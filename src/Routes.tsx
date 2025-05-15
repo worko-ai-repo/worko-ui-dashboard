@@ -1,22 +1,30 @@
-import { Suspense } from "react";
+import { Suspense, lazy } from "react";
 import MainLoader from "@Components/Loader/Loader";
 import { createBrowserRouter } from "react-router-dom";
 import ErrorFallback from "./Pages/errors/base-error/ErrorFallback";
 import CorporateDashboard from "./Pages/Corporate/CorporateDashboard";
+import MainLayout from "@Layouts/Main-Layout/MainLayout";
 
-// Lazy Load Components
+const CandidateDashboard = lazy(() => import("./Pages/Candidate/CandidateDashboard"));
 
-// Route Configuration
 const AppRoutes = createBrowserRouter([
   {
     path: "/dashboard",
     errorElement: <ErrorFallback />,
-    element: <MainLayout />,
     children: [
       {
+        path: "corporate/*",
         element: (
           <Suspense fallback={<MainLoader />}>
             <CorporateDashboard />
+          </Suspense>
+        ),
+      },
+      {
+        path: "candidate/*",
+        element: (
+          <Suspense fallback={<MainLoader />}>
+            <CandidateDashboard />
           </Suspense>
         ),
       },

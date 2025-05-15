@@ -1,10 +1,10 @@
 import Header from '@Components/Dashboard/Header';
 import Sidebar from '@Components/Dashboard/Sidebar';
-import { DashboardProvider } from '@Context/Dashboard.context';
+import { DashboardProvider } from '@Context/CandidateDashboard.context';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-function CorporateDashboardLayout(): JSX.Element {
+function DashboardLayout(): JSX.Element {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
 
@@ -32,4 +32,4 @@ function CorporateDashboardLayout(): JSX.Element {
     );
 }
 
-export default CorporateDashboardLayout;
+export default DashboardLayout;

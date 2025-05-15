@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import MainLoader from '@Components/Loader/Loader';
 import { Navigate, useRoutes } from 'react-router-dom';
 import PageNotFound from '../errors/404/PageNotFound';
-import CorporateDashboardLayout from '@Layouts/CorporateDashboard/CorporateDashboard.layout';
+import CorporateDashboardLayout from '@Layouts/Dashboard.layout';
 
 const CorporateDashboard = () => {
 	const routes = useRoutes([
@@ -38,7 +38,7 @@ const CorporateDashboard = () => {
 					path: 'applicants',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<Applicants />
+							<CorporateDashboard />
 						</Suspense>
 					),
 				},

@@ -1,0 +1,81 @@
+import { FunctionComponent } from 'react';
+import { BsCheckCircleFill } from 'react-icons/bs';
+import { ApplicationStep } from './JobTypes';
+import { stat } from 'fs';
+
+
+interface StepperProps {
+  steps?: ApplicationStep[];
+  statusTracker?: any; // Optional status tracker if direct data is provided
+}
+
+// Function to convert status tracker to application steps
+export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep[] {
+  // Define all possible steps in order
+  const allSteps = [
+    { key: "APPLIED", label: "Applied" },
+    { key: "CV_DOWNLOADED", label: "CV downloaded" },
+    { key: "UNDER_EVALUATION", label: "Under evaluation" },
+    { key: "PROCESSING_INTERVIEW", label: "Interview processing" },
+    { key: "INTERVIEW_DONE", label: "Interviewed" },
+    { key: "HIRED", label: "Hired" }
+  ];
+
+  console.log(statusTracker)
+  // Find the latest status from the tracker
+  let latestStatus = statusTracker.newStatus; // Default to APPLIED
+  let latestDate = "";
+  
+  if (statusTracker && Array.isArray(statusTracker) && statusTracker.length > 0) {
+    // Sort by date (newest first)
+    const sortedTracker = [...statusTracker].sort((a, b) => 
+      new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
+    );
+    
+    latestStatus = sortedTracker[0].newStatus;
+    latestDate = new Date(sortedTracker[0].actionDate).toLocaleDateString();
+  } else if (statusTracker && statusTracker.newStatus) {
+    // Handle case where statusTracker might be a single object with newStatus
+    latestStatus = statusTracker.newStatus;
+    latestDate = statusTracker.actionDate ? new Date(statusTracker.actionDate).toLocaleDateString() : "";
+  }
+
+  // Find the index of the latest status in our steps array
+  const latestStatusIndex = allSteps.findIndex(step => step.key === latestStatus);
+  if (latestStatusIndex === -1) return []; // If status not found, return empty array
+  
+  // Create the steps array with completed flags
+  return allSteps.map((step, index) => ({
+    step: step.label,
+    date: index === latestStatusIndex ? latestDate : "",
+    completed: index <= latestStatusIndex
+  }));
+}
+
+const Stepper: FunctionComponent<StepperProps> = ({ steps, statusTracker }) => {
+  // If statusTracker is provided, convert it to steps
+  const displaySteps = statusTracker ? convertStatusTrackerToSteps(statusTracker) : steps;
+  
+  if (!displaySteps || displaySteps.length === 0) return null;
+
+  return (
+    <div className="flex justify-center mx-auto px-4 py-3 bg-gray-50">
+      {displaySteps.map((step, index) => (
+        <div key={index} className="flex flex-col items-center">
+          <div className="flex items-center">
+            <div className={`w-6 h-6 rounded-full flex items-center justify-center ${step.completed ? 'bg-green-500' : 'bg-gray-300'}`}>
+              {step.completed && <BsCheckCircleFill className="text-white" size={16} />}
+            </div>
+            {index < displaySteps.length - 1 && (
+              <div className={`h-0.5 w-16 md:w-24 ${displaySteps[index].completed && displaySteps[index + 1].completed ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+            )}
+          </div>
+          <div className="text-xs mt-1 font-medium">{step.step}</div>
+          <div className="text-xs text-gray-500">{step.date}</div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export default Stepper;
