@@ -26,6 +26,7 @@ import vector_1 from './backgrounds/vector_1.webp'
 import mag_glass from './backgrounds/mag_glass.webp'
 import check from './backgrounds/check.webp'
 import worko_new from './worko-assets/Worko_new_logo.webp'
+import evaluationRequest from './worko-assets/evaluationRequest.webp';
 
 import auth_bg from './backgrounds/auth_bg.webp'
 import auth_bg2 from './backgrounds/auth_bg2.webp'
@@ -139,6 +140,7 @@ export {
     ref_frame,
     worko_new,
     corporatehero,
+    evaluationRequest,
 
     //svgs
     coin,

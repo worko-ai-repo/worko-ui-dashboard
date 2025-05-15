@@ -3,7 +3,6 @@ import MainLoader from "@Components/Loader/Loader";
 import { createBrowserRouter } from "react-router-dom";
 import ErrorFallback from "./Pages/errors/base-error/ErrorFallback";
 import CorporateDashboard from "./Pages/Corporate/CorporateDashboard";
-import MainLayout from "@Layouts/Main-Layout/MainLayout";
 
 const CandidateDashboard = lazy(() => import("./Pages/Candidate/CandidateDashboard"));
 

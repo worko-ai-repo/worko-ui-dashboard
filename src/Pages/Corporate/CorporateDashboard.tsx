@@ -2,15 +2,20 @@ import { Suspense } from 'react';
 import MainLoader from '@Components/Loader/Loader';
 import { Navigate, useRoutes } from 'react-router-dom';
 import PageNotFound from '../errors/404/PageNotFound';
-import CorporateDashboardLayout from '@Layouts/Dashboard.layout';
+import DashboardLayout from '@Layouts/Dashboard.layout';
+import Jobs from '@Components/Dashboard/Corporate/Job/Jobs';
+import Applicants from '@Components/Dashboard/Corporate/Applicants/Applicants';
+import BulkCVCheck from '@Components/Dashboard/Corporate/BulkCvCheck/BulkCvCheck';
+import Invites from '@Components/Dashboard/Corporate/Invites/Invites';
+import Support from '@Components/Dashboard/Corporate/Support/Support';
 
 const CorporateDashboard = () => {
 	const routes = useRoutes([
 		{
-			path: '/corporate',
+			path: '/',
 			element: (
 				<Suspense fallback={<MainLoader />}>
-					<CorporateDashboardLayout />
+					<DashboardLayout />
 				</Suspense>
 			),
 			children: [
@@ -22,7 +27,7 @@ const CorporateDashboard = () => {
 					path: 'home',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Jobs />
 						</Suspense>
 					),
 				},
@@ -30,7 +35,7 @@ const CorporateDashboard = () => {
 					path: 'jobs',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Jobs />
 						</Suspense>
 					),
 				},
@@ -38,7 +43,7 @@ const CorporateDashboard = () => {
 					path: 'applicants',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Applicants />
 						</Suspense>
 					),
 				},
@@ -46,7 +51,7 @@ const CorporateDashboard = () => {
 					path: 'bulk-cv-check',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<BulkCVCheck />
 						</Suspense>
 					),
 				},
@@ -54,7 +59,7 @@ const CorporateDashboard = () => {
 					path: 'invites',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Invites />
 						</Suspense>
 					),
 				},
@@ -62,7 +67,7 @@ const CorporateDashboard = () => {
 					path: 'referrals',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Jobs />
 						</Suspense>
 					),
 				},
@@ -70,7 +75,7 @@ const CorporateDashboard = () => {
 					path: 'support',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<CorporateDashboard />
+							<Support />
 						</Suspense>
 					),
 				},

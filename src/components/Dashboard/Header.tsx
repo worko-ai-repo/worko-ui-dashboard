@@ -1,5 +1,5 @@
 import { logo_text } from '@Assets';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
+import { useDashboardContext } from '@Context/Dashboard.context';
 import { Bell, Menu } from 'lucide-react';
 import React from 'react';
 

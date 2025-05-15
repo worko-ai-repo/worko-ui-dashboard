@@ -1,21 +1,13 @@
 import React, { useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
-import {
-    ChevronRight,
-} from 'lucide-react';
-import { Applicants, Bulk_CV, Home, Invites, Job, Referral, Support, User } from "@Assets";
+import { User } from "@Assets";
 import { useAppContext } from '@Context/App.context';
 import { useNavigate } from 'react-router-dom';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
 
-type Tab =
-    | 'profile'
-    | 'jobs'
-    | 'referral'
-    | 'guidance'
-    | 'refer-and-earn'
-    | 'subscription'
-    | 'support'
+import navigationItems from './navigation';
+import SidebarItem from './SidebarItem';
+import { DashboardType, TabId } from 'src/types/sidebar';
+import { useDashboardContext } from '@Context/Dashboard.context';
 
 interface SidebarProps {
     sidebarOpen: boolean;
@@ -23,34 +15,34 @@ interface SidebarProps {
     collapsed: boolean;
     setCollapsed: (open: boolean) => void;
 }
-interface NavItem {
-    id: Tab;
-    label: string;
-    icon: React.ReactNode;
-}
-
-const navItems: NavItem[] = [
-    { id: 'profile', label: 'Profile', icon: <img src={Home} className="w-5 h-5" /> },
-    { id: 'jobs', label: 'Jobs', icon: <img src={Job} className="w-5 h-5" /> },
-    { id: 'referral', label: 'Referral', icon: <img src={Applicants} className="w-5 h-5" /> },
-    { id: 'guidance', label: 'Guidance', icon: <img src={Bulk_CV} className="w-5 h-5" /> },
-    { id: 'refer-and-earn', label: 'Refer & Earn', icon: <img src={Invites} className="w-5 h-5" /> },
-    { id: 'subscription', label: 'Subscription', icon: <img src={Referral} className="w-5 h-5" /> },
-    { id: 'support', label: 'Support', icon: <img src={Support} className="w-5 h-5" /> },
-];
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) => {
     const { userDetails } = useAppContext();
-    const { activeTab, setActiveTab } = useDashboardContext();
+    const { activeTab, setActiveTab, activeSidebar } = useDashboardContext();
     const navigate = useNavigate();
-    const dashboardType = location.pathname.split('/')[2] || 'corporate';
+
+    const navItems = navigationItems.filter(item => 
+        !item.dashboardTypes || item.dashboardTypes.includes(activeSidebar)
+      );
 
     useEffect(() => {
         const currentTab = location.pathname.split('/')[3];
         if (currentTab) {
-            setActiveTab(currentTab as Tab);
+            setActiveTab(currentTab as TabId);
         }
     }, [location.pathname]);
+
+    const onNavigate = (dashboardType: DashboardType, tabId: TabId) => {
+        const path = `/dashboard/${dashboardType.toLowerCase()}/${tabId}`;
+        navigate(path);
+    };
+
+
+    const handleTabClick = (tabId: TabId) => {
+        setActiveTab(tabId);
+        onNavigate(activeSidebar, tabId);
+        setSidebarOpen(false);
+      };
 
     const Avatar = (
         <div className="rounded-full text-[#316bff] w-8 h-8 flex items-center justify-center">
@@ -62,9 +54,9 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
         <aside
             className={`bg-[#316bff] text-white h-screen z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
                 ${collapsed ? 'w-[72px]' : 'w-[212px]'}
-                sm:relative sm:block
-                max-sm:fixed max-sm:left-0 max-sm:top-0 max-sm:w-[320px] 
-                ${sidebarOpen ? 'max-sm:translate-x-0' : 'max-sm:-translate-x-full'}`}
+                md:relative md:block
+                max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 
+                ${sidebarOpen ? 'max-md:translate-x-0' : 'max-md:-translate-x-full'}`}
         >
 
             <div className="flex justify-between items-center mb-6">
@@ -98,39 +90,15 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
             </div>
 
             <nav className="space-y-3">
-                {navItems.map((item) => {
-                    const isActive = item.id === activeTab;
-                    return (
-                        <button
-                            key={item.id}
-                            onClick={() => {
-                                setActiveTab(item.id);
-                                navigate(`/dashboard/${dashboardType}/${item.id}`);
-                                setSidebarOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 p-2 transition-all rounded-lg
-                                ${isActive ? 'bg-white text-[#316bff] shadow-sm' : 'hover:bg-blue-600'}
-                                ${collapsed ? 'justify-center' : 'justify-between'}
-                            `}
-                        >
-                            <div className="flex items-center gap-3 overflow-hidden">
-                                <span className={`p-1 rounded-lg ${isActive ? "bg-gray-100 text-[#316bff]" : "bg-blue-600 text-white"}`}>
-                                    {item.icon}
-                                </span>
-                                {!collapsed && (
-                                    <span className="text-[13px] font-medium whitespace-nowrap">
-                                        {item.label}
-                                    </span>
-                                )}
-                            </div>
-                            {!collapsed && (
-                                <span className={`${isActive ? 'bg-gray-100 rounded-md p-1' : ''}`}>
-                                    <ChevronRight className={`w-4 h-4 ${isActive ? 'text-gray-400' : 'text-blue-300'}`} />
-                                </span>
-                            )}
-                        </button>
-                    );
-                })}
+                {navItems.map((item) => (
+                    <SidebarItem
+                        key={item.id}
+                        item={item}
+                        isActive={item.id === activeTab}
+                        collapsed={collapsed}
+                        onClick={handleTabClick}
+                    />
+                ))}
             </nav>
 
             {collapsed && (

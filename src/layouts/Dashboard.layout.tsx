@@ -1,6 +1,6 @@
 import Header from '@Components/Dashboard/Header';
 import Sidebar from '@Components/Dashboard/Sidebar';
-import { DashboardProvider } from '@Context/CandidateDashboard.context';
+import { DashboardProvider } from '@Context/Dashboard.context';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
