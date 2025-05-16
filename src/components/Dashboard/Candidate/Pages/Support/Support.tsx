@@ -1,6 +1,7 @@
 import { FunctionComponent, useState, useCallback } from 'react';
 import Table from "../../SharedComponents/Table";
 import { customer_support } from '@Assets';
+import {Button} from 'lib-worko-ai'
 
 const Support = () => {
   const [isHelpOpen, setHelpOpen] = useState(false);
@@ -122,6 +123,7 @@ const Support = () => {
           />
           <div className="relative tracking-[0.2px] leading-[114%] font-semibold">Help</div>
         </div>
+        <Button onClick={()=>alert("hi")}>TEXTINMIDDLE</Button>
       </div>
       <div className='bg-white p-4 rounded-3xl shadow-md'>
       {/* Table positioned below the help button */}

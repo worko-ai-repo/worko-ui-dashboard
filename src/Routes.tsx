@@ -3,6 +3,7 @@ import MainLoader from "@Components/Loader/Loader";
 import { createBrowserRouter } from "react-router-dom";
 import ErrorFallback from "./Pages/errors/base-error/ErrorFallback";
 import CorporateDashboard from "./Pages/Corporate/CorporateDashboard";
+import Login from "@Components/Login/Login";
 
 const CandidateDashboard = lazy(() => import("./Pages/Candidate/CandidateDashboard"));
 
@@ -11,6 +12,10 @@ const AppRoutes = createBrowserRouter([
     path: "/dashboard",
     errorElement: <ErrorFallback />,
     children: [
+      {
+        path:"login",
+        element: (<Login />)
+      },
       {
         path: "corporate/*",
         element: (

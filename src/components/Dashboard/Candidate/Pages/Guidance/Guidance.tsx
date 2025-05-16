@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
+import { useDashboardContext } from '@Context/Dashboard.context';
 import GuidanceTable from './GuidanceTable';
 import { magnifyingQuestion } from '@Assets';
 import httpServiceObj from '@Services/ApiHandler.service';
+import {Button} from 'lib-worko-ai'
 
 // Define types
 export interface GuidanceRequest {

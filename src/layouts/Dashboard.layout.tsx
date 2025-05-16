@@ -1,15 +1,17 @@
 import Header from '@Components/Dashboard/Header';
 import Sidebar from '@Components/Dashboard/Sidebar';
+import { AppProvider } from '@Context/App.context';
 import { DashboardProvider } from '@Context/Dashboard.context';
 import { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 
-function DashboardLayout(): JSX.Element {
+function CorporateDashboardLayout(): JSX.Element {
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [collapsed, setCollapsed] = useState(false);
 
     return (
         <div className="grid grid-cols-1 sm:grid-cols-[auto_1fr]">
+            <AppProvider>
             <DashboardProvider>
                 <Sidebar
                     sidebarOpen={sidebarOpen}
@@ -28,8 +30,9 @@ function DashboardLayout(): JSX.Element {
                     </main>
                 </div>
             </DashboardProvider>
+            </AppProvider>
         </div>
     );
 }
 
-export default DashboardLayout;
+export default CorporateDashboardLayout;

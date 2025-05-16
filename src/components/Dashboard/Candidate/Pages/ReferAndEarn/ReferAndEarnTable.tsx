@@ -1,4 +1,4 @@
-import { useDashboardContext } from "@Context/CandidateDashboard.context";
+import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useState, useEffect } from "react";
 import Table from "../../SharedComponents/Table";

@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import PricingCard from "./PricingCard";
 import { SubscriptionSkeletonLoader } from "@Components/Loader/Skeleton/SkeletonLoader";
-import { useDashboardContext } from "@Context/CandidateDashboard.context";
+import profileService from "../../Service/ProfileService";
+import { useDashboardContext } from "@Context/Dashboard.context";
 
 const plans = [
   {
@@ -66,14 +67,15 @@ const Subscription = () => {
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const {user} = useDashboardContext();
   
-  const { getSubscriptionPlan } = useDashboardContext();
 
   useEffect(() => {
     const fetchSubscriptionData = async () => {
+      if(!user?.email) return;
       setIsLoading(true);
       try {
-        const data = await getSubscriptionPlan();
+        const data = await profileService.getSubscriptionPlan(user.email);;
         if (data && data.length > 0) {
           setSubscriptionData(data[0]);
           setActivePlan(data[0].name);
@@ -86,9 +88,10 @@ const Subscription = () => {
         setIsLoading(false);
       }
     };
-
+    
     fetchSubscriptionData();
-  }, [getSubscriptionPlan]);
+    
+  }, [user?.email]);
 
   // Format date to DD-MM-YYYY
   const formatDate = (dateString:any) => {

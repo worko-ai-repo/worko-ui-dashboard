@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useDashboardContext } from "@Context/CandidateDashboard.context";
+import profileService from '../../Service/ProfileService';
 import { Group, eyeIcon, verified, gender, salary } from "@Assets";
 import {
   AtSign,
@@ -59,41 +59,78 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 };
 
 const Profile = () => {
-  const {
-    user,
-    profileData,
-    detailsData,
-    educationData,
-    experienceData,
-    achievementData,
-    skillsData,
-    isLoading,
-    error,
-    fetchProfileData,
-    updateProfileData,
-    updateDetailsData,
-    updateSkillsData,
-    updateAchievementData,
-    editMode,
-    setEditMode
-  } = useDashboardContext();
-
-  // Local state for edited data
-  const [editableAbout, setEditableAbout] = useState<string>("");
+  // State for user data
+  const [user, setUser] = useState<any>(null);
+  const [profileData, setProfileData] = useState<any>(null);
+  const [detailsData, setDetailsData] = useState<any>(null);
+  const [educationData, setEducationData] = useState<any>(null);
+  const [experienceData, setExperienceData] = useState<any>(null);
+  const [achievementData, setAchievementData] = useState<any>(null);
+  const [skillsData, setSkillsData] = useState<any>(null);
   
-  useEffect(() => {
-    fetchProfileData();
-  }, [fetchProfileData]);
+  // State for loading and error
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  // State for edit mode
+  const [editMode, setEditModeState] = useState<Record<string, boolean>>({
+    about: false,
+    workExperience: false,
+    coreSkills: false,
+    softSkills: false,
+    technicalSkills: false,
+    achievements: false,
+    responsibilities: false,
+    salary: false
+  });
 
-  useEffect(() => {
-    if (detailsData && detailsData[0]) {
-      setEditableAbout(detailsData[0].about || "");
-    }
-  }, [detailsData]);
+  // Helper function to set edit mode for a specific section
+  const setEditMode = (section: string, value: boolean) => {
+    setEditModeState(prev => ({
+      ...prev,
+      [section]: value
+    }));
+  };
 
+  // Fetch user data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Get current user from the profile service
+        const currentUser = profileService.getCurrentUser();
+        if (!currentUser) {
+          throw new Error("User not found");
+        }
+        
+        setUser(currentUser);
+        
+        // Fetch all user data using the email from the current user
+        const userData = await profileService.fetchAllUserData(currentUser.email);
+        
+        // Set state with the fetched data
+        setProfileData(userData.profile);
+        setDetailsData(userData.details);
+        setEducationData(userData.education);
+        setExperienceData(userData.experience);
+        setSkillsData(userData.skills);
+        setAchievementData(userData.achievement);
+      } catch (err: any) {
+        console.error("Error fetching profile data:", err);
+        setError(err.message || "Failed to load profile data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+
+  // About section handlers
   const handleEditAbout = () => {
     setEditMode('about', true);
-    setEditableAbout(detailsData[0].about || "");
   };
 
   const handleCancelAbout = () => {
@@ -101,17 +138,33 @@ const Profile = () => {
   };
 
   const handleSaveAbout = async (data: any) => {
-    const success = await updateDetailsData({
-      about: data.about
-    });
-    
-    if (success) {
-      setEditMode('about', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateDetailsData(
+        user.email,
+        detailsData,
+        { about: data.about }
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setDetailsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], about: data.about };
+          return updatedData;
+        });
+        setEditMode('about', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update about section:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Work Experience handlers
   const handleEditWorkExperience = () => {
     setEditMode('workExperience', true);
   };
@@ -121,22 +174,46 @@ const Profile = () => {
   };
 
   const handleSaveWorkExperience = async (data: any) => {
-    const success = await updateDetailsData({
-      candidateExperience: {
-        companyName: data.companyName,
-        designation: data.designation,
-        department: data.department
-      },
-      YOE: data.YOE
-    });
-    
-    if (success) {
-      setEditMode('workExperience', false);
+    try {
+      if (!user) return false;
+      
+      const updateData = {
+        candidateExperience: {
+          companyName: data.companyName,
+          designation: data.designation,
+          department: data.department
+        },
+        YOE: data.YOE
+      };
+      
+      const success = await profileService.updateDetailsData(
+        user.email,
+        detailsData,
+        updateData
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setDetailsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { 
+            ...updatedData[0], 
+            candidateExperience: updateData.candidateExperience,
+            YOE: updateData.YOE
+          };
+          return updatedData;
+        });
+        setEditMode('workExperience', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update work experience:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Core Skills handlers
   const handleEditCoreSkills = () => {
     setEditMode('coreSkills', true);
   };
@@ -146,17 +223,34 @@ const Profile = () => {
   };
 
   const handleSaveCoreSkills = async (skills: any[]) => {
-    const success = await updateSkillsData({ 
-      coreSkills: skills 
-    }, 'coreSkills');
-    
-    if (success) {
-      setEditMode('coreSkills', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateSkillsData(
+        user.email,
+        skillsData,
+        { coreSkills: skills },
+        'coreSkills'
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setSkillsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], coreSkills: skills };
+          return updatedData;
+        });
+        setEditMode('coreSkills', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update core skills:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Soft Skills handlers
   const handleEditSoftSkills = () => {
     setEditMode('softSkills', true);
   };
@@ -166,19 +260,34 @@ const Profile = () => {
   };
 
   const handleSaveSoftSkills = async (skills: any[]) => {
-    const success = await updateSkillsData({ 
-      softSkills: skills 
-    }, 'softSkills');
-
-    console.log(success);
-    
-    if (success) {
-      setEditMode('softSkills', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateSkillsData(
+        user.email,
+        skillsData,
+        { softSkills: skills },
+        'softSkills'
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setSkillsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], softSkills: skills };
+          return updatedData;
+        });
+        setEditMode('softSkills', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update soft skills:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Technical Skills handlers
   const handleEditTechnicalSkills = () => {
     setEditMode('technicalSkills', true);
   };
@@ -188,17 +297,34 @@ const Profile = () => {
   };
 
   const handleSaveTechnicalSkills = async (skills: any[]) => {
-    const success = await updateSkillsData({ 
-      technicalSkills: skills 
-    }, 'technicalSkills');
-    
-    if (success) {
-      setEditMode('technicalSkills', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateSkillsData(
+        user.email,
+        skillsData,
+        { technicalSkills: skills },
+        'technicalSkills'
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setSkillsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], technicalSkills: skills };
+          return updatedData;
+        });
+        setEditMode('technicalSkills', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update technical skills:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Achievements handlers
   const handleEditAchievements = () => {
     setEditMode('achievements', true);
   };
@@ -208,44 +334,61 @@ const Profile = () => {
   };
 
   const handleSaveAchievements = async (items: string[]) => {
-    // Transform the items into achievement objects
-    const achievements = items.map(item => {
-      const parts = item.split(' - ');
-      const titlePart = parts[0] || '';
+    try {
+      if (!user) return false;
       
-      let acquiredFrom = '';
-      let achievDate = new Date();
-      
-      if (parts.length > 1) {
-        const secondPart = parts[1] || '';
-        const matches = secondPart.match(/(.+) \((\d{4})\)/);
+      // Transform the items into achievement objects
+      const achievements = items.map(item => {
+        const parts = item.split(' - ');
+        const titlePart = parts[0] || '';
         
-        if (matches && matches.length >= 3) {
-          acquiredFrom = matches[1];
-          achievDate = new Date(matches[2]);
-        } else {
-          acquiredFrom = secondPart;
+        let acquiredFrom = '';
+        let achievDate = new Date();
+        
+        if (parts.length > 1) {
+          const secondPart = parts[1] || '';
+          const matches = secondPart.match(/(.+) \((\d{4})\)/);
+          
+          if (matches && matches.length >= 3) {
+            acquiredFrom = matches[1];
+            achievDate = new Date(matches[2]);
+          } else {
+            acquiredFrom = secondPart;
+          }
         }
+        
+        return {
+          title: titlePart,
+          acquiredFrom,
+          achievDate
+        };
+      });
+      
+      const success = await profileService.updateAchievementData(
+        user.email,
+        achievementData[0],
+        { achievements },
+        'achievement'
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setAchievementData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], achievements };
+          return updatedData;
+        });
+        setEditMode('achievements', false);
       }
       
-      return {
-        title: titlePart,
-        acquiredFrom,
-        achievDate
-      };
-    });
-    
-    const success = await updateAchievementData({ 
-      achievements 
-    }, 'achievement');
-    
-    if (success) {
-      setEditMode('achievements', false);
+      return success;
+    } catch (err) {
+      console.error("Failed to update achievements:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Responsibilities handlers
   const handleEditResponsibilities = () => {
     setEditMode('responsibilities', true);
   };
@@ -255,17 +398,34 @@ const Profile = () => {
   };
 
   const handleSaveResponsibilities = async (items: string[]) => {
-    const success = await updateAchievementData({ 
-      responsibilities: items 
-    }, 'responsibility');
-    
-    if (success) {
-      setEditMode('responsibilities', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateAchievementData(
+        user.email,
+        achievementData[0],
+        { responsibilities: items },
+        'responsibility'
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setAchievementData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], responsibilities: items };
+          return updatedData;
+        });
+        setEditMode('responsibilities', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update responsibilities:", err);
+      return false;
     }
-    
-    return success;
   };
 
+  // Salary handlers
   const handleEditSalary = () => {
     setEditMode('salary', true);
   };
@@ -275,16 +435,63 @@ const Profile = () => {
   };
 
   const handleSaveSalary = async (data: any) => {
-    const success = await updateDetailsData({
-      CTC: data.CTC,
-      ECTC: data.ECTC
-    });
-    
-    if (success) {
-      setEditMode('salary', false);
+    try {
+      if (!user) return false;
+      
+      const success = await profileService.updateDetailsData(
+        user.email,
+        detailsData,
+        { CTC: data.CTC, ECTC: data.ECTC }
+      );
+      
+      if (success) {
+        // Update local state to reflect changes
+        setDetailsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], CTC: data.CTC, ECTC: data.ECTC };
+          return updatedData;
+        });
+        setEditMode('salary', false);
+      }
+      
+      return success;
+    } catch (err) {
+      console.error("Failed to update salary information:", err);
+      return false;
     }
-    
-    return success;
+  };
+
+  // Retry fetching data function
+  const retryFetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      if (!user) {
+        const currentUser = profileService.getCurrentUser();
+        if (!currentUser) {
+          throw new Error("User not found");
+        }
+        setUser(currentUser);
+      }
+
+      // Re-fetch all user data
+      const userData = await profileService.fetchAllUserData(user.email);
+      
+      // Update all state variables with new data
+      setProfileData(userData.profile);
+      setDetailsData(userData.details);
+      setEducationData(userData.education);
+      setExperienceData(userData.experience);
+      setSkillsData(userData.skills);
+      setAchievementData(userData.achievement);
+      
+      setIsLoading(false);
+    } catch (err: any) {
+      console.error("Error retrying data fetch:", err);
+      setError(err.message || "Failed to load profile data");
+      setIsLoading(false);
+    }
   };
 
   if (isLoading) return (
@@ -297,7 +504,7 @@ const Profile = () => {
     <div className="flex flex-col items-center justify-center h-screen">
       <div className="text-red-600 text-xl font-medium">Error loading profile data</div>
       <button 
-        onClick={() => fetchProfileData()}
+        onClick={retryFetchData}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
       >
         Try Again
@@ -329,7 +536,7 @@ const Profile = () => {
                 <div className="ml-8 mt-4 space-y-2">
                   <div className="flex items-center">
                     <h2 className="text-2xl font-semibold text-black capitalize">
-                      {profileData?.data?.name || "User Name"}
+                      {profileData?.data?.name || user?.name || "User Name"}
                     </h2>
                     <img className="ml-2 w-6 h-6" alt="Verified" src={Group} />
                   </div>
@@ -724,4 +931,4 @@ const Profile = () => {
   );
 };
 
-export default Profile;
+export default Profile

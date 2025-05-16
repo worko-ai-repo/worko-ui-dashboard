@@ -7,7 +7,7 @@ import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { AuthLoginForGeneralUserDto } from '@Interfaces/Auth.dto';
 import { AppContextType, ContextProviderProps } from '@Interfaces/ContextProvider.dto';
 import { createContext, useState, useContext, useCallback, useLayoutEffect, useMemo } from 'react';
-import { continueReferralRequestDataDto } from '@Pages/request-referral/RequestReferral';
+// import { continueReferralRequestDataDto } from '@Pages/request-referral/RequestReferral';
 
 
 // Corporate User Interface
@@ -57,7 +57,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	const [tokenData, setTokenData] = useState<any | null>(null);
 	const [userDetails, setUserDetails] = useState<Partial<AuthLoginForGeneralUserDto> | null>(null);
 	const [updateCheck, setUpdateCheck] = useState<boolean>(false);
-	const [PendingApply , setPendingApply] = useState<continueReferralRequestDataDto | null>(null)
+	const [PendingApply , setPendingApply] = useState<any | null>(null)
 	const [isModalOpen , setIsModalOpen] = useState<boolean>(false)
 	// Fetch user details based on user type
 	const fetchUserDetails = async (userType: string[] | undefined, userId: string | undefined, userEmail: string | undefined) => {
