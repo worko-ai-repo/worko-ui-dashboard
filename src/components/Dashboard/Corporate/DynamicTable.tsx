@@ -16,7 +16,6 @@ interface DynamicTableProps<T> {
   toggleRow?: (id: string) => void;
   toggleExpand?: (id: string) => void;
   allSelected?: boolean;
-  renderActions?: (row: T) => React.ReactNode;
   renderExpandedDetails?: (row: T) => React.ReactNode;
   enableSelect?: boolean;
 }
@@ -33,7 +32,6 @@ export function DynamicTable<T extends { id: string }>(
     toggleRow = () => { },
     toggleExpand = () => { },
     allSelected = false,
-    renderActions,
     renderExpandedDetails,
     enableSelect = true,
   } = props;
@@ -42,7 +40,7 @@ export function DynamicTable<T extends { id: string }>(
 
   return (
     <div className="bg-white rounded-lg p-2 md:p-4 overflow-x-auto w-full">
-      <table className="min-w-full table-auto">
+      <table className="min-w-full table-auto"> {/* removed border-spacing-y-4 */}
         {/* Table Head */}
         <thead className="bg-[#EFFFFF] text-[#94A3B8]">
           <tr>
@@ -69,19 +67,23 @@ export function DynamicTable<T extends { id: string }>(
 
         {/* Table Body */}
         <tbody>
-          {rows.map((row) => {
+          <tr><td colSpan={totalCols} className="h-2" /></tr>
+
+          {rows.map((row, rowIndex) => {
             const isSelected = selectedRows.includes(row.id);
             const isExpanded = expandedRows.includes(row.id);
 
             return (
               <React.Fragment key={row.id}>
+                {/* Spacer row before each main row, but NOT before expanded content */}
+                {rowIndex > 0 && !expandedRows.includes(rows[rowIndex - 1].id) && (
+                  <tr><td colSpan={totalCols} className="h-2" /></tr> // ← custom spacing between rows
+                )}
+
                 {/* Main row */}
                 <tr>
                   {enableSelect && (
-                    <td
-                      className={`p-3 text-center border-b-2 ${isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]"
-                        } rounded-l-xl`}
-                    >
+                    <td className={`p-3 text-center border-b ${isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]"} rounded-tl-xl`}>
                       <input
                         type="checkbox"
                         checked={isSelected}
@@ -94,15 +96,14 @@ export function DynamicTable<T extends { id: string }>(
                   {columns.map((col, index) => (
                     <td
                       key={col.key as string}
-                      className={`px-4 border-b-2 py-4 text-sm whitespace-nowrap capitalize ${isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]"
-                        } ${index === columns.length - 1 ? "rounded-r-xl" : ""}`}
+                      className={`px-4 border-b py-4 text-sm whitespace-nowrap capitalize 
+                        ${isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]"} 
+                        ${index === columns.length - 1 ? "rounded-tr-xl" : ""} 
+                        ${!enableSelect && index === 0 ? "rounded-tl-xl" : ""}`}
                     >
                       {col.render
                         ? col.render(row)
-                        : col.key === "actions" && renderActions
-                          ? renderActions(row)
-                          : (row[col.key as keyof T] as React.ReactNode) ?? "-"}
-
+                        : (row[col.key as keyof T] as React.ReactNode) ?? "-"}
                     </td>
                   ))}
                 </tr>
@@ -123,22 +124,31 @@ export function DynamicTable<T extends { id: string }>(
 
                 {/* Expanded Content */}
                 {renderExpandedDetails && isExpanded && (
-                  <tr>
-                    <td
-                      colSpan={totalCols}
-                      className="relative bg-white p-0 text-sm text-gray-600 border rounded-b-xl"
-                    >
-                      <div className="p-4">{renderExpandedDetails(row)}</div>
-
-                      <div
-                        onClick={() => toggleExpand(row.id)}
-                        className="absolute left-1/2 transform -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer"
+                  <>
+                    {/* Expanded Content */}
+                    <tr>
+                      <td
+                        colSpan={totalCols}
+                        className="relative bg-white p-0 text-sm text-gray-600"
                       >
-                        <ChevronUp />
-                      </div>
-                    </td>
-                  </tr>
+                        <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
+
+                        <div
+                          onClick={() => toggleExpand(row.id)}
+                          className="absolute left-1/2 transform -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer"
+                        >
+                          <ChevronUp />
+                        </div>
+                      </td>
+                    </tr>
+
+                    {/* Spacer row after expanded content */}
+                    <tr>
+                      <td colSpan={totalCols} className="h-4" />
+                    </tr>
+                  </>
                 )}
+
               </React.Fragment>
             );
           })}

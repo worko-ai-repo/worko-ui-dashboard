@@ -116,11 +116,11 @@ const LoginForm = () => {
 				 * After successful sign-in, check if the user account is a corporate account.
 				 * If corporate, show a popup and log out the user.
 				 */
-				if (userType === 'Corporate') {
+				/* if (userType === 'Corporate') {
 					toast.error("Oops! You don't have access to log in to this portal. Please contact support for assistance.",getToastOptions({autoClose: false}));
 					CognitoServiceObj.handleSignOut();
 					return;
-				}
+				} */
 
 				/**
 				 * If the account is not confirmed, prompt the user to confirm the email.

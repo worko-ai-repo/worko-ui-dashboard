@@ -19,10 +19,10 @@ const CVPreview = ({
     return (
         <div className="w-full h-full flex flex-col gap-4 p-4">
             {/* CV Viewer */}
-            <div className="flex gap-4 justify-between">
+            <div className="flex gap-4 justify-between h-full">
                 <h2 className="text-lg font-semibold">CV</h2>
                 <div className="flex flex-col gap-4">
-                    <div className="relative border-2 border-gray-400 w-full aspect-square rounded-xl overflow-hidden">
+                    <div className="flex-1 border-2 border-gray-400 w-full h-full rounded-xl overflow-hidden">
                         <iframe
                             src={sampleCV}
                             title="CV Preview"

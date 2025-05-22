@@ -1,5 +1,3 @@
-import ReactDOM from "react-dom";
-
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -19,33 +17,25 @@ const Modal = ({
 }: ModalProps) => {
   if (!isOpen) return null;
 
-  return ReactDOM.createPortal(
+  return (
     <div
-      className="fixed inset-0 z-[9999] overflow-auto bg-black/50"
-      role="dialog"
-      aria-modal="true"
+      className={`fixed top-4 right-4 z-[9999] bg-white rounded-xl p-6 pt-0 shadow-lg animate-slide-in ${className}`}
+      style={{ maxHeight: '90vh', overflowY: 'auto' }}
     >
-      <div className="flex min-h-full items-center justify-center p-4">
-        <div
-          className={`bg-white rounded-xl p-6 shadow-lg relative animate-slide-in ${className} max-sm:w-[90dvh]`}
-          onClick={(e) => e.stopPropagation()}
-        >
-
-          {showCloseButton && (
-            <button
-              className="absolute top-3 right-3 text-xl text-gray-500 hover:text-gray-800"
-              onClick={onClose}
-              aria-label="Close modal"
-            >
-              ×
-            </button>
-          )}
-          {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
-          {children}
+      {showCloseButton && (
+        <div className="sticky top-0 w-full bg-white z-10 flex justify-end pt-2">
+          <button
+            className="text-xl text-gray-500 hover:text-gray-800"
+            onClick={onClose}
+            aria-label="Close modal"
+          >
+            ×
+          </button>
         </div>
-      </div>
-    </div>,
-    document.body
+      )}
+      {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
+      {children}
+    </div>
   );
 };
 

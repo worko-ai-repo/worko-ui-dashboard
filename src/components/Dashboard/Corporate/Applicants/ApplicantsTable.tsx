@@ -1,49 +1,53 @@
 import React, { useState } from "react";
 import { Eye, User } from "lucide-react";
-import { DynamicTable } from "../DynamicTable";
-import Modal from "../Modal";
+
 import CVPreview from "./CVPreview";
 import RejectionForm from "./RejectForm";
 import EvaluatorForm from "./EvaluatorForm";
 import HireNowForm from "./HireNowForm";
 import ProgressCircle from "./CircularBar";
 import RequestDocumentModal from "./RequestDocModal";
+import { Not_Responding } from "@Assets";
+import { render } from "react-dom";
+import InterviewFeedbackCard from "./InterviewFeedbackCard";
+import { DynamicTable } from "lib-worko-ai";
+import Modal from "../Modal";
 
 type ApplicantStatus =
-  | "pending"
-  | "rejected"
-  | "evaluation pending"
-  | "interviewing"
-  | "hired"
-  | "not processed"
-  | "document requested"
-  | "document submitted"
-  | "document verified"
-  | "offer sent"
-  | "joined";
+    | "pending"
+    | "rejected"
+    | "evaluation pending"
+    | "interviewing"
+    | "hired"
+    | "not processed"
+    | "document requested"
+    | "document submitted"
+    | "document verified"
+    | "offer sent"
+    | "joined";
 
 type ApplicationRow = {
-  id: string;
-  name: string;
-  company: string;
-  profile: string;
-  yoe: number;
-  location: string;
-  matchingScore: number;
-  about?: string;
-  ctc?: string;
-  noticePeriod?: string;
-  videoScore?: number;
-  cvViewedBy?: string;
-  rejectedBy?: string;
-  rejectedDate?: string;
-  rejectedReason?: string;
-  status: ApplicantStatus;
-  viewdCv?: boolean;
-  documentSubmitted?: boolean;
-  hiredBy?: string;
-  joiningDate?: string;
-  designation?: string;
+    id: string;
+    name: string;
+    company: string;
+    profile: string;
+    yoe: number;
+    location: string;
+    matchingScore: number;
+    about?: string;
+    ctc?: string;
+    noticePeriod?: string;
+    videoScore?: number;
+    cvViewedBy?: string;
+    rejectedBy?: string;
+    rejectedDate?: string;
+    rejectedReason?: string;
+    status: ApplicantStatus;
+    viewdCv?: boolean;
+    documentSubmitted?: boolean;
+    hiredBy?: string;
+    joiningDate?: string;
+    designation?: string;
 };
 
 const applicationRows: ApplicationRow[] = [
@@ -146,17 +150,22 @@ const applicationRows: ApplicationRow[] = [
 export default function ApplicationTable({
     activeTab,
     setActiveTab,
+    selectedRows,
+    setSelectedRows,
 }: {
     activeTab: 'All' | 'Hired' | 'Joined';
     setActiveTab: (tab: 'All' | 'Hired' | 'Joined') => void;
+    selectedRows: string[];
+    setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
-    const [selectedRows, setSelectedRows] = useState<string[]>([]);
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
     const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
     const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
     const [isHireNowModalOpen, setIsHireNowModalOpen] = useState(false);
     const [isRequestDocModalOpen, setIsRequestDocModalOpen] = useState(false);
+    const [isInterviewFeedbackCardOpen, setIsInterviewFeedbackCardOpen] = useState(false);
+
 
     const commonColumns = {
         name: {
@@ -177,7 +186,9 @@ export default function ApplicationTable({
             label: "Matching Score",
             render: (row: ApplicationRow) => (
                 <div className="flex justify-center">
-                    <ProgressCircle value={row.matchingScore} />
+                    <ProgressCircle
+                        onClick={() => setIsInterviewFeedbackCardOpen(true)}
+                        value={row.matchingScore} />
                 </div>
             )
         },
@@ -203,8 +214,135 @@ export default function ApplicationTable({
                 );
             }
         },
-        actions: { key: "actions", label: "Actions" },
-        response: { key: "response", label: "Response" },
+        actions: {
+            key: "actions",
+            label: "Actions",
+            render: (row: ApplicationRow) => {
+                const viewCvBtn = (
+                    <button
+                        title="View CV"
+                        onClick={() => setIsViewCVModalOpen(true)} className="flex gap-2 items-center btn-sky"
+                    >
+                        <Eye size={16} />
+                        View CV
+                    </button>
+                );
+
+                const viewEvaluatorBtn = (
+                    <button
+                        title="View Evaluation"
+                        onClick={() => setIsAddEvaluatorModalOpen(true)} className="flex items-center gap-2 btn-sky">
+                        <Eye size={16} />
+                        View evaluation
+                    </button>
+                );
+
+                const hireNowBtn = (
+                    <button
+                        title="Hire Now"
+                        onClick={() => setIsHireNowModalOpen(true)} className="btn-sky flex gap-2 items-center">
+                        {/* SVG icon */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19" viewBox="0 0 18 19" fill="none">
+                            <path d="M15.75 8.34668V15.4717C15.75 16.093 15.2463 16.5967 14.625 16.5967H3.375C2.75368 16.5967 2.25 16.093 2.25 15.4717V4.22168C2.25 3.60036 2.75368 3.09668 3.375 3.09668H11.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M6 8.34668L9.75 11.3467L15.375 3.47168" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        Hire Now
+                    </button>
+                );
+
+                const holdBtn = (
+                    <button
+                        title="Hold"
+                        className="flex gap-2 items-center btn-blue">
+                        {/* SVG icon */}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
+                            <g clip-path="url(#clip0_742_200)">
+                                <path d="M10.625 4.97168C10.625 4.67331 10.7435 4.38716 10.9545 4.17618C11.1655 3.96521 11.4516 3.84668 11.75 3.84668C12.0483 3.84668 12.3345 3.96521 12.5455 4.17618C12.7564 4.38716 12.875 4.67331 12.875 4.97168V9.09668M10.625 4.97168V3.47168C10.625 3.17331 10.5065 2.88716 10.2955 2.67618C10.0845 2.46521 9.79834 2.34668 9.49998 2.34668C9.20161 2.34668 8.91546 2.46521 8.70448 2.67618C8.4935 2.88716 8.37498 3.17331 8.37498 3.47168V4.59668M10.625 4.97168V8.34668M8.37498 4.59668C8.37498 4.29831 8.25645 4.01216 8.04547 3.80118C7.83449 3.59021 7.54834 3.47168 7.24998 3.47168C6.95161 3.47168 6.66546 3.59021 6.45448 3.80118C6.2435 4.01216 6.12498 4.29831 6.12498 4.59668V10.9432L4.90998 9.72443C4.78434 9.59824 4.63342 9.50006 4.46714 9.43634C4.30086 9.37262 4.12297 9.3448 3.94518 9.35472C3.76738 9.36464 3.5937 9.41206 3.43553 9.49388C3.27737 9.57569 3.1383 9.69005 3.02748 9.82943C2.85216 10.0493 2.75464 10.321 2.75016 10.6022C2.74568 10.8834 2.8345 11.1581 3.00273 11.3834L5.70273 14.8319C6.21948 15.4919 6.49998 16.5089 6.49998 17.3467M8.37498 4.59668V7.59668M15.125 9.09668V6.47168C15.125 6.17331 15.0065 5.88716 14.7955 5.67618C14.5845 5.46521 14.2983 5.34668 14 5.34668C13.7016 5.34668 13.4155 5.46521 13.2045 5.67618C12.9935 5.88716 12.875 6.17331 12.875 6.47168M11.75 15.4717C11.75 14.7704 11.75 14.4202 11.9007 14.1592C11.9995 13.9882 12.1415 13.8462 12.3125 13.7474C12.5735 13.5967 12.9237 13.5967 13.625 13.5967H14.375C15.0762 13.5967 15.4265 13.5967 15.6875 13.7474C15.8585 13.8462 16.0005 13.9882 16.0992 14.1592C16.25 14.4202 16.25 14.7704 16.25 15.4717C16.25 16.1729 16.25 16.5232 16.0992 16.7842C16.0005 16.9552 15.8585 17.0972 15.6875 17.1959C15.4265 17.3467 15.0762 17.3467 14.375 17.3467H13.625C12.9237 17.3467 12.5735 17.3467 12.3125 17.1959C12.1415 17.0972 11.9995 16.9552 11.9007 16.7842C11.75 16.5232 11.75 16.1729 11.75 15.4717ZM12.875 12.4717C12.875 12.1733 12.9935 11.8872 13.2045 11.6762C13.4155 11.4652 13.7016 11.3467 14 11.3467C14.2983 11.3467 14.5845 11.4652 14.7955 11.6762C15.0065 11.8872 15.125 12.1733 15.125 12.4717V13.5967H12.875V12.4717Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+                            </g>
+                            <defs>
+                                <clipPath id="clip0_742_200">
+                                    <rect width="18" height="18" fill="white" transform="translate(0.5 0.84668)" />
+                                </clipPath>
+                            </defs>
+                        </svg>
+                        on Hold
+                    </button>
+                );
+
+                if (activeTab === "All") {
+                    if (row.status === "pending") {
+                        return (
+                            <div className="flex space-x-2 justify-center">
+                                <button
+                                    title="Accept"
+                                    className="bg-emerald-400 hover:bg-emerald-500 px-3 py-2 rounded-[10px] text-white">✔</button>
+                                <button
+                                    title="Reject"
+                                    onClick={() => setIsRejectModalOpen(true)} className="bg-red-500 hover:bg-red-600 p-3 py-2 rounded-[10px] text-white">✖</button>
+                            </div>
+                        );
+                    }
+
+                    if (["evaluation pending", "interviewing", "hired"].includes(row.status)) {
+                        return (
+                            <div className="flex gap-2 justify-center">
+                                {viewCvBtn}
+                                {row.viewdCv && viewEvaluatorBtn}
+                            </div>
+                        );
+                    }
+                    return <span>{row.rejectedDate}</span>;
+                }
+
+                if (activeTab === "Hired") {
+                    if (!row.documentSubmitted) {
+                        return (
+                            <div className="flex gap-2 justify-center">
+                                <button
+                                    title="Request Document"
+                                    onClick={() => setIsRequestDocModalOpen(true)}
+                                    className="flex items-center gap-2 btn-dark"
+                                >
+                                    <Eye size={16} />
+                                    Request Document
+                                </button>
+                                {hireNowBtn}
+                                {holdBtn}
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <div className="flex gap-2 justify-center">
+                            <button
+                                title="View Document"
+                                className="flex gap-2 items-center btn-sky">
+                                <Eye size={16} />
+                                View Document
+                            </button>
+                            {hireNowBtn}
+                            {holdBtn}
+                        </div>
+                    );
+                }
+                return null;
+            }
+        },
+        response: {
+            key: "response",
+            label: "Not Responding",
+            render: () => {
+                return (
+                    <div className="flex items-center justify-center">
+                        <button
+                            title="Not Responding"
+                        >
+                            <img src={`${Not_Responding}`} alt="Not Responding" className="w-8 h-8" />
+                        </button>
+                    </div>
+                )
+            }
+        },
         company: { key: "company", label: "Company" },
         currentCompany: { key: "Current Company", label: "Current Company" },
     };
@@ -260,6 +398,16 @@ export default function ApplicationTable({
                     {
                         key: "actions",
                         label: "Documents",
+                        render: () => {
+                            return (
+                                <div className="flex gap-2 justify-center">
+                                    <button className="flex gap-2 items-center btn-sky">
+                                        <Eye size={16} />
+                                        View Document
+                                    </button>
+                                </div>
+                            );
+                        }
                     },
                 ];
             default:
@@ -288,113 +436,6 @@ export default function ApplicationTable({
             prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]
         );
     };
-
-    const renderStatusActions = (row: ApplicationRow) => {
-        const viewCvBtn = (
-            <button onClick={() => setIsViewCVModalOpen(true)} className="flex gap-2 btn-view">
-                <Eye size={16} />
-                View CV
-            </button>
-        );
-
-        const viewEvaluatorBtn = (
-            <button onClick={() => setIsAddEvaluatorModalOpen(true)} className="flex gap-2 btn-view">
-                <Eye size={16} />
-                View evaluator
-            </button>
-        );
-
-        const hireNowBtn = (
-            <button onClick={() => setIsHireNowModalOpen(true)} className="btn-view">
-                {/* SVG icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="19" viewBox="0 0 18 19" fill="none">
-                    <path d="M15.75 8.34668V15.4717C15.75 16.093 15.2463 16.5967 14.625 16.5967H3.375C2.75368 16.5967 2.25 16.093 2.25 15.4717V4.22168C2.25 3.60036 2.75368 3.09668 3.375 3.09668H11.25" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M6 8.34668L9.75 11.3467L15.375 3.47168" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-                Hire Now
-            </button>
-        );
-
-        const holdBtn = (
-            <button className="flex gap-1 items-center btn-close">
-                {/* SVG icon */}
-                <svg xmlns="http://www.w3.org/2000/svg" width="19" height="19" viewBox="0 0 19 19" fill="none">
-                    <g clip-path="url(#clip0_742_200)">
-                        <path d="M10.625 4.97168C10.625 4.67331 10.7435 4.38716 10.9545 4.17618C11.1655 3.96521 11.4516 3.84668 11.75 3.84668C12.0483 3.84668 12.3345 3.96521 12.5455 4.17618C12.7564 4.38716 12.875 4.67331 12.875 4.97168V9.09668M10.625 4.97168V3.47168C10.625 3.17331 10.5065 2.88716 10.2955 2.67618C10.0845 2.46521 9.79834 2.34668 9.49998 2.34668C9.20161 2.34668 8.91546 2.46521 8.70448 2.67618C8.4935 2.88716 8.37498 3.17331 8.37498 3.47168V4.59668M10.625 4.97168V8.34668M8.37498 4.59668C8.37498 4.29831 8.25645 4.01216 8.04547 3.80118C7.83449 3.59021 7.54834 3.47168 7.24998 3.47168C6.95161 3.47168 6.66546 3.59021 6.45448 3.80118C6.2435 4.01216 6.12498 4.29831 6.12498 4.59668V10.9432L4.90998 9.72443C4.78434 9.59824 4.63342 9.50006 4.46714 9.43634C4.30086 9.37262 4.12297 9.3448 3.94518 9.35472C3.76738 9.36464 3.5937 9.41206 3.43553 9.49388C3.27737 9.57569 3.1383 9.69005 3.02748 9.82943C2.85216 10.0493 2.75464 10.321 2.75016 10.6022C2.74568 10.8834 2.8345 11.1581 3.00273 11.3834L5.70273 14.8319C6.21948 15.4919 6.49998 16.5089 6.49998 17.3467M8.37498 4.59668V7.59668M15.125 9.09668V6.47168C15.125 6.17331 15.0065 5.88716 14.7955 5.67618C14.5845 5.46521 14.2983 5.34668 14 5.34668C13.7016 5.34668 13.4155 5.46521 13.2045 5.67618C12.9935 5.88716 12.875 6.17331 12.875 6.47168M11.75 15.4717C11.75 14.7704 11.75 14.4202 11.9007 14.1592C11.9995 13.9882 12.1415 13.8462 12.3125 13.7474C12.5735 13.5967 12.9237 13.5967 13.625 13.5967H14.375C15.0762 13.5967 15.4265 13.5967 15.6875 13.7474C15.8585 13.8462 16.0005 13.9882 16.0992 14.1592C16.25 14.4202 16.25 14.7704 16.25 15.4717C16.25 16.1729 16.25 16.5232 16.0992 16.7842C16.0005 16.9552 15.8585 17.0972 15.6875 17.1959C15.4265 17.3467 15.0762 17.3467 14.375 17.3467H13.625C12.9237 17.3467 12.5735 17.3467 12.3125 17.1959C12.1415 17.0972 11.9995 16.9552 11.9007 16.7842C11.75 16.5232 11.75 16.1729 11.75 15.4717ZM12.875 12.4717C12.875 12.1733 12.9935 11.8872 13.2045 11.6762C13.4155 11.4652 13.7016 11.3467 14 11.3467C14.2983 11.3467 14.5845 11.4652 14.7955 11.6762C15.0065 11.8872 15.125 12.1733 15.125 12.4717V13.5967H12.875V12.4717Z" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
-                    </g>
-                    <defs>
-                        <clipPath id="clip0_742_200">
-                            <rect width="18" height="18" fill="white" transform="translate(0.5 0.84668)" />
-                        </clipPath>
-                    </defs>
-                </svg>
-                on Hold
-            </button>
-        );
-
-        if (activeTab === "All") {
-            if (row.status === "pending") {
-                return (
-                    <div className="flex space-x-2 justify-center">
-                        <button className="bg-emerald-400 hover:bg-emerald-500 px-3 py-2 rounded-md text-white">✔</button>
-                        <button onClick={() => setIsRejectModalOpen(true)} className="bg-red-500 hover:bg-red-600 p-3 py-2 rounded-md text-white">✖</button>
-                    </div>
-                );
-            }
-
-            if (["evaluation pending", "interviewing", "hired"].includes(row.status)) {
-                return (
-                    <div className="flex gap-2 justify-center">
-                        {viewCvBtn}
-                        {row.viewdCv && viewEvaluatorBtn}
-                    </div>
-                );
-            }
-
-            return <span>{row.rejectedDate}</span>;
-        }
-
-        if (activeTab === "Hired") {
-            if (!row.documentSubmitted) {
-                return (
-                    <div className="flex gap-2 justify-center">
-                        <button
-                            onClick={() => setIsRequestDocModalOpen(true)}
-                            className="btn-view"
-                        >
-                            <Eye size={16} />
-                            Request Document
-                        </button>
-                        {hireNowBtn}
-                        {holdBtn}
-                    </div>
-                );
-            }
-
-            return (
-                <div className="flex gap-2 justify-center">
-                    <button className="btn-view">
-                        <Eye size={16} />
-                        View Document
-                    </button>
-                    {hireNowBtn}
-                    {holdBtn}
-                </div>
-            );
-        }
-
-        if (activeTab === "Joined") {
-            return (
-                <button className="btn-view">
-                    <Eye size={16} />
-                    View Document
-                </button>
-            )
-        }
-
-        return null;
-    };
-
 
     const renderExpandedDetails = (row: ApplicationRow) => {
         return (
@@ -446,7 +487,6 @@ export default function ApplicationTable({
                 <span>deselect {selectedRows.length} rows</span>
             </button>
             <DynamicTable
-                activeTab="application"
                 columns={applicationColumns}
                 rows={applicationRows}
                 selectedRows={selectedRows}
@@ -455,14 +495,13 @@ export default function ApplicationTable({
                 toggleRow={toggleRow}
                 toggleExpand={toggleExpand}
                 allSelected={selectedRows.length === applicationRows.length}
-                renderActions={(row) => renderStatusActions(row)}
                 renderExpandedDetails={(row) => (renderExpandedDetails(row))}
                 enableSelect={activeTab !== "Joined" ? true : false}
             />
             <Modal
                 isOpen={isViewCVModalOpen}
                 onClose={() => setIsViewCVModalOpen(false)}
-                className="w-[90vw] sm:w-[677px] h-auto"
+                className="w-[90vw] sm:w-[677px] h-[90dvh]"
             >
                 <CVPreview
                     onClose={() => setIsViewCVModalOpen(false)}
@@ -482,7 +521,7 @@ export default function ApplicationTable({
             <Modal
                 isOpen={isAddEvaluatorModalOpen}
                 onClose={() => setIsAddEvaluatorModalOpen(false)}
-                className="w-[90vw] sm:w-[455px] h-auto sm:h-[461px]"
+                className="w-[90vw] sm:w-[455px] h-auto sm:h-[495px]"
             >
                 <EvaluatorForm />
             </Modal>
@@ -499,6 +538,13 @@ export default function ApplicationTable({
                 className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]"
             >
                 <RequestDocumentModal />
+            </Modal>
+            <Modal
+                isOpen={isInterviewFeedbackCardOpen}
+                onClose={() => setIsInterviewFeedbackCardOpen(false)}
+
+            >
+                <InterviewFeedbackCard />
             </Modal>
         </div>
     );

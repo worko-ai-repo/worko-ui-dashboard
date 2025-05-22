@@ -23,7 +23,7 @@ const Support = () => {
             <Modal
                 isOpen={isSupportFormOpen}
                 onClose={() => setIsSupportFormOpen(false)}
-                className="w-[90vw] sm:w-[455px] sm:h-[404px] h-[90vh]"
+                className="w-[90vw] sm:w-[455px] sm:min-h-[404px] max-sm:h-[90dvh]"
             >
                 <SupportForm />
             </Modal>

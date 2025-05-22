@@ -8,6 +8,7 @@ import { DynamicTable } from "../DynamicTable";
 
 interface InviteTableProps {
     data: CorporateInviteResponse;
+    fetchInvites: () => void;
 };
 
 function formatDateToDDMMYYYY(isoDate: string): string {
@@ -23,6 +24,7 @@ function formatDateToDDMMYYYY(isoDate: string): string {
 
 const InviteTable: React.FC<InviteTableProps> = ({
     data,
+    fetchInvites,
 }) => {
     const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
     const [isRevokedModalOpen, setIsRevokedModalOpen] = useState(false);
@@ -137,6 +139,7 @@ const InviteTable: React.FC<InviteTableProps> = ({
             >
                 <RevokeForm
                     inviteId={selectedInviteId as string}
+                    onClose={() => {setIsRevokedModalOpen(false); setSelectedInviteId(null); fetchInvites();}}
                 />
             </Modal>
         </>

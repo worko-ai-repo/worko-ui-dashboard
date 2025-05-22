@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, SendIcon } from 'lucide-react';
 import httpServiceObj from '@Services/ApiHandler.service';
-import { JobDetails } from '@Interfaces/CorporateDashboardJobs.dto';
+import { JobDetails } from '@Interfaces/CorporateDashboard.dto';
 
 export default function JobDescription({
   onClose,
@@ -44,11 +44,11 @@ export default function JobDescription({
   };
 
   return (
-    <form onSubmit={handleSubmit} className="mt-4 w-[80dvw] sm:w-[60dvw] flex flex-col gap-6">
+    <form onSubmit={handleSubmit} className="mt-4 w-[80dvw] sm:w-[60dvw] flex flex-col gap-6 text-start">
       <div className="flex flex-col lg:flex-row gap-6 items-start">
         {/* Left Side: Text Area */}
         <div className="flex-1 w-full">
-          <h2 className="mb-2 text-sm font-semibold text-black">Write or Paste description here</h2>
+          <h2 className="mb-2  text-sm font-semibold text-black">Write or Paste description here</h2>
           <textarea
             className="w-full h-48 p-4 rounded-xl bg-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm"
             placeholder="Write or paste here"

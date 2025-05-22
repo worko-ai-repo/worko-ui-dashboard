@@ -4,6 +4,12 @@ import { ApplicantsIcon, BulkCVIcon, HomeIcon, InterviewIcon, InviteIcon, Invoic
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
     {
+        id: 'home',
+        label: 'Home',
+        icon: HomeIcon,
+        dashboardTypes: ['CORPORATE']
+    },
+    {
         id:'profile',
         label:'Profile',
         icon:InterviewIcon,
@@ -14,6 +20,24 @@ const navigationItems: NavItem[] = [
         label: 'Jobs',
         icon: JobIcon,
         dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE'],
+    },
+    {
+        id: 'applicants',
+        label: 'Applicants',
+        icon: ApplicantsIcon,
+        dashboardTypes: ['CORPORATE'],
+    },
+    {
+        id: 'bulk-cv-check',
+        label: 'Bulk CV Check',
+        icon: BulkCVIcon,
+        dashboardTypes: ['CORPORATE'],
+    },
+    {
+        id: 'invites',
+        label: 'Invites',
+        icon: InviteIcon,
+        dashboardTypes: ['CORPORATE'],
     },
     {
         id: 'referral',
@@ -40,35 +64,11 @@ const navigationItems: NavItem[] = [
         icon: HomeIcon,
         dashboardTypes: ['CANDIDATE']
       },
-    {
-        id: 'home',
-        label: 'Home',
-        icon: HomeIcon,
-        dashboardTypes: ['CORPORATE']
-    },
     
-    {
-        id: 'applicants',
-        label: 'Applicants',
-        icon: ApplicantsIcon,
-        dashboardTypes: ['CORPORATE'],
-    },
     {
         id: 'interviews',
         label: 'Interviews',
         icon: InterviewIcon,
-        dashboardTypes: ['CORPORATE'],
-    },
-    {
-        id: 'bulk-cv-check',
-        label: 'Bulk CV Check',
-        icon: BulkCVIcon,
-        dashboardTypes: ['CORPORATE'],
-    },
-    {
-        id: 'invites',
-        label: 'Invites',
-        icon: InviteIcon,
         dashboardTypes: ['CORPORATE'],
     },
     {

@@ -5,10 +5,11 @@ import JobsTable from './JobTable';
 import httpServiceObj from '@Services/ApiHandler.service';
 import Modal from '../Modal';
 import BulkOption from '@Components/Dashboard/Corporate/Bulk';
-import { JobApiResponse } from '@Interfaces/CorporateDashboard.dto';
+import { JobApiResponse, JobDetails } from '@Interfaces/CorporateDashboard.dto';
 import HeaderDetails from '../Stats';
 import SearchBar from '../SearchBar';
-import FilterToggle from '../Filters';
+import { Filter } from 'lib-worko-ai';
+import SkeletonLoader from '../SkeletonLoader';
 
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
 
@@ -17,31 +18,63 @@ const Jobs = () => {
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"PUBLISHED" | "CLOSED" | "ARCHIVED">("PUBLISHED");
+  const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [data, setData] = useState<JobApiResponse | null>(null);
-  const [jobDetails, setJobDetails] = useState<JobApiResponse | null>(null);
+  const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
+  const [isJobsLoading, setIsJobsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const fetchJobs = async () => {
-    const params = new URLSearchParams({
-      pageSize: '25',
-      companyId: '01JM1WBGBZK51B951XBRBG8NKX',
-      sortOrder: 'desc',
-      dashboard: 'CORPORATE',
-      status: activeTab,
-    });
+    try {
+      setIsJobsLoading(true);
+      const params = new URLSearchParams({
+        pageSize: '25',
+        companyId: '01JM1WBGBZK51B951XBRBG8NKX',
+        sortOrder: 'desc',
+        dashboard: 'CORPORATE',
+        status: activeTab,
+      });
 
-    if (searchBarText?.trim()) {
-      params.append('searchText', searchBarText);
+      if (searchBarText?.trim()) {
+        params.append('searchText', searchBarText);
+      }
+
+      const url = `https://jobs.dev.worko.work/job/?${params.toString()}`;
+      const { response, error } = await httpServiceObj.get(url, true, {}, true);
+      setData(response as JobApiResponse);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setIsJobsLoading(false);
     }
-
-    const url = `https://jobs.dev.worko.work/job/?${params.toString()}`;
-    const { response, error } = await httpServiceObj.get(url, true, {}, true);
-    setData(response as JobApiResponse);
   }
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  }, [])
 
   useEffect(() => {
     fetchJobs();
   }, [activeTab])
+
+  if (isLoading) {
+    return (
+      <SkeletonLoader
+        showHeaderCards={true}
+        showSearchBar={true}
+        showButtons={true}
+        buttonCount={1}
+        showTabs={true}
+        showTableHeader={true}
+        showTableRows={true}
+        tableColumns={5}
+        rowCount={5}
+      />
+    )
+  }
 
   return (
     <div className="w-full space-y-[35px] px-0">
@@ -69,8 +102,14 @@ const Jobs = () => {
           </div>
 
           <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
-            <FilterToggle />
-            <BulkOption />
+            <Filter />
+            <BulkOption
+              options={[
+                { label: 'Open', onClick: () => console.log("Open clicked", selectedRows) },
+                { label: 'Close', onClick: () => console.log('Delete clicked', selectedRows) },
+                { label: 'Archive', onClick: () => console.log('Archive clicked', selectedRows) },
+              ]}
+             />
           </div>
         </div>
       </div>
@@ -90,16 +129,29 @@ const Jobs = () => {
         ))}
       </div>
 
-      <JobsTable
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-        data={data as JobApiResponse}
-      />
+      {isJobsLoading ? (
+        <SkeletonLoader
+          showTableHeader={true}
+          showTableRows={true}
+          tableColumns={5}
+          rowCount={5}
+        />
+      ) : (
+        <JobsTable
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          data={data as JobApiResponse}
+          selectedRows={selectedRows}
+          setSelectedRows={setSelectedRows}
+        />
+      )
+      }
 
       <Modal
         isOpen={isJobFormModalOpen}
         onClose={() => setIsJobFormModalOpen(false)}
         title='Check the details'
+        className='max-w-[90dvw]'
       >
         <JobForm
           onClose={() => setIsJobFormModalOpen(false)}

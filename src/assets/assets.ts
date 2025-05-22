@@ -26,6 +26,10 @@ import vector_1 from './backgrounds/vector_1.webp'
 import mag_glass from './backgrounds/mag_glass.webp'
 import check from './backgrounds/check.webp'
 import worko_new from './worko-assets/Worko_new_logo.webp'
+import job_listing_promo from './backgrounds/Job_listing_promo.webp'
+import job_listing_promo_1 from './backgrounds/Job_listing_promo_1.webp'
+import job_listing_promo_2 from './backgrounds/Job_listing_promo_2.webp'
+import job_listing_promo_3 from './backgrounds/Job_listing_promo_3.webp'
 import evaluationRequest from './worko-assets/evaluationRequest.webp';
 
 import auth_bg from './backgrounds/auth_bg.webp'
@@ -76,19 +80,12 @@ import Bulk_CV from './svgs/bulk_cv.svg';
 import Invites from './svgs/invites.svg';
 import Referral from './svgs/referral.svg';
 import Support from './svgs/support.svg';
-import Group from './svgs/Group.svg';
-import eyeIcon from './svgs/eye-icon.svg';
-import verified from './svgs/verified.svg';
-import gender from './svgs/gender.svg'
-import customer_support from './svgs/customer_support.svg';
-import salary from './svgs/salary.svg';
-import dashboardSort from './svgs/dashboardSort.svg'
-import checkAndAccept from './svgs/checkAndAccept.svg'
-import iHaveJoined from './svgs/iHaveJoined.svg'
-import viewFeedback from './svgs/viewFeedback.svg'
-import askQuestion from './svgs/askQuestion.svg'
-import magnifyingQuestion from './svgs/magnifyingQuestion.svg'
-import checkbubble from './svgs/check-bubble.svg'
+import Not_Responding from './svgs/not_responding.svg';
+import View from './svgs/view.svg';
+import Edit from './svgs/edit.svg';
+import Duplicate from './svgs/duplicate.svg';
+import Archive from './svgs/archive.svg';
+import Repost from './svgs/repost.svg';
 export { 
     // Backgrounds
     bg_plexus,
@@ -98,6 +95,10 @@ export {
     vector_1,
     mag_glass,
     check,
+    job_listing_promo,
+    job_listing_promo_1,
+    job_listing_promo_2,
+    job_listing_promo_3,
 
     employee_hero,
     employee_hero_mobile,
@@ -160,17 +161,10 @@ export {
     Referral,
     Invites,
     Support,
-    Group,
-    eyeIcon,
-    verified,
-    gender,
-    customer_support,
-    salary,
-    dashboardSort,
-    checkAndAccept,
-    iHaveJoined,
-    viewFeedback,
-    askQuestion,
-    magnifyingQuestion,
-    checkbubble,
+    Not_Responding,
+    View,
+    Edit,
+    Duplicate,
+    Archive,
+    Repost,
 };

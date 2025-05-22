@@ -1,5 +1,6 @@
-import Header from '@Components/Dashboard/Header';
+
 import Sidebar from '@Components/Dashboard/Sidebar';
+import Header from '@Components/Dashboard/Header';
 import { AppProvider } from '@Context/App.context';
 import { DashboardProvider } from '@Context/Dashboard.context';
 import { useState } from 'react';
@@ -21,10 +22,7 @@ function CorporateDashboardLayout(): JSX.Element {
                 />
                 
                 <div className="grid grid-rows-[auto_1fr] h-screen">
-                    <Header
-                        sidebarOpen={sidebarOpen}
-                        setSidebarOpen={setSidebarOpen}
-                    />
+                    <Header setSidebarOpen={setSidebarOpen} sidebarOpen={sidebarOpen} />
                     <main className="overflow-auto p-8 pt-2">
                         <Outlet />
                     </main>
