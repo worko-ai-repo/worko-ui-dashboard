@@ -6,7 +6,7 @@ import TagInput from './TagInput';
 import { useEffect } from 'react';
 import { validationRules } from '@Utils/FormValidator.utils';
 import Editor from './RichTextEditor';
-import { JobDetails, JobFormSchema } from '@Interfaces/CorporateDashboardJobs.dto';
+import { JobDetails, JobFormSchema } from '@Components/Dashboard/types';
 
 export default function JobForm({
   onClose,
@@ -31,7 +31,7 @@ export default function JobForm({
       gradeLevel: '',
       department: '',
       workMode: '',
-      location: '',
+      location: [],
       experienceFrom: '',
       experienceTo: '',
       creatorName: '',
@@ -76,9 +76,11 @@ export default function JobForm({
     if (jobDetails.workMode && jobDetails.workMode !== 'Not Mentioned') {
       setValue('workMode', jobDetails.workMode);
     }
+
     if (jobDetails.location && jobDetails.location !== 'Not Mentioned') {
-      setValue('location', jobDetails.location);
+      setValue('location', [jobDetails.location]);
     }
+
     if (jobDetails.typeOfEmployment && jobDetails.typeOfEmployment !== 'Not Mentioned') {
       setValue('typeOfEmployment', jobDetails.typeOfEmployment);
     }
@@ -101,6 +103,7 @@ export default function JobForm({
     onClose();
   };
 
+  const location = watch('location');
   const coreSkills = watch('coreSkills');
   const technicalSkills = watch('technicalSkills');
   const softSkills = watch('softSkills');
@@ -117,7 +120,7 @@ export default function JobForm({
   };
 
   return (
-    <div className="overflow-auto p-1">
+    <div className="overflow-auto p-1 text-start">
       {/* Job Description */}
       <div>
         <label className="text-sm font-medium text-gray-700">Edit Job Description*</label>
@@ -205,21 +208,11 @@ export default function JobForm({
             />
           )}
         />
-        <div className="space-y-4">
-          <Controller
-            name="location"
-            control={control}
-            rules={{ required: 'Location is required' }}
-            render={({ field }) => (
-              <Input
-                label="Location*"
-                {...field}
-                error={errors.location?.message}
-              />
-            )}
-          />
+        {/* <div className="space-y-4"> */}
+        <TagInput label="Location*" tags={location} onAddTag={(tag) => addTag('location', tag)} onRemoveTag={(tag) => removeTag('location', tag)} />
 
-          <Controller
+
+        {/* <Controller
             name="creatorName"
             control={control}
             render={({ field }) => (
@@ -228,12 +221,12 @@ export default function JobForm({
                 {...field}
               />
             )}
-          />
-        </div>
+          /> */}
+        {/* </div> */}
 
-        <div className="space-y-2">
+        <div className="space-y-[10px]">
           <div>
-            <label className="text-sm font-medium text-gray-700">Experience (in years)</label>
+            <label className="text-sm font-medium text-gray-700">Experience* (in years)</label>
             <div className="flex items-center gap-2 mt-1">
               <input type="number" placeholder="From" {...register('experienceFrom')} className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none" />
               <span className="text-sm text-gray-500">to</span>
@@ -246,7 +239,7 @@ export default function JobForm({
               {/* Left Side: Label, Currency, From */}
               <div className="flex flex-col w-full">
                 <div className="flex items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700 mr-2">Salary</label>
+                  <label className="text-sm font-medium text-gray-700 mr-2">Salary*</label>
                   <select className="appearance-none border-2 rounded-full px-3 text-xs bg-transparent focus:outline-none">
                     <option value="INR">INR</option>
                     <option value="USD">USD</option>
@@ -285,29 +278,55 @@ export default function JobForm({
           </div>
         </div>
 
-        <TagInput label="Core Skills" tags={coreSkills} onAddTag={(tag) => addTag('coreSkills', tag)} onRemoveTag={(tag) => removeTag('coreSkills', tag)} />
-        <TagInput label="Technical Skills" tags={technicalSkills} onAddTag={(tag) => addTag('technicalSkills', tag)} onRemoveTag={(tag) => removeTag('technicalSkills', tag)} />
-        <TagInput label="Soft Skills" tags={softSkills} onAddTag={(tag) => addTag('softSkills', tag)} onRemoveTag={(tag) => removeTag('softSkills', tag)} />
-        <TagInput label="Good to Have Skills" tags={goodSkills} onAddTag={(tag) => addTag('goodSkills', tag)} onRemoveTag={(tag) => removeTag('goodSkills', tag)} />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Other requirements</label>
-          <textarea {...register('otherRequirements')} className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write here" rows={3} />
-        </div>
-        <Controller
-          name="typeOfEmployment"
-          control={control}
-          rules={{ required: 'This field is required' }}
-          render={({ field }) => (
-            <Input
-              label="Type of employment*"
-              {...field}
-              error={errors.typeOfEmployment?.message}
+        <div className='flex flex-col gap-3'>
+          <div className='flex flex-row gap-4'>
+            <Controller
+              name="typeOfEmployment"
+              control={control}
+              rules={{ required: 'This field is required' }}
+              render={({ field }) => (
+                <Input
+                  label="Variable Component"
+                  {...field}
+                  error={errors.typeOfEmployment?.message}
+                />
+              )}
             />
-          )}
-        />
+            <Controller
+              name="typeOfEmployment"
+              control={control}
+              rules={{ required: 'This field is required' }}
+              render={({ field }) => (
+                <Input
+                  label="Fixed Component"
+                  {...field}
+                  error={errors.typeOfEmployment?.message}
+                />
+              )}
+            />
+          </div>
+          <Controller
+            name="typeOfEmployment"
+            control={control}
+            rules={{ required: 'This field is required' }}
+            render={({ field }) => (
+              <Input
+                label="Type of employment*"
+                {...field}
+                error={errors.typeOfEmployment?.message}
+              />
+            )}
+          />
+        </div>
+
+        <TagInput label="Core Skills*" tags={coreSkills} onAddTag={(tag) => addTag('coreSkills', tag)} onRemoveTag={(tag) => removeTag('coreSkills', tag)} />
+        <TagInput label="Technical Skills*" tags={technicalSkills} onAddTag={(tag) => addTag('technicalSkills', tag)} onRemoveTag={(tag) => removeTag('technicalSkills', tag)} />
+        <TagInput label="Soft Skills*" tags={softSkills} onAddTag={(tag) => addTag('softSkills', tag)} onRemoveTag={(tag) => removeTag('softSkills', tag)} />
+        <TagInput label="Good to Have Skills" tags={goodSkills} onAddTag={(tag) => addTag('goodSkills', tag)} onRemoveTag={(tag) => removeTag('goodSkills', tag)} />
+        <div className='col-span-2'>
+          <label className="text-sm font-medium text-gray-700">Other mandatory requirements*</label>
+          <textarea {...register('otherRequirements')} className="mt-1 w-full min-h-[133px] rounded-xl bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write here" rows={3} />
+        </div>
       </div>
       <div className="flex justify-start pt-2">
         <button onClick={handleSubmit(onSubmit)} className="bg-[#316BFF] text-white p-[10px] pr-4 rounded-[10px] font-medium">

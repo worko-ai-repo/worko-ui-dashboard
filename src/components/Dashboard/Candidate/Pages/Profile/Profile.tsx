@@ -39,7 +39,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
 }) => {
   if (editMode && formFields) {
     return (
-      <div className="w-full rounded-3xl bg-white shadow p-8">
+      <div className="w-full rounded-3xl bg-white shadow p-4 sm:p-6 lg:p-8">
         <EditForm
           title={title}
           fields={formFields}
@@ -495,14 +495,14 @@ const Profile = () => {
   };
 
   if (isLoading) return (
-    <div className="flex items-center justify-center h-screen">
+    <div className="flex items-center justify-center min-h-screen">
       <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
     </div>
   );
   
   if (error) return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <div className="text-red-600 text-xl font-medium">Error loading profile data</div>
+    <div className="flex flex-col items-center justify-center min-h-screen px-4">
+      <div className="text-red-600 text-xl font-medium text-center">Error loading profile data</div>
       <button 
         onClick={retryFetchData}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
@@ -513,375 +513,381 @@ const Profile = () => {
   );
 
   return (
-    <div className="flex w-full">
-      {/* Quick Links Sidebar */}
-      <QuickLinks />
+    <div className="flex flex-col lg:flex-row w-full min-h-screen">
+      {/* Quick Links Sidebar - Hidden on mobile, visible on desktop */}
+      <div className="hidden xl:block">
+        <QuickLinks />
+      </div>
       
       {/* Main Content */}
-      <div className="w-full flex ml-[60px] justify-end items-start flex-col gap-6 text-left font-sans p-6 pt-0">
-        {/* Profile Header Card */}
-        {profileData && detailsData && educationData && (
-          <div className="w-full relative rounded-3xl bg-white shadow-md h-72 overflow-hidden">
-            <div className="relative flex justify-between w-full h-64 p-4">
-              {/* Profile Section */}
-              <div className="flex pt-6">
-                {/* Profile Image */}
-                <img
-                  className="w-36 h-36 object-cover rounded-full mt-6"
-                  alt="Profile"
-                  src={detailsData[0].profileImageAwsS3SignedUrl || "/api/placeholder/144/144"}
-                />
-
-                {/* Profile Info */}
-                <div className="ml-8 mt-4 space-y-2">
-                  <div className="flex items-center">
-                    <h2 className="text-2xl font-semibold text-black capitalize">
-                      {profileData?.data?.name || user?.name || "User Name"}
-                    </h2>
-                    <img className="ml-2 w-6 h-6" alt="Verified" src={Group} />
-                  </div>
-
-                  <div className="text-xs font-medium text-black">
-                    Profile last updated - {new Date().toLocaleDateString('en-US', { 
-                      day: '2-digit', 
-                      month: 'short', 
-                      year: 'numeric' 
-                    })}
-                  </div>
-
-                  <div className="flex items-center text-xs text-black gap-1.5 mt-2">
-                    <div>{educationData[0]?.collage || "Education"}</div>
-                    <img className="w-3 h-3" alt="Location" src={Group} />
-                  </div>
-
-                  <div className="border border-gray-300 opacity-50 w-[96%] my-4"></div>
-
-                  {/* Contact Info Grid */}
-                  <div className="grid grid-cols-2 gap-y-4 mt-2">
-                    {[
-                      {
-                        icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
-                        text: detailsData[0]?.location || "Location",
-                      },
-                      {
-                        icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
-                        text: detailsData[0]?.number || "Phone Number",
-                        verify: true,
-                      },
-                      {
-                        icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
-                        text: "Add gender",
-                        isAction: true,
-                      },
-                      {
-                        icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
-                        text: detailsData[0]?.email || user?.email || "Email",
-                        verified: true,
-                      },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center">
-                        {item.icon}
-                        <span
-                          className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${
-                            item.isAction ? "font-medium text-blue-600" : ""
-                          }`}
-                        >
-                          {item.text}
-                        </span>
-                        {item.verify && (
-                          <span className="text-xs font-medium text-blue-600 ml-1">
-                            Verify
-                          </span>
-                        )}
-                        {item.verified && (
-                          <img
-                            className="w-4 h-4 ml-1"
-                            alt="Verified"
-                            src={verified}
-                          />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Side Resume Section */}
-              <div className="w-64 h-64 bg-gray-100 rounded-lg p-6 flex flex-col gap-6">
-                <div className="flex items-center justify-between">
-                  <div className="text-sm overflow-hidden text-ellipsis whitespace-nowrap">
-                    {detailsData[0]?.CV || "Resume.pdf"}
-                  </div>
-                  <a
-                    href={detailsData[0]?.cvAwsS3SignedUrl || "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className={!detailsData[0]?.cvAwsS3SignedUrl ? "cursor-not-allowed opacity-50" : ""}
-                  >
+      <div className="w-full lg:ml-[60px] flex justify-center">
+        <div className="w-full max-w-6xl flex flex-col gap-4 sm:gap-6 text-left font-sans p-4 sm:p-6 lg:pt-0">
+          {/* Profile Header Card */}
+          {profileData && detailsData && educationData && (
+            <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
+              <div className="relative flex flex-col lg:flex-row justify-between w-full p-4 sm:p-6">
+                
+                {/* Profile Section */}
+                <div className="flex flex-col sm:flex-row w-full lg:flex-1">
+                  {/* Profile Image */}
+                  <div className="flex justify-center sm:justify-start mb-4 sm:mb-0">
                     <img
-                      className="w-8 h-8 rounded-md bg-[#57E1E1]"
-                      src={eyeIcon}
-                      alt="View CV"
+                      className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 object-cover rounded-full"
+                      alt="Profile"
+                      src={detailsData[0].profileImageAwsS3SignedUrl || "/api/placeholder/144/144"}
                     />
-                  </a>
+                  </div>
+
+                  {/* Profile Info */}
+                  <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
+                    <div className="flex items-center justify-center sm:justify-start">
+                      <h2 className="text-xl sm:text-2xl font-semibold text-black capitalize">
+                        {profileData?.data?.name || user?.name || "User Name"}
+                      </h2>
+                      <img className="ml-2 w-5 h-5 sm:w-6 sm:h-6" alt="Verified" src={Group} />
+                    </div>
+
+                    <div className="text-xs font-medium text-black text-center sm:text-left">
+                      Profile last updated - {new Date().toLocaleDateString('en-US', { 
+                        day: '2-digit', 
+                        month: 'short', 
+                        year: 'numeric' 
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
+                      <div>{educationData[0]?.collage || "Education"}</div>
+                      <img className="w-3 h-3" alt="Location" src={Group} />
+                    </div>
+
+                    <div className="border border-gray-300 opacity-50 w-full my-4"></div>
+
+                    {/* Contact Info Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 mt-2">
+                      {[
+                        {
+                          icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
+                          text: detailsData[0]?.location || "Location",
+                        },
+                        {
+                          icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
+                          text: detailsData[0]?.number || "Phone Number",
+                          verify: true,
+                        },
+                        {
+                          icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
+                          text: "Add gender",
+                          isAction: true,
+                        },
+                        {
+                          icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
+                          text: detailsData[0]?.email || user?.email || "Email",
+                          verified: true,
+                        },
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center justify-center sm:justify-start">
+                          {item.icon}
+                          <span
+                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${
+                              item.isAction ? "font-medium text-blue-600" : ""
+                            }`}
+                          >
+                            {item.text}
+                          </span>
+                          {item.verify && (
+                            <span className="text-xs font-medium text-blue-600 ml-1">
+                              Verify
+                            </span>
+                          )}
+                          {item.verified && (
+                            <img
+                              className="w-4 h-4 ml-1"
+                              alt="Verified"
+                              src={verified}
+                            />
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                {[
-                  {
-                    icon: <Plus className="h-5 w-5" />,
-                    text: "Upload CV",
-                    className: "bg-gradient-to-r from-blue-600 to-blue-500 text-white",
-                  },
-                  {
-                    icon: <Video className="h-5 w-5" />,
-                    text: "Initiate video interview",
-                    className: "bg-white shadow-md border border-blue-200 text-blue-600 mt-16",
-                  },
-                ].map((button, index) => (
-                  <button
-                    key={index}
-                    className={`w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${button.className}`}
-                  >
-                    {button.icon}
-                    <span className="text-xs font-semibold">{button.text}</span>
-                  </button>
-                ))}
+                {/* Right Side Resume Section */}
+                <div className="w-full lg:w-40 xl:w-64 mt-6 lg:mt-0 bg-gray-100 rounded-lg p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm overflow-hidden text-ellipsis whitespace-nowrap flex-1 mr-2">
+                      {detailsData[0]?.CV || "Resume.pdf"}
+                    </div>
+                    <a
+                      href={detailsData[0]?.cvAwsS3SignedUrl || "#"}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={!detailsData[0]?.cvAwsS3SignedUrl ? "cursor-not-allowed opacity-50" : ""}
+                    >
+                      <img
+                        className="w-8 h-8 rounded-md bg-[#57E1E1]"
+                        src={eyeIcon}
+                        alt="View CV"
+                      />
+                    </a>
+                  </div>
+
+                  {[
+                    {
+                      icon: <Plus className="h-4 w-4 sm:h-5 sm:w-5" />,
+                      text: "Upload CV",
+                      className: "bg-gradient-to-r from-blue-600 to-blue-500 text-white",
+                    },
+                    {
+                      icon: <Video className="h-4 w-4 sm:h-5 sm:w-5" />,
+                      text: "Initiate video interview",
+                      className: "bg-white shadow-md border border-blue-200 text-blue-600",
+                    },
+                  ].map((button, index) => (
+                    <button
+                      key={index}
+                      className={`w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${button.className}`}
+                    >
+                      {button.icon}
+                      <span className="text-xs font-semibold">{button.text}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* About Section */}
-        {detailsData && (
-          <ProfileSection
-            title="About"
-            editMode={editMode.about || false}
-            onEdit={handleEditAbout}
-            onCancel={handleCancelAbout}
-            onSave={handleSaveAbout}
-            formFields={[
-              {
-                name: "about",
-                label: "About",
-                type: "textarea",
-                placeholder: "Tell us about yourself",
-                required: true
-              }
-            ]}
-            formData={{ about: detailsData[0]?.about || "" }}
-          >
-            <p id='about' className="text-sm text-gray-800 leading-relaxed">
-              {detailsData[0]?.about || "No information provided."}
-            </p>
-          </ProfileSection>
-        )}
+          {/* About Section */}
+          {detailsData && (
+            <ProfileSection
+              title="About"
+              editMode={editMode.about || false}
+              onEdit={handleEditAbout}
+              onCancel={handleCancelAbout}
+              onSave={handleSaveAbout}
+              formFields={[
+                {
+                  name: "about",
+                  label: "About",
+                  type: "textarea",
+                  placeholder: "Tell us about yourself",
+                  required: true
+                }
+              ]}
+              formData={{ about: detailsData[0]?.about || "" }}
+            >
+              <p id='about' className="text-sm text-gray-800 leading-relaxed">
+                {detailsData[0]?.about || "No information provided."}
+              </p>
+            </ProfileSection>
+          )}
 
-        {/* Work Experience */}
-        {detailsData && (
-          <ProfileSection
-            title="Work experience"
-            editMode={editMode.workExperience || false}
-            onEdit={handleEditWorkExperience}
-            onCancel={handleCancelWorkExperience}
-            onSave={handleSaveWorkExperience}
-            formFields={[
-              {
-                name: "companyName",
-                label: "Company Name",
-                type: "text",
-                placeholder: "Enter company name",
-                required: true
-              },
-              {
-                name: "designation",
-                label: "Designation",
-                type: "text",
-                placeholder: "Enter designation",
-                required: true
-              },
-              {
-                name: "department",
-                label: "Department",
-                type: "text",
-                placeholder: "Enter department",
-                required: false
-              },
-              {
-                name: "YOE",
-                label: "Years of Experience",
-                type: "number",
-                placeholder: "Enter years of experience",
-                required: true
-              }
-            ]}
-            formData={{
-              companyName: detailsData[0]?.candidateExperience?.companyName || "",
-              designation: detailsData[0]?.candidateExperience?.designation || "",
-              department: detailsData[0]?.candidateExperience?.department || "",
-              YOE: detailsData[0]?.YOE || ""
-            }}
-          >
-            {detailsData[0]?.candidateExperience ? (
-              <div id='experience' className="flex items-start gap-4 mb-4">
-                <Briefcase strokeWidth={1.5} />
-                <div className="flex-1 flex items-center justify-between">
-                  <div className="font-medium text-base">
-                    {detailsData[0].candidateExperience.designation || "Position"} -{" "}
-                    {detailsData[0].candidateExperience.companyName || "Company"}
-                  </div>
-                  <div className="flex items-center gap-4 text-sm">
-                    <span>
-                      {detailsData[0].candidateExperience.department || "Department"}
-                    </span>
-                    <div className="w-1 h-1 rounded-full bg-gray-800"></div>
-                    <span>
-                      {detailsData[0].YOE ? `${detailsData[0].YOE} years` : ""}
-                    </span>
+          {/* Work Experience */}
+          {detailsData && (
+            <ProfileSection
+              title="Work experience"
+              editMode={editMode.workExperience || false}
+              onEdit={handleEditWorkExperience}
+              onCancel={handleCancelWorkExperience}
+              onSave={handleSaveWorkExperience}
+              formFields={[
+                {
+                  name: "companyName",
+                  label: "Company Name",
+                  type: "text",
+                  placeholder: "Enter company name",
+                  required: true
+                },
+                {
+                  name: "designation",
+                  label: "Designation",
+                  type: "text",
+                  placeholder: "Enter designation",
+                  required: true
+                },
+                {
+                  name: "department",
+                  label: "Department",
+                  type: "text",
+                  placeholder: "Enter department",
+                  required: false
+                },
+                {
+                  name: "YOE",
+                  label: "Years of Experience",
+                  type: "number",
+                  placeholder: "Enter years of experience",
+                  required: true
+                }
+              ]}
+              formData={{
+                companyName: detailsData[0]?.candidateExperience?.companyName || "",
+                designation: detailsData[0]?.candidateExperience?.designation || "",
+                department: detailsData[0]?.candidateExperience?.department || "",
+                YOE: detailsData[0]?.YOE || ""
+              }}
+            >
+              {detailsData[0]?.candidateExperience ? (
+                <div id='experience' className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
+                  <Briefcase strokeWidth={1.5} className="flex-shrink-0 mt-1" />
+                  <div className="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
+                    <div className="font-medium text-base">
+                      {detailsData[0].candidateExperience.designation || "Position"} -{" "}
+                      {detailsData[0].candidateExperience.companyName || "Company"}
+                    </div>
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-sm">
+                      <span>
+                        {detailsData[0].candidateExperience.department || "Department"}
+                      </span>
+                      <div className="hidden sm:block w-1 h-1 rounded-full bg-gray-800"></div>
+                      <span>
+                        {detailsData[0].YOE ? `${detailsData[0].YOE} years` : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="text-gray-500">No work experience added yet.</div>
-            )}
-          </ProfileSection>
-        )}
+              ) : (
+                <div className="text-gray-500">No work experience added yet.</div>
+              )}
+            </ProfileSection>
+          )}
 
-        {/* Skills Sections */}
-        {skillsData && (
-          <>
-            {/* Core Skills */}
-            {editMode.coreSkills ? (
-              <SkillsEditor
-                title="Core skills"
-                skills={skillsData[0]?.coreSkills || []}
-                onSave={handleSaveCoreSkills}
-                onCancel={handleCancelCoreSkills}
-                withYears={true}
-              />
-            ) : (
-              renderSkillsSection({
-                title: "Core skills",
-                skills: skillsData[0]?.coreSkills || [],
-                onEdit: handleEditCoreSkills
-              })
-            )}
+          {/* Skills Sections */}
+          {skillsData && (
+            <>
+              {/* Core Skills */}
+              {editMode.coreSkills ? (
+                <SkillsEditor
+                  title="Core skills"
+                  skills={skillsData[0]?.coreSkills || []}
+                  onSave={handleSaveCoreSkills}
+                  onCancel={handleCancelCoreSkills}
+                  withYears={true}
+                />
+              ) : (
+                renderSkillsSection({
+                  title: "Core skills",
+                  skills: skillsData[0]?.coreSkills || [],
+                  onEdit: handleEditCoreSkills
+                })
+              )}
 
-            {/* Soft Skills */}
-            {editMode.softSkills ? (
-              <SkillsEditor
-                title="Soft skills"
-                skills={skillsData[0]?.softSkills || []}
-                onSave={handleSaveSoftSkills}
-                onCancel={handleCancelSoftSkills}
-              />
-            ) : (
-              renderSkillsSection({
-                title: "Soft skills",
-                skills: skillsData[0]?.softSkills || [],
-                onEdit: handleEditSoftSkills
-              })
-            )}
+              {/* Soft Skills */}
+              {editMode.softSkills ? (
+                <SkillsEditor
+                  title="Soft skills"
+                  skills={skillsData[0]?.softSkills || []}
+                  onSave={handleSaveSoftSkills}
+                  onCancel={handleCancelSoftSkills}
+                />
+              ) : (
+                renderSkillsSection({
+                  title: "Soft skills",
+                  skills: skillsData[0]?.softSkills || [],
+                  onEdit: handleEditSoftSkills
+                })
+              )}
 
-            {/* Technical Skills */}
-            {editMode.technicalSkills ? (
-              <SkillsEditor
-                title="Technical skills"
-                skills={skillsData[0]?.technicalSkills || []}
-                onSave={handleSaveTechnicalSkills}
-                onCancel={handleCancelTechnicalSkills}
-                withYears={true}
-              />
-            ) : (
-              renderSkillsSection({
-                title: "Technical skills",
-                skills: skillsData[0]?.technicalSkills || [],
-                onEdit: handleEditTechnicalSkills
-              })
-            )}
-          </>
-        )}
+              {/* Technical Skills */}
+              {editMode.technicalSkills ? (
+                <SkillsEditor
+                  title="Technical skills"
+                  skills={skillsData[0]?.technicalSkills || []}
+                  onSave={handleSaveTechnicalSkills}
+                  onCancel={handleCancelTechnicalSkills}
+                  withYears={true}
+                />
+              ) : (
+                renderSkillsSection({
+                  title: "Technical skills",
+                  skills: skillsData[0]?.technicalSkills || [],
+                  onEdit: handleEditTechnicalSkills
+                })
+              )}
+            </>
+          )}
 
-        {/* Preference Sections */}
-        {[
-          {
-            title: "Roles I am looking for",
-            skills: [
-              "Communication",
-              "UI/UX",
-              "Design manager",
-              "Java developer",
-            ],
-          },
-          {
-            title: "Industry preference",
-            skills: ["IT", { skillName: "Manufacturing", canRemove: true }],
-          },
-          {
-            title: "Department preference",
-            skills: [
-              "IT",
-              { skillName: "Manufacturing", canRemove: true },
-            ],
-          },
-          {
-            title: "Location preference",
-            skills: [{ skillName: "Kolkata", canRemove: true }],
-          },
-        ].map((section, index) =>
-          renderSkillsSection({
-            key: index,
-            title: section.title,
-            skills: section.skills,
-          })
-        )}
+          {/* Preference Sections */}
+          {[
+            {
+              title: "Roles I am looking for",
+              skills: [
+                "Communication",
+                "UI/UX",
+                "Design manager",
+                "Java developer",
+              ],
+            },
+            {
+              title: "Industry preference",
+              skills: ["IT", { skillName: "Manufacturing", canRemove: true }],
+            },
+            {
+              title: "Department preference",
+              skills: [
+                "IT",
+                { skillName: "Manufacturing", canRemove: true },
+              ],
+            },
+            {
+              title: "Location preference",
+              skills: [{ skillName: "Kolkata", canRemove: true }],
+            },
+          ].map((section, index) =>
+            renderSkillsSection({
+              key: index,
+              title: section.title,
+              skills: section.skills,
+            })
+          )}
 
-        {/* Achievements */}
-        {editMode.achievements ? (
-          <ListEditor
-            title="Achievements"
-            items={(achievementData && achievementData[0]?.achievements?.map(
-              (achievement: any) =>
-                `${achievement.title} - ${
-                  achievement.acquiredFrom
-                } (${new Date(achievement.achievDate).getFullYear()})`
-            )) || []}
-            onSave={handleSaveAchievements}
-            onCancel={handleCancelAchievements}
-          />
-        ) : (
-          renderListSection({
-            title: "Achievements",
-            items:
-              (achievementData &&
-                achievementData[0]?.achievements?.map(
-                  (achievement: any) =>
-                    `${achievement.title} - ${
-                      achievement.acquiredFrom
-                    } (${new Date(achievement.achievDate).getFullYear()})`
-                )) || [],
-            onEdit: handleEditAchievements
-          })
-        )}
+          {/* Achievements */}
+          {editMode.achievements ? (
+            <ListEditor
+              title="Achievements"
+              items={(achievementData && achievementData[0]?.achievements?.map(
+                (achievement: any) =>
+                  `${achievement.title} - ${
+                    achievement.acquiredFrom
+                  } (${new Date(achievement.achievDate).getFullYear()})`
+              )) || []}
+              onSave={handleSaveAchievements}
+              onCancel={handleCancelAchievements}
+            />
+          ) : (
+            renderListSection({
+              title: "Achievements",
+              items:
+                (achievementData &&
+                  achievementData[0]?.achievements?.map(
+                    (achievement: any) =>
+                      `${achievement.title} - ${
+                        achievement.acquiredFrom
+                      } (${new Date(achievement.achievDate).getFullYear()})`
+                  )) || [],
+              onEdit: handleEditAchievements
+            })
+          )}
 
-        {/* Responsibilities */}
-        {editMode.responsibilities ? (
-          <ListEditor
-            title="Responsibility"
-            items={(achievementData && achievementData[0]?.responsibilities) || []}
-            onSave={handleSaveResponsibilities}
-            onCancel={handleCancelResponsibilities}
-          />
-        ) : (
-          renderListSection({
-            title: "Responsibility",
-            items: (achievementData && achievementData[0]?.responsibilities) || [],
-            onEdit: handleEditResponsibilities
-          })
-        )}
+          {/* Responsibilities */}
+          {editMode.responsibilities ? (
+            <ListEditor
+              title="Responsibility"
+              items={(achievementData && achievementData[0]?.responsibilities) || []}
+              onSave={handleSaveResponsibilities}
+              onCancel={handleCancelResponsibilities}
+            />
+          ) : (
+            renderListSection({
+              title: "Responsibility",
+              items: (achievementData && achievementData[0]?.responsibilities) || [],
+              onEdit: handleEditResponsibilities
+            })
+          )}
 
-        {/* Salary */}
-        {detailsData && (
-          <ProfileSection
+          {/* Salary */}
+          {detailsData && (
+            <ProfileSection
             title="Salary"
             editMode={editMode.salary || false}
             onEdit={handleEditSalary}
@@ -928,7 +934,8 @@ const Profile = () => {
         )}
       </div>
     </div>
-  );
+    </div>
+  );;
 };
 
-export default Profile
+export default Profile;

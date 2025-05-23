@@ -10,6 +10,7 @@ type HireFormInputs = {
   ctc: string;
   offerLetter: FileList;
   remarks: string;
+  joiningDate: string;
 };
 
 export default function HireNowForm() {
@@ -26,7 +27,7 @@ export default function HireNowForm() {
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="size-full space-y-4"
+      className="size-full space-y-4 text-left"
     >
       <h2 className="text-lg font-semibold text-gray-800">Hire now</h2>
 
@@ -126,6 +127,22 @@ export default function HireNowForm() {
           />
           <Upload className="absolute right-3 top-4 text-gray-400" size={18} />
         </div>
+      </div>
+
+      {/* Joining Date */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700">
+          <span className="text-red-500 mr-1">*</span>Joining Date
+        </label>
+        <input
+          type="text"
+          placeholder="50,00,000.00"
+          {...register("joiningDate", { required: "joiningDate is required" })}
+          className="mt-1 w-full px-4 py-2 border rounded-lg bg-gray-100 focus:outline-none"
+        />
+        {errors.joiningDate && (
+          <p className="text-sm text-red-500 mt-1">{errors.joiningDate.message}</p>
+        )}
       </div>
 
       {/* Remarks */}

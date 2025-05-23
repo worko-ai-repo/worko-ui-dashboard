@@ -85,7 +85,10 @@ export default function InterviewTable() {
             label: "Matching Score",
             render: (row: Applicant) => (
                 <div className="flex justify-center">
-                    <ProgressCircle value={row.matchingScore} />
+                    <ProgressCircle
+                        onClick={() => console.log("Clicked")}
+                        value={row.matchingScore}
+                    />
                 </div>
             ),
         },
@@ -112,13 +115,13 @@ export default function InterviewTable() {
                 <div className="flex gap-2 min-w-[150px]">
                     {row.status === "Pending" && (
                         <div className="flex gap-2 justify-center items-center w-full">
-                            <button className="flex gap-2 btn-view">
+                            <button className="flex items-center gap-2 btn-sky">
                                 <Eye size={16} />
                                 View CV
                             </button>
                             <button
                                 onClick={() => setIsScheduleModalOpen(true)}
-                                className="flex gap-1 items-center btn-close"
+                                className="flex gap-2 items-center btn-blue"
                             >
                                 <Calendar size={16} />
                                 Schedule
@@ -173,7 +176,6 @@ export default function InterviewTable() {
     return (
         <>
             <DynamicTable
-                activeTab="all"
                 columns={columns}
                 rows={staticApplicants}
                 selectedRows={selected}

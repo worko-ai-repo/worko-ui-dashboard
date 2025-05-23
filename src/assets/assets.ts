@@ -89,6 +89,12 @@ import viewFeedback from './svgs/viewFeedback.svg'
 import askQuestion from './svgs/askQuestion.svg'
 import magnifyingQuestion from './svgs/magnifyingQuestion.svg'
 import checkbubble from './svgs/check-bubble.svg'
+import Not_Responding from './svgs/not_responding.svg';
+import View from './svgs/view.svg';
+import Edit from './svgs/edit.svg';
+import Duplicate from './svgs/duplicate.svg';
+import Archive from './svgs/archive.svg';
+import Repost from './svgs/repost.svg';
 export { 
     // Backgrounds
     bg_plexus,
@@ -173,4 +179,11 @@ export {
     askQuestion,
     magnifyingQuestion,
     checkbubble,
+    Not_Responding,
+    View,
+    Edit,
+    Duplicate,
+    Archive,
+    Repost,
+
 };

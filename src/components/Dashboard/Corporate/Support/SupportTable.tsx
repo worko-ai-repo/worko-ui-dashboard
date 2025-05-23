@@ -85,7 +85,6 @@ const SupportTable = () => {
             columns={columns}
             rows={rowData}
             enableSelect={false}
-            activeTab="all"
         />
     );
 };

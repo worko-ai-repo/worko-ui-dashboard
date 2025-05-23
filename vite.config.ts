@@ -27,11 +27,7 @@ export default defineConfig({
 			'@Utils': path.resolve(__dirname, 'src/utils'),
 			'@Views': path.resolve(__dirname, 'src/views'),
 			'@Routes': path.resolve(__dirname, 'src/routes.ts'),
-			'lib-worko-ai': path.resolve(__dirname, '../../packages/lib-worko-ai/src')
 		},
-	},
-	optimizeDeps: {
-		exclude: ['lib-worko-ai']
 	},
 	server: {
 		fs: {

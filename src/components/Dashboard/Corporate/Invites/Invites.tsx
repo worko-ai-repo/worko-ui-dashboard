@@ -5,24 +5,45 @@ import Modal from '../Modal'
 import InviteForm from './SendInviteForm'
 import httpServiceObj from '@Services/ApiHandler.service'
 import { CorporateInviteResponse, CorporateInvite } from '@Interfaces/CorporateDashboard.dto'
+import SkeletonLoader from '../SkeletonLoader'
 
 const Invites = () => {
   const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
   const [data, setData] = useState<CorporateInviteResponse | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const fetchJobs = async () => {
-    const params = new URLSearchParams({
-      pageSize: '25',
-    });
+  const fetchInvites = async () => {
+    try {
+      const params = new URLSearchParams({
+        pageSize: '25',
+      });
 
-    const url = `https://api.dev.worko.work/corporate-invite/?${params.toString()}`;
-    const { response, error } = await httpServiceObj.get(url, true, {}, true);
-    setData(response as CorporateInviteResponse);
+      const url = `https://api.dev.worko.work/corporate-invite/?${params.toString()}`;
+      const { response, error } = await httpServiceObj.get(url, true, {}, true);
+      setData(response as CorporateInviteResponse);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   useEffect(() => {
-    fetchJobs();
+    fetchInvites();
   }, [])
+
+  if (isLoading) {
+    return (
+      <SkeletonLoader
+        showButtons={true}
+        buttonCount={1}
+        showTableHeader={true}
+        showTableRows={true}
+        tableColumns={5}
+        rowCount={5}
+      />
+    )
+  }
 
   return (
     <div className='space-y-4'>
@@ -37,6 +58,7 @@ const Invites = () => {
       </div>
       <InviteTable
         data={data as CorporateInviteResponse}
+        fetchInvites={fetchInvites}
       />
       <Modal
         isOpen={isSendInviteModalOpen}

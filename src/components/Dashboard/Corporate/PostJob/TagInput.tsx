@@ -24,7 +24,7 @@ export default function TagInput({
   return (
     <div className="space-y-1">
       <label className="text-sm font-medium text-gray-700">{label}</label>
-      <div className="bg-gray-100 rounded-xl p-2 min-h-[130px] flex flex-col justify-between">
+      <div className="bg-gray-100 rounded-xl p-2 min-h-[133px] flex flex-col justify-between">
         {/* Tags container */}
         {tags && <div className="flex flex-wrap gap-2 max-h-[60px] overflow-y-auto">
           {tags.map((tag, i) => (

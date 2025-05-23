@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import FilterToggle from '../Filters';
 import BulkOption from '@Components/Dashboard/Corporate/Bulk';
 import ApplicationTable from './ApplicantsTable';
+
+import httpServiceObj from '@Services/ApiHandler.service';
 import HeaderDetails from '../Stats';
 import SearchBar from '../SearchBar';
-import httpServiceObj from '@Services/ApiHandler.service';
+import FilterToggle from '../Filters';
 
 const stats = [
     { label: 'Total Applicants', value: 106 },
@@ -20,20 +21,37 @@ const tabs = ["All", "Hired", "Joined"] as const;
 const Applicants = () => {
     const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
     const [searchBarText, setSearchBarText] = useState<string | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedRows, setSelectedRows] = useState<string[]>([]);
+
 
     const fetchApplicants = async () => {
-        const params = new URLSearchParams({
-            pageSize: '25',
-            companyId: '01JM1WBGBZK51B951XBRBG8NKX',
-            userType: 'corporate-admin',
-          });
-        const { response, error } = await httpServiceObj.get(`https://api.dev.worko.work/job-application?${params.toString()}`, true, {}, true);
-        console.log(response);
+        try {
+            const params = new URLSearchParams({
+                pageSize: '25',
+                companyId: '01JM1WBGBZK51B951XBRBG8NKX',
+                sortOrder: 'descending',
+                userType: 'corporate-admin',
+            });
+
+            if (searchBarText?.trim()) {
+                params.append('searchText', searchBarText);
+            }
+
+            const url = `https://jobs.dev.worko.work/job-application/?${params.toString()}`;
+            const { response, error } = await httpServiceObj.get(url, true, {}, true);
+            //   setData(response as JobApiResponse);
+            console.log(response);
+        } catch (error) {
+            console.error("Error fetching jobs:", error);
+        } finally {
+            setIsLoading(false);
+        }
     }
-    
+
     useEffect(() => {
         fetchApplicants();
-    }, []);
+    }, [])
 
     return (
         <div>
@@ -67,7 +85,17 @@ const Applicants = () => {
 
                         <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
                             <FilterToggle />
-                            <BulkOption />
+                            <BulkOption
+                                options={[
+                                    { label: 'Send to evaluator', onClick: () => console.log("Send to evaluator clicked",) },
+                                    { label: 'Reject', onClick: () => console.log('Reject clicked',) },
+                                    { label: 'Initiate Interview', onClick: () => console.log('Initiate interview clicked',) },
+                                    { label: 'Accept', onClick: () => console.log("Accept clicked",) },
+                                    { label: 'On Hold', onClick: () => console.log('On hold clicked',) },
+                                    { label: 'Hired', onClick: () => console.log('Hired clicked',) },
+                                    { label: 'Joined', onClick: () => console.log('Joined clicked',) },
+                                ]}
+                            />
                         </div>
                     </div>
                 </div>
@@ -88,6 +116,8 @@ const Applicants = () => {
                 <ApplicationTable
                     activeTab={activeTab}
                     setActiveTab={setActiveTab}
+                    selectedRows={selectedRows}
+                    setSelectedRows={setSelectedRows}
                 />
             </div>
         </div>
