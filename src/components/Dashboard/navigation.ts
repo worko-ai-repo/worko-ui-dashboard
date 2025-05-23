@@ -4,16 +4,49 @@ import { ApplicantsIcon, BulkCVIcon, HomeIcon, InterviewIcon, InviteIcon, Invoic
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
     {
-        id: 'home',
-        label: 'Home',
-        icon: HomeIcon,
+        id:'profile',
+        label:'Profile',
+        icon:InterviewIcon,
+        dashboardTypes: ['CANDIDATE']
     },
     {
         id: 'jobs',
         label: 'Jobs',
         icon: JobIcon,
-        dashboardTypes: ['CORPORATE', 'EMPLOYEE'],
+        dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE'],
     },
+    {
+        id: 'referral',
+        label: 'Referral',
+        icon: ReferralIcon,
+        dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE'],
+    },
+    {
+        id: 'guidance',
+        label: 'Guidance',
+        icon: HomeIcon,
+        dashboardTypes: ['CANDIDATE']
+      },
+    {
+        id: 'refer-and-earn',
+        label: 'Refer & Earn',
+        icon: HomeIcon,
+        dashboardTypes: ['CANDIDATE']
+      },
+      
+      {
+        id: 'subscription',
+        label: 'Subscription',
+        icon: HomeIcon,
+        dashboardTypes: ['CANDIDATE']
+      },
+    {
+        id: 'home',
+        label: 'Home',
+        icon: HomeIcon,
+        dashboardTypes: ['CORPORATE']
+    },
+    
     {
         id: 'applicants',
         label: 'Applicants',
@@ -24,7 +57,7 @@ const navigationItems: NavItem[] = [
         id: 'interviews',
         label: 'Interviews',
         icon: InterviewIcon,
-        dashboardTypes: ['CORPORATE', 'CANDIDATE'],
+        dashboardTypes: ['CORPORATE'],
     },
     {
         id: 'bulk-cv-check',
@@ -36,13 +69,7 @@ const navigationItems: NavItem[] = [
         id: 'invites',
         label: 'Invites',
         icon: InviteIcon,
-        dashboardTypes: ['CORPORATE', 'CANDIDATE'],
-    },
-    {
-        id: 'referrals',
-        label: 'Referrals',
-        icon: ReferralIcon,
-        dashboardTypes: ['CORPORATE', 'EMPLOYEE'],
+        dashboardTypes: ['CORPORATE'],
     },
     {
         id: 'invoice-&-payment',

@@ -1,4 +1,3 @@
-// src/components/Jobs/JobsTable.tsx
 import { memo, useState, useCallback } from 'react';
 import { JobApiResponse, JobTypes, PaginationInfo } from './JobTypes';
 import { Check } from 'lucide-react';
@@ -7,7 +6,7 @@ import Stepper from './Stepper';
 import { viewFeedback, iHaveJoined, checkAndAccept, askQuestion } from '@Assets';
 import RejectionFeedbackModal from './modals/RejectionFeedbackModal';
 import JobService from '../../Service/JobsService';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
+import { useDashboardContext } from '@Context/Dashboard.context';
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -30,6 +29,7 @@ const JobsTable = memo(({
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
   
+  // Get user from dashboard context
   const { user } = useDashboardContext();
 
   // Map the status to action for the specific cases
@@ -256,7 +256,7 @@ const JobsTable = memo(({
           columns={columns}
           keyExtractor={(item) => item.id}
           rowClassName={() => "relative rounded-xl border-b text-sm hover:bg-gray-50"}
-          headerClassName='bg-cyan-50 text-nowrap text-sm px-4 mb-2'
+          headerClassName="bg-cyan-50 text-nowrap text-sm px-4 mb-2"
           expandableContent={item => {
             if (item.statusTracker && item.statusTracker.length > 0) {
               return <Stepper statusTracker={item.statusTracker[item.statusTracker.length-1]} />;

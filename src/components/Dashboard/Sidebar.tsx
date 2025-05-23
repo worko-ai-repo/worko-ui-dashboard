@@ -1,8 +1,8 @@
 import React, { useEffect } from 'react';
 import { XMarkIcon, ChevronLeftIcon } from '@heroicons/react/24/outline';
 import { User } from "@Assets";
-import { useAppContext } from '@Context/App.context';
-import { useNavigate } from 'react-router-dom';
+import { useAppContext } from '@LibWorko';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 import navigationItems from './navigation';
 import SidebarItem from './SidebarItem';
@@ -18,31 +18,47 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) => {
     const { userDetails } = useAppContext();
-    const { activeTab, setActiveTab, activeSidebar } = useDashboardContext();
+    const { activeTab, setActiveTab, dashboardType, setDashboardType } = useDashboardContext();
     const navigate = useNavigate();
+    const location = useLocation();
 
+    // Filter navigation items based on current dashboard type
     const navItems = navigationItems.filter(item => 
-        !item.dashboardTypes || item.dashboardTypes.includes(activeSidebar)
-      );
+        !item.dashboardTypes || item.dashboardTypes.includes(dashboardType)
+    );
 
+    // Sync URL with dashboard context
     useEffect(() => {
-        const currentTab = location.pathname.split('/')[3];
-        if (currentTab) {
-            setActiveTab(currentTab as TabId);
+        const pathParts = location.pathname.split('/');
+        
+        // Update dashboard type based on URL if needed
+        if (pathParts.length >= 3) {
+            const urlType = pathParts[2].toUpperCase() as DashboardType;
+            if (['CORPORATE', 'EMPLOYEE', 'CANDIDATE', 'ADMIN'].includes(urlType) && 
+                urlType !== dashboardType) {
+                setDashboardType(urlType);
+            }
         }
-    }, [location.pathname]);
+        
+        // Update active tab based on URL if needed
+        if (pathParts.length >= 4 && pathParts[3]) {
+            const urlTab = pathParts[3] as TabId;
+            if (urlTab !== activeTab) {
+                setActiveTab(urlTab);
+            }
+        }
+    }, [location.pathname, dashboardType, activeTab, setDashboardType, setActiveTab]);
 
     const onNavigate = (dashboardType: DashboardType, tabId: TabId) => {
         const path = `/dashboard/${dashboardType.toLowerCase()}/${tabId}`;
         navigate(path);
     };
 
-
     const handleTabClick = (tabId: TabId) => {
         setActiveTab(tabId);
-        onNavigate(activeSidebar, tabId);
+        onNavigate(dashboardType, tabId);
         setSidebarOpen(false);
-      };
+    };
 
     const Avatar = (
         <div className="rounded-full text-[#316bff] w-8 h-8 flex items-center justify-center">

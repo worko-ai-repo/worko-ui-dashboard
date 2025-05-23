@@ -43,6 +43,9 @@ const Jobs = () => {
     fetchJobs();
   }, [activeTab])
 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
+  
   return (
     <div className="w-full space-y-[35px] px-0">
       <div className='flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between'>

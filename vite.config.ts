@@ -5,6 +5,7 @@ import compression from 'vite-plugin-compression';
 import path from 'path';
 // https://vite.dev/config/
 export default defineConfig({
+	base: '/v1/', // Configure the base path for the dashboard app
 	plugins: [
 		react(),
 		compression()
@@ -27,9 +28,17 @@ export default defineConfig({
 			'@Utils': path.resolve(__dirname, 'src/utils'),
 			'@Views': path.resolve(__dirname, 'src/views'),
 			'@Routes': path.resolve(__dirname, 'src/routes.ts'),
+			'lib-worko-ai': path.resolve(__dirname, '../../packages/lib-worko-ai/src'),
+			'@LibWorko': path.resolve(__dirname, '../../packages/lib-worko-ai/src')
 		},
 	},
+	optimizeDeps: {
+		exclude: ['lib-worko-ai']
+	},
 	server: {
+		fs: {
+			allow: ['..']
+		},
 		proxy: {
 			'/cognito': {
 				target: 'https://cognito-idp.ap-south-1.amazonaws.com',
@@ -39,6 +48,6 @@ export default defineConfig({
 		},
 		open: true, // Manually open the browser window upon starting the server
 		host: '0.0.0.0', //Manally specify the host so the app binds to all network interfaces and you can run the app on a different device
-		port: 3001, // Manually specify the port for the server
+		port: 3002, // Manually specify the port for the server
 	},
 });

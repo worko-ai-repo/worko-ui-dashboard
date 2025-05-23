@@ -64,7 +64,7 @@ const CorporateDashboard = () => {
 					),
 				},
 				{
-					path: 'referrals',
+					path: 'referral',
 					element: (
 						<Suspense fallback={<MainLoader />}>
 							<Jobs />

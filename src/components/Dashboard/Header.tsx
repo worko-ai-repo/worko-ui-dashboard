@@ -24,8 +24,9 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
 
   return (
     <header className="px-4 w-full sm:px-8 py-4 relative">
+     
       <div className="absolute bottom-0 left-0 w-full border-b border-gray-200" />
-
+      
       <div className="flex items-center justify-between z-10">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 w-full sm:w-auto">
           <div className="flex items-center justify-between w-full sm:w-auto">

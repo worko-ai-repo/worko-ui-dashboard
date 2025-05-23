@@ -43,7 +43,9 @@
 			"@Services/*": ["src/services/*"],
 			"@Utils/*": ["src/utils/*"],
 			"@Views/*": ["src/views/*"],
-			"@Routes": ["src/Routes.tsx"]
+			"@Routes": ["src/Routes.tsx"],
+			"lib-worko-ai": ["../../packages/lib-worko-ai/src"],
+			"@LibWorko": ["../../packages/lib-worko-ai/src"]
 		}
 	},
 	"include": ["src", "src/**/*", "vite-env.d.ts"],

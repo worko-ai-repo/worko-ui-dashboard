@@ -1,7 +1,7 @@
 import { memo, useState, useCallback } from 'react';
 import Table from "../../SharedComponents/Table";
 import { GuidanceApiResponse, GuidanceRequest, GuidancePaginationInfo } from './Guidance';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
+import { useDashboardContext } from '@Context/Dashboard.context';
 import { checkbubble, eyeIcon, viewFeedback } from '@Assets';
 
 interface GuidanceTableProps {

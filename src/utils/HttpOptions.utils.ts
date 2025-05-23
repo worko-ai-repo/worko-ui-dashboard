@@ -1,5 +1,5 @@
 import { HttpHeaderOptionDto, HttpParamsOptions } from '@Interfaces/HttpOption.dto';
-import CognitoServiceObj from './Cognito.utils';
+import {CognitoServiceObj} from "@LibWorko";
 
 export const getHttpOptions = (authorization = true, params: HttpParamsOptions = {}) => {
 	let headers: HttpHeaderOptionDto 

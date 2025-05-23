@@ -1,11 +1,10 @@
-// src/components/Jobs/Jobs.tsx
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
-import { useDashboardContext } from '@Context/CandidateDashboard.context';
 import JobsTable from './JobsTable';
 import FilterToggle from '../../Filters';
 import JobService from '../../Service/JobsService';
 import { JobApiResponse, PaginationInfo, JobFilters } from './JobTypes';
 import { debounce } from 'lodash';
+import { useDashboardContext } from '@Context/Dashboard.context';
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -38,7 +37,8 @@ const Jobs = () => {
     1: '' // First page always has empty lastKey
   });
 
-  const { user } = useDashboardContext();
+  // Get user from dashboard context
+  const { user, isLoadingUser } = useDashboardContext();
 
   // Memoize the fetch function to prevent unnecessary re-renders
   const fetchJobs = useCallback(async (
@@ -88,7 +88,7 @@ const Jobs = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, pageSize, searchBarText, filters]);
+  }, [user, pageSize, searchBarText, filters, currentPage]);
 
   // Search handling with proper debounce
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
@@ -168,7 +168,7 @@ const Jobs = () => {
   }, [debouncedSearch]);
 
   // Loading state when user is not available yet
-  if (!user) {
+  if (isLoadingUser || !user) {
     return (
       <div className="w-full h-[50vh] flex items-center justify-center">
         <div className="flex flex-col items-center">
@@ -215,7 +215,6 @@ const Jobs = () => {
 
         <div className="flex flex-col gap-4 justify-center sm:items-end">
           <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
-            {/* <FilterToggle onFilterChange={handleFilterChange} /> */}
           </div>
         </div>
       </div>
