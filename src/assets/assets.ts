@@ -95,6 +95,7 @@ import Edit from './svgs/edit.svg';
 import Duplicate from './svgs/duplicate.svg';
 import Archive from './svgs/archive.svg';
 import Repost from './svgs/repost.svg';
+import Submit from './svgs/submit.svg';
 export { 
     // Backgrounds
     bg_plexus,
@@ -185,5 +186,5 @@ export {
     Duplicate,
     Archive,
     Repost,
-
+    Submit
 };

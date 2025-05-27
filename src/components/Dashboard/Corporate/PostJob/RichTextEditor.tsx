@@ -7,7 +7,7 @@ import { CustomToolbar } from './CustomToolbar'
 import Quill from 'quill'
 
 interface EditorProps {
-  value: string
+  value: string | undefined
   onChange: (value: string) => void
 }
 
@@ -50,7 +50,7 @@ const Editor: FC<EditorProps> = ({ value, onChange }) => {
         onChange={handleChange}
         modules={modules}
         formats={formats}
-        className="border-none rounded-md text-sm bg-white"
+        className="border-none rounded-md text-sm h-[250px]"
         theme="snow"
         placeholder="Write job description here"
       />

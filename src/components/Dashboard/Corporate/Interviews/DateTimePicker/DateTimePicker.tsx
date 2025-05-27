@@ -68,7 +68,7 @@ const DateTimePicker: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col md:flex-row w-full overflow-hidden">
+    <div className="w-full h-full flex flex-col md:flex-row overflow-hidden">
       {/* Details Section */}
       <div className="md:w-2/5 bg-white border-r border-gray-100 p-6">
         <EventDetails />

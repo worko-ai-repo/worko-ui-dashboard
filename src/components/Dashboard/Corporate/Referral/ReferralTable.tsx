@@ -93,7 +93,7 @@ export default function ReferralTable() {
                 <div className="flex justify-center">
                     <ProgressCircle value={row.score} onClick={function (): void {
                         throw new Error("Function not implemented.");
-                    } } />
+                    }} />
                 </div>
             ),
         },
@@ -185,11 +185,10 @@ export default function ReferralTable() {
                 renderExpandedDetails={renderExpandedRow}
                 enableSelect={false}
             />
-
             <Modal
                 isOpen={isRejectModalOpen}
                 onClose={() => setIsRejectModalOpen(false)}
-                className="w-[90vw] sm:w-[455px] h-auto sm:h-[479px]"
+                className="w-[90vw] sm:w-[455px] h-auto"
             >
                 <RejectionForm />
             </Modal>

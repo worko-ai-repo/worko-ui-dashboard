@@ -4,6 +4,7 @@ import { Calendar, Eye } from "lucide-react";
 import Modal from "../Modal";
 import DateTimePicker from "./DateTimePicker/DateTimePicker";
 import ProgressCircle from "../Applicants/CircularBar";
+import CVPreview from "../Applicants/CVPreview";
 
 type Applicant = {
     id: string;
@@ -53,6 +54,8 @@ export default function InterviewTable() {
     const [selected, setSelected] = useState<string[]>([]);
     const [expanded, setExpanded] = useState<string[]>([]);
     const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+    const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+
 
     const toggleSelectAll = () => {
         if (selected.length === staticApplicants.length) {
@@ -115,7 +118,10 @@ export default function InterviewTable() {
                 <div className="flex gap-2 min-w-[150px]">
                     {row.status === "Pending" && (
                         <div className="flex gap-2 justify-center items-center w-full">
-                            <button className="flex items-center gap-2 btn-sky">
+                            <button
+                                onClick={() => setIsViewCVModalOpen(true)}
+                                className="flex items-center gap-2 btn-sky"
+                            >
                                 <Eye size={16} />
                                 View CV
                             </button>
@@ -185,15 +191,27 @@ export default function InterviewTable() {
                 toggleExpand={toggleExpand}
                 allSelected={selected.length === staticApplicants.length}
                 renderExpandedDetails={renderExpandedDetails}
-                enableSelect
             />
 
             <Modal
                 isOpen={isScheduleModalOpen}
                 onClose={() => setIsScheduleModalOpen(false)}
-                className="w-[90vw] sm:w-[1000px] h-auto"
+                className="w-[90vw] sm:w-[1000px] h-full"
             >
                 <DateTimePicker />
+            </Modal>
+            <Modal
+                isOpen={isViewCVModalOpen}
+                onClose={() => setIsViewCVModalOpen(false)}
+                className="w-[90vw] sm:w-[677px] h-full"
+            >
+                <CVPreview
+                    onClose={() => setIsViewCVModalOpen(false)}
+                    onSubmit={() => { }}
+                // setIsAddEvaluatorModal={setIsAddEvaluatorModalOpen}
+                // setIsRejectModalOpen={setIsRejectModalOpen}
+                // setIsHireNowModalOpen={setIsHireNowModalOpen}
+                />
             </Modal>
         </>
     );

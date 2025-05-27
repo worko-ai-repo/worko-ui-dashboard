@@ -1,5 +1,5 @@
 import React from "react";
-import { Info } from "lucide-react";
+import { ChevronDownIcon, Info } from "lucide-react";
 
 // Types
 interface Score {
@@ -51,16 +51,29 @@ const dummyData: InterviewData = {
       feedback:
         "You are currently performing well and your responses are clear and concise. To improve, consider incorporating more context and details when answering questions, and perhaps offer alternative perspectives or solutions where appropriate.",
     },
+    {
+      timestamp: "10:21",
+      question: "How do you see this opportunity?",
+      feedback:
+        "You are currently performing well and your responses are clear and concise. To improve, consider incorporating more context and details when answering questions, and perhaps offer alternative perspectives or solutions where appropriate.",
+    },
+    {
+      timestamp: "10:21",
+      question: "How do you see this opportunity?",
+      feedback:
+        "You are currently performing well and your responses are clear and concise. To improve, consider incorporating more context and details when answering questions, and perhaps offer alternative perspectives or solutions where appropriate.",
+    },
   ],
 };
 
 const InterviewFeedbackCard = () => {
   return (
     <div className="w-full max-w-5xl">
+      <h2 className="text-xl font-semibold text-left mb-4">{dummyData.candidateName}</h2>
       {/* Header Section */}
       <div className="flex flex-col md:flex-row gap-4">
         {/* Video Section */}
-        <div className="flex-1 rounded-xl overflow-hidden">
+        <div className="flex-[3] rounded-xl overflow-hidden">
           <video
             controls
             poster={dummyData.posterUrl}
@@ -72,57 +85,79 @@ const InterviewFeedbackCard = () => {
         </div>
 
         {/* Score Section */}
-        <div className="bg-[#F8FAFC] p-4 rounded-xl w-full md:w-64 flex flex-col justify-between">
-          <div>
-            <p className="text-sm text-gray-500">Overall Score <Info className="inline w-4 h-4 ml-1 text-gray-400" /></p>
+        <div className="flex-[2] bg-[#F8FAFC] p-12 rounded-xl flex flex-col justify-between w-full min-w-[250px] md:max-w-[300px]">
+          <div className="flex flex-col gap-2 text-start">
+            <p className="text-sm">
+              Overall Score <Info className="inline w-4 h-4 ml-1 text-blue-500" />
+            </p>
             <p className="text-4xl font-bold text-gray-900">{dummyData.overallScore}%</p>
           </div>
-          <div className="mt-6">
-            <p className="text-sm text-gray-500">Interview date :</p>
-            <p className="text-base text-gray-700 font-medium">{dummyData.interviewDate}</p>
-            <p className="text-sm text-gray-500 mt-2">Interview time :</p>
-            <p className="text-base text-gray-700 font-medium">{dummyData.interviewTime}</p>
+          <div className="text-start mt-6 space-y-2">
+            <div className="whitespace-nowrap flex">
+              <span className="text-sm text-[#94A3B8]">Interview date :</span>
+              <span className="text-base ml-2 text-gray-700 font-medium">{dummyData.interviewDate}</span>
+            </div>
+            <div className="whitespace-nowrap flex">
+              <span className="text-sm text-[#94A3B8]">Interview time :</span>
+              <span className="text-base ml-2 text-gray-700 font-medium">{dummyData.interviewTime}</span>
+            </div>
           </div>
+
         </div>
       </div>
 
+
       {/* Scores Section */}
-      <div className="flex flex-wrap items-center gap-4 mt-6 text-sm">
-        <p className="font-medium text-gray-700">Scores :</p>
-        {dummyData.scores.map((score) => (
-          <span
-            key={score.label}
-            className="bg-[#EBF8FF] text-blue-600 px-3 py-1 rounded-full"
-          >
-            {score.label} {score.value}%
-          </span>
-        ))}
+      <div className="mt-6 text-sm">
+        <div className="flex items-center gap-4">
+          <h2 className="font-semibold text-lg text-gray-700 whitespace-nowrap pt-1">Scores :</h2>
+          <div className="flex flex-wrap gap-4 rounded-2xl bg-[#EFFFFF] p-4 text-[#94A3B8] w-full">
+            {dummyData.scores.map((score, index) => (
+              <div key={`${score.label}-${index}`} className="whitespace-nowrap">
+                {score.label}
+                <span className="ml-2 text-blue-500 font-medium">{score.value}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* QA Table */}
-      <div className="mt-6 bg-[#F9FBFC] rounded-xl max-h-72 overflow-y-auto">
-        <div className="grid grid-cols-3 text-left text-sm text-gray-500 px-6 py-3 border-b sticky top-0 bg-[#F9FBFC] z-10">
-          <p>Timestamps</p>
-          <p>Questions</p>
-          <p>Feedback</p>
+      <div className="mt-6 max-h-[400px] overflow-y-auto py-6 pt-0 rounded-xl bg-[#FCFCFC]">
+        {/* Header Row */}
+        <div className="pt-6 bg-[#FCFCFC]">
+          <div className="grid grid-cols-[1fr_2fr_2fr] text-sm text-center text-gray-500 ">
+            <p className="border-r border-gray-300 px-6 py-3">Timestamps</p>
+            <p className="border-r border-gray-300 px-6 py-3">Questions</p>
+            <p className="px-6 py-3">Feedback</p>
+          </div>
         </div>
 
+        {/* Feedback Rows */}
         {dummyData.feedbackList.map((entry, index) => (
           <div
             key={index}
-            className="grid grid-cols-3 px-6 py-4 border-b text-sm bg-white"
+            className="grid grid-cols-[1fr_2fr_2fr] text-sm text-gray-700"
           >
-            <div className="text-blue-600 font-medium">{entry.timestamp}</div>
-            <div>
-              <p className="text-gray-700 font-medium">{entry.question}</p>
-              <button className="text-blue-600 text-sm mt-1 underline">
-                Read answer
-              </button>
+            <div className="border-r border-gray-300 px-6 py-4 text-blue-600 font-semibold flex justify-center items-center">
+              <span className="bg-[#CDFFFF] px-9 py-2 rounded-2xl">
+                {entry.timestamp}
+              </span>
             </div>
-            <div className="text-gray-600">{entry.feedback}</div>
+            <div className="border-r border-gray-300 px-6 py-4">
+              <p className="font-medium text-gray-800">{entry.question}</p>
+              <div className="w-full flex justify-center mt-2">
+                <button className="flex items-center text-blue-600 border px-2 py-1 rounded-full text-sm">
+                  Read answer
+                  <ChevronDownIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+            <div className="px-6 py-4 text-black">{entry.feedback}</div>
           </div>
         ))}
       </div>
+
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, User } from "lucide-react";
+import { Eye, NotebookIcon, User } from "lucide-react";
 
 import CVPreview from "./CVPreview";
 import RejectionForm from "./RejectForm";
@@ -12,6 +12,7 @@ import { render } from "react-dom";
 import InterviewFeedbackCard from "./InterviewFeedbackCard";
 import Modal from "../Modal";
 import { DynamicTable } from "../DynamicTable";
+import Notes from "./Notes";
 
 type ApplicantStatus =
     | "pending"
@@ -165,6 +166,7 @@ export default function ApplicationTable({
     const [isHireNowModalOpen, setIsHireNowModalOpen] = useState(false);
     const [isRequestDocModalOpen, setIsRequestDocModalOpen] = useState(false);
     const [isInterviewFeedbackCardOpen, setIsInterviewFeedbackCardOpen] = useState(false);
+    const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
 
 
     const commonColumns = {
@@ -269,6 +271,17 @@ export default function ApplicationTable({
                     </button>
                 );
 
+                const noteBtn = (
+                    <button
+                        title="Add Note"
+                        className="flex gap-2 items-center btn-sky"
+                        onClick={() => setIsNoteModalOpen(true)}>
+                        {/* SVG icon */}
+                        <NotebookIcon size={16} />
+                        Add Note
+                    </button>
+                );
+
                 if (activeTab === "All") {
                     if (row.status === "pending") {
                         return (
@@ -287,6 +300,7 @@ export default function ApplicationTable({
                         return (
                             <div className="flex gap-2 justify-center">
                                 {viewCvBtn}
+                                {noteBtn}
                                 {row.viewdCv && viewEvaluatorBtn}
                             </div>
                         );
@@ -501,7 +515,7 @@ export default function ApplicationTable({
             <Modal
                 isOpen={isViewCVModalOpen}
                 onClose={() => setIsViewCVModalOpen(false)}
-                className="w-[90vw] sm:w-[677px] h-[90dvh]"
+                className="w-[90vw] sm:max-w-4xl h-full"
             >
                 <CVPreview
                     onClose={() => setIsViewCVModalOpen(false)}
@@ -514,21 +528,21 @@ export default function ApplicationTable({
             <Modal
                 isOpen={isRejectModalOpen}
                 onClose={() => setIsRejectModalOpen(false)}
-                className="w-[90vw] sm:w-[455px] h-auto sm:h-[479px]"
+                className="w-[90vw] sm:w-[455px] h-auto"
             >
                 <RejectionForm />
             </Modal>
             <Modal
                 isOpen={isAddEvaluatorModalOpen}
                 onClose={() => setIsAddEvaluatorModalOpen(false)}
-                className="w-[90vw] sm:w-[455px] h-auto sm:h-[495px]"
+                className="w-[90vw] sm:w-[455px] h-auto"
             >
                 <EvaluatorForm />
             </Modal>
             <Modal
                 isOpen={isHireNowModalOpen}
                 onClose={() => setIsHireNowModalOpen(false)}
-                className="w-[90vw] sm:w-[532px] h-auto"
+                className="w-[90vw] sm:w-[532px] h-full"
             >
                 <HireNowForm />
             </Modal>
@@ -542,9 +556,16 @@ export default function ApplicationTable({
             <Modal
                 isOpen={isInterviewFeedbackCardOpen}
                 onClose={() => setIsInterviewFeedbackCardOpen(false)}
-
+                className="h-full"
             >
                 <InterviewFeedbackCard />
+            </Modal>
+            <Modal
+                isOpen={isNoteModalOpen}
+                onClose={() => setIsNoteModalOpen(false)}
+                className="w-full sm:max-w-4xl h-auto"
+            >
+                <Notes />
             </Modal>
         </div>
     );

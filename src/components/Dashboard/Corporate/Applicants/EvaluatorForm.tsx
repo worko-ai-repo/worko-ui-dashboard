@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Send } from 'lucide-react';
 import { evaluationRequest } from '@Assets';
+import ReusableInput from '../ReusableInput';
 
 type Evaluator = {
   name: string;
@@ -109,42 +110,32 @@ const EvaluatorForm: React.FC = () => {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full justify-between space-y-3">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full gap-12 text-left">
               <div className='flex flex-col gap-4'>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Name</label>
-                  <input
+                  <ReusableInput
                     type="text"
-                    {...register(`evaluators.${index}.name`, { required: 'Name is required' })}
+                    register={register(`evaluators.${index}.name`, { required: "Name is required" })}
                     placeholder="Write name"
-                    className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+                    error={errors?.evaluators?.[index]?.name?.message}
                   />
-                  {errors.evaluators?.[index]?.name && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.evaluators[index].name?.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Email</label>
-                  <input
+                  <ReusableInput
                     type="email"
-                    {...register(`evaluators.${index}.email`, {
-                      required: 'Email is required',
+                    register={register(`evaluators.${index}.email`, {
+                      required: "Email is required",
                       pattern: {
                         value: /^\S+@\S+$/i,
-                        message: 'Invalid email format',
+                        message: "Invalid email format",
                       },
                     })}
                     placeholder="Write email address"
-                    className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+                    error={errors?.evaluators?.[index]?.email?.message}
                   />
-                  {errors.evaluators?.[index]?.email && (
-                    <p className="text-red-500 text-xs mt-1">
-                      {errors.evaluators[index].email?.message}
-                    </p>
-                  )}
                 </div>
 
                 <div>
@@ -152,7 +143,7 @@ const EvaluatorForm: React.FC = () => {
                   <textarea
                     {...register(`evaluators.${index}.message`)}
                     placeholder="Any message you want to write"
-                    className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+                    className="w-full h-[96px] rounded-xl bg-gray-100 p-4 pl-[26px] text-sm focus:outline-none"
                     rows={3}
                   />
                 </div>
