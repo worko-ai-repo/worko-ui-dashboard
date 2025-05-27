@@ -5,12 +5,11 @@ import JobsTable from './JobTable';
 import httpServiceObj from '@Services/ApiHandler.service';
 import Modal from '../Modal';
 import BulkOption from '@Components/Dashboard/Corporate/Bulk';
-import { JobApiResponse } from '@Interfaces/CorporateDashboard.dto';
+import { JobApiResponse, JobDetails } from '@Interfaces/CorporateDashboard.dto';
 import HeaderDetails from '../Stats';
 import SearchBar from '../SearchBar';
 import SkeletonLoader from '../SkeletonLoader';
 import FilterToggle from '../Filters';
-import { JobDetails } from '@Components/Dashboard/types';
 
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
 

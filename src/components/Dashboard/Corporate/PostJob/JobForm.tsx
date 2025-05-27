@@ -77,9 +77,11 @@ export default function JobForm({
       setValue('workMode', jobDetails.workMode);
     }
 
+
     if (jobDetails.location && jobDetails.location !== 'Not Mentioned') {
       setValue('location', [jobDetails.location]);
     }
+
 
     if (jobDetails.typeOfEmployment && jobDetails.typeOfEmployment !== 'Not Mentioned') {
       setValue('typeOfEmployment', jobDetails.typeOfEmployment);

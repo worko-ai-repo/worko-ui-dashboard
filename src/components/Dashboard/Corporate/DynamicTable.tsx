@@ -154,6 +154,7 @@ export function DynamicTable<T extends { id: string }>({
                     <tr><td colSpan={totalCols} className="h-4" /></tr>
                   </>
                 )}
+
               </React.Fragment>
             );
           })}
