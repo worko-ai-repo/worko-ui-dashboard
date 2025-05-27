@@ -1,12 +1,11 @@
 import { Controller, useForm } from 'react-hook-form';
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
-import { X } from 'lucide-react';
 import Input from './Input';
 import TagInput from './TagInput';
 import { useEffect } from 'react';
 import { validationRules } from '@Utils/FormValidator.utils';
 import Editor from './RichTextEditor';
-import { JobDetails, JobFormSchema } from '@Components/Dashboard/types';
+import { JobDetails } from '@Interfaces/CorporateDashboard.dto';
+import { JobFormSchema } from '@Components/Dashboard/types';
 
 export default function JobForm({
   onClose,

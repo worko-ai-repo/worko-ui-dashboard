@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Upload, SendIcon } from 'lucide-react';
 import httpServiceObj from '@Services/ApiHandler.service';
-import { JobDetails } from '@Components/Dashboard/types';
+import { JobDetails } from '@Interfaces/CorporateDashboard.dto';
 
 
 export default function JobDescription({
