@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { Send } from 'lucide-react';
 import { evaluationRequest } from '@Assets';
+import ReusableInput from '../ReusableInput';
 
 type Evaluator = {
   name: string;
@@ -54,50 +55,51 @@ const EvaluatorForm: React.FC = () => {
   };
 
   return (
-    <div className="size-full mt-4">
+    <div className="flex flex-col mt-4 h-full">
       {/* Tabs */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex space-x-2 overflow-x-auto">
-          {fields.map((_, index) => (
-            <div
-              key={index}
-              className={`flex items-center border-r px-2 border-gray-300`}
+      <div className="flex flex-wrap gap-2 mb-4 items-center">
+        {fields.map((_, index) => (
+          <div
+            key={index}
+            className="flex items-center border px-2 py-1 rounded-xl border-gray-300 bg-white"
+          >
+            <button
+              onClick={() => setActiveTab(index)}
+              className={`text-sm font-semibold pr-1 ${activeTab === index ? 'text-black' : 'text-gray-400'}`}
             >
+              Evaluator {index + 1}
+            </button>
+            {fields.length > 1 && (
               <button
-                onClick={() => setActiveTab(index)}
-                className={`text-sm font-semibold pr-1 text-nowrap ${activeTab === index ? 'text-black' : 'text-gray-400'
-                  }`}
+                onClick={() => handleRemoveTab(index)}
+                className="text-gray-400 text-xs hover:text-red-500 ml-1"
+                title="Remove Evaluator"
               >
-                Evaluator {index + 1}
+                ×
               </button>
-              {fields.length > 1 && (
-                <button
-                  onClick={() => handleRemoveTab(index)}
-                  className="text-gray-400 text-xs hover:text-red-500 ml-1"
-                  title="Remove Evaluator"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-        <button
-          type="button"
-          onClick={() => {
-            append({ name: '', email: '', message: '' });
-            setActiveTab(fields.length);
-          }}
-          className="text-blue-500 text-lg font-bold"
-          title="Add Evaluator"
-        >
-          +
-        </button>
+            )}
+          </div>
+        ))}
+
+        {fields.length < 5 && (
+          <button
+            type="button"
+            onClick={() => {
+              append({ name: '', email: '', message: '' });
+              setActiveTab(fields.length);
+            }}
+            className="text-blue-500 text-xl font-bold px-2"
+            title="Add Evaluator"
+          >
+            +
+          </button>
+        )}
       </div>
+
 
       {/* Form or Confirmation */}
       {fields.map((_, index) => (
-        <div key={index} className={`${activeTab === index ? 'block' : 'hidden'}`}>
+        <div key={index} className={`h-full ${activeTab === index ? 'block' : 'hidden'}`}>
           {submittedTabs.includes(index) ? (
             <div className="flex flex-col items-center justify-center text-center p-4">
               {/* Add your image here */}
@@ -108,56 +110,48 @@ const EvaluatorForm: React.FC = () => {
               </p>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Name</label>
-                <input
-                  type="text"
-                  {...register(`evaluators.${index}.name`, { required: 'Name is required' })}
-                  placeholder="Write name"
-                  className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
-                />
-                {errors.evaluators?.[index]?.name && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.evaluators[index].name?.message}
-                  </p>
-                )}
-              </div>
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col h-full gap-12 text-left">
+              <div className='flex flex-col gap-4'>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Name</label>
+                  <ReusableInput
+                    type="text"
+                    register={register(`evaluators.${index}.name`, { required: "Name is required" })}
+                    placeholder="Write name"
+                    error={errors?.evaluators?.[index]?.name?.message}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Email</label>
-                <input
-                  type="email"
-                  {...register(`evaluators.${index}.email`, {
-                    required: 'Email is required',
-                    pattern: {
-                      value: /^\S+@\S+$/i,
-                      message: 'Invalid email format',
-                    },
-                  })}
-                  placeholder="Write email address"
-                  className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
-                />
-                {errors.evaluators?.[index]?.email && (
-                  <p className="text-red-500 text-xs mt-1">
-                    {errors.evaluators[index].email?.message}
-                  </p>
-                )}
-              </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Email</label>
+                  <ReusableInput
+                    type="email"
+                    register={register(`evaluators.${index}.email`, {
+                      required: "Email is required",
+                      pattern: {
+                        value: /^\S+@\S+$/i,
+                        message: "Invalid email format",
+                      },
+                    })}
+                    placeholder="Write email address"
+                    error={errors?.evaluators?.[index]?.email?.message}
+                  />
+                </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Message</label>
-                <textarea
-                  {...register(`evaluators.${index}.message`)}
-                  placeholder="Any message you want to write"
-                  className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
-                  rows={3}
-                />
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Message</label>
+                  <textarea
+                    {...register(`evaluators.${index}.message`)}
+                    placeholder="Any message you want to write"
+                    className="w-full h-[96px] rounded-xl bg-gray-100 p-4 pl-[26px] text-sm focus:outline-none"
+                    rows={3}
+                  />
+                </div>
               </div>
 
               <button
                 type="submit"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
+                className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
               >
                 <Send size={16} />
                 <span>Submit</span>

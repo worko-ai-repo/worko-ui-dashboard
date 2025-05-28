@@ -78,3 +78,16 @@
 .btn_secondary:hover {
   @apply bg-blue-600;
 }
+
+.btn-sky {
+  @apply p-2 text-white rounded-[10px] bg-[#57E1E1] bg-[linear-gradient(0deg,_rgba(49,_107,_255,_0.3)_0%,_rgba(56,_161,_214,_0.3)_100%)];
+}
+
+/* Close Button (Open, Archived) */
+.btn-blue {
+  @apply p-2 text-white rounded-[10px] bg-[#98B5FF] bg-[linear-gradient(0deg,_#316BFF_0%,_#38A1D6_100%)];
+}
+
+.btn-dark {
+    @apply p-2 text-white rounded-[10px] bg-[linear-gradient(0deg,_#182b45_0%,_#314d70_100%)];
+}

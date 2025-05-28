@@ -1,6 +1,7 @@
 import { Send, ChevronDownIcon } from 'lucide-react';
 import React from 'react';
 import { useForm } from 'react-hook-form';
+import { SubmitButton } from '../SubmitButton';
 
 type RejectionFormData = {
   reason: string;
@@ -19,10 +20,10 @@ const RejectionForm: React.FC = () => {
   };
 
   return (
-    <div className="size-full mt-4">
+    <div className="size-full mt-4 text-left">
       <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col space-y-4 size-full">
         <div>
-          <label className="block text-sm font-semibold text-gray-800 mb-1">
+          <label className="block text-sm font-semibold text-gray-800 mb-[26px]">
             Why are you rejecting?
           </label>
           <div className="relative">
@@ -50,22 +51,19 @@ const RejectionForm: React.FC = () => {
           )}
         </div>
 
-        <div className='flex-1'>
+        <div className='flex flex-col gap-[61px]'>
           <textarea
             {...register('feedback')}
             placeholder="Please provide a detail feedback. It will help us to do a better matching"
-            className="w-full h-[80%] rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+            className="w-full h-[231px] rounded-xl bg-gray-100 p-3 text-sm  focus:outline-none"
             rows={4}
           />
-        </div>
 
-        <button
-          type="submit"
-          className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition"
-        >
-          <Send size={16} />
-          <span>Submit</span>
-        </button>
+          <SubmitButton
+            type="submit"
+            label="Submit"
+          />
+        </div>
       </form>
     </div>
   );

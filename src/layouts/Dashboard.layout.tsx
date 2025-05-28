@@ -22,7 +22,10 @@ function CorporateDashboardLayout(): JSX.Element {
                 />
                 
                 <div className="grid grid-rows-[auto_1fr] h-screen">
-                    <Header setSidebarOpen={setSidebarOpen} sidebarOpen={sidebarOpen} />
+                    <Header
+                        sidebarOpen={sidebarOpen}
+                        setSidebarOpen={setSidebarOpen}
+                    />
                     <main className="overflow-auto p-0 lg:p-8 pt-2">
                         <Outlet />
                     </main>

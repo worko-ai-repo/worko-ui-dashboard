@@ -1,4 +1,4 @@
-import { ComponentType, ReactElement, ReactNode, SVGProps } from "react";
+import { ComponentType, SVGProps } from "react";
 
 export type DashboardType = 'CORPORATE' | 'EMPLOYEE' | 'CANDIDATE' | 'ADMIN';
 

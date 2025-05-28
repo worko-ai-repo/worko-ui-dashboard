@@ -20,23 +20,22 @@ const RequestDocumentModal = () => {
     };
 
     return (
-        <div className="w-full h-full">
-            <h2 className="text-lg font-semibold mb-4">Request for document</h2>
+        <div className="w-full h-full flex flex-col">
+            <h2 className="text-lg text-left font-semibold mb-4 px-2">Request for document</h2>
 
-            <div className="h-[90%] flex flex-col justify-between">
+            <div className="flex-1 flex flex-col p-2 justify-between overflow-y-auto">
                 <div>
                     {documents.map((doc, index) => (
                         <div key={index} className="mb-4">
-                            {index === 0 && (
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
-                                    <span className="text-red-500 mr-1">*</span>Document name
-                                </label>
-                            )}
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <span className="text-red-500 mr-1">*</span>
+                                Document {index + 1}
+                            </label>
                             <input
                                 type="text"
                                 value={doc}
                                 onChange={(e) => handleChange(index, e.target.value)}
-                                placeholder="Write document name here"
+                                placeholder={`Enter Document ${index + 1} name`}
                                 className="w-full px-4 py-2 rounded-md bg-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
@@ -51,13 +50,15 @@ const RequestDocumentModal = () => {
                     </button>
                 </div>
 
-                <button
-                    onClick={handleSubmit}
-                    className="bg-blue-600 hover:bg-blue-700 w-fit text-white px-3 py-2 rounded-lg flex justify-center items-center gap-2"
-                >
-                    <Send size={16} />
-                    Request
-                </button>
+                <div className="pt-4">
+                    <button
+                        onClick={handleSubmit}
+                        className="bg-blue-600 hover:bg-blue-700 w-fit text-white px-3 py-2 rounded-lg flex justify-center items-center gap-2"
+                    >
+                        <Send size={16} />
+                        Request
+                    </button>
+                </div>
             </div>
         </div>
     );

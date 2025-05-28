@@ -1,22 +1,27 @@
 import React, { useState } from "react";
-import { Eye, Pencil, FileText, X, Save } from 'lucide-react';
+import { Filter, X, Link } from 'lucide-react';
+import { DynamicTable } from "../DynamicTable";
 import Modal from "../Modal";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
-import { DynamicTable } from "../DynamicTable";
+import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 
 interface JobsTableProps {
     activeTab: 'PUBLISHED' | 'CLOSED' | 'ARCHIVED';
     setActiveTab: (tab: 'PUBLISHED' | 'CLOSED' | 'ARCHIVED') => void;
     data: JobApiResponse
+    selectedRows: string[];
+    setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
+
 }
 
 const JobTableWrapper: React.FC<JobsTableProps> = ({
     activeTab,
     setActiveTab,
     data,
+    selectedRows,
+    setSelectedRows,
 }) => {
-    const [selectedRows, setSelectedRows] = useState<string[]>([]);
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState(false);
 
@@ -24,16 +29,64 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         {
             key: "jobTitle",
             label: "Job Title",
-            hideOnMobile: true,
             render: (row: JobData) => <span className="font-bold w-full capitalize">{row.jobTitle}</span>,
         },
-        { key: "department", label: "Department", hideOnMobile: true },
-        { key: "totalApplications", label: "Total Applications", hideOnMobile: true },
+        { key: "department", label: "Department" },
+        { key: "totalApplications", label: "Total Applications" },
         ...(activeTab === "PUBLISHED"
-            ? [{ key: "pending", label: "Pending", hideOnMobile: true }]
-            : [{ key: "archivedBy", label: "Archived By", hideOnMobile: true }]),
-        ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status", hideOnMobile: true }] : []),
-        { key: "actions", label: "Actions", hideOnMobile: true },
+            ? [{ key: "pending", label: "Pending" }]
+            : [{ key: "archivedBy", label: "Archived By" }]),
+        ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status" }] : []),
+        {
+            key: "actions",
+            label: "Actions",
+            render: (row: JobData) => {
+                const tabButtonConfig: Record<string, {
+                    icon: JSX.Element,
+                    className: string,
+                    onClick?: () => void,
+                    tooltip: string
+                }[]> = {
+                    PUBLISHED: [
+                        { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants" },
+                        { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes" },
+                        { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job" },
+                        { icon: <img src={Edit} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Update Job" },
+                        { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job" },
+                        { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Close Job", onClick: () => setIsCloseJobModalOpen(true) },
+                        { icon: <img src={Archive} className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Archive Job" }
+                    ],
+                    ARCHIVED: [
+                        { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Remove Job" },
+                        { icon: <img src={Repost} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Repost Job" },
+                        { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate" }
+                    ],
+                    CLOSED: [
+                        { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job" }
+                    ]
+                };
+
+
+                const buttons = tabButtonConfig[activeTab];
+
+                if (!buttons) return null;
+
+                return (
+                    <div className="p-1 flex gap-2 items-center justify-center">
+                        {buttons.map((btn, idx) => (
+                            <button
+                                key={idx}
+                                className={btn.className}
+                                onClick={btn.onClick}
+                                title={btn.tooltip}
+                            >
+                                {btn.icon}
+                            </button>
+                        ))}
+                    </div>
+                );
+            }
+        }
     ];
 
     const toggleRow = (id: string) => {
@@ -68,7 +121,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                 <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">
                     &minus;
                 </span>
-                <span>deselect {selectedRows.length} rows</span>
+                <span>deselect {selectedRows?.length} rows</span>
             </button>
             <DynamicTable<JobData>
                 columns={columns}
@@ -78,62 +131,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                 toggleRow={toggleRow}
                 toggleExpand={toggleExpand}
                 toggleSelectAll={toggleSelectAll}
-                allSelected={selectedRows.length === data?.data.length && data.data.length > 0}
-                renderActions={(row) => {
-                    if (activeTab === "PUBLISHED") {
-                        return (
-                            <div className="flex gap-2 items-center justify-center">
-                                <button className="btn-view">
-                                    <Eye className="w-4 h-4" />
-                                </button>
-                                <button className="btn-edit">
-                                    <Pencil className='w-4 h-4' />
-                                </button>
-                                <button className="btn-copy">
-                                    <FileText className='w-4 h-4' />
-                                </button>
-                                <button
-                                    onClick={() => setIsCloseJobModalOpen(true)}
-                                    className="btn-close"
-                                >
-                                    <X className='w-4 h-4' />
-                                </button>
-                                <button className="btn-save-open">
-                                    <Save className='w-4 h-4' />
-                                </button>
-                            </div>
-                        );
-                    }
-
-                    if (activeTab === "ARCHIVED") {
-                        return (
-                            <div className="flex gap-2 items-center justify-center">
-
-                                <button className="btn-close">
-                                    <X className='w-4 h-4' />
-                                </button>
-                                <button className="btn-repost">
-                                    <Pencil className='w-4 h-4' />
-                                </button>
-                                <button className="btn-copy">
-                                    <FileText className='w-4 h-4' />
-                                </button>
-                            </div>
-                        );
-                    }
-
-                    if (activeTab === "CLOSED") {
-                        return (
-                            <div className="flex gap-2 items-center justify-center">
-                                <button className="btn-copy">
-                                    <FileText className='w-4 h-4' />
-                                </button>;
-                            </div>
-                        );
-                    }
-
-                    return null; // fallback
-                }}
+                allSelected={selectedRows?.length === data?.data.length && data.data.length > 0}
                 renderExpandedDetails={(row) => (
                     <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
                         <div className="col-span-2">

@@ -101,3 +101,30 @@ export interface CorporateInvite {
   PK: string;
   companyDetails: CompanyDetails;
 }
+
+export interface JobDetails {
+  jobTitle?: string;
+  company?: string;
+  offerings?: string;
+  gradeLevel?: string;
+  department?: string;
+  workMode?: string;
+  location?: string;
+  experienceRange?: {
+    min?: string;
+    max?: string;
+  };
+  salaryRange?: {
+    min?: string;
+    max?: string;
+  };
+  creatorName?: string;
+  coreSkills?: string[];
+  technicalSkills?: string[];
+  softSkills?: string[];
+  goodSkills?: string[];
+  otherRequirements?: string;
+  typeOfEmployment?: string;
+  formattedHTML?: string;
+}
+

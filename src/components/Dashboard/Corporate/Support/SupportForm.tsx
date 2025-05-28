@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { ChevronDown, Send } from "lucide-react";
+import { SubmitButton } from "../SubmitButton";
 
 type FormData = {
     reason: string;
@@ -21,10 +22,10 @@ const SupportForm = () => {
     return (
         <form
             onSubmit={handleSubmit(onSubmit)}
-            className="flex flex-col justify-between h-full max-w-md w-full space-y-4 text-sm font-medium text-[#0F172A]"
+            className="flex flex-col h-full text-left max-w-md w-full space-y-12 text-sm font-medium text-[#0F172A]"
         >
             <div className="flex flex-col gap-4">
-                <h2 className="font-semibold text-base mb-4">How can we help you?</h2>
+                <h2 className="font-semibold text-base mb-12">How can we help you?</h2>
 
                 {/* Reason */}
                 <div>
@@ -79,13 +80,10 @@ const SupportForm = () => {
             </div>
             {/* Submit Button */}
             <div className="mt-auto">
-                <button
+                <SubmitButton
                     type="submit"
-                    className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
-                >
-                    <Send className="w-4 h-4" />
-                    <span>Submit</span>
-                </button>
+                    label="Submit"
+                />
             </div>
         </form>
     );

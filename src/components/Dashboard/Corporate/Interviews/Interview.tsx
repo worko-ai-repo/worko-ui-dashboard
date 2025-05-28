@@ -9,7 +9,7 @@ const Interview = () => {
     const [searchBarText, setSearchBarText] = useState<string | null>(null);
     
     return (
-        <div className='space-y-4'>
+        <div className='flex flex-col gap-4'>
             <div className='flex-wrap flex gap-4'>
                 <HeaderDetails />
             </div>

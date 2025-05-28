@@ -1,4 +1,3 @@
-import { continueReferralRequestDataDto } from "@Pages/request-referral/RequestReferral";
 import React, { ReactNode } from "react";
 
 /**
@@ -15,8 +14,8 @@ export interface AppContextType {
   setAuthState: (tokenData: any, isLoggedIn: boolean) => void;
   setUpdateCheck: React.Dispatch<React.SetStateAction<boolean>>;
   userDetails: any | null;
-  PendingApply: continueReferralRequestDataDto | null ;
-  setPendingApply: React.Dispatch<React.SetStateAction<continueReferralRequestDataDto | null >>;
+  PendingApply: any | null ;
+  setPendingApply: React.Dispatch<React.SetStateAction<any | null >>;
   isModalOpen: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }

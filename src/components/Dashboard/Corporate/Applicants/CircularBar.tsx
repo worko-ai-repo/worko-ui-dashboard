@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CircularProgressbar, buildStyles } from 'react-circular-progressbar';
 import 'react-circular-progressbar/dist/styles.css';
 
 type ProgressCircleProps = {
+  onClick: () => void; // optional, same as () => void
   value?: number; // optional, same as number | undefined
 };
 
@@ -12,7 +13,10 @@ const getColor = (value: number) => {
   return '#4CBC9A';
 };
 
-const ProgressCircle: React.FC<ProgressCircleProps> = ({ value }) => {
+const ProgressCircle: React.FC<ProgressCircleProps> = ({ 
+  value,
+  onClick,
+ }) => {
   const safeValue = typeof value === 'number' ? value : 0;
   const color = getColor(safeValue);
 
@@ -29,7 +33,12 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({ value }) => {
           strokeLinecap: 'round',
         })}
       />
-      {/* <p className="text-xs text-center text-gray-500 mt-2">View details</p> */}
+      <button
+        onClick={onClick}
+        className="text-xs text-center text-gray-500 mt-2"
+      >
+        View details
+      </button>
     </div>
   );
 };

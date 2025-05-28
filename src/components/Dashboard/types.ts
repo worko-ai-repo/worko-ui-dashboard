@@ -5,7 +5,7 @@ export type JobFormSchema = {
   gradeLevel?: string;
   department?: string;
   workMode: string;
-  location: string;
+  location: string[];
   experienceFrom: string;
   experienceTo: string;
   creatorName?: string;

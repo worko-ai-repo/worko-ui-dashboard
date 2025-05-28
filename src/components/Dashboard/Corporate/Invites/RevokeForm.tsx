@@ -4,6 +4,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 
 interface RevokeFormProps {
   inviteId: string;
+  onClose: () => void;
 }
 
 type FormData = {
@@ -12,6 +13,7 @@ type FormData = {
 
 const RevokeForm: React.FC<RevokeFormProps> = ({
   inviteId,
+  onClose,
 }) => {
   const {
     register,
@@ -20,8 +22,10 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
   } = useForm<FormData>();
 
   const onSubmit = async (data: FormData) => {
-    const { response, error } = await httpServiceObj.patch(`https://api.dev.worko.work/corporate-invite/${inviteId}/delete`, {}, true, {}, true);
-    console.log(response, error);
+    const { error, status } = await httpServiceObj.patch(`https://api.dev.worko.work/corporate-invite/${inviteId}/delete`, {}, true, {}, true);
+    if(status === 204) {
+      onClose();
+    }
   };
 
   return (

@@ -12,17 +12,17 @@ const CVPreview = ({
 }: {
     onClose: () => void;
     onSubmit: () => void;
-    setIsAddEvaluatorModal: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsRejectModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
-    setIsHireNowModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsAddEvaluatorModal?: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsRejectModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
+    setIsHireNowModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
 }) => {
     return (
         <div className="w-full h-full flex flex-col gap-4 p-4">
             {/* CV Viewer */}
-            <div className="flex gap-4 justify-between">
+            <div className="flex gap-4 justify-between h-full">
                 <h2 className="text-lg font-semibold">CV</h2>
                 <div className="flex flex-col gap-4">
-                    <div className="relative border-2 border-gray-400 w-full aspect-square rounded-xl overflow-hidden">
+                    <div className="flex-1 border-2 border-gray-400 w-full h-full rounded-xl overflow-hidden">
                         <iframe
                             src={sampleCV}
                             title="CV Preview"
@@ -36,7 +36,7 @@ const CVPreview = ({
                         <button
                             onClick={() => {
                                 onClose();
-                                setIsRejectModalOpen(true);
+                                setIsRejectModalOpen?.(true);
                             }}
                             className="flex items-center gap-2 border border-red-600 text-red-600 font-medium px-4 py-2 rounded-lg transition"
                         >
@@ -47,7 +47,7 @@ const CVPreview = ({
                         <button
                             onClick={() => {
                                 onClose();
-                                setIsHireNowModalOpen(true);
+                                setIsHireNowModalOpen?.(true);
                             }}
                             className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition"
                         >
@@ -58,7 +58,7 @@ const CVPreview = ({
                         <button
                             onClick={() => {
                                 onClose();
-                                setIsAddEvaluatorModal(true);
+                                setIsAddEvaluatorModal?.(true);
                             }}
                             className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition"
                         >

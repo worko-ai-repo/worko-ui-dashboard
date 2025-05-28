@@ -8,6 +8,9 @@ import Applicants from '@Components/Dashboard/Corporate/Applicants/Applicants';
 import BulkCVCheck from '@Components/Dashboard/Corporate/BulkCvCheck/BulkCvCheck';
 import Invites from '@Components/Dashboard/Corporate/Invites/Invites';
 import Support from '@Components/Dashboard/Corporate/Support/Support';
+import Referral from '@Components/Dashboard/Corporate/Referral/Referral';
+import InvoiceAndPayment from '@Components/Dashboard/Corporate/InvoiceAndPayment/InvoiceAndPayment';
+import Interview from '@Components/Dashboard/Corporate/Interviews/Interview';
 
 const CorporateDashboard = () => {
 	const routes = useRoutes([
@@ -67,7 +70,7 @@ const CorporateDashboard = () => {
 					path: 'referral',
 					element: (
 						<Suspense fallback={<MainLoader />}>
-							<Jobs />
+							<Referral />
 						</Suspense>
 					),
 				},
@@ -76,6 +79,22 @@ const CorporateDashboard = () => {
 					element: (
 						<Suspense fallback={<MainLoader />}>
 							<Support />
+						</Suspense>
+					),
+				},
+				{
+					path: 'invoice-&-payment',
+					element: (
+						<Suspense fallback={<MainLoader />}>
+							<InvoiceAndPayment />
+						</Suspense>
+					),
+				},
+				{
+					path: 'interviews',
+					element: (
+						<Suspense fallback={<MainLoader />}>
+							<Interview />
 						</Suspense>
 					),
 				},

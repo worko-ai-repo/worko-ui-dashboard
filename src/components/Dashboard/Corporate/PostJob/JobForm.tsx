@@ -1,12 +1,11 @@
 import { Controller, useForm } from 'react-hook-form';
-import { Dialog, DialogPanel, DialogTitle } from '@headlessui/react';
-import { X } from 'lucide-react';
 import Input from './Input';
 import TagInput from './TagInput';
 import { useEffect } from 'react';
 import { validationRules } from '@Utils/FormValidator.utils';
 import Editor from './RichTextEditor';
-import { JobDetails, JobFormSchema } from '@Interfaces/CorporateDashboardJobs.dto';
+import { JobDetails } from '@Interfaces/CorporateDashboard.dto';
+import { JobFormSchema } from '@Components/Dashboard/types';
 
 export default function JobForm({
   onClose,
@@ -31,7 +30,7 @@ export default function JobForm({
       gradeLevel: '',
       department: '',
       workMode: '',
-      location: '',
+      location: [],
       experienceFrom: '',
       experienceTo: '',
       creatorName: '',
@@ -76,9 +75,13 @@ export default function JobForm({
     if (jobDetails.workMode && jobDetails.workMode !== 'Not Mentioned') {
       setValue('workMode', jobDetails.workMode);
     }
+
+
     if (jobDetails.location && jobDetails.location !== 'Not Mentioned') {
-      setValue('location', jobDetails.location);
+      setValue('location', [jobDetails.location]);
     }
+
+
     if (jobDetails.typeOfEmployment && jobDetails.typeOfEmployment !== 'Not Mentioned') {
       setValue('typeOfEmployment', jobDetails.typeOfEmployment);
     }
@@ -101,6 +104,7 @@ export default function JobForm({
     onClose();
   };
 
+  const location = watch('location');
   const coreSkills = watch('coreSkills');
   const technicalSkills = watch('technicalSkills');
   const softSkills = watch('softSkills');
@@ -117,24 +121,23 @@ export default function JobForm({
   };
 
   return (
-    <div className="overflow-auto p-1">
+    <div className="overflow-auto p-1 text-start">
       {/* Job Description */}
-      <div>
+      <div className='mb-4'>
         <label className="text-sm font-medium text-gray-700">Edit Job Description*</label>
-        {jobDetails?.formattedHTML !== undefined && (
-          <Editor
-            value={jobDetails.formattedHTML}
-            onChange={(val) => {
-              setValue('description', val)
-              trigger('description')
-            }}
-          />
-        )}
+        <Editor
+          value={jobDetails?.formattedHTML}
+          onChange={(val) => {
+            setValue('description', val)
+            trigger('description')
+          }}
+        />
+
         {errors.description && <p className="text-sm text-red-500">{errors.description.message}</p>}
       </div>
 
       {/* Grid Inputs */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <Controller
           name="jobTitle"
           control={control}
@@ -205,35 +208,17 @@ export default function JobForm({
             />
           )}
         />
-        <div className="space-y-4">
-          <Controller
-            name="location"
-            control={control}
-            rules={{ required: 'Location is required' }}
-            render={({ field }) => (
-              <Input
-                label="Location*"
-                {...field}
-                error={errors.location?.message}
-              />
-            )}
-          />
-
-          <Controller
-            name="creatorName"
-            control={control}
-            render={({ field }) => (
-              <Input
-                label="Creator name"
-                {...field}
-              />
-            )}
-          />
+        
+        {/* Location */}
+        <div className="sm:col-span-2 lg:col-span-1">
+          <TagInput label="Location*" tags={location} onAddTag={(tag) => addTag('location', tag)} onRemoveTag={(tag) => removeTag('location', tag)} />
         </div>
 
-        <div className="space-y-2">
+        {/* Experience and Salary - Stacked vertically */}
+        <div className="flex flex-col sm:col-span-2 lg:col-span-1 justify-between gap-4">
+          {/* Experience */}
           <div>
-            <label className="text-sm font-medium text-gray-700">Experience (in years)</label>
+            <label className="text-sm font-medium text-gray-700">Experience* (in years)</label>
             <div className="flex items-center gap-2 mt-1">
               <input type="number" placeholder="From" {...register('experienceFrom')} className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none" />
               <span className="text-sm text-gray-500">to</span>
@@ -241,76 +226,106 @@ export default function JobForm({
             </div>
           </div>
 
-          <div className="relative">
-            <div className="flex items-center gap-2 mt-1">
-              {/* Left Side: Label, Currency, From */}
-              <div className="flex flex-col w-full">
-                <div className="flex items-center mb-1">
-                  <label className="text-sm font-medium text-gray-700 mr-2">Salary</label>
-                  <select className="appearance-none border-2 rounded-full px-3 text-xs bg-transparent focus:outline-none">
-                    <option value="INR">INR</option>
-                    <option value="USD">USD</option>
-                  </select>
-                </div>
+          {/* Salary */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <label className="text-sm font-medium text-gray-700">Salary*</label>
+              <select className="appearance-none border-2 rounded-full px-3 text-xs bg-transparent focus:outline-none">
+                <option value="INR">INR</option>
+                <option value="USD">USD</option>
+              </select>
+              <label className="flex text-[10px] items-center font-medium text-gray-700 ml-auto">
                 <input
-                  type="number"
-                  placeholder="From"
-                  {...register('salaryFrom')}
-                  className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+                  type="checkbox"
+                  className="form-checkbox text-blue-600 w-3 h-3 focus:ring-0 mr-1 accent-blue-600"
                 />
-              </div>
-
-              {/* Middle Separator */}
-              <span className="text-sm text-gray-500 self-end pb-3">to</span>
-
-              {/* Right Side: Checkbox, To */}
-              <div className="flex flex-col w-full">
-                <div className="flex justify-start mb-1">
-                  <label className="flex text-[10px] items-center font-medium text-gray-700">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox text-blue-600 w-3 h-3 focus:ring-0 mr-1 accent-blue-600"
-                    />
-                    <span className="text-gray-700">don’t show on website</span>
-                  </label>
-                </div>
-                <input
-                  type="number"
-                  placeholder="To"
-                  {...register('salaryTo')}
-                  className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
-                />
-              </div>
+                <span className="text-gray-700">don't show on website</span>
+              </label>
+            </div>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                placeholder="From"
+                {...register('salaryFrom')}
+                className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+              />
+              <span className="text-sm text-gray-500">to</span>
+              <input
+                type="number"
+                placeholder="To"
+                {...register('salaryTo')}
+                className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
+              />
             </div>
           </div>
         </div>
 
-        <TagInput label="Core Skills" tags={coreSkills} onAddTag={(tag) => addTag('coreSkills', tag)} onRemoveTag={(tag) => removeTag('coreSkills', tag)} />
-        <TagInput label="Technical Skills" tags={technicalSkills} onAddTag={(tag) => addTag('technicalSkills', tag)} onRemoveTag={(tag) => removeTag('technicalSkills', tag)} />
-        <TagInput label="Soft Skills" tags={softSkills} onAddTag={(tag) => addTag('softSkills', tag)} onRemoveTag={(tag) => removeTag('softSkills', tag)} />
-        <TagInput label="Good to Have Skills" tags={goodSkills} onAddTag={(tag) => addTag('goodSkills', tag)} onRemoveTag={(tag) => removeTag('goodSkills', tag)} />
-      </div>
-
-      <div className="mt-4 grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
-        <div>
-          <label className="text-sm font-medium text-gray-700">Other requirements</label>
-          <textarea {...register('otherRequirements')} className="mt-1 w-full rounded-xl bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write here" rows={3} />
-        </div>
-        <Controller
-          name="typeOfEmployment"
-          control={control}
-          rules={{ required: 'This field is required' }}
-          render={({ field }) => (
-            <Input
-              label="Type of employment*"
-              {...field}
-              error={errors.typeOfEmployment?.message}
+        {/* Variable/Fixed Components and Employment Type */}
+        <div className='sm:col-span-2 lg:col-span-1 flex flex-col gap-3'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+            <Controller
+              name="typeOfEmployment"
+              control={control}
+              rules={{ required: 'This field is required' }}
+              render={({ field }) => (
+                <Input
+                  label="Variable Component"
+                  {...field}
+                  error={errors.typeOfEmployment?.message}
+                />
+              )}
             />
-          )}
-        />
+            <Controller
+              name="typeOfEmployment"
+              control={control}
+              rules={{ required: 'This field is required' }}
+              render={({ field }) => (
+                <Input
+                  label="Fixed Component"
+                  {...field}
+                  error={errors.typeOfEmployment?.message}
+                />
+              )}
+            />
+          </div>
+          <Controller
+            name="typeOfEmployment"
+            control={control}
+            rules={{ required: 'This field is required' }}
+            render={({ field }) => (
+              <Input
+                label="Type of employment*"
+                {...field}
+                error={errors.typeOfEmployment?.message}
+              />
+            )}
+          />
+        </div>
+
+        {/* Skills - Each skill section takes full width on mobile, adapts on larger screens */}
+        <div className="sm:col-span-2 lg:col-span-1">
+          <TagInput label="Core Skills*" tags={coreSkills} onAddTag={(tag) => addTag('coreSkills', tag)} onRemoveTag={(tag) => removeTag('coreSkills', tag)} />
+        </div>
+        <div className="sm:col-span-2 lg:col-span-1">
+          <TagInput label="Technical Skills*" tags={technicalSkills} onAddTag={(tag) => addTag('technicalSkills', tag)} onRemoveTag={(tag) => removeTag('technicalSkills', tag)} />
+        </div>
+        <div className="sm:col-span-2 lg:col-span-1">
+          <TagInput label="Soft Skills*" tags={softSkills} onAddTag={(tag) => addTag('softSkills', tag)} onRemoveTag={(tag) => removeTag('softSkills', tag)} />
+        </div>
+        <div className="sm:col-span-2 lg:col-span-1">
+          <TagInput label="Good to Have Skills" tags={goodSkills} onAddTag={(tag) => addTag('goodSkills', tag)} onRemoveTag={(tag) => removeTag('goodSkills', tag)} />
+        </div>
+        
+        {/* Other Requirements - Full width */}
+        <div className='sm:col-span-2'>
+          <label className="text-sm font-medium text-gray-700">Other mandatory requirements*</label>
+          <textarea {...register('otherRequirements')} className="mt-1 w-full min-h-[133px] rounded-xl bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write here" rows={3} />
+        </div>
       </div>
+      
+      {/* Submit Button */}
       <div className="flex justify-start pt-2">
-        <button onClick={handleSubmit(onSubmit)} className="bg-[#316BFF] text-white p-[10px] pr-4 rounded-[10px] font-medium">
+        <button onClick={handleSubmit(onSubmit)} className="bg-[#316BFF] text-white p-[10px] pr-4 rounded-[10px] font-medium text-sm sm:text-base">
           + Create Job
         </button>
       </div>

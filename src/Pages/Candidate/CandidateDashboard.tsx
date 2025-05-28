@@ -2,7 +2,6 @@ import { useRoutes, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 import MainLoader from "@Components/Loader/Loader";
 import DashboardLayout from "@Layouts/Dashboard.layout";
-import Applicants from "@Components/Dashboard/Candidate/Applicants/Applicants";
 import Profile from "@Components/Dashboard/Candidate/Pages/Profile/Profile";
 import ReferAndEarn from "@Components/Dashboard/Candidate/Pages/ReferAndEarn/ReferAndEarn";
 import Guidance from "@Components/Dashboard/Candidate/Pages/Guidance/Guidance";
@@ -37,10 +36,6 @@ const CandidateDashboard = () => {
               <Jobs />
             </Suspense>
           ),
-        },
-        {
-          path: "referral",
-          element: <Applicants />,
         },
         {
           path: "guidance",

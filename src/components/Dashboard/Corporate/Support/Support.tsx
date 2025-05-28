@@ -9,8 +9,8 @@ const Support = () => {
     const [isSupportFormOpen, setIsSupportFormOpen] = useState(false)
 
     return (
-        <div className='space-y-4'>
-            <div className='flex justify-end'>
+        <div>
+            <div className='flex mb-4 justify-end'>
                 <button
                     onClick={() => setIsSupportFormOpen(true)}
                     className='flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-xl text-white text-sm'
@@ -23,7 +23,7 @@ const Support = () => {
             <Modal
                 isOpen={isSupportFormOpen}
                 onClose={() => setIsSupportFormOpen(false)}
-                className="w-[90vw] sm:w-[455px] sm:h-[404px] h-[90vh]"
+                className="w-[90vw] sm:w-[455px] sm:min-h-[404px] max-sm:h-[90dvh]"
             >
                 <SupportForm />
             </Modal>
