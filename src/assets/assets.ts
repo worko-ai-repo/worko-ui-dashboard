@@ -95,6 +95,7 @@ import Duplicate from './svgs/duplicate.svg'
 import Edit from './svgs/edit.svg'
 import Repost from './svgs/repost.svg'
 import View from './svgs/view.svg'
+import Submit from './svgs/submit.svg'
 
 export { 
     // Backgrounds
@@ -185,5 +186,6 @@ export {
     Duplicate,
     Edit,
     Repost,
-    View
+    View,
+    Submit
 };
