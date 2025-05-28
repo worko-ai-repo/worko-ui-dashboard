@@ -2,7 +2,8 @@ import { memo, useState, useCallback } from 'react';
 import Table from "../../SharedComponents/Table";
 import { GuidanceApiResponse, GuidanceRequest, GuidancePaginationInfo } from './Guidance';
 import { useDashboardContext } from '@Context/Dashboard.context';
-import { checkbubble, eyeIcon, viewFeedback } from '@Assets';
+import { checkbubble, eyeIcon } from '@Assets';
+import MentorDetails from '../../SharedComponents/GuidanceMentorModal';
 
 interface GuidanceTableProps {
   data: GuidanceApiResponse | null;
@@ -22,7 +23,18 @@ const GuidanceTable = memo(({
   onRefresh
 }: GuidanceTableProps) => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
+  const [modalState, setModalState] = useState<{
+    isOpen: boolean;
+    variant: 'join' | 'book';
+    selectedRequest: GuidanceRequest | null;
+  }>({
+    isOpen: false,
+    variant: 'book',
+    selectedRequest: null
+  });
   const { user } = useDashboardContext();
+  const [localVisible, setLocalVisible] = useState(false);
+
 
   // Map guidanceRequestType to more readable format
   const formatGuidanceType = (type: string) => {
@@ -38,16 +50,44 @@ const GuidanceTable = memo(({
     return typeMap[type] || type;
   };
 
+  // Function to open modal
+  const openModal = useCallback((request: GuidanceRequest, variant: 'join' | 'book') => {
+    setModalState({
+      isOpen: true,
+      variant,
+      selectedRequest: request
+    });
+    setLocalVisible(true);
+  }, []);
+
+  // Function to close modal
+  const closeModal = useCallback(() => {
+    setLocalVisible(false);
+    // delay actual modal unmount
+  setTimeout(() => {
+    setModalState({
+      isOpen: false,
+      variant: 'book',
+      selectedRequest: null
+    });
+  }, 300);
+  }, []);
+
   // Function to handle viewing details
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
-    // Implementation for viewing details
-    console.log("View details for request:", request.id);
-  }, []);
+    openModal(request, 'join');
+  }, [openModal]);
 
   // Function to handle accept and pay
   const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     if (!user?.email) return;
     
+    // Open modal first
+    openModal(request, 'book');
+  }, [openModal, user?.email]);
+
+  // Function to handle actual acceptance and payment from modal
+  const handleModalAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     setProcessingRequestId(request.id);
     
     try {
@@ -55,12 +95,13 @@ const GuidanceTable = memo(({
       console.log("Accept and pay for request:", request.id);
       // After successful API call, refresh the data
       onRefresh();
+      closeModal();
     } catch (error) {
       console.error("Error accepting guidance request:", error);
     } finally {
       setProcessingRequestId(null);
     }
-  }, [onRefresh, user?.email]);
+  }, [onRefresh, closeModal]);
 
   // Define table columns
   const columns = [
@@ -122,7 +163,7 @@ const GuidanceTable = memo(({
             onClick={() => !isProcessing && handleViewDetails(item)}
           >
             {isProcessing ? (
-              <div className=" border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
+              <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
             ) : (
               <img src={eyeIcon} className='h-6 w-6' alt="View feedback" />
             )}
@@ -178,6 +219,36 @@ const GuidanceTable = memo(({
           </div>
         }
       />
+
+      {/* Modal Overlay */}
+      {modalState.selectedRequest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="relative">
+            {/* Close button */}
+            <button
+              onClick={closeModal}
+              className="fixed top-0 right-0 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-gray-100 z-10"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            
+            {/* Modal Content */}
+            <MentorDetails
+              className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+              variant={modalState.variant}
+              mentorName={modalState.selectedRequest?.mentorName || 'Sam Das'}
+              mentorDetails={modalState.selectedRequest?.guidanceRequestDescription || 'Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.'}
+              date={modalState.selectedRequest?.dateNeeded || '24-05-2025'}
+              time="7:00 pm"
+              duration="2 hrs 30 mins"
+              charge="₹4,999"
+              onAcceptAndPay={() => modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 });

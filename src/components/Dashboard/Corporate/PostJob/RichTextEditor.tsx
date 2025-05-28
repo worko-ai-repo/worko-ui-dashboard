@@ -28,7 +28,7 @@ const Editor: FC<EditorProps> = ({ value, onChange }) => {
   const [internalValue, setInternalValue] = useState(value)
 
   useEffect(() => {
-    const Font = Quill.import('formats/font');
+    const Font = Quill.import('formats/font') as any;
     Font.whitelist = ['sans-serif', 'serif', 'monospace']
     Quill.register(Font, true);
   }, [])

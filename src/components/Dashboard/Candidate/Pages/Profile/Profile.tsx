@@ -563,7 +563,7 @@ const Profile = () => {
                     <div className="border border-gray-300 opacity-50 w-full my-4"></div>
 
                     {/* Contact Info Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 sm:gap-y-4 mt-2">
+                    <div className="grid grid-cols-[auto] sm:grid-cols-[150px_1fr] gap-y-3 sm:gap-y-4 mt-2">
                       {[
                         {
                           icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,

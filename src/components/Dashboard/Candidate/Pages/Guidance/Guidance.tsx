@@ -19,6 +19,7 @@ export interface GuidanceRequest {
     text: string;
   };
   dateNeeded?: string;
+  mentorName?: string;
 }
 
 export interface GuidancePaginationInfo {

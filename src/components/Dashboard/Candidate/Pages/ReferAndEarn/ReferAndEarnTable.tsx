@@ -8,6 +8,7 @@ const ReferralsTable = ({searchbarText}: any) => {
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     count: 0,
     pageSize: 10,
@@ -20,9 +21,15 @@ const ReferralsTable = ({searchbarText}: any) => {
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
 
   const fetchReferrals = async (page = 1, pageSize = 10) => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setError("User email is not available");
+      setLoading(false);
+      return;
+    }
     
     setLoading(true);
+    setError(null); // Clear previous errors
+    
     try {
       // Include lastKey in the request if it exists for the requested page
       const lastKey = page > 1 ? lastKeyMap[page - 1] : undefined;
@@ -35,19 +42,48 @@ const ReferralsTable = ({searchbarText}: any) => {
         true
       );
 
-      const formatted = response?.data.map((item:any) => ({
-        id: item.id,
-        name: item.recipientDetails?.name || "N/A",
-        jobTitle: item.jobDetails?.title || "N/A",
-        email: item.recipientDetails?.email || "N/A",
-        phone: item.recipientDetails?.phoneNumber || "N/A",
-        dateReferred: new Date(item.referredDate).toLocaleDateString("en-GB"),
-        dateApplied: item.jobApplicationStatus
-          ? new Date(item.updatedAt).toLocaleDateString("en-GB")
-          : "----",
-        status: item.status || "PENDING",
-        referralBonus: item.commissionAmount,
-      }));
+      // Check if response exists and has the expected structure
+      if (!response) {
+        throw new Error("No response received from server");
+      }
+
+      // Check if response.data exists and is an array
+      if (!response.data || !Array.isArray(response.data)) {
+        console.warn("Invalid or missing data in API response:", response);
+        setReferrals([]);
+        setPagination(prev => ({
+          ...prev,
+          count: 0,
+          timesQueried: (response?.pagination?.timesQueried || 0) + 1,
+          queriedCount: 0,
+          lastKey: undefined
+        }));
+        return;
+      }
+
+      const formatted = response.data.map((item:any) => {
+        // Add null checks for nested objects
+        if (!item) {
+          console.warn("Null or undefined item in response data");
+          return null;
+        }
+
+        return {
+          id: item.id || `temp-${Math.random()}`, // Fallback ID if missing
+          name: item.recipientDetails?.name || "N/A",
+          jobTitle: item.jobDetails?.title || "N/A",
+          email: item.recipientDetails?.email || "N/A",
+          phone: item.recipientDetails?.phoneNumber || "N/A",
+          dateReferred: item.referredDate 
+            ? new Date(item.referredDate).toLocaleDateString("en-GB")
+            : "N/A",
+          dateApplied: item.jobApplicationStatus && item.updatedAt
+            ? new Date(item.updatedAt).toLocaleDateString("en-GB")
+            : "----",
+          status: item.status || "PENDING",
+          referralBonus: item.commissionAmount || 0,
+        };
+      }).filter(Boolean); // Remove any null items
 
       setReferrals(formatted);
       
@@ -65,15 +101,40 @@ const ReferralsTable = ({searchbarText}: any) => {
         sortOrder: "descending",
         timesQueried: response?.pagination?.timesQueried || 1,
         queriedCount: response?.pagination?.queriedCount || 0,
-        lastKey: response?.pagination.lastKey // Store lastKey in pagination state
+        lastKey: response?.pagination?.lastKey // Store lastKey in pagination state
       });
-    } catch (error) {
+
+    } catch (error: any) {
       console.error("Error fetching referrals:", error);
+      
+      // Set user-friendly error message
+      let errorMessage = "Failed to load referrals. Please try again.";
+      
+      if (error?.message) {
+        if (error.message.includes("Network")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("401") || error.message.includes("Unauthorized")) {
+          errorMessage = "Session expired. Please log in again.";
+        } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
+          errorMessage = "You don't have permission to view this data.";
+        } else if (error.message.includes("404")) {
+          errorMessage = "Referrals service not found. Please contact support.";
+        } else if (error.message.includes("500")) {
+          errorMessage = "Server error. Please try again later.";
+        }
+      }
+      
+      setError(errorMessage);
+      setReferrals([]);
+      setPagination(prev => ({
+        ...prev,
+        count: 0,
+        lastKey: undefined
+      }));
     } finally {
       setLoading(false);
     }
   };
-
 
   useEffect(() => {
     fetchReferrals(currentPage, pagination.pageSize);
@@ -90,6 +151,11 @@ const ReferralsTable = ({searchbarText}: any) => {
     }));
     setCurrentPage(1); // Reset to page 1 when changing page size
     setLastKeyMap({}); // Clear lastKey map when changing page size
+  };
+
+  const handleRetry = () => {
+    setError(null);
+    fetchReferrals(currentPage, pagination.pageSize);
   };
 
   const getStatusLabelAndStyle = (status: any) => {
@@ -109,7 +175,7 @@ const ReferralsTable = ({searchbarText}: any) => {
       NOT_ACHIEVED_YET: { label: "Not Achieved Yet", style: "text-[#0f172a]" },
       PENDING: { label: "Pending", style: "text-[#0f172a]" },
     };
-    return map[status];
+    return map[status] || { label: "Unknown", style: "text-[#0f172a]" };
   };
 
   const getBonusColor = (status:any) =>
@@ -179,11 +245,27 @@ const ReferralsTable = ({searchbarText}: any) => {
       header: "Referral bonus",
       render: (value:any, item:any) => (
         <div className={`flex items-center gap-1 ${getBonusColor(item.status)}`}>
-          <span className="font-semibold">Rs. {value}</span>
+          <span className="font-semibold">Rs. {value || 0}</span>
         </div>
       )
     }
   ];
+
+  // Error state component
+  const ErrorComponent = () => (
+    <div className="w-full p-8 text-center">
+      <div className="flex flex-col items-center gap-4">
+        <div className="text-red-500 text-lg">⚠️</div>
+        <p className="text-red-600 font-medium">{error}</p>
+        <button
+          onClick={handleRetry}
+          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    </div>
+  );
 
   return (
     <div className="w-full">
@@ -200,9 +282,13 @@ const ReferralsTable = ({searchbarText}: any) => {
           onPageSizeChange={handlePageSizeChange}
           currentPage={currentPage}
           emptyStateComponent={
-            <div className="w-full p-8 text-center">
-              <p className="text-gray-500">No referrals found</p>
-            </div>
+            error ? (
+              <ErrorComponent />
+            ) : (
+              <div className="w-full p-8 text-center">
+                <p className="text-gray-500">No referrals found</p>
+              </div>
+            )
           }
           loadingComponent={
             <div className="w-full p-8 text-center">
