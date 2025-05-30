@@ -1,4 +1,5 @@
 import { FunctionComponent, useCallback } from 'react';
+import { X } from 'lucide-react';
 
 interface MentorDetailsProps {
   variant?: 'join' | 'book';
@@ -10,6 +11,7 @@ interface MentorDetailsProps {
   charge?: string;
   figmaUrl?: string;
   onAcceptAndPay?: () => void;
+  onClose?: () => void;
   className?: string;
 }
 
@@ -23,7 +25,8 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   duration = '2 hrs 30 mins',
   charge = '₹4,999',
   figmaUrl = 'https://www.figma.com/proto/ENzqo1AmC80w4cmN6alJgz/Worko-Dashboards?node-id=156-6188&t=F4iKtzlqU886AMiU-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1&starting-point-node-id=2%3A10377&show-proto-sidebar=1',
-  onAcceptAndPay
+  onAcceptAndPay,
+  onClose
 }) => {
   
   const onActionButtonClick = useCallback(() => {
@@ -37,24 +40,34 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   const isJoinVariant = variant === 'join';
   
   return (
-    <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
+    <div className={`w-full w-[500px] bg-white rounded-xl shadow-2xl overflow-hidden ${className}`}>
       {/* Header */}
       <div className="flex justify-between items-center p-6 pb-4">
         <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">
           Mentor details
         </h2>
-        <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
-          <div className="w-5 h-5 bg-[#316bff] rounded-sm flex items-center justify-center">
-            <span className="text-white text-xs">in</span>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
+            <div className="w-5 h-5 bg-[#316bff] rounded-sm flex items-center justify-center">
+              <span className="text-white text-xs">in</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className="underline font-medium cursor-pointer hover:text-[#316bff] transition-colors">
+                Linkedin
+              </span>
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
+              </svg>
+            </div>
           </div>
-          <div className="flex items-center gap-1">
-            <span className="underline font-medium cursor-pointer hover:text-[#316bff] transition-colors">
-              Linkedin
-            </span>
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z"/>
-            </svg>
-          </div>
+          {onClose && (
+            <button 
+              onClick={onClose}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-gray-500" />
+            </button>
+          )}
         </div>
       </div>
       

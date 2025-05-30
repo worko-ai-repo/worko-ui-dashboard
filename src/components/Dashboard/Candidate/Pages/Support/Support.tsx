@@ -1,7 +1,8 @@
 import { FunctionComponent, useState, useCallback } from 'react';
+import { ChevronDown, Send, X } from 'lucide-react';
 import Table from "../../SharedComponents/Table";
 import { customer_support } from '@Assets';
-import {Button} from 'lib-worko-ai'
+import HelpModal from '../../SharedComponents/HelpModal';
 
 const Support = () => {
   const [isHelpOpen, setHelpOpen] = useState(false);
@@ -36,26 +37,25 @@ const Support = () => {
       statusColor: { bg: "bg-blue-100", text: "text-blue-800" }, 
     },
     {
-        id: 3,
-        Type: "Mock interview/preparation",
-        Header: "Amazon",
-        Ticketno: "24-08-2025",
-        Date: "24-08-2025",
-        Details: "Mentor assigned",
-        status: "Escalated",
-        statusColor: { bg: "bg-yellow-100", text: "text-yellow-800" }, 
-      },
-      {
-        id: 4,
-        Type: "Mock interview/preparation",
-        Header: "Amazon",
-        Ticketno: "24-08-2025",
-        Date: "24-08-2025",
-        Details: "Mentor assigned",
-        status: "Resolved",
-        statusColor: { bg: "bg-green-100", text: "text-green-800" },
-      },
-    // ... other service data
+      id: 3,
+      Type: "Mock interview/preparation",
+      Header: "Amazon",
+      Ticketno: "24-08-2025",
+      Date: "24-08-2025",
+      Details: "Mentor assigned",
+      status: "Escalated",
+      statusColor: { bg: "bg-yellow-100", text: "text-yellow-800" }, 
+    },
+    {
+      id: 4,
+      Type: "Mock interview/preparation",
+      Header: "Amazon",
+      Ticketno: "24-08-2025",
+      Date: "24-08-2025",
+      Details: "Mentor assigned",
+      status: "Resolved",
+      statusColor: { bg: "bg-green-100", text: "text-green-800" },
+    },
   ];
 
   const columns = [
@@ -123,19 +123,22 @@ const Support = () => {
           />
           <div className="relative tracking-[0.2px] leading-[114%] font-semibold">Help</div>
         </div>
-        <Button onClick={()=>alert("hi")}>TEXTINMIDDLE</Button>
       </div>
+      
       <div className='bg-white p-4 rounded-3xl shadow-md'>
-      {/* Table positioned below the help button */}
-      <Table
-        data={serviceData}
-        columns={columns}
-        keyExtractor={(item) => item.id.toString()}
-        className="w-full"
-        headerClassName="bg-cyan-50 text-nowrap py-3 px-4 mb-2"
-        rowClassName={() => "w-full mb-2 bg-white text-sm border-b"}
-      />
+        {/* Table positioned below the help button */}
+        <Table
+          data={serviceData}
+          columns={columns}
+          keyExtractor={(item) => item.id.toString()}
+          className="w-full"
+          headerClassName="bg-cyan-50 text-nowrap py-3 px-4 mb-2"
+          rowClassName={() => "w-full mb-2 bg-white text-sm border-b"}
+        />
       </div>
+
+      {/* Help Modal - Fixed to top-right */}
+      <HelpModal isOpen={isHelpOpen} onClose={closeHelp} />
     </div>
   );
 };

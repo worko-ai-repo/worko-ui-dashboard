@@ -32,9 +32,8 @@ const GuidanceTable = memo(({
     variant: 'book',
     selectedRequest: null
   });
+  const [isClosing, setIsClosing] = useState(false);
   const { user } = useDashboardContext();
-  const [localVisible, setLocalVisible] = useState(false);
-
 
   // Map guidanceRequestType to more readable format
   const formatGuidanceType = (type: string) => {
@@ -57,20 +56,20 @@ const GuidanceTable = memo(({
       variant,
       selectedRequest: request
     });
-    setLocalVisible(true);
+    setIsClosing(false);
   }, []);
 
   // Function to close modal
   const closeModal = useCallback(() => {
-    setLocalVisible(false);
-    // delay actual modal unmount
-  setTimeout(() => {
-    setModalState({
-      isOpen: false,
-      variant: 'book',
-      selectedRequest: null
-    });
-  }, 300);
+    setIsClosing(true);
+    setTimeout(() => {
+      setModalState({
+        isOpen: false,
+        variant: 'book',
+        selectedRequest: null
+      });
+      setIsClosing(false);
+    }, 300);
   }, []);
 
   // Function to handle viewing details
@@ -220,23 +219,12 @@ const GuidanceTable = memo(({
         }
       />
 
-      {/* Modal Overlay */}
-      {modalState.selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="relative">
-            {/* Close button */}
-            <button
-              onClick={closeModal}
-              className="fixed top-0 right-0 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-gray-100 z-10"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            
-            {/* Modal Content */}
+      {/* Modal - Following Support component pattern */}
+      {(modalState.isOpen || isClosing) && (
+        <div className="fixed inset-0 z-50 pointer-events-none">
+          <div className="absolute top-4 right-4 pointer-events-auto">
             <MentorDetails
-              className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+              className={`${isClosing ? 'animate-slide-out' : 'animate-slide-in'}`}
               variant={modalState.variant}
               mentorName={modalState.selectedRequest?.mentorName || 'Sam Das'}
               mentorDetails={modalState.selectedRequest?.guidanceRequestDescription || 'Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.'}
@@ -245,6 +233,7 @@ const GuidanceTable = memo(({
               duration="2 hrs 30 mins"
               charge="₹4,999"
               onAcceptAndPay={() => modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)}
+              onClose={closeModal}
             />
           </div>
         </div>

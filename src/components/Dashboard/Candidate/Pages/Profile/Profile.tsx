@@ -528,7 +528,7 @@ const Profile = () => {
               <div className="relative flex flex-col lg:flex-row justify-between w-full p-4 sm:p-6">
                 
                 {/* Profile Section */}
-                <div className="flex flex-col sm:flex-row w-full lg:flex-1">
+                <div className="flex pt-4 flex-col sm:flex-row w-full lg:flex-1">
                   {/* Profile Image */}
                   <div className="flex justify-center sm:justify-start mb-4 sm:mb-0">
                     <img
