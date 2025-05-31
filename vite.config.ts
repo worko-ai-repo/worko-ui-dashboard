@@ -4,8 +4,9 @@ import compression from 'vite-plugin-compression';
 
 import path from 'path';
 // https://vite.dev/config/
+const isStaging = process.env.APP_MODE != "STAGING";
 export default defineConfig({
-	base: '/v1/', // Configure the base path for the dashboard app
+	...(isStaging ? {} : { base: "/v2/" }),
 	plugins: [
 		react(),
 		compression()

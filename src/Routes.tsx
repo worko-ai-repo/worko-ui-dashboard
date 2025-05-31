@@ -10,7 +10,7 @@ const CandidateDashboard = lazy(() => import("./Pages/Candidate/CandidateDashboa
 // Create router with a basename of '/v1' to match the proxy configuration
 const AppRoutes = createBrowserRouter([
   {
-    path: "/dashboard",
+    path: "/",
     errorElement: <ErrorFallback />,
     children: [
       {
@@ -33,7 +33,7 @@ const AppRoutes = createBrowserRouter([
   },
   { path: '*', element: <PageNotFound /> },
 ], {
-  basename: '/v1' // Set the base URL for all routes
+  ...(import.meta.env.APP_MODE != "STAGING" ? {} : { basename: "/v2/" }),
 });
 
 export default AppRoutes;
