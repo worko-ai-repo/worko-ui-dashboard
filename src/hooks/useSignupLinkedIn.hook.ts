@@ -1,6 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useCallback } from 'react';
-import {CognitoServiceObj} from "@LibWorko";
+import CognitoServiceObj from "@Utils/Cognito.utils";
 import secureStorage from '@Utils/SecureStorage.utils';
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { toast } from 'react-toastify';

@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { jwtDecode } from 'jwt-decode';
 import secureStorage from '@Utils/SecureStorage.utils';
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
-import { useAppContext } from '@LibWorko';
+import { useAppContext } from '@Context/App.context';
 
 interface DecodedToken {
 	exp: number;

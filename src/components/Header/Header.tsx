@@ -3,8 +3,8 @@ import { Menu, X, ChevronDown, LogOut, User } from "lucide-react";
 import { coin, logo_text } from "@Assets";
 import styles from "./header.module.scss";
 import { useNavigate } from "react-router-dom";
-import { useAppContext } from "@LibWorko";
-import {CognitoServiceObj} from "@LibWorko";
+import { useAppContext } from "@Context/App.context";
+import CognitoServiceObj from "@Utils/Cognito.utils";
 import { AuthLoginForGeneralUserDto } from "@Interfaces/Auth.dto";
 
 interface NavItem {

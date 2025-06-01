@@ -3,7 +3,7 @@ import App from './App.tsx';
 import ReactDOM from 'react-dom/client';
 import { Tooltip } from 'react-tooltip';
 import { ToastContainer } from 'react-toastify';
-import { AppProvider } from '@LibWorko';
+import { AppProvider } from '@Context/App.context.tsx';
 import ErrorBoundary from './error-boundary/ErrorBoundary.tsx';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 

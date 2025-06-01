@@ -1,6 +1,6 @@
 import { JwtPayload } from 'jwt-decode';
 import {fetchAuthSession} from '@aws-amplify/auth'
-import {CognitoServiceObj} from "@LibWorko";
+import CognitoServiceObj from '@Utils/Cognito.utils';
 import secureStorage from '@Utils/SecureStorage.utils';
 import httpServiceObj from '@Services/ApiHandler.service';
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
@@ -11,7 +11,7 @@ import { createContext, useState, useContext, useCallback, useLayoutEffect, useM
 
 
 // Corporate User Interface
-interface CorporateUserDetail extends AuthLoginForGeneralUserDto {
+export interface CorporateUserDetail extends AuthLoginForGeneralUserDto {
 	id: string;
 	companyId: string;
 	firstName: string;
@@ -60,29 +60,40 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	const [PendingApply , setPendingApply] = useState<any | null>(null)
 	const [isModalOpen , setIsModalOpen] = useState<boolean>(false)
 	// Fetch user details based on user type
+	console.info('Initializing AppProvider...');
+
 	const fetchUserDetails = async (userType: string[] | undefined, userId: string | undefined, userEmail: string | undefined) => {
 		try {
 			let userResponse;
-			if (userType?.includes('corporate')) {
+			if (userType?.includes('corporate-admin') || userType?.includes('corporate-recruiter')) {
 				const { response, error } = await httpServiceObj.get<[CorporateUserDetail]>(`/corporate-user/${userId}/cognito`, true, {});
-				if (error) throw new Error(error.message);
+				if (error) {
+					// toast.error('Error: ' + error, getToastOptions({ autoClose: false }));
+					throw new Error(error.message);
+				}
 				userResponse = response?.[0] || {};
 			} else {
 				const { response, error } = await httpServiceObj.get<[Partial<CorporateUserDetail>]>(`/user/${userEmail}/details`, true, {});
-				if (error) throw new Error(error.message);
+				if (error) {
+					// toast.error('Error: ' + error, getToastOptions({ autoClose: false }));
+					throw new Error(error.message);
+				}
 				userResponse = response?.[0] || {};
 			}
 
-			const userDetails: CorporateUserDetail | Partial<AuthLoginForGeneralUserDto> = {
-				lastAccessedDash: userResponse?.lastAccessedDash || '',
-				name: userResponse?.name || userResponse.firstName+' '+userResponse.lastName || '',
-				email: userResponse?.email || '',
-				id: userResponse?.id || '',
-				profileImageAwsS3SignedUrl: userResponse?.profileImageAwsS3SignedUrl || '',
-				referralCount: userResponse?.referralCount || 0,
-			};
+			// const userDetails: CorporateUserDetail | Partial<AuthLoginForGeneralUserDto | CorporateUserDto> = {
+			// 	lastAccessedDash: userResponse?.lastAccessedDash || '',
+			// 	name: userResponse?.name || userResponse.firstName + ' ' + userResponse.lastName || '',
+			// 	email: userResponse?.email || '',
+			// 	id: userResponse?.id || '',
+			// 	profileImageAwsS3SignedUrl: userResponse?.profileImageAwsS3SignedUrl || '',
+			// 	referralCount: userResponse?.referralCount || 0,
+			// };
+
+			const userDetails: Partial<AuthLoginForGeneralUserDto | Partial<CorporateUserDetail>> = userResponse;
 
 			setUserDetails(userDetails);
+
 			secureStorage.setItem(SecureStorageKeyEnum.LOGINDETAILS, userDetails);
 		} catch (error) {
 			console.error('Error fetching user details:', error);
@@ -92,6 +103,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	// Check if user is logged in
 	useLayoutEffect(() => {
 		const checkUserLoggedIn = async () => {
+			debugger;
 			try {
 				console.info('Checking user authentication status...');
 				const isUserLoggedIn = await CognitoServiceObj.isLoggedIn();
