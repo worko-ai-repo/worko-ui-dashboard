@@ -103,7 +103,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	// Check if user is logged in
 	useLayoutEffect(() => {
 		const checkUserLoggedIn = async () => {
-			debugger;
+			// debugger;
 			try {
 				console.info('Checking user authentication status...');
 				const isUserLoggedIn = await CognitoServiceObj.isLoggedIn();

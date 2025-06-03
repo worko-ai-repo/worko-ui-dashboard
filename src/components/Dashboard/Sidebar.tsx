@@ -25,7 +25,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
   const location = useLocation();
   const [finalUserDetails, setFinalUserDetails] = React.useState<Partial<CorporateUserDetail>>(userDetails);
   useEffect(() => {
-    debugger;
+    // debugger;
      if(userDetails) {
         setFinalUserDetails(userDetails);
      }else {

@@ -35,7 +35,7 @@ const AppRoutes = createBrowserRouter(
     { path: "*", element: <PageNotFound /> },
   ],
   {
-    ...(import.meta.env.APP_MODE != "STAGING" ? {} : { basename: "/v2/" }),
+    // ...(import.meta.env.APP_MODE != "STAGING" ? {} : { basename: "/v2/" }),
   }
 );
 
