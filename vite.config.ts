@@ -5,7 +5,7 @@ import compression from "vite-plugin-compression";
 import path from "path";
 // https://vite.dev/config/
 export default defineConfig({
-  // base: "/v2/",
+  base: "/v2/",
   plugins: [react(), compression()],
   envDir: "./environments", // Manually specify the directory where the environment files are located
   envPrefix: "APP_", // Manually specify the prefix for the environment variables
