@@ -14,7 +14,8 @@ export type TabId =
 // Corporate Dashboard Tabs
 | 'home'
 | 'invites'
-| 'applicants'
+| 'c_applicants'
+| 'a_applicants'
 | 'interviews'
 | 'hire'
 | 'bulk-cv-check'

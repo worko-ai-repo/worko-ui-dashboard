@@ -3,7 +3,7 @@ import MainLoader from "@Components/Loader/Loader";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import ErrorFallback from "@Pages/errors/base-error/ErrorFallback";
 import CorporateDashboard from "@Pages/Corporate/CorporateDashboard";
-import PageNotFound from "./Pages/errors/404/PageNotFound"; 
+import PageNotFound from "@Pages/errors/404/PageNotFound";
 import ProtectedRoute from "@Services/SessionValidator.service";
 
 const CandidateDashboard = lazy(() => import("@Pages/Candidate/CandidateDashboard"));
@@ -23,7 +23,7 @@ const AppRoutes = createBrowserRouter(
           path: "corporate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={['Corporate']} element={<CorporateDashboard />} />
+              <ProtectedRoute requiredRoles={["Corporate"]} element={<CorporateDashboard />} />
             </Suspense>
           ),
         },
@@ -31,7 +31,7 @@ const AppRoutes = createBrowserRouter(
           path: "candidate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-             <ProtectedRoute requiredRoles={['General_Users','Admin']} element={<CandidateDashboard />} />
+              <ProtectedRoute requiredRoles={["General_Users", "Admin"]} element={<CandidateDashboard />} />
             </Suspense>
           ),
         },

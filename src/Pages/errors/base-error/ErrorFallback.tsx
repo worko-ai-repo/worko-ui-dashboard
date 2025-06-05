@@ -22,7 +22,7 @@ const ErrorFallback = ({ error }: { error?: Error }) => {
             heading: { message: "Corporate Access Denied", type: "error" },
             message: "You do not have access to this page.",
             buttons: [
-              { label: "Go to Home", action: () => nav("/dashboard/corporate/jobs"), type: "primary" },
+              { label: "Go to Home", action: () => nav("/corporate/jobs"), type: "primary" },
               { label: "Contact Us", action: () => window.open("mailto:support@worko.ai"), type: "warning" },
             ],
           });

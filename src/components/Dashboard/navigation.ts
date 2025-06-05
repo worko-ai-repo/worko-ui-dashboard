@@ -46,12 +46,17 @@ const navigationItems: NavItem[] = [
         icon: HomeIcon,
         dashboardTypes: ['CORPORATE']
     },
-    
     {
-        id: 'applicants',
+        id: 'c_applicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
         dashboardTypes: ['CORPORATE'],
+    },
+    {
+        id: 'a_applicants',
+        label: 'Applicants',
+        icon: ApplicantsIcon,
+        dashboardTypes: ['ADMIN'],
     },
     {
         id: 'interviews',

@@ -43,7 +43,7 @@ const CorporateDashboard = () => {
 					),
 				},
 				{
-					path: 'applicants',
+					path: 'cApplicants/:id',
 					element: (
 						<Suspense fallback={<MainLoader />}>
 							<Applicants />
@@ -98,14 +98,14 @@ const CorporateDashboard = () => {
 						</Suspense>
 					),
 				},
-				{
+				/* {
 					path: '*',
 					element: (
 						<Suspense fallback={<MainLoader />}>
 							<PageNotFound />
 						</Suspense>
 					),
-				},
+				}, */
 			],
 		},
 		{

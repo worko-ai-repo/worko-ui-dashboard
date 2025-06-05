@@ -1,37 +1,18 @@
 import { Star } from "lucide-react";
 import { createContext, ReactNode, useState, useContext, useEffect, useMemo } from "react";
 import profileService, { CognitoUserDetails } from "@Components/Dashboard/Candidate/Service/ProfileService";
-import { useLocation, useNavigate } from "react-router-dom";
-
-// Define all possible tab types across different dashboard views
-export type DashboardTab =
-  // Candidate Dashboard Tabs
-  | "profile"
-  | "jobs"
-  | "referral"
-  | "guidance"
-  | "refer-and-earn"
-  | "subscription"
-  | "support"
-  // Corporate Dashboard Tabs
-  | "home"
-  | "invites"
-  | "applicants"
-  | "interviews"
-  | "hire"
-  | "bulk-cv-check"
-  | "referrals"
-  | "invoice-&-payment";
+import { useLocation } from "react-router-dom";
+import { TabId } from "src/types/sidebar";
+import navigationItems from "@Components/Dashboard/navigation";
 
 // Define dashboard types
 export type DashboardType = "CORPORATE" | "EMPLOYEE" | "CANDIDATE" | "ADMIN";
 
 interface DashboardContextType {
   // Core dashboard properties
-  activeTab: DashboardTab;
-  setActiveTab: (tab: DashboardTab) => void;
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
   dashboardType: DashboardType;
-  setDashboardType: (type: DashboardType) => void;
   breadcrumb: ReactNode;
   user: CognitoUserDetails | null;
   isLoadingUser: boolean;
@@ -40,44 +21,37 @@ interface DashboardContextType {
 
 const DashboardContext = createContext<DashboardContextType | undefined>(undefined);
 
-export const DashboardProvider = ({ children, initialDashboardType = "CANDIDATE" }: { children: ReactNode; initialDashboardType?: DashboardType }) => {
+export const DashboardProvider = ({ children }: { children: ReactNode; initialDashboardType?: DashboardType }) => {
   const location = useLocation();
-  const navigate = useNavigate();
-
-  // Determine initial tab based on dashboard type
-  const getInitialTab = (dashboardType: DashboardType): DashboardTab => {
-    switch (dashboardType) {
-      case "CORPORATE":
-        return "home";
-      case "CANDIDATE":
-        return "jobs";
-      case "EMPLOYEE":
-      case "ADMIN":
-      default:
-        return "home";
-    }
-  };
-
-  // Parse dashboard type from URL
-  const getDashboardTypeFromUrl = (): DashboardType => {
-    const pathParts = location.pathname.split("/");
-    if (pathParts.length >= 3) {
-      const urlType = pathParts[1].toUpperCase() as DashboardType;
-      // Validate that it's a valid dashboard type
-      if (["CORPORATE", "EMPLOYEE", "CANDIDATE", "ADMIN"].includes(urlType)) {
-        return urlType;
-      }
-    }
-    return initialDashboardType;
-  };
-
+  let urlSplittedPath = location.pathname.split("/");
   // Dashboard type and active tab state
-  const [dashboardType, setDashboardType] = useState<DashboardType>(getDashboardTypeFromUrl());
-  const [activeTab, setActiveTab] = useState<DashboardTab>(getInitialTab(getDashboardTypeFromUrl()));
+  const [dashboardType, setDashboardType] = useState<DashboardType>(getDashboardTypeFromUrl().Dashboard);
+  const [activeTab, setActiveTab] = useState<string>(getDashboardTypeFromUrl().ActiveTab);
 
   // User state with loading indicator
   const [user, setUser] = useState<CognitoUserDetails | null>(null);
   const [isLoadingUser, setIsLoadingUser] = useState<boolean>(true);
+
+  // Parse dashboard type from URL
+  function getDashboardTypeFromUrl(): {
+    Dashboard: DashboardType;
+    ActiveTab: string;
+  } {
+    const urlType = urlSplittedPath[1].toUpperCase() as DashboardType;
+    const activeTab = urlSplittedPath[2]?.toUpperCase() as TabId;
+    const navItems = navigationItems.filter((item) => !item.dashboardTypes || item.dashboardTypes.includes(urlType));
+    let finalActiveTab;
+    if (activeTab) {
+      const matchedItem = navItems.find(item => item.id.toLowerCase() === activeTab.toLowerCase());
+      if (matchedItem && matchedItem.label !== activeTab) {
+        finalActiveTab = matchedItem.label;
+      }
+    }
+    return {
+      Dashboard: urlType,
+      ActiveTab: finalActiveTab!,
+    };
+  }
 
   // Function to refresh user data
   const refreshUser = () => {
@@ -87,6 +61,8 @@ export const DashboardProvider = ({ children, initialDashboardType = "CANDIDATE"
     setIsLoadingUser(false);
   };
 
+  useEffect(() => {
+  },[activeTab]);
   // Load user from secure storage on initial mount
   useEffect(() => {
     refreshUser();
@@ -94,35 +70,10 @@ export const DashboardProvider = ({ children, initialDashboardType = "CANDIDATE"
 
   // Update dashboard type and tab when URL changes
   useEffect(() => {
-    const pathParts = location.pathname.split("/");
-
-    // Update dashboard type based on URL
-    if (pathParts.length >= 3) {
-      const urlType = pathParts[2].toUpperCase() as DashboardType;
-      if (["CORPORATE", "EMPLOYEE", "CANDIDATE", "ADMIN"].includes(urlType) && urlType !== dashboardType) {
-        setDashboardType(urlType);
-      }
-    }
-
-    // Update active tab based on URL
-    console.log("Path parts:", pathParts);
-    if (pathParts.length >= 3 && pathParts[2]) {
-      setActiveTab(pathParts[2] as DashboardTab);
-    } else {
-      // If no tab is specified in the URL, set to default for the dashboard type
-      const currentDashboardType = pathParts.length >= 3 ? (pathParts[2].toUpperCase() as DashboardType) : dashboardType;
-      setActiveTab(getInitialTab(currentDashboardType));
-    }
+    const { Dashboard, ActiveTab } = getDashboardTypeFromUrl();
+    setDashboardType(Dashboard);
+    setActiveTab(ActiveTab);
   }, [location.pathname]);
-
-  // Update URL when dashboard type changes (but not from URL changes)
-  const updateDashboardType = (type: DashboardType) => {
-    setDashboardType(type);
-    // Also update the URL to reflect the new dashboard type
-    const newTab = getInitialTab(type);
-    setActiveTab(newTab);
-    navigate(`${type.toLowerCase()}/${newTab}`);
-  };
 
   // Dynamic breadcrumb based on active tab
   const breadcrumb = useMemo(
@@ -144,7 +95,6 @@ export const DashboardProvider = ({ children, initialDashboardType = "CANDIDATE"
       activeTab,
       setActiveTab,
       dashboardType,
-      setDashboardType: updateDashboardType,
       breadcrumb,
       user,
       isLoadingUser,

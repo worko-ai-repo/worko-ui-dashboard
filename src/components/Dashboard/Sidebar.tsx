@@ -6,7 +6,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 import navigationItems from "./navigation";
 import SidebarItem from "./SidebarItem";
-import { DashboardType, TabId } from "src/types/sidebar";
+import { DashboardType, NavItem, TabId } from "src/types/sidebar";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -18,67 +18,90 @@ interface SidebarProps {
   setCollapsed: (open: boolean) => void;
 }
 
+/**
+ * Sidebar Component
+ *
+ * A responsive sidebar navigation component that supports:
+ * - Collapsible/expandable states
+ * - Mobile responsive behavior
+ * - User profile display with avatar
+ * - Dynamic navigation based on dashboard type
+ * - Context-aware navigation filtering
+ */
+
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) => {
-  const { userDetails , setUpdateCheck}: { userDetails: Partial<CorporateUserDetail> , setUpdateCheck:any} = useAppContext();
-  const { activeTab, setActiveTab, dashboardType, setDashboardType } = useDashboardContext();
+  // Extract user context and dashboard context
   const navigate = useNavigate();
-  const location = useLocation();
+  const { activeTab, setActiveTab, dashboardType } = useDashboardContext();
+  const { userDetails, setUpdateCheck }: { userDetails: Partial<CorporateUserDetail>; setUpdateCheck: any } = useAppContext();
+
+  // Local state to manage finalized user details
+  const [userName, setUserName] = React.useState("");
   const [finalUserDetails, setFinalUserDetails] = React.useState<Partial<CorporateUserDetail>>(userDetails);
+
+  // Get user type from secure storage for conditional rendering
+  const userType = secureStorage.getItem(SecureStorageKeyEnum.USERTYPE) as string;
+  /**
+   * Effect to handle user details updates
+   * - Updates local state when userDetails changes
+   * - Triggers update check when userDetails is null/undefined
+   */
   useEffect(() => {
-    // debugger;
-     if(userDetails) {
-        setFinalUserDetails(userDetails);
-     }else {
-        setUpdateCheck((prev:any) => !prev);
-     }
+    if (userDetails) {
+      setFinalUserDetails(userDetails);
+    } else {
+      // Trigger parent component to refresh user data
+      setUpdateCheck((prev: any) => !prev);
+    }
   }, [userDetails, setUpdateCheck]);
-  
-  // Filter navigation items based on current dashboard type
+
+  /**
+   * Filter navigation items based on current dashboard type
+   * Only shows items that are either global or match current dashboard type
+   */
   const navItems = navigationItems.filter((item) => !item.dashboardTypes || item.dashboardTypes.includes(dashboardType));
 
-  // Sync URL with dashboard context
-  useEffect(() => {
-    const pathParts = location.pathname.split("/");
-
-    // Update dashboard type based on URL if needed
-    if (pathParts.length >= 3) {
-      const urlType = pathParts[2].toUpperCase() as DashboardType;
-      if (["CORPORATE", "EMPLOYEE", "CANDIDATE", "ADMIN"].includes(urlType) && urlType !== dashboardType) {
-        setDashboardType(urlType);
-      }
-    }
-
-    // Update active tab based on URL if needed
-    if (pathParts.length >= 4 && pathParts[3]) {
-      const urlTab = pathParts[3] as TabId;
-      if (urlTab !== activeTab) {
-        setActiveTab(urlTab);
-      }
-    }
-  }, [location.pathname, dashboardType, activeTab, setDashboardType, setActiveTab]);
-
+  /**
+   * Handle navigation to different dashboard sections
+   * @param dashboardType - The type of dashboard to navigate to
+   * @param tabId - The specific tab/section within the dashboard
+   */
   const onNavigate = (dashboardType: DashboardType, tabId: TabId) => {
     const path = `/${dashboardType.toLowerCase()}/${tabId}`;
     navigate(path);
   };
 
-  const handleTabClick = (tabId: TabId) => {
-    setActiveTab(tabId);
-    onNavigate(dashboardType, tabId);
-    setSidebarOpen(false);
+  /**
+   * Handle tab click events
+   * - Updates active tab state
+   * - Navigates to selected tab
+   * - Closes sidebar on mobile after navigation
+   */
+  const handleTabClick = (NavItem:NavItem) => {
+    console.log("Navigating to tab:", NavItem.label);
+    setActiveTab(NavItem.label);
+    onNavigate(dashboardType, NavItem.id);
+    setSidebarOpen(false); // Close sidebar on mobile after navigation
   };
 
+  /**
+   * Effect to set appropriate user name based on user type
+   * - Corporate users: firstName + lastName
+   * - Other users: name field
+   */
+  useEffect(() => {
+    setUserName(userType === "Corporate" ? `${finalUserDetails?.firstName ?? ""} ${finalUserDetails?.lastName ?? ""}`.trim() : finalUserDetails?.name ?? "");
+  }, [finalUserDetails]);
+
+  /**
+   * Avatar component - reusable user profile image/icon
+   */
   const Avatar = (
-    <div className="rounded-full text-[#316bff] w-8 h-8 flex items-center justify-center">
-      <img src={User} alt="User" className="w-full h-full object-cover rounded-full" />
+    <div>
+      <img src={finalUserDetails?.profileImage || User} alt="User Avatar" className={`w-10 h-10 rounded-full ${collapsed ? "hidden" : "block"}`} />
     </div>
   );
-  const userType = secureStorage.getItem(SecureStorageKeyEnum.USERTYPE) as string;
-  const [userName, setUserName] = React.useState<string>("");
- 
-  useEffect(() => {
-    setUserName ( userType === "Corporate" ? `${finalUserDetails?.firstName ?? ""} ${finalUserDetails?.lastName ?? ""}`.trim() : finalUserDetails?.name ?? "");
-  }, [finalUserDetails]);
+  
   return (
     <aside
       className={`bg-[#316bff] text-white h-screen z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
@@ -108,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
 
       <nav className="space-y-3">
         {navItems.map((item) => (
-          <SidebarItem key={item.id} item={item} isActive={item.id === activeTab} collapsed={collapsed} onClick={handleTabClick} />
+          <SidebarItem key={item.id} item={item} isActive={item.label === activeTab} collapsed={collapsed} onClick={handleTabClick} />
         ))}
       </nav>
 
