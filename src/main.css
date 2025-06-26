@@ -219,6 +219,33 @@ label {
 	align-items: center;
   }
 
+  .no-scrl {
+    -ms-overflow-style: none;  /* Internet Explorer 10+ */
+    scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+}
+.no-scrl-web::-webkit-scrollbar { 
+    display: none;  /* Older Safari and Chromium */
+}
+
+
+#my-tooltip {
+	width: 100%;
+	text-align: left;
+	text-wrap: break-word;
+	max-width: 200px;
+	padding: 1rem;
+	border-radius: 0.5rem;
+	z-index:  999999999999999;
+	
+}
+/* .myLightToolTip{
+	background: #def3ff;
+background: linear-gradient(90deg,rgba(222, 243, 255, 1) 50%, rgba(212, 227, 255, 1) 100%);
+	color: rgb(77, 77, 77);
+	border: 1px;
+	font-weight: 600;
+} */
+
 @media screen and (max-width: 480px) {
 	.section-wrapper {
 		padding: 5rem 0.5em;
@@ -232,13 +259,16 @@ label {
 	h1 {
 		font-size: var(--text-md);
 	}
+
 	.Toastify__toast {
 		max-width: 90vw !important;
-	  }
+	}
+
 	.Toastify__toast-container--top-center {
 		left: 50%;
 		transform: translateX(-50%);
-		position: fixed; 
-	  }
+		position: fixed;
+	}
 
 }
+

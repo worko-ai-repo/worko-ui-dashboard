@@ -5,6 +5,7 @@ import ErrorFallback from "@Pages/errors/base-error/ErrorFallback";
 import CorporateDashboard from "@Pages/Corporate/CorporateDashboard";
 import PageNotFound from "@Pages/errors/404/PageNotFound";
 import ProtectedRoute from "@Services/SessionValidator.service";
+import JobCardGrid from "@Pages/test";
 
 const CandidateDashboard = lazy(() => import("@Pages/Candidate/CandidateDashboard"));
 
@@ -18,6 +19,12 @@ const AppRoutes = createBrowserRouter(
         {
           index: true,
           element: <Navigate to="/candidate" replace />,
+        },
+        {
+          path: "test/*",
+          element: (
+            <JobCardGrid />
+          ),
         },
         {
           path: "corporate/*",

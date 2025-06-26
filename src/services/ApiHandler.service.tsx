@@ -2,6 +2,11 @@ import { HttpMethodResponseDto } from '@Interfaces/HttpOption.dto';
 import { getHttpOptions } from '@Utils/HttpOptions.utils';
 
 /**
+ * ApiType
+ */
+  export type ApiType = 'JOB' | 'BASE'; 
+
+/**
  * @description The HttpService object that contains the methods to make HTTP requests
  *
  * @param {string} path The path of the API endpoint
@@ -15,10 +20,13 @@ import { getHttpOptions } from '@Utils/HttpOptions.utils';
  */
 export class HttpService {
 	// Declare the API_URI variable
-	private API_URI: string;
+	private API_URI: Record<ApiType, string>;
 
 	constructor() {
-		this.API_URI = import.meta.env.APP_API_URI || 'https://api.dev.worko.work';
+	  this.API_URI = {
+		  ["BASE"]: import.meta.env.APP_API_URI || 'https://api.worko.ai',
+		  ["JOB"]: import.meta.env.APP_JOBS_API_URI || 'https://jobs.worko.ai',
+	  };
 	}
 
 	/**
@@ -30,12 +38,13 @@ export class HttpService {
 	 * @param {object} data The data to be sent to the API as payload
 	 * @param {boolean} authorization The flag to check if the request needs authorization
 	 * @param params The additional parameters to be sent to the API
-	 *
+	 * @param {ApiType} apiType ApiType.Main Would Be The Default Until You Explicitly Declare It
+	 * 
 	 * @example
 	 *         > HttpServiceObj.post('/path', { data: 'data' }, true, { xTenantId: 'tenantId' });
 	 *         > HttpServiceObj.post('/api/resource', { name: 'Test' }, false, { page: 1, limit: 10 });
 	 */
-	async post<ResponseDataDto>(path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false): Promise<HttpMethodResponseDto<ResponseDataDto>> {
+	async post<ResponseDataDto>(path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType: ApiType = "BASE"): Promise<HttpMethodResponseDto<ResponseDataDto>> {
 		try {
 			// Build query string and append it to the path
 			const queryString = new URLSearchParams(params as Record<string, string>).toString();
@@ -52,7 +61,8 @@ export class HttpService {
 			if (fullUri) {
 				FetchApiPath = path;
 			} else {
-				FetchApiPath = `${this.API_URI}${fullPath}`;
+				const baseUri = this.API_URI[apiType];
+			    FetchApiPath =  `${baseUri}${fullPath}`;
 			}
 			// Make the POST request to the API
 			const response = await fetch(FetchApiPath, options);
@@ -88,7 +98,7 @@ export class HttpService {
 	 * @example
 	 *         > HttpServiceObj.get('/path', true, { xTenantId: 'tenantId' });
 	 */
-	 async get<ResponseDataDto>(path: string, authorization: boolean = true, params = {}, fullUri: boolean = false): Promise<HttpMethodResponseDto<ResponseDataDto>> {
+	 async get<ResponseDataDto>(path: string, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType: ApiType = "BASE"): Promise<HttpMethodResponseDto<ResponseDataDto>> {
 		try {
 			// Build query string and append it to the path
 			const queryString = new URLSearchParams(params as Record<string, string>).toString();
@@ -102,7 +112,8 @@ export class HttpService {
 				// Make the GET request to the API
 			 response = await fetch(fullPath, options);
 			} else {
-				response = await fetch(`${this.API_URI}${fullPath}`, options);
+				const baseUri = this.API_URI[apiType];
+				response = await fetch(`${baseUri}${fullPath}`, options);
 			}
 			
 
@@ -134,7 +145,7 @@ export class HttpService {
 	 * @param {boolean} authorization The flag to check if the request needs authorization
 	 * @param params The additional parameters to be sent to the API
 	 */
-	async put<ResponseDataDto>(path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false): Promise<HttpMethodResponseDto<ResponseDataDto>> {
+	async put<ResponseDataDto>(path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType:ApiType = "BASE"): Promise<HttpMethodResponseDto<ResponseDataDto>> {
 		try {
 			// Build query string and append it to the path
 			const queryString = new URLSearchParams(params as Record<string, string>).toString();
@@ -149,7 +160,8 @@ export class HttpService {
 			};
 
 			// Determine the final URL
-			FetchApiPath = fullUri ? path : `${this.API_URI}${fullPath}`;
+			const baseUri = this.API_URI[apiType];
+			FetchApiPath = fullUri ? path : `${baseUri}${fullPath}`;
 
 			// Make the PUT request to the API
 			const response = await fetch(FetchApiPath, options);
@@ -191,12 +203,14 @@ export class HttpService {
 		data: object,
 		authorization: boolean = true,
 		params = {},
-		fullUri: boolean = false
+		fullUri: boolean = false,
+		apiType: ApiType = "BASE",
 	  ): Promise<HttpMethodResponseDto<ResponseDataDto>> {
 		try {
 		  const queryString = new URLSearchParams(params as Record<string, string>).toString();
 		  const fullPath = queryString ? `${path}?${queryString}` : path;
-		  const FetchApiPath = fullUri ? path : `${this.API_URI}${fullPath}`;
+		  const baseUri = this.API_URI[apiType];
+		  const FetchApiPath = fullUri ? path : `${baseUri}${fullPath}`;
 	  
 		  const options = {
 			method: 'PATCH',
@@ -205,7 +219,6 @@ export class HttpService {
 		  };
 	  
 		//   console.log('PATCH request:', FetchApiPath, options); // Debugging
-	  
 		  const response = await fetch(FetchApiPath, options);
 	  
 		  // If the response status is 204 No Content, return immediately
@@ -245,7 +258,7 @@ export class HttpService {
 	 * @param {boolean} authorization The flag to check if the request needs authorization
 	 * @param params The additional parameters to be sent to the API
 	 */
-	delete = async (path: string, authorization: boolean = true, params = {}) => {
+	delete = async (path: string, authorization: boolean = true, params = {},apiType:ApiType="BASE") => {
 		try {
 			// Build query string and append it to the path
 			const queryString = new URLSearchParams(params as Record<string, string>).toString();
@@ -256,7 +269,8 @@ export class HttpService {
 			};
 
 			// Make the DELETE request to the API
-			const response = await fetch(`${this.API_URI}${fullPath}`, options);
+			const baseUri = this.API_URI[apiType];
+			const response = await fetch(`${baseUri}${fullPath}`, options);
 
 			// Check if the response is not OK
 			if (!response.ok) {

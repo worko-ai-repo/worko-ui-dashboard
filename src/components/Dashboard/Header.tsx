@@ -30,7 +30,7 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
       <div className="flex items-center justify-between z-10">
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 w-full sm:w-auto">
           <div className="flex items-center justify-between w-full sm:w-auto">
-            <img src={logo_text} className="h-6 sm:h-8" alt="Logo" />
+            <img src={logo_text} onClick={()=>window.location.href = "/"} className="cursor-pointer h-6 sm:h-8" alt="Logo" />
             
             <div className="flex items-center gap-3 sm:hidden">
               <button 

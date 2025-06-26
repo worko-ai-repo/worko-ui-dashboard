@@ -1,24 +1,38 @@
 export type JobFormSchema = {
-  jobTitle: string;
-  company: string;
-  offerings: string;
-  gradeLevel?: string;
-  department?: string;
-  workMode: string;
-  location: string[];
-  experienceFrom: string;
-  experienceTo: string;
-  creatorName?: string;
-  salaryFrom: string;
-  salaryTo: string;
-  coreSkills: string[];
-  technicalSkills: string[];
-  softSkills: string[];
-  goodSkills: string[];
-  otherRequirements?: string;
-  typeOfEmployment: string;
-  description: string;
-};
+    status: string;
+    companyId: string;
+    coreSkills: string[];
+    department: string;
+    experienceRange: {
+      min: number;
+      max: number;
+    };
+    jobTitle: string;
+    htmlJobDescription: string;
+    location?: {
+      city: string[];
+      country: string[];
+      fullLocation: string[];
+      state: string[];
+    };
+    miscellaneousSkills: string[];
+    numOfOpenings: number;
+    noticePeriod: number;
+    otherRequirements: string;
+    salaryRange: {
+      min: number;
+      max: number;
+    };
+    displaySalaryRange: boolean;
+    softSkills: string[];
+    technicalSkills: string[];
+    typeofEmployment: "FULL_TIME" | "PART_TIME" | "CONTRACT" | 'INTERNSHIP';
+    workMode: "WFO" | "WFH" | "HYBRID";
+    jobDescription: string;
+    variableComponent?: number;
+    fixedComponent?: number;
+  }
+
 
 export interface JobApiResponse {
   data: JobData[];

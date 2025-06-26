@@ -1,25 +1,27 @@
 import React from "react";
 import { ChevronDownIcon, ChevronUp } from "lucide-react";
 
-interface Column<T> {
+export interface Column<T> {
   key: keyof T | string;
   label: string;
   render?: (row: T) => React.ReactNode;
   hideOnMobile?: boolean;
 }
 
-interface DynamicTableProps<T> {
+export interface DynamicTableProps<T> {
   columns: Column<T>[];
   rows: T[];
   activeTab?: string;
   selectedRows: string[];
-  expandedRows: string[];
+  expandedRows?: string[];
   toggleSelectAll: () => void;
   toggleRow: (id: string) => void;
-  toggleExpand: (id: string) => void;
+  toggleExpand?: (id: string) => void;
   allSelected: boolean;
   renderActions?: (row: T) => React.ReactNode;
   renderExpandedDetails?: (row: T) => React.ReactNode;
+  enableSelect?: boolean;
+  showExpansionByDefault?: boolean; // New optional parameter
 }
 
 export function DynamicTable<T extends { id: string; jobTitle: string }>(
@@ -36,6 +38,7 @@ export function DynamicTable<T extends { id: string; jobTitle: string }>(
     toggleExpand,
     allSelected,
     renderActions,
+    showExpansionByDefault = true, // Default to true
   } = props;
 
   const dynamicGridTemplate = `2fr repeat(${columns.length}, 1fr) ${activeTab !== 'Open' ? '1fr' : '2fr'}`;
@@ -63,7 +66,7 @@ export function DynamicTable<T extends { id: string; jobTitle: string }>(
 
       {rows.map((row) => {
         const isSelected = selectedRows.includes(row.id);
-        const isExpanded = expandedRows.includes(row.id);
+        const isExpanded = (expandedRows ?? []).includes(row.id);
 
         return (
           <div key={row.id} className={`relative my-2 md:my-1 ${isExpanded ? "md:my-6" : ""}`}>
@@ -97,19 +100,20 @@ export function DynamicTable<T extends { id: string; jobTitle: string }>(
               </div>
             </div>
 
-            <div
-              onClick={() => toggleExpand(row.id)}
-              className="absolute hover:cursor-pointer left-1/2 transform -translate-x-1/2 w-8 h-8 flex items-center justify-center text-blue-600 rounded-full border bg-white shadow-md z-10 bottom-[-1rem]"
-            >
-              {isExpanded ? <ChevronUp /> : <ChevronDownIcon />}
-            </div>
+            {showExpansionByDefault && (
+              <div
+                onClick={() => toggleExpand?.(row.id)}
+                className="absolute hover:cursor-pointer left-1/2 transform -translate-x-1/2 w-8 h-8 flex items-center justify-center text-blue-600 rounded-full border bg-white shadow-md z-10 bottom-[-1rem]"
+              >
+                {isExpanded ? <ChevronUp /> : <ChevronDownIcon />}
+              </div>
+            )}
 
             {isExpanded && (
               <div className="bg-white p-4 border text-sm text-gray-600 rounded-b-md">
                 {props.renderExpandedDetails?.(row)}
               </div>
             )}
-
           </div>
         );
       })}

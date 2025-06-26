@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import JobsTable from './JobsTable';
-import FilterToggle from '../../Filters';
 import JobService from '../../Service/JobsService';
 import { JobApiResponse, PaginationInfo, JobFilters } from './JobTypes';
 import { debounce } from 'lodash';
@@ -137,15 +136,6 @@ const Jobs = () => {
     paginationKeysRef.current = { 1: '' }; // Reset pagination keys
     fetchJobs(1, size, '');
   }, [fetchJobs]);
-
-  // Handle filter changes
-  const handleFilterChange = useCallback((newFilters: JobFilters) => {
-    setFilters(prev => ({...prev, ...newFilters}));
-    setCurrentPage(1);
-    setPaginationInfo(prev => ({...prev, lastKey: ''}));
-    paginationKeysRef.current = { 1: '' }; // Reset pagination keys
-    fetchJobs(1, pageSize, '', {...filters, ...newFilters}, true);
-  }, [fetchJobs, filters, pageSize]);
 
   // Initial data load
   useEffect(() => {

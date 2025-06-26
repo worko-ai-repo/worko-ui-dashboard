@@ -1,7 +1,7 @@
 import httpServiceObj from '@Services/ApiHandler.service';
 import { JobApiResponse, JobFilters } from '../Pages/Job/JobTypes';
 
-const BASE_URL = 'https://jobs.dev.worko.work';
+const BASE_URL = import.meta.env.APP_JOBS_API_URI ;
 
 export class JobService {
   static async fetchJobs(

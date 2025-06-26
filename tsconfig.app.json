@@ -31,6 +31,7 @@
 		"baseUrl": "./",
 		"paths": {
 			// Aliases Imports Start with @ and Capital Letter and it must be plural
+			"@AssetsFolder/*": ["src/assets/*"],
 			"@Assets": ["src/assets/assets.ts"],
 			"@Components/*": ["src/components/*"],
 			"@Context/*": ["src/context/*"],

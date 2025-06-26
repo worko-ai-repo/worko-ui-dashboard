@@ -1,7 +1,7 @@
 import React from "react";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
-interface Column<T> {
+export interface Column<T> {
   key: keyof T & string | string;
   label: string;
   render?: (row: T) => React.ReactNode;

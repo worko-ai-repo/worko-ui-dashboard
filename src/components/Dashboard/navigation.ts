@@ -19,7 +19,7 @@ const navigationItems: NavItem[] = [
         id: 'referral',
         label: 'Referral',
         icon: ReferralIcon,
-        dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE'],
+        dashboardTypes: [ 'EMPLOYEE', 'CANDIDATE'],
     },
     {
         id: 'guidance',
@@ -40,20 +40,20 @@ const navigationItems: NavItem[] = [
         icon: HomeIcon,
         dashboardTypes: ['CANDIDATE']
       },
-    {
+   /*  {
         id: 'home',
         label: 'Home',
         icon: HomeIcon,
         dashboardTypes: ['CORPORATE']
-    },
+    }, */
     {
-        id: 'c_applicants',
+        id: 'cApplicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
         dashboardTypes: ['CORPORATE'],
     },
     {
-        id: 'a_applicants',
+        id: 'Aapplicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
         dashboardTypes: ['ADMIN'],
@@ -76,16 +76,17 @@ const navigationItems: NavItem[] = [
         icon: InviteIcon,
         dashboardTypes: ['CORPORATE'],
     },
-    {
+    /* {
         id: 'invoice-&-payment',
         label: 'Invoice & Payment',
         icon: InvoiceAndPaymentIcon,
         dashboardTypes: ['CORPORATE'],
-    },
+    }, */
     {
         id: 'support',
         label: 'Support',
         icon: SupportIcon,
+        dashboardTypes: ['ADMIN' , 'EMPLOYEE', 'CANDIDATE'],
     },
 ];
 

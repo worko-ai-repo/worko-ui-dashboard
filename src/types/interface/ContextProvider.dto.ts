@@ -1,4 +1,5 @@
 import React, { ReactNode } from "react";
+import { CorporateUserDetail } from "@Context/App.context";
 
 /**
  * Interface for the ContextProvider
@@ -13,7 +14,7 @@ export interface AppContextType {
   tokenData: any | null;
   setAuthState: (tokenData: any, isLoggedIn: boolean) => void;
   setUpdateCheck: React.Dispatch<React.SetStateAction<boolean>>;
-  userDetails: any | null;
+  userDetails: Partial<CorporateUserDetail>;
   PendingApply: any | null ;
   setPendingApply: React.Dispatch<React.SetStateAction<any | null >>;
   isModalOpen: boolean;

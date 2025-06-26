@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { XCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react';
+import {  AlertTriangle, CheckCircle, Info } from 'lucide-react';
 
 export interface MessagePopupProps {
 	type: 'none' | 'error' | 'warning' | 'success' | 'info';

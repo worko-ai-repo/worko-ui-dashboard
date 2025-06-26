@@ -7,8 +7,6 @@ import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { AuthLoginForGeneralUserDto } from '@Interfaces/Auth.dto';
 import { AppContextType, ContextProviderProps } from '@Interfaces/ContextProvider.dto';
 import { createContext, useState, useContext, useCallback, useLayoutEffect, useMemo } from 'react';
-// import { continueReferralRequestDataDto } from '@Pages/request-referral/RequestReferral';
-
 
 // Corporate User Interface
 export interface CorporateUserDetail extends AuthLoginForGeneralUserDto {
@@ -28,11 +26,23 @@ export interface CorporateUserDetail extends AuthLoginForGeneralUserDto {
 	GSI1SK: string;
 }
 
-/**
- * Cognito Meta Data Interface
- * 
- * @description This is an interface for Cognito Meta Data. All the properties of CognitoMetaDataDto are optional. And should be used to define the structure of Cognito Meta Data.
- */
+export interface CorporateUserDetailOnly{
+	id: string;
+	companyId: string;
+	firstName: string;
+	lastName: string;
+	email: string;
+	createdAt: string;
+	updatedAt: string;
+	isDeleted: boolean;
+	cognitoUserId: string;
+	corporateUserType: string;
+	PK: string;
+	SK: string;
+	GSI1PK: string;
+	GSI1SK: string;
+}
+
 export interface CognitoMetaDataDto extends JwtPayload {
 	'cognito:groups'?: string[];
 	email_verified?: boolean;
@@ -55,100 +65,111 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	// State variables
 	const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
 	const [tokenData, setTokenData] = useState<any | null>(null);
-	const [userDetails, setUserDetails] = useState<Partial<AuthLoginForGeneralUserDto> | null>(null);
+	const [userDetails, setUserDetails] = useState<Partial<CorporateUserDetail>>({});
 	const [updateCheck, setUpdateCheck] = useState<boolean>(false);
-	const [PendingApply , setPendingApply] = useState<any | null>(null)
-	const [isModalOpen , setIsModalOpen] = useState<boolean>(false)
-	// Fetch user details based on user type
-	console.info('Initializing AppProvider...');
+	const [PendingApply, setPendingApply] = useState<any | null>(null);
+	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
+	const [isLoadingUserDetails, setIsLoadingUserDetails] = useState<boolean>(false);
 
+	console.info('Initializing AppProvider...');
+	// Fetch user details based on user type
 	const fetchUserDetails = async (userType: string[] | undefined, userId: string | undefined, userEmail: string | undefined) => {
 		try {
+			setIsLoadingUserDetails(true);
 			let userResponse;
+			
 			if (userType?.includes('corporate-admin') || userType?.includes('corporate-recruiter')) {
 				const { response, error } = await httpServiceObj.get<[CorporateUserDetail]>(`/corporate-user/${userId}/cognito`, true, {});
 				if (error) {
-					// toast.error('Error: ' + error, getToastOptions({ autoClose: false }));
 					throw new Error(error.message);
 				}
 				userResponse = response?.[0] || {};
 			} else {
 				const { response, error } = await httpServiceObj.get<[Partial<CorporateUserDetail>]>(`/user/${userEmail}/details`, true, {});
 				if (error) {
-					// toast.error('Error: ' + error, getToastOptions({ autoClose: false }));
 					throw new Error(error.message);
 				}
 				userResponse = response?.[0] || {};
 			}
 
-			// const userDetails: CorporateUserDetail | Partial<AuthLoginForGeneralUserDto | CorporateUserDto> = {
-			// 	lastAccessedDash: userResponse?.lastAccessedDash || '',
-			// 	name: userResponse?.name || userResponse.firstName + ' ' + userResponse.lastName || '',
-			// 	email: userResponse?.email || '',
-			// 	id: userResponse?.id || '',
-			// 	profileImageAwsS3SignedUrl: userResponse?.profileImageAwsS3SignedUrl || '',
-			// 	referralCount: userResponse?.referralCount || 0,
-			// };
-
-			const userDetails: Partial<AuthLoginForGeneralUserDto | Partial<CorporateUserDetail>> = userResponse;
-
+			const userDetails: Partial<CorporateUserDetail> = userResponse;
 			setUserDetails(userDetails);
-
-			secureStorage.setItem(SecureStorageKeyEnum.LOGINDETAILS, userDetails);
+			secureStorage.setItem<Partial<CorporateUserDetail>>(SecureStorageKeyEnum.LOGINDETAILS, userDetails);
+			secureStorage.setItem<Partial<CorporateUserDetail>>(SecureStorageKeyEnum.CORPORATECOMPANYID, { companyId: userDetails?.companyId || '' });
 		} catch (error) {
 			console.error('Error fetching user details:', error);
+			// If we can't fetch user details but user is logged in, sign them out
+			await CognitoServiceObj.handleSignOut();
+			setIsLoggedIn(false);
+			setUserDetails({});
+		} finally {
+			setIsLoadingUserDetails(false);
 		}
 	};
 
 	// Check if user is logged in
-	useLayoutEffect(() => {
-		const checkUserLoggedIn = async () => {
-			// debugger;
-			try {
-				console.info('Checking user authentication status...');
-				const isUserLoggedIn = await CognitoServiceObj.isLoggedIn();
-				setIsLoggedIn(isUserLoggedIn);
-
-				if (!isUserLoggedIn) return;
-
-				// Retrieve user-related information from secure storage
-				const { tokens } =  await fetchAuthSession()
-				const cognitoUserDetails : CognitoMetaDataDto | undefined =  tokens?.idToken?.payload;
-				const userType : string[] | undefined = cognitoUserDetails?.['cognito:groups'];
-				const userEmail = cognitoUserDetails?.email;
-				const userId = cognitoUserDetails?.sub;
-
-				// Get token and store it
-				const token = CognitoServiceObj.getAccessToken();
-				setTokenData(token);
-
-				// Check if user details are already stored
-				const storedUserDetails = secureStorage.getItem(SecureStorageKeyEnum.LOGINDETAILS);
-				if (storedUserDetails) {
-					setUserDetails(storedUserDetails);
-					return;
-				}
-
-				// Fetch user details from API if not available in storage
-				await fetchUserDetails(userType, userId, userEmail);
-			} catch (error) {
-				console.error('Authentication check failed:', error);
-				await CognitoServiceObj.handleSignOut();
+// Check if user is logged in
+useLayoutEffect(() => {
+	const checkUserLoggedIn = async () => {
+		try {
+			console.info('Checking user authentication status...');
+			const isUserLoggedIn = await CognitoServiceObj.isLoggedIn();
+			
+			if (!isUserLoggedIn) {
 				setIsLoggedIn(false);
+				setUserDetails({});
+				setTokenData(null);
+				return;
 			}
-		};
 
-		checkUserLoggedIn();
+			// ✅ DO NOT set isLoggedIn = true here yet!
+			// User is logged in, now ensure we have user details
+			const { tokens } = await fetchAuthSession();
+			const cognitoUserDetails: CognitoMetaDataDto | undefined = tokens?.idToken?.payload;
+			const userType: string[] | undefined = cognitoUserDetails?.['cognito:groups'];
+			const userEmail = cognitoUserDetails?.email;
+			const userId = cognitoUserDetails?.sub;
 
-		// Refresh user login status every 50 minutes
-		const interval = setInterval(checkUserLoggedIn, 50 * 60 * 1000);
-		return () => clearInterval(interval);
-	}, [updateCheck]);
+			// Get token and store it
+			const token = CognitoServiceObj.getAccessToken();
+			setTokenData(token);
+
+			// Check if user details are already stored and valid
+			const storedUserDetails = secureStorage.getItem(SecureStorageKeyEnum.LOGINDETAILS);
+			
+			if (storedUserDetails && Object.keys(storedUserDetails).length > 0) {
+				setUserDetails(storedUserDetails);
+			} else {
+				// No user details found, fetch them
+				await fetchUserDetails(userType, userId, userEmail);
+			}
+
+			// ✅ NOW set isLoggedIn = true AFTER we have userDetails
+			setIsLoggedIn(true);
+
+		} catch (error) {
+			console.error('Authentication check failed:', error);
+			await CognitoServiceObj.handleSignOut();
+			setIsLoggedIn(false);
+			setUserDetails({});
+			setTokenData(null);
+		}
+	};
+
+	checkUserLoggedIn();
+
+	// Refresh user login status every 50 minutes
+	const interval = setInterval(checkUserLoggedIn, 50 * 60 * 1000);
+	return () => clearInterval(interval);
+}, [updateCheck]);
 
 	// Function to set authentication state
 	const setAuthState = useCallback((data: any, loggedIn: boolean) => {
 		setTokenData(data);
 		setIsLoggedIn(loggedIn);
+		if (!loggedIn) {
+			setUserDetails({});
+		}
 	}, []);
 
 	// Memoized context value
@@ -163,8 +184,9 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 			setPendingApply,
 			isModalOpen,
 			setIsModalOpen,
+			isLoadingUserDetails,
 		}),
-		[isLoggedIn, tokenData, setAuthState, userDetails, setUpdateCheck,PendingApply,setPendingApply,isModalOpen,setIsModalOpen]
+		[isLoggedIn, tokenData, setAuthState, userDetails, setUpdateCheck, PendingApply, setPendingApply, isModalOpen, setIsModalOpen, isLoadingUserDetails]
 	);
 
 	return <AppContext.Provider value={memoizedValue}>{children}</AppContext.Provider>;

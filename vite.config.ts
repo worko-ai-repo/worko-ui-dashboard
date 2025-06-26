@@ -12,6 +12,7 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "src"), // Add alias for `src`
+      "@AssetsFolder": path.resolve(__dirname, "src/assets"),
       "@Assets": path.resolve(__dirname, "src/assets/assets.ts"),
       "@Components": path.resolve(__dirname, "src/components"),
       "@Context": path.resolve(__dirname, "src/context"),
@@ -31,6 +32,7 @@ export default defineConfig({
     exclude: ["lib-worko-ui"],
   },
   server: {
+    hmr: true,
     fs: {
       allow: [".."],
     },

@@ -96,6 +96,7 @@ import Edit from './svgs/edit.svg'
 import Repost from './svgs/repost.svg'
 import View from './svgs/view.svg'
 import Submit from './svgs/submit.svg'
+import clipboard from './svgs/clipboard.svg';
 
 export { 
     // Backgrounds
@@ -151,6 +152,7 @@ export {
     evaluationRequest,
 
     //svgs
+    clipboard,
     coin,
     about_bg,
     document,

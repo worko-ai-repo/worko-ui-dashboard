@@ -74,7 +74,7 @@ const Modal = ({
           </button>
         </div>
       )}
-      <div className="p-6 pt-0 h-full">
+      <div className="p-6 pt-0">
       {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
       {children}
       </div>

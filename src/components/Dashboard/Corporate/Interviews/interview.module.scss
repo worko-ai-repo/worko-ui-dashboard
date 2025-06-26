@@ -1,0 +1,28 @@
+:root {
+    --clr-border: #003c97;
+  }
+  
+  .box {
+    padding: 2rem;
+    position: relative;
+    
+  
+    background-image:
+      linear-gradient(0deg, var(--clr-border) 0 25%, transparent 25% 75%, var(--clr-border) 75% 100%),   // Left
+      linear-gradient(90deg, var(--clr-border) 0 25%, transparent 25% 75%, var(--clr-border) 75% 100%),  // Top
+      linear-gradient(180deg, var(--clr-border) 0 25%, transparent 25% 75%, var(--clr-border) 75% 100%), // Right
+      linear-gradient(270deg, var(--clr-border) 0 25%, transparent 25% 75%, var(--clr-border) 75% 100%); // Bottom
+  
+    background-repeat: no-repeat;
+    background-position:
+      left center,
+      top center,
+      right center,
+      bottom center;
+    background-size:
+      2px 100%,
+      100% 2px,
+      2px 100%,
+      100% 2px;
+  }
+  

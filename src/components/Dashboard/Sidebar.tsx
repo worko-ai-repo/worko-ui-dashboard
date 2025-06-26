@@ -10,6 +10,8 @@ import { DashboardType, NavItem, TabId } from "src/types/sidebar";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { LogOut } from "lucide-react";
+import CognitoServiceObj from "@Utils/Cognito.utils";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -77,7 +79,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    * - Navigates to selected tab
    * - Closes sidebar on mobile after navigation
    */
-  const handleTabClick = (NavItem:NavItem) => {
+  const handleTabClick = (NavItem: NavItem) => {
     console.log("Navigating to tab:", NavItem.label);
     setActiveTab(NavItem.label);
     onNavigate(dashboardType, NavItem.id);
@@ -101,47 +103,65 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
       <img src={finalUserDetails?.profileImage || User} alt="User Avatar" className={`w-10 h-10 rounded-full ${collapsed ? "hidden" : "block"}`} />
     </div>
   );
-  
+
   return (
     <aside
-      className={`bg-[#316bff] text-white h-screen z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
+      className={`bg-[#316bff] text-white  h-screen z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
                 ${collapsed ? "w-[72px]" : "w-[212px]"}
                 md:relative md:block
                 max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 
                 ${sidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}`}>
-      <div className="flex justify-between items-center mb-6">
-        {!collapsed ? (
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2 overflow-hidden">
-              {Avatar}
-              <span className="text-base text-start font-bold capitalize">{userName}</span>
-            </div>
-
-            <button onClick={() => setCollapsed(true)} className="hidden sm:flex focus:outline-none" aria-label="Collapse sidebar">
-              <ChevronLeftIcon className="w-4 h-4" />
-            </button>
-            <button onClick={() => setSidebarOpen(false)} className="block sm:hidden focus:outline-none" aria-label="Close sidebar">
-              <XMarkIcon className="h-6 w-6" />
-            </button>
+      <div className="h-full flex flex-col justify-between  ">
+        <div className="">
+          <div className="flex justify-between items-center mb-6 ">
+            {!collapsed ? (
+              <div className="flex items-center justify-between w-full">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  {Avatar}
+                  <span className="text-base text-start font-bold capitalize">{userName}</span>
+                </div>
+                <button onClick={() => setCollapsed(true)} className="hidden sm:flex focus:outline-none" aria-label="Collapse sidebar">
+                  <ChevronLeftIcon className="w-4 h-4" />
+                </button>
+                <button onClick={() => setSidebarOpen(false)} className="block sm:hidden focus:outline-none" aria-label="Close sidebar">
+                  <XMarkIcon className="h-6 w-6" />
+                </button>
+              </div>
+            ) : (
+              <div className="w-full flex justify-center">{Avatar}</div>
+            )}
           </div>
-        ) : (
-          <div className="w-full flex justify-center">{Avatar}</div>
-        )}
-      </div>
+          <nav className="space-y-3 ">
+            {navItems.map((item) => (
+              <SidebarItem key={item.id} item={item} isActive={item.label === activeTab} collapsed={collapsed} onClick={handleTabClick} />
+            ))}
+          </nav>
+          {/* Expand Button */}
+          {collapsed && (
+            <div className="mt-6 flex justify-center">
+              <button onClick={() => setCollapsed(false)} className="text-white focus:outline-none" aria-label="Expand sidebar">
+                <ChevronLeftIcon className="w-5 h-5 rotate-180" />
+              </button>
+            </div>
+          )}
+        </div>
+        {/* Logout Buttons */}
 
-      <nav className="space-y-3">
-        {navItems.map((item) => (
-          <SidebarItem key={item.id} item={item} isActive={item.label === activeTab} collapsed={collapsed} onClick={handleTabClick} />
-        ))}
-      </nav>
-
-      {collapsed && (
-        <div className="mt-6 flex justify-center">
-          <button onClick={() => setCollapsed(false)} className="text-white focus:outline-none" aria-label="Expand sidebar">
-            <ChevronLeftIcon className="w-5 h-5 rotate-180" />
+        <div className="border-t border-white/20 pt-4 hover:text-red-600">
+          <button
+            onClick={() => {
+              CognitoServiceObj.handleSignOut();
+              secureStorage.clear();
+              setUpdateCheck((prev: boolean) => !prev);
+              navigate("/login");
+            }}
+            className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 rounded"
+            aria-label="Logout">
+            {!collapsed && <p>Logout</p>}
+            <LogOut className="cursor-pointer self-center" />
           </button>
         </div>
-      )}
+      </div>
     </aside>
   );
 };
