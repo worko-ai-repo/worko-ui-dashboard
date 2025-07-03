@@ -1,5 +1,5 @@
 import { JobFormSchema } from "@Components/Dashboard/types";
-import { ApiResponseDto, CorporateInvite, CorporateInviteResponse, JobApiResponse, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { ApiResponseDto, CorporateInvite, JobApiResponse, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SelectedRow } from "../Job/Jobs";
@@ -254,9 +254,17 @@ class CorporateService {
     }
   }
 
-  async getBulkScreeningList(params: object): Promise<{ data: BulkScreeningListItemDto[] } | null> {
+  /**
+   * fetchBulkScreenedJobs
+   *
+   * @description - This api is used to fetch the bulk screened jobs.
+   * @param params
+   * @returns {BulkScreeningListItemDto[]} - List of bulk screened jobs.
+   */
+
+  async fetchBulkScreenedJobs(params: object): Promise<ApiResponseDto<BulkScreeningListItemDto>> {
     try {
-      const { response } = await httpServiceObj.get<{ data: BulkScreeningListItemDto[] }>(`/corporate-bulk-jd/`, true, params, false, "BASE");
+      const { response } = await httpServiceObj.get<ApiResponseDto<BulkScreeningListItemDto>>(`/corporate-bulk-jd/`, true, params, false, "BASE");
 
       if (!response) {
         throw new Error("No response received");
@@ -264,7 +272,13 @@ class CorporateService {
       return response;
     } catch (error: any) {
       console.error("[CORPORATE SERVICE]: Failed to fetch Bulk Screening List.", error);
-      return null;
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
     }
   }
 
@@ -273,9 +287,9 @@ class CorporateService {
    *
    * @description - This api is used to get the bulk screening resumes based on the bulkCvId.
    */
-  async getBulkScreeningResumes(params: object): Promise<{ data: ResumeScreeningRecordDto[] } | null> {
+  async getBulkScreeningResumes(params: object): Promise<ApiResponseDto<ResumeScreeningRecordDto>> {
     try {
-      const { response } = await httpServiceObj.get<{ data: ResumeScreeningRecordDto[] }>(`/corporate-bulk-jd-resume/`, true, params, false, "BASE");
+      const { response } = await httpServiceObj.get<ApiResponseDto<ResumeScreeningRecordDto>>(`/corporate-bulk-jd-resume/`, true, params, false, "BASE");
 
       if (!response) {
         throw new Error("No response received");
@@ -283,13 +297,19 @@ class CorporateService {
       return response;
     } catch (error: any) {
       console.error("[CORPORATE SERVICE]: Failed to fetch Bulk Screening Resumes.", error);
-      return null;
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
     }
   }
 
   /**
    * fetchInvites
-   * 
+   *
    * @description - This api is used to fetch the corporate invites.
    * @param {object} params - The parameters for the API call, such as pagination and filters.
    */

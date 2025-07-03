@@ -11,5 +11,4 @@ export const CommonPaginationPageSizeOptions = [
     { label: '100 items', value: 100 },
     { label: '150 items', value: 150 },
     { label: '200 items', value: 200 },
-    { label: '250 items', value: 250 }
   ];

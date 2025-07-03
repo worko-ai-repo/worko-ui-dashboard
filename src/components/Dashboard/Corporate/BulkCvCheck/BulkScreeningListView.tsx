@@ -1,15 +1,12 @@
-import React, { FunctionComponent, useState, useCallback, useEffect, useMemo } from "react";
-import { Column } from "../DynamicTable";
-import { DynamicTable } from "@Components/Dashboard/Candidate/DynamicTable";
+import { FunctionComponent, useState, useCallback, useMemo, useEffect } from "react";
+import { Column, DynamicTable } from "../DynamicTable";
 import { eyeIcon } from "@AssetsFolder/assets";
-import { BulkScreeningListItemDto } from "src/types/corporateServices.types";
-import secureStorage from "@Utils/SecureStorage.utils";
-import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
-import { useQuery } from "@tanstack/react-query";
+import { BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams } from "src/types/corporateServices.types";
+import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
 import SkeletonLoader from "../SkeletonLoader";
 import ApplicantScreeningTable from "./BulkCvApplicants";
+import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 
 // Define the data type for our screening records
 interface ScreeningRecord {
@@ -28,39 +25,34 @@ const ScreeningListView: FunctionComponent = () => {
   const [isBulkResumesOpen, setBulkResumesOpen] = useState<boolean>(false);
   const { userDetails } = useAppContext();
 
-  const params: {
-    pageSize: string;
-    sortOrder: string;
-    companyId?: string;
-    corporateRecruiterUserId?: string;
-  } = {
-    pageSize: "25",
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const params: Omit<CursorPaginationBulkScreenedJobsParams, "lastKey"> = {
+    pageSize: pageSize,
     sortOrder: "descending",
+    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
   };
 
-  const {
-    data,
-    isLoading: queryIsJobsLoading,
-    error,
-    refetch,
-  } = useQuery<{ data: BulkScreeningListItemDto[] } | null>({
-    queryKey: ["ScreeningListViewQuery", userDetails.companyId],
-    queryFn: async () => {
-      if (!userDetails.companyId) {
-        return Promise.reject("No Bulk Screening List available for this company.");
-      }
-      let updatedParams = { ...params, companyId: userDetails.companyId };
-      return await CorporateServiceObj.getBulkScreeningList(updatedParams);
-    },
+  const { data, isLoading, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, refetch, reset } = useCursorPagination<BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams>({
+    queryKey: ["CorporateJobsApplicationQuery", !!userDetails.companyId, params],
+    queryFn: CorporateServiceObj.fetchBulkScreenedJobs,
+    baseParams: params,
     enabled: !!userDetails.companyId, // only run if companyId exists
   });
+
+  /**
+   * UseEffect to reset selected rows when the active tab changes
+   */
+  useEffect(() => {
+    reset(); // Reset pagination when active tab changes
+  }, [pageSize]);
 
   // Use useMemo to memoize the transformed data and prevent unnecessary recalculations
   const transformedData = useMemo(() => {
     console.log("Data from API:", data);
 
-    if (data && Array.isArray(data.data)) {
-      return data.data.map((item) => ({
+    if (data && Array.isArray(data)) {
+      return data.map((item) => ({
         id: item.id,
         jobTitle: item.jobTitle || "Not mentioned",
         location: item.jobLocation || "Not mentioned",
@@ -81,8 +73,36 @@ const ScreeningListView: FunctionComponent = () => {
     }
   }, [data]); // Only recalculate when data changes
 
+  const renderActions = useCallback(
+    (row: ScreeningRecord) => (
+      <div className="flex items-center">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setBulkResumeId(row.id);
+            setBulkResumesOpen(true);
+          }}
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content="View details"
+          className="flex items-center justify-center rounded-lg w-10 h-8 bg-gradient-to-t from-[#57E1E1] to-[#57E1E1] relative">
+          <img className="w-4 h-4 rounded-md bg-[#57E1E1] absolute top-[30%]" src={eyeIcon} alt="View Details" />
+        </button>
+      </div>
+    ),
+    []
+  );
+
   // Define columns for the table
-  const columns: Column<ScreeningRecord>[] = [
+  const columns:Column<ScreeningRecord>[] = [
+    {
+      key: "jobTitle",
+      label: "Job title",
+      render: (row: ScreeningRecord) => (
+        <span className="w-full capitalize font-bold " >
+          {row.jobTitle}
+        </span>
+    ),
+    },
     {
       key: "location",
       label: "Location",
@@ -103,9 +123,15 @@ const ScreeningListView: FunctionComponent = () => {
       key: "doneBy",
       label: "Done by",
     },
+    
+    {
+      key: "actions",
+      label: "Actions",
+      render: renderActions,
+    },
   ];
 
-  const toggleSelectAll = useCallback(() => {
+/*   const toggleSelectAll = useCallback(() => {
     if (transformedData && selectedRows.length === transformedData.length) {
       setSelectedRows([]);
     } else if (transformedData) {
@@ -116,27 +142,7 @@ const ScreeningListView: FunctionComponent = () => {
   const toggleRow = useCallback((id: string) => {
     setSelectedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]));
   }, []);
-
-  const renderActions = useCallback(
-    (row: ScreeningRecord) => (
-      <div className="flex items-center">
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setBulkResumeId(row.id);
-            setBulkResumesOpen(true);
-          }}
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content="View details"
-          className="flex items-center justify-center rounded-lg w-10 h-8 bg-gradient-to-t from-[#57E1E1] to-[#57E1E1] relative">
-          <img className="w-4 h-4 rounded-md bg-[#57E1E1] absolute top-[30%]" src={eyeIcon} alt="View Details" />
-        </button>
-      </div>
-    ),
-    []
-  );
-
-  const allSelected = transformedData ? selectedRows.length === transformedData.length && transformedData.length > 0 : false;
+ */
 
   // Handle popup close
   const handleClosePopup = useCallback(() => {
@@ -144,13 +150,13 @@ const ScreeningListView: FunctionComponent = () => {
     setBulkResumeId("");
   }, []);
 
-  return queryIsJobsLoading ? (
+  return isLoading ? (
     <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
   ) : (
     <div className="min-h-screen bg-gray-50">
       <div className="p-6">
         <div className="max-w-full mx-auto">
-          <DynamicTable columns={columns} rows={transformedData} activeTab="screening" selectedRows={selectedRows} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} allSelected={allSelected} renderActions={renderActions} enableSelect={true} showExpansionByDefault={false} />
+          <DynamicTable columns={columns} rows={transformedData ?? []}  enableSelect={false}    pageSize={pageSize} setPageSize={setPageSize} handlePreviousPage={goToPreviousPage} handleNextPage={goToNextPage} hasNextPage={hasNextPage} hasPrevPage={hasPreviousPage} />
         </div>
       </div>
 

@@ -265,3 +265,31 @@ export interface CursorPaginationInviteDataParams {
   userType?: string;
   lastKey?: string | undefined;
 }
+
+/**
+ * CursorPaginationBulkScreenedJobsParams
+ * 
+ * @description - This interface defines the parameters for cursor-based pagination of bulk screened jobs in corporate services.
+ */
+export interface CursorPaginationBulkScreenedJobsParams {
+  searchText?: string;
+  lastKey?: string | undefined;
+  pageSize: number;
+  sortOrder: string;
+  companyId?: string;
+  corporateRecruiterUserId?: string;
+}
+
+/**
+ * CursorPaginationResumeScreeningRecordsParams
+ * 
+ * @description - This interface defines the parameters for cursor-based pagination of resume screening records in corporate services.
+ * */
+export interface CursorPaginationResumeScreeningRecordsParams {
+  pageSize: number;
+  sortOrder: string;
+  companyId?: string;
+  corporateRecruiterUserId?: string;
+  corporateBulkJdId: string;
+  lastKey?: string;
+}
