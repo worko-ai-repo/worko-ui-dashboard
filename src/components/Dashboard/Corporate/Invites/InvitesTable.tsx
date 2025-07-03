@@ -5,10 +5,12 @@ import InviteForm from "./SendInviteForm";
 import RevokeForm from "./RevokeForm";
 import { CorporateInviteResponse, CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
 import { DynamicTable } from "../DynamicTable";
+import { CommonCursorPaginationProp } from "src/types/corporateServices.types";
 
 interface InviteTableProps {
-    data: CorporateInviteResponse;
+    data: CorporateInvite[];
     fetchInvites: () => void;
+    pagination:CommonCursorPaginationProp;
 };
 
 function formatDateToDDMMYYYY(isoDate: string): string {
@@ -25,6 +27,7 @@ function formatDateToDDMMYYYY(isoDate: string): string {
 const InviteTable: React.FC<InviteTableProps> = ({
     data,
     fetchInvites,
+    pagination
 }) => {
     const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
     const [isRevokedModalOpen, setIsRevokedModalOpen] = useState(false);
@@ -41,7 +44,7 @@ const InviteTable: React.FC<InviteTableProps> = ({
         {
             key: "name",
             label: "Name",
-            render: (row: typeof data.data[0]) => (
+            render: (row: typeof data[0]) => (
                 <span className="w-full capitalize">
                     {row?.firstName} {row?.lastName}
                 </span>
@@ -52,13 +55,13 @@ const InviteTable: React.FC<InviteTableProps> = ({
         {
             key: "createdAt",
             label: "Date",
-            render: (row: typeof data.data[0]) => formatDateToDDMMYYYY(row.createdAt),
+            render: (row: typeof data[0]) => formatDateToDDMMYYYY(row.createdAt),
         },
         { key: "access", label: "Access" },
         {
             key: "inviteStatus",
             label: "Invite status",
-            render: (row: typeof data.data[0]) => {
+            render: (row: typeof data[0]) => {
                 let color = "";
                 switch (row.inviteStatus) {
                     case "ACCEPTED":
@@ -83,7 +86,7 @@ const InviteTable: React.FC<InviteTableProps> = ({
         {
             key: "resend",
             label: "Resend",
-            render: (row: typeof data.data[0]) => (
+            render: (row: typeof data[0]) => (
                 <>
                 {row.inviteStatus !== 'DELETED' && <button
                     onClick={() => setIsSendInviteModalOpen(true)}
@@ -102,7 +105,7 @@ const InviteTable: React.FC<InviteTableProps> = ({
         {
             key: "revoke",
             label: "Revoke",
-            render: (row: typeof data.data[0]) => (
+            render: (row: typeof data[0]) => (
                 <>
             {row.inviteStatus !== 'DELETED' && <button
                     onClick={() => {
@@ -122,8 +125,14 @@ const InviteTable: React.FC<InviteTableProps> = ({
         <>
             <DynamicTable<CorporateInvite>
                 columns={columns}
-                rows={data?.data ?? []}
+                rows={data ?? []}
                 enableSelect={false}
+                pageSize={pagination.pageSize}
+                setPageSize={pagination.setPageSize}
+                handlePreviousPage={pagination.goToPreviousPage}
+                handleNextPage={pagination.goToNextPage}
+                hasNextPage={pagination.hasNextPage}
+                hasPrevPage={pagination.hasPreviousPage}
             />
             <Modal
                 isOpen={isSendInviteModalOpen}

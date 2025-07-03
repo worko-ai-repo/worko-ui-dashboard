@@ -21,6 +21,7 @@ import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/Deta
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { CorporateUserDetail, useAppContext } from "@Context/App.context";
+import { CommonCursorPaginationProp } from "src/types/corporateServices.types";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -31,9 +32,10 @@ interface ApplicationTableProps {
   data: JobApplicationDetailsDto[];
   handleUpdate: (payload: JobApplicationUpdatePayloadDto, jobId: string) => void;
   userType: string;
+  Pagination: CommonCursorPaginationProp;
 }
 
-export default function ApplicationTable({ activeTab, setActiveTab, selectedRows, setSelectedRows, data, handleUpdate, userType }: ApplicationTableProps) {
+export default function ApplicationTable({ activeTab, setActiveTab, selectedRows, setSelectedRows, data, handleUpdate, userType, Pagination }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
@@ -469,7 +471,24 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
       </button>
 
       {/* Main table component */}
-      <DynamicTable columns={applicationColumns} rows={data} selectedRows={selectedRows} expandedRows={expandedRows} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selectedRows.length === data.length} renderExpandedDetails={renderExpandedDetails} enableSelect={activeTab !== "Joined"} />
+      <DynamicTable
+        columns={applicationColumns}
+        rows={data}
+        selectedRows={selectedRows}
+        expandedRows={expandedRows}
+        toggleSelectAll={toggleSelectAll}
+        toggleRow={toggleRow}
+        toggleExpand={toggleExpand}
+        allSelected={selectedRows.length === data.length}
+        renderExpandedDetails={renderExpandedDetails}
+        enableSelect={activeTab !== "Joined"}
+        pageSize={Pagination.pageSize}
+        setPageSize={Pagination.setPageSize}
+        handlePreviousPage={Pagination.goToPreviousPage}
+        handleNextPage={Pagination.goToNextPage}
+        hasNextPage={Pagination.hasNextPage}
+        hasPrevPage={Pagination.hasPreviousPage}
+      />
 
       {/* Modal components */}
       <Modal

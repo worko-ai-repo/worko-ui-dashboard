@@ -12,7 +12,7 @@ import { useNavigate } from "react-router-dom";
 
 interface JobsTableProps {
   activeTab: "PUBLISHED" | "CLOSED" | "ARCHIVED";
-  data: JobApiResponse;
+  data: JobData[];
   selectedRows: SelectedRow[];
   setSelectedRows: React.Dispatch<React.SetStateAction<SelectedRow[]>>;
    handleJobCreation: (mode: "UPDATE" | "DUPLICATE", row: JobData) => void;
@@ -20,9 +20,15 @@ interface JobsTableProps {
     id:string;
     companyId:string;
    }) => void;
+  hasNextPage: boolean;
+  hasPrevPage: boolean;
+  fetchNextPage: () => void;
+  fetchPreviousPage: () => void;
+  pageSize: number;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, setSelectedRows ,handleJobCreation,updateJobStatus}) => {
+const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, setSelectedRows, handleJobCreation, updateJobStatus, hasNextPage, hasPrevPage, fetchNextPage, fetchPreviousPage,pageSize,setPageSize }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{id:string,companyId:string} | null>(null);
   const nav = useNavigate();
@@ -31,7 +37,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
       key: "jobTitle",
       label: "Job Title",
       render: (row: JobData) => (
-        <span className="font-bold w-fullP capitalize truncate block max-w-[99.3%] cursor-pointer text-left" data-tooltip-id="my-tooltip" data-tooltip-content={row.jobTitle} data-tooltip-place="top" data-tooltip-delay-show={500} data-tooltip-delay-hide={500}>
+        <span className="font-bold w-full capitalize truncate block max-w-[99.3%] cursor-pointer" data-tooltip-id="my-tooltip" data-tooltip-content={row.jobTitle} data-tooltip-place="top" data-tooltip-delay-show={500} data-tooltip-delay-hide={500}>
           {row.jobTitle}
         </span>
       ),
@@ -88,7 +94,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
   ];
 
   const toggleRow = (id: string) => {
-    const job = data.data.find((j) => j.id === id);
+    const job = data.find((j) => j.id === id);
     if (!job) return;
 
     setSelectedRows((prev) => {
@@ -117,13 +123,13 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
   };
 
   const toggleSelectAll = () => {
-    if (!data?.data) return;
+    if (!data) return;
 
-    if (selectedRows.length === data.data.length) {
+    if (selectedRows.length === data.length) {
       setSelectedRows([]);
     } else {
-      const jobsToSelect = data.data.slice(0, 30); // Select only first 30
-      if (data.data.length > 30) {
+      const jobsToSelect = data.slice(0, 30); // Select only first 30
+      if (data.length > 30) {
         toast.warn("Only the first 30 jobs were selected.");
       }
       setSelectedRows(
@@ -144,13 +150,13 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
       </button>
       <DynamicTable<JobData>
         columns={columns}
-        rows={data?.data ?? []}
+        rows={data ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}
         expandedRows={expandedRows}
         toggleRow={toggleRow}
         toggleExpand={toggleExpand}
         toggleSelectAll={toggleSelectAll}
-        allSelected={selectedRows?.length === data?.data.length && data.data.length > 0}
+        allSelected={selectedRows?.length === data.length && data.length > 0}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div className="col-span-2">
@@ -171,6 +177,12 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
             </div>
           </div>
         )}
+        hasNextPage={hasNextPage}
+        hasPrevPage={hasPrevPage}
+        handleNextPage={fetchNextPage}
+        handlePreviousPage={fetchPreviousPage}
+        pageSize={pageSize} // Default page size
+        setPageSize={setPageSize} // Replace with actual handler
       />
       <Modal isOpen={isCloseJobModalOpen != null} onClose={() => setIsCloseJobModalOpen(null)}>
         <CloseJob 

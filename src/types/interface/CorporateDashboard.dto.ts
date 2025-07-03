@@ -1,6 +1,11 @@
+
 export interface JobApiResponse {
   data: JobData[];
   pagination: {
+    lastKey?: string;
+    sortOrder?: string;
+    timesQueried?: number;
+    queriedCount?: number;
     count: number;
     pageSize: number;
   };

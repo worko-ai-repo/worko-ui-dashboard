@@ -94,7 +94,7 @@ const BulkCVCheck: React.FC = () => {
         </div>
       ) : (
         <ScreeningListView />
-      )}
+      )}   
       <BulkCvForm isOpen={isbulkCvFormOpen} jobData={data} dropDownData={dropDownData} onClose={() => setIsBulkCvFormOpen(false)} />
     </div>
   );
