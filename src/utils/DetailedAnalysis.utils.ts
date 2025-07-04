@@ -30,7 +30,7 @@ export function parseScorePoints(input: unknown): ScorePoint[] {
       parsed = JSON.parse(parsed);
       if (isScorePointArray(parsed)) return parsed;
     } catch {
-      // continue
+       console.warn("Failed to parse input as JSON, falling back to text parsing");
     }
   }
 

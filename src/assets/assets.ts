@@ -97,6 +97,7 @@ import Repost from './svgs/repost.svg'
 import View from './svgs/view.svg'
 import Submit from './svgs/submit.svg'
 import clipboard from './svgs/clipboard.svg';
+import inviteTick from './svgs/inviteTick.svg';
 
 export { 
     // Backgrounds
@@ -189,5 +190,6 @@ export {
     Edit,
     Repost,
     View,
-    Submit
+    Submit,
+    inviteTick
 };

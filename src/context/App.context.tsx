@@ -71,7 +71,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 	const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
 	const [isLoadingUserDetails, setIsLoadingUserDetails] = useState<boolean>(false);
 
-	console.info('Initializing AppProvider...');
+	// console.info('Initializing AppProvider...');
 	// Fetch user details based on user type
 	const fetchUserDetails = async (userType: string[] | undefined, userId: string | undefined, userEmail: string | undefined) => {
 		try {
@@ -112,7 +112,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 useLayoutEffect(() => {
 	const checkUserLoggedIn = async () => {
 		try {
-			console.info('Checking user authentication status...');
+			// console.info('Checking user authentication status...');
 			const isUserLoggedIn = await CognitoServiceObj.isLoggedIn();
 			
 			if (!isUserLoggedIn) {

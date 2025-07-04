@@ -113,7 +113,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
-              console.log("Matching Score Details:", scorePointsModal);
+              // console.log("Matching Score Details:", scorePointsModal);
             }}
             value={row.matchingScore}
           />
