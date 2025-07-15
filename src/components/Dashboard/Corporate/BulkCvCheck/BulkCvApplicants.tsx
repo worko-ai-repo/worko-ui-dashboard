@@ -60,7 +60,7 @@ export default function ApplicantScreeningTable({ BulkResumeId, onClose }: { Bul
 
   // useEffect to transform and set data when API call is successful
   useEffect(() => {
-    console.log("Data from API:", data);
+    // console.log("Data from API:", data);
 
     if (data && Array.isArray(data)) {
       const transformedData: ApplicantScreeningRecord[] = data

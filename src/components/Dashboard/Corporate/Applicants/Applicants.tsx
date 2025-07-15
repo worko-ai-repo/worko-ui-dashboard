@@ -58,7 +58,26 @@ export async function handleJobApplicationStatusUpdate(payload: JobApplicationUp
     refetch(); // Refetch the data to reflect the changes
   }
 }
+  /**
+   * getJobStatus
+   */
+  const getJobStatus = (data:any) => {
+    if (data && data.data.length > 0) {
+      switch (data.data[0].status) {
+        case "PUBLISHED":
+          return "Hiring";
+        case "CLOSED":
+          return "Closed";
+        case "ARCHIVED":
+          return "On Hold";
+        default:
+          return "N/A";
+      }
+      return "N/A"; // Default case if no status matches
+    }
+  };
 
+  
 const Applicants = () => {
   const { userDetails } = useAppContext();
 
@@ -110,24 +129,7 @@ const Applicants = () => {
     reset(); // Reset pagination when active tab changes
   }, [activeTab, searchBarText, pageSize]);
 
-  /**
-   * getJobStatus
-   */
-  const getJobStatus = () => {
-    if (data && data.length > 0) {
-      switch (data[0].status) {
-        case "PUBLISHED":
-          return "Hiring";
-        case "CLOSED":
-          return "Closed";
-        case "ARCHIVED":
-          return "On Hold";
-        default:
-          return "N/A";
-      }
-      return "N/A"; // Default case if no status matches
-    }
-  };
+
 
   return (
     <div>
@@ -155,7 +157,7 @@ const Applicants = () => {
             </div>
             <div className="flex flex-col gap-2 bg-white rounded-xl px-7 py-4 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
-              <span className="text-2xl text-blue-500 font-semibold">{getJobStatus()}</span>
+              <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
             </div>
           </div>
 

@@ -49,7 +49,7 @@ const ScreeningListView: FunctionComponent = () => {
 
   // Use useMemo to memoize the transformed data and prevent unnecessary recalculations
   const transformedData = useMemo(() => {
-    console.log("Data from API:", data);
+    // console.log("Data from API:", data);
 
     if (data && Array.isArray(data)) {
       return data.map((item) => ({

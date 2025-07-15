@@ -97,7 +97,9 @@ import Repost from './svgs/repost.svg'
 import View from './svgs/view.svg'
 import Submit from './svgs/submit.svg'
 import clipboard from './svgs/clipboard.svg';
-
+import inviteTick from './svgs/inviteTick.svg';
+import hireNow from './svgs/hireNow.svg';
+import onHold from './svgs/onHold.svg';
 export { 
     // Backgrounds
     bg_plexus,
@@ -189,5 +191,8 @@ export {
     Edit,
     Repost,
     View,
-    Submit
+    Submit,
+    inviteTick,
+    hireNow,
+    onHold
 };
