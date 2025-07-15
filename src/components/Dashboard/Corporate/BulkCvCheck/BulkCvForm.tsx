@@ -74,6 +74,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
   // Prefill form data when jobData is available
   useEffect(() => {
     try {
+      if(!jobData){
+        return; //@Todo#TEST
+        }
       if (jobData) {
         setValue("jobTitle", jobData.jobTitle || "");
         setValue("experienceRange", {

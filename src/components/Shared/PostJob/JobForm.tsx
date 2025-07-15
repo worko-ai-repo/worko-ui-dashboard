@@ -30,6 +30,28 @@ interface JobFormProps {
   onSuccess?: () => void; // Callback to refresh the jobs list
 }
 
+const getFormTitle = (mode:JobFormMode) => {
+  switch (mode) {
+    case "UPDATE":
+      return "Edit Job";
+    case "DUPLICATE":
+      return "Duplicate Job";
+    default:
+      return "Create Job";
+  }
+};
+
+const getSubmitButtonText = (mode:JobFormMode) => {
+  switch (mode) {
+    case "UPDATE":
+      return "Update Job";
+    case "DUPLICATE":
+      return "Create Duplicate";
+    default:
+      return "Create Job";
+  }
+};
+
 export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onSuccess }: JobFormProps) {
   const queryClient = useQueryClient();
       
@@ -263,33 +285,13 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
     return () => subscription.unsubscribe();
   }, [watch, trigger]);
 
-  const getFormTitle = () => {
-    switch (mode) {
-      case "UPDATE":
-        return "Edit Job";
-      case "DUPLICATE":
-        return "Duplicate Job";
-      default:
-        return "Create Job";
-    }
-  };
 
-  const getSubmitButtonText = () => {
-    switch (mode) {
-      case "UPDATE":
-        return "Update Job";
-      case "DUPLICATE":
-        return "Create Duplicate";
-      default:
-        return "Create Job";
-    }
-  };
 
   const isSubmitDisabled = mode === "DUPLICATE" && !hasFormChanged;
 
   return (
     <div className="overflow-auto p-2 sm:p-4 lg:p-6 text-start">
-      <h2 className="text-xl font-semibold mb-4">{getFormTitle()}</h2>
+      <h2 className="text-xl font-semibold mb-4">{getFormTitle(mode)}</h2>
 
       {mode === "DUPLICATE" && !hasFormChanged && (
         <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
@@ -414,7 +416,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
         <div className="flex justify-start pt-4 sm:pt-6">
           <button type="submit" disabled={isSubmitDisabled} className={`px-4 py-2 sm:px-6 sm:py-3 rounded-[10px] font-medium text-sm sm:text-base transition-colors duration-200 flex items-center gap-2 ${isSubmitDisabled ? "bg-gray-400 cursor-not-allowed text-gray-600" : "bg-[#316BFF] hover:bg-[#2557e6] text-white"}`}>
             <span className="text-lg">+</span>
-            {getSubmitButtonText()}
+            {getSubmitButtonText(mode)}
           </button>
         </div>
       </form>
