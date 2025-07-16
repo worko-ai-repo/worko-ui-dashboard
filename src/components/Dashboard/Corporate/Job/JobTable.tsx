@@ -14,12 +14,17 @@ interface JobsTableProps {
   activeTab: "PUBLISHED" | "CLOSED" | "ARCHIVED";
   data: JobData[];
   selectedRows: SelectedRow[];
-  setSelectedRows: React.Dispatch<React.SetStateAction<SelectedRow[]>>;
-   handleJobCreation: (mode: "UPDATE" | "DUPLICATE", row: JobData) => void;
-   updateJobStatus: (status: 'CLOSED' | "PUBLISHED" | "ARCHIVED" , data:{
-    id:string;
-    companyId:string;
-   }) => void;
+  selectRows: (row: JobData) => void;
+  selectAllRows: (rows: JobData[]) => void;
+  reset: () => void;
+  handleJobCreation: (mode: "UPDATE" | "DUPLICATE", row: JobData) => void;
+  updateJobStatus: (
+    status: "CLOSED" | "PUBLISHED" | "ARCHIVED",
+    data: {
+      id: string;
+      companyId: string;
+    }
+  ) => void;
   hasNextPage: boolean;
   hasPrevPage: boolean;
   fetchNextPage: () => void;
@@ -28,10 +33,28 @@ interface JobsTableProps {
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, setSelectedRows, handleJobCreation, updateJobStatus, hasNextPage, hasPrevPage, fetchNextPage, fetchPreviousPage,pageSize,setPageSize }) => {
+const JobTableWrapper: React.FC<JobsTableProps> = ({
+  activeTab,
+  data,
+  selectedRows,
+  selectRows,
+  selectAllRows,
+  reset,
+  handleJobCreation,
+  updateJobStatus,
+  hasNextPage,
+  hasPrevPage,
+  fetchNextPage,
+  fetchPreviousPage,
+  pageSize,
+  setPageSize,
+}) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{id:string,companyId:string} | null>(null);
+  const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{ id: string; companyId: string } | null>(null);
+
+  //hook
   const nav = useNavigate();
+
   const columns = [
     {
       key: "jobTitle",
@@ -60,20 +83,20 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
           }[]
         > = {
           PUBLISHED: [
-            { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants",onClick: () => nav(`/corporate/cApplicants/${row.id}`) },
-            { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes",onClick: () => nav(`/corporate/bulk-cv-check/${row.companyDetails.id}`) },
+            { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants", onClick: () => nav(`/corporate/cApplicants/${row.id}`) },
+            { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes", onClick: () => nav(`/corporate/bulk-cv-check/${row.companyDetails.id}`) },
             { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) },
             { icon: <img src={Edit} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Update Job", onClick: () => handleJobCreation("UPDATE", row) },
-            { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job",  onClick: () => window.open(`/jobs/${row.companyDetails.name}/${row.id}`, '_blank') },
-            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Close Job", onClick: () => setIsCloseJobModalOpen({id:row.id , companyId:row.companyDetails.id}) },
-            { icon: <img src={Archive} className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Archive Job",onClick: () => updateJobStatus('ARCHIVED',{id:row.id , companyId:row.companyDetails.id}) },
+            { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job", onClick: () => window.open(`/jobs/${row.companyDetails.name}/${row.id}`, "_blank") },
+            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Close Job", onClick: () => setIsCloseJobModalOpen({ id: row.id, companyId: row.companyDetails.id }) },
+            { icon: <img src={Archive} className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Archive Job", onClick: () => updateJobStatus("ARCHIVED", { id: row.id, companyId: row.companyDetails.id }) },
           ],
           ARCHIVED: [
-            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Remove Job", onClick: () => updateJobStatus('CLOSED',{id:row.id , companyId:row.companyDetails.id}) },
-            { icon: <img src={Repost} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Repost Job" ,onClick: () => updateJobStatus('PUBLISHED',{id:row.id , companyId:row.companyDetails.id})},
-            { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate" ,onClick: () => handleJobCreation("DUPLICATE", row)},
+            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Remove Job", onClick: () => updateJobStatus("CLOSED", { id: row.id, companyId: row.companyDetails.id }) },
+            { icon: <img src={Repost} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Repost Job", onClick: () => updateJobStatus("PUBLISHED", { id: row.id, companyId: row.companyDetails.id }) },
+            { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate", onClick: () => handleJobCreation("DUPLICATE", row) },
           ],
-          CLOSED: [{ icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job",onClick: () => handleJobCreation("DUPLICATE", row) }],
+          CLOSED: [{ icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) }],
         };
 
         const buttons = tabButtonConfig[activeTab];
@@ -93,58 +116,13 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
     },
   ];
 
-  const toggleRow = (id: string) => {
-    const job = data.find((j) => j.id === id);
-    if (!job) return;
-
-    setSelectedRows((prev) => {
-      if (prev.some((row) => row.jobId === job.id)) {
-        // Deselect if already selected
-        return prev.filter((row) => row.jobId !== job.id);
-      } else {
-        if (prev.length >= 30) {
-          toast.error("You can select up to 30 jobs only.");
-          return prev; // Don’t add more
-        }
-        return [
-          ...prev,
-          {
-            companyId: job.companyDetails.id,
-            jobId: job.id,
-            status: job.status as "PUBLISHED" | "ARCHIVED" | "CLOSED",
-          },
-        ];
-      }
-    });
-  };
-
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
-  const toggleSelectAll = () => {
-    if (!data) return;
-
-    if (selectedRows.length === data.length) {
-      setSelectedRows([]);
-    } else {
-      const jobsToSelect = data.slice(0, 30); // Select only first 30
-      if (data.length > 30) {
-        toast.warn("Only the first 30 jobs were selected.");
-      }
-      setSelectedRows(
-        jobsToSelect.map((job) => ({
-          companyId: job.companyDetails.id,
-          jobId: job.id,
-          status: job.status as "PUBLISHED" | "CLOSED" | "ARCHIVED",
-        }))
-      );
-    }
-  };
-
   return (
     <div>
-      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => setSelectedRows([])}>
+      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset}>
         <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
@@ -153,9 +131,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
         rows={data ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}
         expandedRows={expandedRows}
-        toggleRow={toggleRow}
+        toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
-        toggleSelectAll={toggleSelectAll}
+        toggleSelectAll={() => selectAllRows(data)}
         allSelected={selectedRows?.length === data.length && data.length > 0}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
@@ -185,16 +163,16 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
         setPageSize={setPageSize} // Replace with actual handler
       />
       <Modal isOpen={isCloseJobModalOpen != null} onClose={() => setIsCloseJobModalOpen(null)}>
-        <CloseJob 
-          onClose={() => setIsCloseJobModalOpen(null)} 
+        <CloseJob
+          onClose={() => setIsCloseJobModalOpen(null)}
           onSubmit={() => {
             if (isCloseJobModalOpen?.id && isCloseJobModalOpen?.companyId) {
-              updateJobStatus('CLOSED', { id: isCloseJobModalOpen.id, companyId: isCloseJobModalOpen.companyId });
+              updateJobStatus("CLOSED", { id: isCloseJobModalOpen.id, companyId: isCloseJobModalOpen.companyId });
             } else {
-              toast.error("Failed to perform this operation", getToastOptions({}))
+              toast.error("Failed to perform this operation", getToastOptions({}));
               console.error("Missing id or companyId for closing job.");
             }
-          }} 
+          }}
         />
       </Modal>
     </div>

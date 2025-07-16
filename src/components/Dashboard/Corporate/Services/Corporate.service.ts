@@ -3,7 +3,7 @@ import { ApiResponseDto, CorporateInvite, JobApiResponse, JobApplicationDetailsD
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SelectedRow } from "../Job/Jobs";
-import { CorporateBulkScreeningDto, FileMetadataDto, BulkUploadResponseDto, BulkScreeningListItemDto, ResumeScreeningRecordDto } from "src/types/corporateServices.types";
+import { CorporateBulkScreeningDto, FileMetadataDto, BulkUploadResponseDto, BulkScreeningListItemDto, ResumeScreeningRecordDto, JobEvaluationRequestDto, BulkJobApplicationUpdateItem, EvaluationResponseItem } from "@Interfaces/CorporateServices.dto";
 
 /**
  * Corporate Service File
@@ -331,6 +331,110 @@ class CorporateService {
       };
     }
   }
+
+  /**
+   * postEvaluatorFeedbackRequest
+   *
+   * @description - This api is used to post the evaluator feedback request for a job application.
+   */
+
+  async postEvaluatorFeedbackRequest(payload: JobEvaluationRequestDto): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.post<any>("/request-evaluation/", payload, true, {}, false, "JOB");
+
+      if (status === 409) {
+        const error = new Error(`The application evaluator feedback request already exists against ${payload.evaluatorDetails.email || "this evaluator"}.`);
+        (error as any).status = 409;
+        throw error;
+      }
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to post Evaluator Feedback Request.", error);
+      throw error; // Re-throw to let the caller handle it
+    }
+  }
+  /**
+   * postBulkEvaluatorFeedbackRequest
+   *
+   * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
+   */
+  async postBulkEvaluatorFeedbackRequest(payload: { requestEvaluations: JobEvaluationRequestDto[] }): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.post<any>(
+        "/request-evaluation/bulk",
+        payload,
+        true, // withAuth
+        {}, // headers
+        false, // noContentTypeHeader
+        "JOB" // serviceIdentifier (optional)
+      );
+
+      if (status === 409) {
+        const error = new Error("Some evaluator feedback requests already exist.");
+        (error as any).status = 409;
+        throw error;
+      }
+
+      if (!response) {
+        throw new Error("No response received from bulk evaluation request.");
+      }
+
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to post Bulk Evaluator Feedback Request.", error);
+      throw error;
+    }
+  }
+  /**
+   * postBulkApplicationUpdate
+   *
+   * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
+   */
+  async postBulkApplicationUpdate(payload: { bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[] }): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.post<any>(
+        "/job-application/bulk-update",
+        payload,
+        true, // withAuth
+        {}, // headers
+        false, // noContentTypeHeader
+        "JOB" // serviceIdentifier (optional)
+      );
+
+      if (!response) {
+        throw new Error("No response received from bulk update request.");
+      }
+
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to post Bulk Application Update Request.", error);
+      throw error;
+    }
+  }
+
+  async getEvaluationResponses(params: {
+    jobApplicationId: string;
+  }): Promise<{ data: EvaluationResponseItem[] } | null> {
+    try {
+      const { response } = await httpServiceObj.get<{ data: EvaluationResponseItem[] }>(
+        "/response-evaluation/",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (!response) throw new Error("No response received");
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to fetch evaluation responses.", error);
+      return null;
+    }
+  }
+
+  
 }
 
 const CorporateServiceObj = new CorporateService();

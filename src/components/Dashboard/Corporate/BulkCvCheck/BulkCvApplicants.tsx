@@ -3,7 +3,7 @@ import { Eye, FileText, ArrowLeft } from "lucide-react";
 import { DynamicTable, Column } from "../DynamicTable";
 import ProgressCircle from "@Components/Shared/CircularBar";
 import { useQuery } from "@tanstack/react-query";
-import { CursorPaginationResumeScreeningRecordsParams, ResumeScreeningRecordDto } from "src/types/corporateServices.types";
+import { CursorPaginationResumeScreeningRecordsParams, ResumeScreeningRecordDto } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";

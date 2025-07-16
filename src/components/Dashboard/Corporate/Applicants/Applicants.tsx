@@ -14,7 +14,14 @@ import SkeletonLoader from "../SkeletonLoader";
 import { clipboard } from "@Assets";
 import { toast } from "react-toastify";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CursorPaginationApplicationDataParams } from "src/types/corporateServices.types";
+import { CursorPaginationApplicationDataParams } from "src/types/interface/CorporateServices.dto";
+import Modal from "../Modal";
+import ResponseEvaluation from "./ViewEvaluation";
+import BulkStatusDropDown from "./BulkStatusDropDown";
+import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
+import { BulkJobApplicationUpdateItem } from "@Interfaces/CorporateServices.dto";
+import { EvaluatorFormProps } from "./EvaluatorForm";
+import { useListSelection } from "@Hooks/useListSelection.hook";
 
 const stats = [
   { label: "Total Applicants", value: 106 },
@@ -26,13 +33,13 @@ const stats = [
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
   emailId: string;
-  status: applcationType;
+  status: JobApplicationStatusType;
   userId: string;
   userType?: string;
 }
 
 const tabs = ["All", "Hired", "Joined"] as const;
-export type applcationType = "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
+export type JobApplicationStatusType = "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
 
 /**
  * handleJobApplicationStatusUpdate - Function to handle status updates for applications
@@ -58,52 +65,70 @@ export async function handleJobApplicationStatusUpdate(payload: JobApplicationUp
     refetch(); // Refetch the data to reflect the changes
   }
 }
-  /**
-   * getJobStatus
-   */
-  const getJobStatus = (data:any) => {
-    if (data && data.data.length > 0) {
-      switch (data.data[0].status) {
-        case "PUBLISHED":
-          return "Hiring";
-        case "CLOSED":
-          return "Closed";
-        case "ARCHIVED":
-          return "On Hold";
-        default:
-          return "N/A";
-      }
-      return "N/A"; // Default case if no status matches
+/**
+ * getJobStatus
+ */
+const getJobStatus = (data: any) => {
+  if (data && data.length > 0) {
+    switch (data[0].status) {
+      case "PUBLISHED":
+        return "Hiring";
+      case "CLOSED":
+        return "Closed";
+      case "ARCHIVED":
+        return "On Hold";
+      default:
+        return "N/A";
     }
-  };
-
-  
+    return "N/A"; // Default case if no status matches
+  }
+};
+export interface ApplicationListSelectionDto {
+  selectedRows: BulkJobApplicationUpdateItem[];
+  toggleRow: (item: JobApplicationDetailsDto) => void;
+  toggleSelectAll: (items: JobApplicationDetailsDto[]) => void;
+  isSelected: (item: JobApplicationDetailsDto) => boolean;
+  reset: () => void;
+}
 const Applicants = () => {
   const { userDetails } = useAppContext();
-
-  // State management
-  const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [selectedRows, setSelectedRows] = useState<string[]>([]);
+  const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
+  const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(SecureStorageKeyEnum.COGNITOUSERDETAILS);
   const userType = userCognitoDetails?.["cognito:groups"]?.[0];
-
+  
   //Api states
+  const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
   const [pageSize, setPageSize] = useState(10);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
+  const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
-  const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
+  const ListSelection: ApplicationListSelectionDto = useListSelection({
+    limit: 5, //@TODO change this to 30
+    mapFn: (application: JobApplicationDetailsDto): BulkJobApplicationUpdateItem => ({
+      id: application.id,
+      emailId: application.applicantDetails.email,
+      jobApplicationId: application.id,
+      status: application.status as JobApplicationStatusType,
+      oldStatus: application.status as JobApplicationStatusType,
+      userType: userType ?? "corporate-recruiter",
+      applicantName: application.applicantDetails.name,
+      oldStatusTracker: application.statusTracker ?? [],
+      applicantUserId: application.applicantDetails.userId, // ForBulk
+    }),
+    keySelector: (application:BulkJobApplicationUpdateItem) => application.jobApplicationId,
+  });
+
+
+
+ const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
+ 
+   ...(apiStatus !== undefined ? { status: apiStatus } : {}),
+   ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
+    userType: userType,
+    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
     pageSize: pageSize,
     sortOrder: "descending",
-    //@Todo add status
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
-    userType, // Add corporateRecruiterUserId if user is not corporate-admin
-    // Add search text if it exists and is not empty
-    ...(activeTab !== "All" ? { status: activeTab === "Hired" ? "HIRED" : "JOINED" } : {}),
-    ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
-    /*  ...(userType && 
-          !userType.includes("corporate-admin") && 
-          userCognitoDetails?.sub ?  @Todo : Verify this if this is needed
-          { corporateRecruiterUserId: userCognitoDetails.sub } : {}), */
   };
 
   const {
@@ -129,8 +154,70 @@ const Applicants = () => {
     reset(); // Reset pagination when active tab changes
   }, [activeTab, searchBarText, pageSize]);
 
+  const onBulkUpdate = async (type: JobApplicationStatusType) => {
+    try {
+      if (ListSelection.selectedRows.length === 0) {
+        toast.error("Please select at least one application to update.", getToastOptions({}));
+        return;
+      }
+      const payload: BulkJobApplicationUpdateItem[] = ListSelection.selectedRows.map((row) => ({
+        ...row,
+        status: type, // Set the new status based on the dropdown selection
+      }));
+      const data = await CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
+    } catch (error) {
+      console.error("Error in bulk update:", error);
+    }
+  };
 
+  useEffect(() => {
+    switch (activeTab) {
+      case "All":
+        setApiStatus(undefined);
+        break;
+      case "Hired":
+        setApiStatus("HIRED");
+        break;
+      case "Joined":
+        setApiStatus("JOINED");
+        break;
+      default:
+        setApiStatus(undefined);
+    }
+  }, [activeTab]);
 
+  const StatusFilterDropdown = [
+    { label: "All", onClick: () => setApiStatus(undefined) },
+    { label: "Applied", onClick: () => setApiStatus("APPLIED") },
+    { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
+    { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
+    { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
+    { label: "Hired", onClick: () => setApiStatus("HIRED") },
+    { label: "Joined", onClick: () => setApiStatus("JOINED") },
+    { label: "On Hold", onClick: () => setApiStatus("ON_HOLD") },
+    { label: "Rejected", onClick: () => setApiStatus("REJECTED") },
+  ];
+
+  const handleBulkEvaluatorUpdate = () => {
+    if (ListSelection.selectedRows.length === 0) {
+      toast.error("Please select at least one application to send to evaluator.", getToastOptions({}));
+      return;
+    }
+    setIsAddEvaluatorModalOpen(true);
+    setEvaluatorFormProps({
+      Defaultvalues: {
+        jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
+        jobId: data[0]?.jobId ?? "",
+        jobTitle: data[0]?.jobTitle ?? "",
+        companyId: data[0]?.companyId ?? "",
+        applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
+        applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
+        hrName: userDetails?.firstName + " " + userDetails?.lastName,
+        hrCurrentCompanyName: data[0]?.companyName ?? "",
+      },
+    });
+    //@TODO:Update the status
+  };
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
@@ -164,19 +251,27 @@ const Applicants = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar searchBarText={searchBarText} setSearchBarText={setSearchBarText} handleClick={() => console.log("Search clicked")} />
-
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              <BulkOption
+              <GenericDropdown selectTitle="Status" tooltipMessage="Select Status to filter applications" disabled={activeTab !== "All"} options={StatusFilterDropdown} />
+              <BulkStatusDropDown
                 options={[
-                  { label: "Send to evaluator", onClick: () => console.log("Send to evaluator clicked") },
-                  { label: "Reject", onClick: () => console.log("Reject clicked") },
-                  { label: "Initiate Interview", onClick: () => console.log("Initiate interview clicked") },
-                  { label: "Accept", onClick: () => console.log("Accept clicked") },
-                  { label: "On Hold", onClick: () => console.log("On hold clicked") },
-                  { label: "Hired", onClick: () => console.log("Hired clicked") },
-                  { label: "Joined", onClick: () => console.log("Joined clicked") },
+                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
+                  {
+                    label: "Send to evaluator",
+                    onClick: () => {
+                      handleBulkEvaluatorUpdate();
+                    },
+                  },
+                  { label: "Initiate Interview", onClick: () => onBulkUpdate("PROCESSING_INTERVIEW") },
+                  { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
+                  { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
+                  { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
+                  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
                 ]}
-                disabled={false}
+                apiStatus={apiStatus} // Change this to test
+                disabled={apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"}
+                tooltipMessage="Select a bulk status update"
+                selectTitle="Bulk"
               />
             </div>
           </div>
@@ -188,8 +283,12 @@ const Applicants = () => {
             </button>
           ))}
         </div>
-        {queryIsJobsLoading ? <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} /> : <ApplicationTable activeTab={activeTab} setActiveTab={setActiveTab} selectedRows={selectedRows} setSelectedRows={setSelectedRows} data={data} handleUpdate={(payload, jobId) => handleJobApplicationStatusUpdate(payload, jobId, refetch)} userType={userType ?? ""} Pagination={{ hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, pageSize, setPageSize }} />}
+        {queryIsJobsLoading ? <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} /> : <ApplicationTable activeTab={activeTab} setActiveTab={setActiveTab} data={data} handleUpdate={(payload, jobId) => handleJobApplicationStatusUpdate(payload, jobId, refetch)} userType={userType ?? ""} Pagination={{ hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, pageSize, setPageSize }}  EvaluatorFormProps={EvaluatorFormProps} setEvaluatorFormProps={setEvaluatorFormProps} isAddEvaluatorModalOpen={isAddEvaluatorModalOpen} setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen} ListSelection={ListSelection}  /> }
+        
       </div>
+      <Modal isOpen={false} onClose={() => null} className="!p-0">
+        <ResponseEvaluation jobApplicationId="dcsadascdsaccsdacsda" />
+      </Modal>
     </div>
   );
 };

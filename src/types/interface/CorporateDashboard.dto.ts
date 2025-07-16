@@ -1,3 +1,4 @@
+import { JobApplicationStatusType } from "@Components/Dashboard/Corporate/Applicants/BulkStatusDropDown";
 
 export interface JobApiResponse {
   data: JobData[];
@@ -188,10 +189,10 @@ export interface JobApplicationDetailsDto   {
 }
 
 export interface StatusTracker {
-  userType: 'CAND' | 'ADMIN' | string;
-  newStatus: string;
-  oldStatus: string;
-  actionDate: string;
+  userType: "ADMIN" | "CAND" | string; // you can extend this union as needed
+  newStatus: JobApplicationStatusType;
+  oldStatus: JobApplicationStatusType;
+  actionDate: string; // ISO string
   userId: string;
 }
 

@@ -8,7 +8,7 @@ import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import JobForm from "@Components/Shared/PostJob/JobForm";
 import BulkOption from "@Components/Dashboard/Corporate/Bulk";
 import JobDescription from "@Components/Shared/PostJob/JobDescription";
-import {JobData, JobDetails } from "@Interfaces/CorporateDashboard.dto";
+import { JobData, JobDetails } from "@Interfaces/CorporateDashboard.dto";
 import CorporateServiceObj from "../Services/Corporate.service";
 import JobTableWrapper from "./JobTable";
 import { toast } from "react-toastify";
@@ -16,7 +16,8 @@ import { getToastOptions } from "lib-worko-ui";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CursorPaginationJobDataParams } from "src/types/corporateServices.types";
+import { CursorPaginationJobDataParams } from "src/types/interface/CorporateServices.dto";
+import { useListSelection } from "@Hooks/useListSelection.hook";
 
 // Header Switch button constant to loop
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
@@ -29,13 +30,28 @@ export type SelectedRow = {
 const Jobs = () => {
   const { userDetails } = useAppContext();
 
-  const [selectedRows, setSelectedRows] = useState<SelectedRow[]>([]);
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
   const [jobFormMode, setJobFormMode] = useState<"UPDATE" | "CREATE" | "DUPLICATE">("CREATE");
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(SecureStorageKeyEnum.COGNITOUSERDETAILS);
   const userType = userCognitoDetails?.["cognito:groups"];
+
+  const {
+    selectedRows,
+    toggleRow,
+    toggleSelectAll,
+    isSelected,
+    reset:resetSelection
+  } = useListSelection({
+    limit: 5,//@TODO change this to 30
+    mapFn: (job: JobData) => ({
+      jobId: job.id,
+      companyId: job.companyDetails.id,
+      status: job.status as "PUBLISHED" | "CLOSED" | "ARCHIVED",
+    }),
+    keySelector: (job) => job.jobId,
+  });
 
   // Api States
   const [activeTab, setActiveTab] = useState<JobStatusType>("PUBLISHED");
@@ -51,23 +67,10 @@ const Jobs = () => {
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     // Add corporateRecruiterUserId if user is not corporate-admin
-    ...(userType && 
-        !userType.includes("corporate-admin") && 
-        userCognitoDetails?.sub ? 
-        { corporateRecruiterUserId: userCognitoDetails.sub } : {}),
+    ...(userType && !userType.includes("corporate-admin") && userCognitoDetails?.sub ? { corporateRecruiterUserId: userCognitoDetails.sub } : {}),
   };
 
-
-  const {
-    data,
-    isLoading,
-    hasNextPage,
-    hasPreviousPage,
-    goToNextPage,
-    goToPreviousPage,
-    refetch,
-    reset,
-  } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
+  const { data, isLoading, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, refetch, reset } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
     queryKey: ["CorporateJobsQuery", !!userDetails.companyId, activeTab, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchJobs,
     baseParams: params,
@@ -80,12 +83,8 @@ const Jobs = () => {
    */
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
-  }, [activeTab, searchBarText,pageSize]);
-
-  useEffect(() => {
-    // clear the selected rows
-    setSelectedRows([]);
-  }, [activeTab]);
+    resetSelection(); // Reset selected rows when active tab changes
+  }, [activeTab, searchBarText, pageSize]);
 
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
     // update status of selectedRows element status with the params
@@ -166,7 +165,7 @@ const Jobs = () => {
       {isLoading ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
-        <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} setSelectedRows={setSelectedRows} handleJobCreation={handleJobCreation} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage } hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} />
+        <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} selectRows={toggleRow} selectAllRows={toggleSelectAll} handleJobCreation={handleJobCreation} reset={reset} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage} hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} />
       )}
       <Modal isOpen={isJobFormModalOpen} onClose={() => setIsJobFormModalOpen(false)} title="Check the details" className="w-[100dvw] lg:w-[70dvw] h-full text-left no-scrl no-scrl-web ">
         <JobForm onClose={() => setIsJobFormModalOpen(false)} jobDetails={jobDetails} userDetailsOne={userDetails} mode={jobFormMode} />

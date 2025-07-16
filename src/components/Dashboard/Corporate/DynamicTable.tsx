@@ -2,10 +2,12 @@ import React, { SetStateAction } from "react";
 import { ChevronDownIcon, ChevronUpIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import CustomDropdown from "@Components/Shared/DropDown/CustomDropDown";
 import { CommonPaginationPageSizeOptions } from "../../../types/common.constants";
+import { sortOrder } from "@AssetsFolder/assets";
 
-export interface Column<T> {
+             export interface Column<T> {
   key: (keyof T & string) | string;
   label: string;
+  sortable?: boolean;
   render?: (row: T) => React.ReactNode;
 }
 
@@ -30,6 +32,7 @@ interface DynamicTableProps<T extends { id: string }> {
   //Added empty state props
   emptyStateMessage?: string;
   emptyStateSubMessage?: string;
+  onSortChange?: (columnKey: string) => void;
 }
 
 export function DynamicTable<T extends { id: string }>({
@@ -50,6 +53,7 @@ export function DynamicTable<T extends { id: string }>({
   hasNextPage = false,
   handlePreviousPage,
   handleNextPage,
+  onSortChange,
   // @claude: Destructured empty state props with defaults
   emptyStateMessage = "No data available",
   emptyStateSubMessage = "There are no items to display at the moment.",
@@ -114,11 +118,28 @@ export function DynamicTable<T extends { id: string }>({
                   <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" />
                 </th>
               )}
-              {columns.map((col) => (
+             {columns.map((col) => {
+              return (
                 <th key={col.key} className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
-                  {col.label}
+                  <span className="flex items-center justify-center gap-1">
+                    {col.label}
+                    {col.sortable  && onSortChange && (
+                      <span className="cursor-pointer  h-auto w-8">
+                        <img
+                          src={sortOrder}
+                          onClick={(e) => {
+                            onSortChange(col.key);
+                            e.currentTarget.style.transform = e.currentTarget.style.transform === "rotate(180deg)" ? "rotate(0deg)" : "rotate(180deg)";
+                          }}
+                          className="inline ml-2 transition-transform duration-300"
+                          alt="sortOrder"
+                        />
+                      </span>
+                    )}
+                  </span>
                 </th>
-              ))}
+              );
+            })}
             </tr>
           </thead>
 
@@ -157,39 +178,38 @@ export function DynamicTable<T extends { id: string }>({
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
                           ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""}`}>
-                          {getCellValue(row, col)}
-                        </td>
-                      );
-                    })}
-                  </tr>
+                        {getCellValue(row, col)}
+                      </td>
+                    );
+                  })}
+                </tr>
 
-                  {/* Expand Button */}
-                  {renderExpandedDetails && !isExpanded && (
-                    <tr className="relative h-0">
-                      <td colSpan={totalCols} className="p-0 border-t-0">
-                        <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
-                          <ChevronDownIcon />
+                {/* Expand Button */}
+                {renderExpandedDetails && !isExpanded && (
+                  <tr className="relative h-0">
+                    <td colSpan={totalCols} className="p-0 border-t-0">
+                      <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
+                        <ChevronDownIcon />
+                      </div>
+                    </td>
+                  </tr>
+                )}
+
+                {renderExpandedDetails && isExpanded && (
+                  <>
+                    <tr>
+                      <td colSpan={totalCols} className="relative bg-white p-0 text-sm text-gray-600">
+                        <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
+                        <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
+                          <ChevronUpIcon />
                         </div>
                       </td>
                     </tr>
-                  )}
-
-                  {/* Expanded Content */}
-                  {renderExpandedDetails && isExpanded && (
-                    <>
-                      <tr>
-                        <td colSpan={totalCols} className="relative bg-white p-0 text-sm text-gray-600">
-                          <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
-                          <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
-                            <ChevronUpIcon />
-                          </div>
-                        </td>
-                      </tr>
-                      <tr>
-                        <td colSpan={totalCols} className="h-4" />
-                      </tr>
-                    </>
-                  )}
+                    <tr>
+                      <td colSpan={totalCols} className="h-4" />
+                    </tr>
+                  </>
+                )}
                 </React.Fragment>
               );
             })}

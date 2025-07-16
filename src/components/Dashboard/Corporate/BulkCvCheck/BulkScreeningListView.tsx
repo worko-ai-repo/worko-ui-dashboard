@@ -1,7 +1,7 @@
 import { FunctionComponent, useState, useCallback, useMemo, useEffect } from "react";
 import { Column, DynamicTable } from "../DynamicTable";
 import { eyeIcon } from "@AssetsFolder/assets";
-import { BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams } from "src/types/corporateServices.types";
+import { BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
 import SkeletonLoader from "../SkeletonLoader";

@@ -3,7 +3,7 @@ import { useForm, Controller } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import { Loader2, Send, Upload, X, AlertCircle } from "lucide-react";
 import CorporateServiceObj from "../Services/Corporate.service";
-import { CorporateBulkScreenPayload, FileMetadataDto } from "src/types/corporateServices.types";
+import { CorporateBulkScreenPayload, FileMetadataDto } from "@Interfaces/CorporateServices.dto";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -616,7 +616,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                     </div>
                   </div>
                 ) : (
-                  <ApplicantScreeningTable BulkResumeId={BulkResumeId} onClose={onClose}/>
+                  <ApplicantScreeningTable BulkResumeId={BulkResumeId} onClose={onClose} />
                 )}
               </div>
             )}
