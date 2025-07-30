@@ -15,6 +15,7 @@ import { renderCard, renderSkillsSection, renderListSection } from "./Helper/Pro
 import EditForm from './Helper/EditForm';
 import SkillsEditor from "./Helper/SkillsEditor";
 import ListEditor from "./Helper/ListEditor";
+import UploadCVButton from "@Components/Shared/UploadCVButton";
 
 interface ProfileSectionProps {
   title: string;
@@ -67,11 +68,11 @@ const Profile = () => {
   const [experienceData, setExperienceData] = useState<any>(null);
   const [achievementData, setAchievementData] = useState<any>(null);
   const [skillsData, setSkillsData] = useState<any>(null);
-  
+
   // State for loading and error
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  
+
   // State for edit mode
   const [editMode, setEditModeState] = useState<Record<string, boolean>>({
     about: false,
@@ -92,39 +93,42 @@ const Profile = () => {
     }));
   };
 
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(profileData?.data?.name || user?.name || "");
+
+  const fetchData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get current user from the profile service
+      const currentUser = profileService.getCurrentUser();
+      if (!currentUser) {
+        throw new Error("User not found");
+      }
+
+      setUser(currentUser);
+
+      // Fetch all user data using the email from the current user
+      const userData = await profileService.fetchAllUserData(currentUser.email);
+
+      // Set state with the fetched data
+      setProfileData(userData.profile);
+      setDetailsData(userData.details);
+      setEducationData(userData.education);
+      setExperienceData(userData.experience);
+      setSkillsData(userData.skills);
+      setAchievementData(userData.achievement);
+    } catch (err: any) {
+      console.error("Error fetching profile data:", err);
+      setError(err.message || "Failed to load profile data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Fetch user data on component mount
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
-        
-        // Get current user from the profile service
-        const currentUser = profileService.getCurrentUser();
-        if (!currentUser) {
-          throw new Error("User not found");
-        }
-        
-        setUser(currentUser);
-        
-        // Fetch all user data using the email from the current user
-        const userData = await profileService.fetchAllUserData(currentUser.email);
-        
-        // Set state with the fetched data
-        setProfileData(userData.profile);
-        setDetailsData(userData.details);
-        setEducationData(userData.education);
-        setExperienceData(userData.experience);
-        setSkillsData(userData.skills);
-        setAchievementData(userData.achievement);
-      } catch (err: any) {
-        console.error("Error fetching profile data:", err);
-        setError(err.message || "Failed to load profile data");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchData();
   }, []);
 
@@ -140,13 +144,13 @@ const Profile = () => {
   const handleSaveAbout = async (data: any) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateDetailsData(
         user.email,
         detailsData,
         { about: data.about }
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
@@ -156,13 +160,37 @@ const Profile = () => {
         });
         setEditMode('about', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update about section:", err);
       return false;
     }
   };
+
+  const handleSaveName = async () => {
+    if (!user) return;
+
+    const success = await profileService.updateDetailsData(
+      user.email,
+      detailsData,
+      { name: editedName }
+    );
+
+    if (success) {
+      setProfileData((prev: any) => ({
+        ...prev,
+        data: {
+          ...prev.data,
+          name: editedName
+        }
+      }));
+      setIsEditingName(false);
+    } else {
+      console.error("Failed to update name");
+    }
+  };
+
 
   // Work Experience handlers
   const handleEditWorkExperience = () => {
@@ -176,7 +204,7 @@ const Profile = () => {
   const handleSaveWorkExperience = async (data: any) => {
     try {
       if (!user) return false;
-      
+
       const updateData = {
         candidateExperience: {
           companyName: data.companyName,
@@ -185,19 +213,19 @@ const Profile = () => {
         },
         YOE: data.YOE
       };
-      
+
       const success = await profileService.updateDetailsData(
         user.email,
         detailsData,
         updateData
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
           const updatedData = [...prevData];
-          updatedData[0] = { 
-            ...updatedData[0], 
+          updatedData[0] = {
+            ...updatedData[0],
             candidateExperience: updateData.candidateExperience,
             YOE: updateData.YOE
           };
@@ -205,7 +233,7 @@ const Profile = () => {
         });
         setEditMode('workExperience', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update work experience:", err);
@@ -225,14 +253,14 @@ const Profile = () => {
   const handleSaveCoreSkills = async (skills: any[]) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateSkillsData(
         user.email,
         skillsData,
         { coreSkills: skills },
         'coreSkills'
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setSkillsData((prevData: any) => {
@@ -242,7 +270,7 @@ const Profile = () => {
         });
         setEditMode('coreSkills', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update core skills:", err);
@@ -262,14 +290,14 @@ const Profile = () => {
   const handleSaveSoftSkills = async (skills: any[]) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateSkillsData(
         user.email,
         skillsData,
         { softSkills: skills },
         'softSkills'
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setSkillsData((prevData: any) => {
@@ -279,7 +307,7 @@ const Profile = () => {
         });
         setEditMode('softSkills', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update soft skills:", err);
@@ -299,14 +327,14 @@ const Profile = () => {
   const handleSaveTechnicalSkills = async (skills: any[]) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateSkillsData(
         user.email,
         skillsData,
         { technicalSkills: skills },
         'technicalSkills'
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setSkillsData((prevData: any) => {
@@ -316,7 +344,7 @@ const Profile = () => {
         });
         setEditMode('technicalSkills', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update technical skills:", err);
@@ -336,19 +364,19 @@ const Profile = () => {
   const handleSaveAchievements = async (items: string[]) => {
     try {
       if (!user) return false;
-      
+
       // Transform the items into achievement objects
       const achievements = items.map(item => {
         const parts = item.split(' - ');
         const titlePart = parts[0] || '';
-        
+
         let acquiredFrom = '';
         let achievDate = new Date();
-        
+
         if (parts.length > 1) {
           const secondPart = parts[1] || '';
           const matches = secondPart.match(/(.+) \((\d{4})\)/);
-          
+
           if (matches && matches.length >= 3) {
             acquiredFrom = matches[1];
             achievDate = new Date(matches[2]);
@@ -356,21 +384,21 @@ const Profile = () => {
             acquiredFrom = secondPart;
           }
         }
-        
+
         return {
           title: titlePart,
           acquiredFrom,
           achievDate
         };
       });
-      
+
       const success = await profileService.updateAchievementData(
         user.email,
         achievementData[0],
         { achievements },
         'achievement'
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setAchievementData((prevData: any) => {
@@ -380,7 +408,7 @@ const Profile = () => {
         });
         setEditMode('achievements', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update achievements:", err);
@@ -400,14 +428,14 @@ const Profile = () => {
   const handleSaveResponsibilities = async (items: string[]) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateAchievementData(
         user.email,
         achievementData[0],
         { responsibilities: items },
         'responsibility'
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setAchievementData((prevData: any) => {
@@ -417,7 +445,7 @@ const Profile = () => {
         });
         setEditMode('responsibilities', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update responsibilities:", err);
@@ -437,13 +465,13 @@ const Profile = () => {
   const handleSaveSalary = async (data: any) => {
     try {
       if (!user) return false;
-      
+
       const success = await profileService.updateDetailsData(
         user.email,
         detailsData,
         { CTC: data.CTC, ECTC: data.ECTC }
       );
-      
+
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
@@ -453,7 +481,7 @@ const Profile = () => {
         });
         setEditMode('salary', false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update salary information:", err);
@@ -477,7 +505,7 @@ const Profile = () => {
 
       // Re-fetch all user data
       const userData = await profileService.fetchAllUserData(user.email);
-      
+
       // Update all state variables with new data
       setProfileData(userData.profile);
       setDetailsData(userData.details);
@@ -485,7 +513,7 @@ const Profile = () => {
       setExperienceData(userData.experience);
       setSkillsData(userData.skills);
       setAchievementData(userData.achievement);
-      
+
       setIsLoading(false);
     } catch (err: any) {
       console.error("Error retrying data fetch:", err);
@@ -499,11 +527,11 @@ const Profile = () => {
       <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
     </div>
   );
-  
+
   if (error) return (
     <div className="flex flex-col items-center justify-center min-h-screen px-4">
       <div className="text-red-600 text-xl font-medium text-center">Error loading profile data</div>
-      <button 
+      <button
         onClick={retryFetchData}
         className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
       >
@@ -518,21 +546,21 @@ const Profile = () => {
       <div className="hidden xl:block">
         <QuickLinks />
       </div>
-      
+
       {/* Main Content */}
-      <div className="w-full lg:ml-[60px] flex justify-center">
-        <div className="w-full max-w-6xl flex flex-col gap-4 sm:gap-6 text-left font-sans p-4 sm:p-6 lg:pt-0">
+      <div className="w-full flex">
+        <div className="w-full max-w-6xl flex flex-col gap-4 sm:gap-6 text-left font-sans p-4 sm:p-8 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
-              <div className="relative flex flex-col lg:flex-row justify-between w-full p-4 sm:p-6">
-                
+              <div className="relative flex flex-col lg:flex-row lg:items-center justify-between w-full p-4 sm:py-5 sm:px-8">
+
                 {/* Profile Section */}
                 <div className="flex flex-col sm:flex-row w-full lg:flex-1">
                   {/* Profile Image */}
-                  <div className="flex justify-center sm:justify-start mb-4 sm:mb-0">
+                  <div className="flex justify-center sm:flex-col sm:justify-center mb-4 sm:mb-0">
                     <img
-                      className="w-24 h-24 sm:w-32 sm:h-32 lg:w-36 lg:h-36 object-cover rounded-full"
+                      className="w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 object-cover rounded-full"
                       alt="Profile"
                       src={detailsData[0].profileImageAwsS3SignedUrl || "/api/placeholder/144/144"}
                     />
@@ -541,17 +569,52 @@ const Profile = () => {
                   {/* Profile Info */}
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">
-                      <h2 className="text-xl sm:text-2xl font-semibold text-black capitalize">
-                        {profileData?.data?.name || user?.name || "User Name"}
-                      </h2>
-                      <img className="ml-2 w-5 h-5 sm:w-6 sm:h-6" alt="Verified" src={Group} />
+                      {isEditingName ? (
+                        <>
+                          <input
+                            type="text"
+                            value={editedName}
+                            onChange={(e) => setEditedName(e.target.value)}
+                            className="text-xl sm:text-2xl font-semibold text-black border border-gray-300 rounded px-2 py-1"
+                          />
+                          <button
+                            onClick={handleSaveName}
+                            className="ml-2 text-blue-600 text-sm font-medium"
+                          >
+                            Save
+                          </button>
+
+                          <button
+                            onClick={() => {
+                              setEditedName(profileData?.data?.name || user?.name || "");
+                              setIsEditingName(false);
+                            }}
+                            className="ml-2 text-gray-500 text-sm font-medium"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <h2 className="text-xl sm:text-2xl font-semibold text-black capitalize">
+                            {profileData?.data?.name || user?.name || "User Name"}
+                          </h2>
+                          <img
+                            className="ml-2 w-5 h-5 cursor-pointer"
+                            alt="Edit"
+                            src={Group}
+                            onClick={() => setIsEditingName(true)}
+                          />
+                          {/* <img className="ml-2 w-5 h-5" alt="Verified" src={Group} /> */}
+                        </>
+                      )}
                     </div>
 
                     <div className="text-xs font-medium text-black text-center sm:text-left">
-                      Profile last updated - {new Date().toLocaleDateString('en-US', { 
-                        day: '2-digit', 
-                        month: 'short', 
-                        year: 'numeric' 
+                      Profile last updated - {new Date().toLocaleDateString('en-US', {
+                        day: '2-digit',
+                        month: 'short',
+                        year: 'numeric'
                       })}
                     </div>
 
@@ -588,9 +651,8 @@ const Profile = () => {
                         <div key={index} className="flex items-center justify-center sm:justify-start">
                           {item.icon}
                           <span
-                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${
-                              item.isAction ? "font-medium text-blue-600" : ""
-                            }`}
+                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${item.isAction ? "font-medium text-blue-600" : ""
+                              }`}
                           >
                             {item.text}
                           </span>
@@ -632,26 +694,19 @@ const Profile = () => {
                     </a>
                   </div>
 
-                  {[
-                    {
-                      icon: <Plus className="h-4 w-4 sm:h-5 sm:w-5" />,
-                      text: "Upload CV",
-                      className: "bg-gradient-to-r from-blue-600 to-blue-500 text-white",
-                    },
-                    {
-                      icon: <Video className="h-4 w-4 sm:h-5 sm:w-5" />,
-                      text: "Initiate video interview",
-                      className: "bg-white shadow-md border border-blue-200 text-blue-600",
-                    },
-                  ].map((button, index) => (
-                    <button
-                      key={index}
-                      className={`w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer ${button.className}`}
-                    >
-                      {button.icon}
-                      <span className="text-xs font-semibold">{button.text}</span>
-                    </button>
-                  ))}
+                  <UploadCVButton
+                    onUploadSuccess={(cvUrl) => {
+                      console.log("Uploaded CV URL:", cvUrl);
+                      fetchData();
+                    }}
+                  />
+
+                  {/* <button
+                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600"
+                  >
+                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                    <span className="text-xs font-semibold">Initiate video interview</span>
+                  </button> */}
                 </div>
               </div>
             </div>
@@ -756,54 +811,60 @@ const Profile = () => {
           {skillsData && (
             <>
               {/* Core Skills */}
-              {editMode.coreSkills ? (
-                <SkillsEditor
-                  title="Core skills"
-                  skills={skillsData[0]?.coreSkills || []}
-                  onSave={handleSaveCoreSkills}
-                  onCancel={handleCancelCoreSkills}
-                  withYears={true}
-                />
-              ) : (
-                renderSkillsSection({
-                  title: "Core skills",
-                  skills: skillsData[0]?.coreSkills || [],
-                  onEdit: handleEditCoreSkills
-                })
-              )}
+              <div id="core-skills">
+                {editMode.coreSkills ? (
+                  <SkillsEditor
+                    title="Core skills"
+                    skills={skillsData[0]?.coreSkills || []}
+                    onSave={handleSaveCoreSkills}
+                    onCancel={handleCancelCoreSkills}
+                    withYears={true}
+                  />
+                ) : (
+                  renderSkillsSection({
+                    title: "Core skills",
+                    skills: skillsData[0]?.coreSkills || [],
+                    onEdit: handleEditCoreSkills
+                  })
+                )}
+              </div>
 
               {/* Soft Skills */}
-              {editMode.softSkills ? (
-                <SkillsEditor
-                  title="Soft skills"
-                  skills={skillsData[0]?.softSkills || []}
-                  onSave={handleSaveSoftSkills}
-                  onCancel={handleCancelSoftSkills}
-                />
-              ) : (
-                renderSkillsSection({
-                  title: "Soft skills",
-                  skills: skillsData[0]?.softSkills || [],
-                  onEdit: handleEditSoftSkills
-                })
-              )}
+              <div id="soft-skills">
+                {editMode.softSkills ? (
+                  <SkillsEditor
+                    title="Soft skills"
+                    skills={skillsData[0]?.softSkills || []}
+                    onSave={handleSaveSoftSkills}
+                    onCancel={handleCancelSoftSkills}
+                  />
+                ) : (
+                  renderSkillsSection({
+                    title: "Soft skills",
+                    skills: skillsData[0]?.softSkills || [],
+                    onEdit: handleEditSoftSkills
+                  })
+                )}
+              </div>
 
               {/* Technical Skills */}
-              {editMode.technicalSkills ? (
-                <SkillsEditor
-                  title="Technical skills"
-                  skills={skillsData[0]?.technicalSkills || []}
-                  onSave={handleSaveTechnicalSkills}
-                  onCancel={handleCancelTechnicalSkills}
-                  withYears={true}
-                />
-              ) : (
-                renderSkillsSection({
-                  title: "Technical skills",
-                  skills: skillsData[0]?.technicalSkills || [],
-                  onEdit: handleEditTechnicalSkills
-                })
-              )}
+              <div id="technical-skills">
+                {editMode.technicalSkills ? (
+                  <SkillsEditor
+                    title="Technical skills"
+                    skills={skillsData[0]?.technicalSkills || []}
+                    onSave={handleSaveTechnicalSkills}
+                    onCancel={handleCancelTechnicalSkills}
+                    withYears={true}
+                  />
+                ) : (
+                  renderSkillsSection({
+                    title: "Technical skills",
+                    skills: skillsData[0]?.technicalSkills || [],
+                    onEdit: handleEditTechnicalSkills
+                  })
+                )}
+              </div>
             </>
           )}
 
@@ -842,98 +903,102 @@ const Profile = () => {
           )}
 
           {/* Achievements */}
-          {editMode.achievements ? (
-            <ListEditor
-              title="Achievements"
-              items={(achievementData && achievementData[0]?.achievements?.map(
-                (achievement: any) =>
-                  `${achievement.title} - ${
-                    achievement.acquiredFrom
-                  } (${new Date(achievement.achievDate).getFullYear()})`
-              )) || []}
-              onSave={handleSaveAchievements}
-              onCancel={handleCancelAchievements}
-            />
-          ) : (
-            renderListSection({
-              title: "Achievements",
-              items:
-                (achievementData &&
-                  achievementData[0]?.achievements?.map(
-                    (achievement: any) =>
-                      `${achievement.title} - ${
-                        achievement.acquiredFrom
-                      } (${new Date(achievement.achievDate).getFullYear()})`
-                  )) || [],
-              onEdit: handleEditAchievements
-            })
-          )}
+          <div id="achievements">
+            {editMode.achievements ? (
+              <ListEditor
+                title="Achievements"
+                items={(achievementData && achievementData[0]?.achievements?.map(
+                  (achievement: any) =>
+                    `${achievement.title} - ${achievement.acquiredFrom
+                    } (${new Date(achievement.achievDate).getFullYear()})`
+                )) || []}
+                onSave={handleSaveAchievements}
+                onCancel={handleCancelAchievements}
+              />
+            ) : (
+              renderListSection({
+                title: "Achievements",
+                items:
+                  (achievementData &&
+                    achievementData[0]?.achievements?.map(
+                      (achievement: any) =>
+                        `${achievement.title} - ${achievement.acquiredFrom
+                        } (${new Date(achievement.achievDate).getFullYear()})`
+                    )) || [],
+                onEdit: handleEditAchievements
+              })
+            )}
+          </div>
 
           {/* Responsibilities */}
-          {editMode.responsibilities ? (
-            <ListEditor
-              title="Responsibility"
-              items={(achievementData && achievementData[0]?.responsibilities) || []}
-              onSave={handleSaveResponsibilities}
-              onCancel={handleCancelResponsibilities}
-            />
-          ) : (
-            renderListSection({
-              title: "Responsibility",
-              items: (achievementData && achievementData[0]?.responsibilities) || [],
-              onEdit: handleEditResponsibilities
-            })
-          )}
+          <div id="responsibilities">
+            {editMode.responsibilities ? (
+              <ListEditor
+                title="Responsibility"
+                items={(achievementData && achievementData[0]?.responsibilities) || []}
+                onSave={handleSaveResponsibilities}
+                onCancel={handleCancelResponsibilities}
+              />
+            ) : (
+              renderListSection({
+                title: "Responsibility",
+                items: (achievementData && achievementData[0]?.responsibilities) || [],
+                onEdit: handleEditResponsibilities
+              })
+            )}
+          </div>
 
           {/* Salary */}
           {detailsData && (
-            <ProfileSection
-            title="Salary"
-            editMode={editMode.salary || false}
-            onEdit={handleEditSalary}
-            onCancel={handleCancelSalary}
-            onSave={handleSaveSalary}
-            formFields={[
-              {
-                name: "CTC",
-                label: "Current CTC (LPA)",
-                type: "number",
-                placeholder: "Enter current CTC",
-                required: true
-              },
-              {
-                name: "ECTC",
-                label: "Expected CTC (LPA)",
-                type: "number",
-                placeholder: "Enter expected CTC",
-                required: true
-              }
-            ]}
-            formData={{
-              CTC: detailsData[0]?.CTC || "",
-              ECTC: detailsData[0]?.ECTC || ""
-            }}
-          >
-            <div className="flex items-start gap-20">
-              {[
-                { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
-                { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
-              ].map((item, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <img className="w-6 h-6" alt="Money" src={salary} />
-                  <div>
-                    <span className="font-medium">{item.label} - </span>
-                    <span className="font-semibold text-blue-600">
-                      {item.value}
-                    </span>
-                  </div>
+            <div id="salary">
+              <ProfileSection
+                title="Salary"
+                editMode={editMode.salary || false}
+                onEdit={handleEditSalary}
+                onCancel={handleCancelSalary}
+                onSave={handleSaveSalary}
+                formFields={[
+                  {
+                    name: "CTC",
+                    label: "Current CTC (LPA)",
+                    type: "number",
+                    placeholder: "Enter current CTC",
+                    required: true
+                  },
+                  {
+                    name: "ECTC",
+                    label: "Expected CTC (LPA)",
+                    type: "number",
+                    placeholder: "Enter expected CTC",
+                    required: true
+                  }
+                ]}
+                formData={{
+                  CTC: detailsData[0]?.CTC || "",
+                  ECTC: detailsData[0]?.ECTC || ""
+                }}
+              >
+                <div className="flex items-start gap-20">
+                  {[
+                    { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
+                    { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
+                  ].map((item, index) => (
+                    <div key={index} className="flex items-center gap-4">
+                      <img className="w-6 h-6" alt="Money" src={salary} />
+                      <div>
+                        <span className="font-medium">{item.label} - </span>
+                        <span className="font-semibold text-blue-600">
+                          {item.value}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              </ProfileSection>
             </div>
-          </ProfileSection>
-        )}
+          )}
+        </div>
       </div>
-    </div>
     </div>
   );;
 };

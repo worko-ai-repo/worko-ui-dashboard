@@ -7,7 +7,9 @@ import PageNotFound from "@Pages/errors/404/PageNotFound";
 import ProtectedRoute from "@Services/SessionValidator.service";
 import JobCardGrid from "@Pages/test";
 
-const CandidateDashboard = lazy(() => import("@Pages/Candidate/CandidateDashboard"));
+const CandidateDashboard = lazy(() => import("./Pages/Candidate/CandidateDashboard"));
+import EvaluatorDashboard from '@Components/EvaluatorDashboard/EvaluatorDashboard';
+
 
 // Create router with a basename of '/v1' to match the proxy configuration
 const AppRoutes = createBrowserRouter(
@@ -39,6 +41,14 @@ const AppRoutes = createBrowserRouter(
           element: (
             <Suspense fallback={<MainLoader />}>
               <ProtectedRoute requiredRoles={["General_Users", "Admin"]} element={<CandidateDashboard />} />
+            </Suspense>
+          ),
+        },
+        {
+          path: "evaluator-dashboard/*",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <EvaluatorDashboard />
             </Suspense>
           ),
         },
