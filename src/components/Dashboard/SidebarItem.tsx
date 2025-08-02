@@ -24,14 +24,14 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
         ${collapsed ? 'justify-center' : 'justify-between'}
       `}
     >
-      <div className="flex items-center gap-3 overflow-hidden">
+      <div className="flex items-center gap-2 overflow-hidden">
         <span className={`p-1 rounded-lg ${isActive ? "bg-gray-100 text-[#316bff]" : "bg-blue-600 text-white"}`}>
           <span className="w-4 h-4 flex items-center justify-center">
-            <item.icon />
+          {typeof item.icon === "function" ? <item.icon /> : item.icon}
             </span>
         </span>
         {!collapsed && (
-          <span className="text-[13px] font-medium whitespace-nowrap">
+          <span className="text-[11px] font-medium whitespace-nowrap">
             {item.label}
           </span>
         )}

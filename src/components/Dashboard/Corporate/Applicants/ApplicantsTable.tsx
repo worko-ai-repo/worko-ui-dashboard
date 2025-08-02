@@ -8,8 +8,8 @@ import EvaluatorForm, { EvaluatorFormProps } from "./EvaluatorForm";
 import HireNowForm from "./HireNowForm";
 import ProgressCircle from "../../../Shared/CircularBar";
 import RequestDocumentModal from "./RequestDocModal";
-import Modal from "../Modal";
-import { DynamicTable } from "../DynamicTable";
+import Modal from "../../../Shared/Modal";
+import { DynamicTable } from "../../../Shared/DynamicTable";
 import Notes from "./Notes";
 
 // Assets and interfaces
@@ -22,6 +22,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { CorporateUserDetail, useAppContext } from "@Context/App.context";
 import { CommonCursorPaginationProp } from "src/types/interface/CorporateServices.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { NormalizedUser } from "@Utils/NormalizeUser";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -51,7 +52,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
-  const { userDetails } = useAppContext() as { userDetails: CorporateUserDetail };
+  const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const [pdfViewDetails, setPdfViewDetails] = useState<{
     pdfUri: string | undefined;
     mode: JobApplicationStatusType;
@@ -295,8 +296,8 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
                         companyId: row.companyId,
                         applicantUserId: [row.applicantDetails.userId],
                         applicantUserEmail: [row.applicantDetails.email],
-                        hrName: userDetails?.firstName + " " + userDetails?.lastName,
-                        hrCurrentCompanyName: userDetails?.companyId,
+                        hrName: userDetails?.fullName,
+                        hrCurrentCompanyName: userDetails?.companyId || "",
                       },
                     });
                   }}

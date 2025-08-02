@@ -1,5 +1,6 @@
 import { base_error_bg, logo_text } from "@Assets";
 import MessageModal from "@Components/Modals/MessageModal";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { UnauthorizedAccessError } from "@Utils/ErrorBoundary.utils";
 import React from "react";
 import { useNavigate } from "react-router-dom";
@@ -16,18 +17,18 @@ const ErrorFallback = ({ error }: { error?: Error }) => {
   React.useEffect(() => {
     if (error instanceof UnauthorizedAccessError) {
       switch (error.message) {
-        case "Corporate":
+        case UserRole.CORPORATE:
           setModalData({
             type: "error",
             heading: { message: "Corporate Access Denied", type: "error" },
             message: "You do not have access to this page.",
             buttons: [
-              { label: "Go to Home", action: () => nav("/corporate/jobs"), type: "primary" },
+              { label: "Go to Home", action: () => (window.location.href = `/${import.meta.env.APP_PROXY_DASH}/corporate/jobs`), type: "primary" },
               { label: "Contact Us", action: () => window.open("mailto:support@worko.ai"), type: "warning" },
             ],
           });
           break;
-        case "Admin":
+        case UserRole.ADMIN:
           setModalData({
             type: "error",
             heading: { message: "Admin Access Denied", type: "error" },

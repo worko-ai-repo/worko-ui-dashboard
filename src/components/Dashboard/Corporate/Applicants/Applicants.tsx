@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import BulkOption from "@Components/Dashboard/Corporate/Bulk";
 import ApplicationTable from "./ApplicantsTable";
-import HeaderDetails from "../Stats";
-import SearchBar from "../SearchBar";
+import HeaderDetails from "../../../Shared/Stats";
+import SearchBar from "../../../Shared/SearchBar";
 import { useQuery } from "@tanstack/react-query";
 import { ApiResponseDto, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useAppContext } from "@Context/App.context";
@@ -10,12 +10,12 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import CorporateServiceObj from "../Services/Corporate.service";
-import SkeletonLoader from "../SkeletonLoader";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { clipboard } from "@Assets";
 import { toast } from "react-toastify";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataParams } from "src/types/interface/CorporateServices.dto";
-import Modal from "../Modal";
+import Modal from "../../../Shared/Modal";
 import ResponseEvaluation from "./ViewEvaluation";
 import BulkStatusDropDown from "./BulkStatusDropDown";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
@@ -96,7 +96,7 @@ const Applicants = () => {
   const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(SecureStorageKeyEnum.COGNITOUSERDETAILS);
   const userType = userCognitoDetails?.["cognito:groups"]?.[0];
-  
+
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
   const [pageSize, setPageSize] = useState(10);
@@ -116,17 +116,14 @@ const Applicants = () => {
       oldStatusTracker: application.statusTracker ?? [],
       applicantUserId: application.applicantDetails.userId, // ForBulk
     }),
-    keySelector: (application:BulkJobApplicationUpdateItem) => application.jobApplicationId,
+    keySelector: (application: BulkJobApplicationUpdateItem) => application.jobApplicationId,
   });
 
-
-
- const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
- 
-   ...(apiStatus !== undefined ? { status: apiStatus } : {}),
-   ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
+  const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
+    ...(apiStatus !== undefined ? { status: apiStatus } : {}),
+    ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: userType,
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     pageSize: pageSize,
     sortOrder: "descending",
   };
@@ -141,10 +138,10 @@ const Applicants = () => {
     refetch,
     reset,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!userDetails.companyId, activeTab, !!searchBarText,params],
+    queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, activeTab, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchApplications,
     baseParams: params,
-    enabled: !!userDetails.companyId, // only run if companyId exists
+    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
 
   /**
@@ -212,7 +209,7 @@ const Applicants = () => {
         companyId: data[0]?.companyId ?? "",
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
-        hrName: userDetails?.firstName + " " + userDetails?.lastName,
+        hrName: userDetails?.fullName ?? "",
         hrCurrentCompanyName: data[0]?.companyName ?? "",
       },
     });
@@ -283,8 +280,23 @@ const Applicants = () => {
             </button>
           ))}
         </div>
-        {queryIsJobsLoading ? <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} /> : <ApplicationTable activeTab={activeTab} setActiveTab={setActiveTab} data={data} handleUpdate={(payload, jobId) => handleJobApplicationStatusUpdate(payload, jobId, refetch)} userType={userType ?? ""} Pagination={{ hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, pageSize, setPageSize }}  EvaluatorFormProps={EvaluatorFormProps} setEvaluatorFormProps={setEvaluatorFormProps} isAddEvaluatorModalOpen={isAddEvaluatorModalOpen} setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen} ListSelection={ListSelection}  /> }
-        
+        {queryIsJobsLoading ? (
+          <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
+        ) : (
+          <ApplicationTable
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            data={data}
+            handleUpdate={(payload, jobId) => handleJobApplicationStatusUpdate(payload, jobId, refetch)}
+            userType={userType ?? ""}
+            Pagination={{ hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, pageSize, setPageSize }}
+            EvaluatorFormProps={EvaluatorFormProps}
+            setEvaluatorFormProps={setEvaluatorFormProps}
+            isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}
+            setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
+            ListSelection={ListSelection}
+          />
+        )}
       </div>
       <Modal isOpen={false} onClose={() => null} className="!p-0">
         <ResponseEvaluation jobApplicationId="dcsadascdsaccsdacsda" />

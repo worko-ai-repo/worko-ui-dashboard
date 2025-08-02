@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { Eye, FileText, ArrowLeft } from "lucide-react";
-import { DynamicTable, Column } from "../DynamicTable";
+import { DynamicTable, Column } from "../../../Shared/DynamicTable";
 import ProgressCircle from "@Components/Shared/CircularBar";
 import { useQuery } from "@tanstack/react-query";
 import { CursorPaginationResumeScreeningRecordsParams, ResumeScreeningRecordDto } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import SkeletonLoader from "../SkeletonLoader";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 
 interface ApplicantScreeningRecord {
   id: string;
@@ -31,7 +31,7 @@ export default function ApplicantScreeningTable({ BulkResumeId, onClose }: { Bul
   const params: Omit<CursorPaginationResumeScreeningRecordsParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     corporateBulkJdId: BulkResumeId, // Use the BulkResumeId prop to filter records
   };
 
@@ -45,10 +45,10 @@ export default function ApplicantScreeningTable({ BulkResumeId, onClose }: { Bul
     refetch,
     reset,
   } = useCursorPagination<ResumeScreeningRecordDto, CursorPaginationResumeScreeningRecordsParams>({
-    queryKey: ["ApplicantScreeningBulkQuery", !!userDetails.companyId, params],
+    queryKey: ["ApplicantScreeningBulkQuery", !!userDetails?.companyId, params],
     queryFn: CorporateServiceObj.getBulkScreeningResumes,
     baseParams: params,
-    enabled: !!userDetails.companyId, // only run if companyId exists
+    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
 
   /**

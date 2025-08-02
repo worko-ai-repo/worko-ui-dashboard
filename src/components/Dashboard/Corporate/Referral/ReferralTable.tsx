@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Check, X, Eye } from "lucide-react";
-import { DynamicTable } from "../DynamicTable";
+import { DynamicTable } from "../../../Shared/DynamicTable";
 import ProgressCircle from "../../../Shared/CircularBar";
-import Modal from "../Modal";
+import Modal from "../../../Shared/Modal";
 import RejectionForm from "../Applicants/RejectForm";
 
 interface WorkoRow {

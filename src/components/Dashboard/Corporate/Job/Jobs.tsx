@@ -1,8 +1,8 @@
-import Modal from "../Modal";
-import SearchBar from "../SearchBar";
-import HeaderDetails from "../Stats";
-import { useEffect, useRef, useState } from "react";
-import SkeletonLoader from "../SkeletonLoader";
+import Modal from "../../../Shared/Modal";
+import SearchBar from "../../../Shared/SearchBar";
+import HeaderDetails from "../../../Shared/Stats";
+import { useEffect, useState } from "react";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { JobStatusType } from "src/types/jobs.type";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import JobForm from "@Components/Shared/PostJob/JobForm";
@@ -42,9 +42,9 @@ const Jobs = () => {
     toggleRow,
     toggleSelectAll,
     isSelected,
-    reset:resetSelection
+    reset: resetSelection,
   } = useListSelection({
-    limit: 5,//@TODO change this to 30
+    limit: 5, //@TODO change this to 30
     mapFn: (job: JobData) => ({
       jobId: job.id,
       companyId: job.companyDetails.id,
@@ -63,7 +63,7 @@ const Jobs = () => {
     dashboard: "CORPORATE",
     userRole: userType,
     status: activeTab,
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     // Add corporateRecruiterUserId if user is not corporate-admin
@@ -71,10 +71,10 @@ const Jobs = () => {
   };
 
   const { data, isLoading, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, refetch, reset } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
-    queryKey: ["CorporateJobsQuery", !!userDetails.companyId, activeTab, !!searchBarText, params],
+    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchJobs,
     baseParams: params,
-    enabled: !!userDetails.companyId, // Only enable if companyId exists
+    enabled: !!userDetails?.companyId, // Only enable if companyId exists
   });
 
   /**

@@ -12,6 +12,8 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { LogOut } from "lucide-react";
 import CognitoServiceObj from "@Utils/Cognito.utils";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -34,15 +36,14 @@ interface SidebarProps {
 const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) => {
   // Extract user context and dashboard context
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeTab, setActiveTab, dashboardType } = useDashboardContext();
-  const { userDetails, setUpdateCheck }: { userDetails: Partial<CorporateUserDetail>; setUpdateCheck: any } = useAppContext();
+  const { userDetails, setUpdateCheck }: { userDetails: NormalizedUser | null; setUpdateCheck: any } = useAppContext();
 
   // Local state to manage finalized user details
   const [userName, setUserName] = React.useState("");
-  const [finalUserDetails, setFinalUserDetails] = React.useState<Partial<CorporateUserDetail>>(userDetails);
+  const [finalUserDetails, setFinalUserDetails] = React.useState<NormalizedUser | null>(userDetails);
 
-  // Get user type from secure storage for conditional rendering
-  const userType = secureStorage.getItem(SecureStorageKeyEnum.USERTYPE) as string;
   /**
    * Effect to handle user details updates
    * - Updates local state when userDetails changes
@@ -80,10 +81,25 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    * - Closes sidebar on mobile after navigation
    */
   const handleTabClick = (NavItem: NavItem) => {
-    console.log("Navigating to tab:", NavItem.label);
-    setActiveTab(NavItem.label);
-    onNavigate(dashboardType, NavItem.id);
-    setSidebarOpen(false); // Close sidebar on mobile after navigation
+    if (NavItem.id === "switch-dashboard") {
+      //Check the current page from the URL
+
+      const currentPath = location.pathname;
+      //If the current path is admin, switch to corporate dashboard
+      if (currentPath.includes("admin")) {
+        onNavigate("CANDIDATE", "jobs");
+        return;
+      } else if (currentPath.includes("candidate")) {
+        //If the current path is corporate, switch to admin dashboard
+        onNavigate("ADMIN", "jobs");
+        return;
+      }
+    } else {
+      console.log("Navigating to tab:", NavItem.label);
+      setActiveTab(NavItem.label);
+      onNavigate(dashboardType, NavItem.id);
+      setSidebarOpen(false); // Close sidebar on mobile after navigation
+    }
   };
 
   /**
@@ -92,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    * - Other users: name field
    */
   useEffect(() => {
-    setUserName(userType === "Corporate" ? `${finalUserDetails?.firstName ?? ""} ${finalUserDetails?.lastName ?? ""}`.trim() : finalUserDetails?.name ?? "");
+    setUserName(finalUserDetails?.fullName || "User");
   }, [finalUserDetails]);
 
   /**
@@ -100,7 +116,7 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    */
   const Avatar = (
     <div>
-      <img src={finalUserDetails?.profileImage || User} alt="User Avatar" className={`w-10 h-10 rounded-full ${collapsed ? "hidden" : "block"}`} />
+      <img src={finalUserDetails?.profileImageUrl || User} alt="User Avatar" className={`w-10 h-10 rounded-full ${collapsed ? "hidden" : "block"}`} />
     </div>
   );
 
@@ -155,10 +171,10 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
               setUpdateCheck((prev: boolean) => !prev);
               navigate("/login");
             }}
-            className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 rounded"
+            className="hover:text-red-500 text-[13px] text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-1 rounded"
             aria-label="Logout">
             {!collapsed && <p>Logout</p>}
-            <LogOut className="cursor-pointer self-center" />
+            <LogOut className="cursor-pointer self-center text-[13px]" />
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Filter, X, Link } from "lucide-react";
-import { DynamicTable } from "../DynamicTable";
-import Modal from "../Modal";
+import { DynamicTable } from "../../../Shared/DynamicTable";
+import Modal from "../../../Shared/Modal";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
@@ -33,22 +33,7 @@ interface JobsTableProps {
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
 }
 
-const JobTableWrapper: React.FC<JobsTableProps> = ({
-  activeTab,
-  data,
-  selectedRows,
-  selectRows,
-  selectAllRows,
-  reset,
-  handleJobCreation,
-  updateJobStatus,
-  hasNextPage,
-  hasPrevPage,
-  fetchNextPage,
-  fetchPreviousPage,
-  pageSize,
-  setPageSize,
-}) => {
+const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, selectRows, selectAllRows, reset, handleJobCreation, updateJobStatus, hasNextPage, hasPrevPage, fetchNextPage, fetchPreviousPage, pageSize, setPageSize }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{ id: string; companyId: string } | null>(null);
 

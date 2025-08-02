@@ -1,10 +1,10 @@
 import { FunctionComponent, useState, useCallback, useMemo, useEffect } from "react";
-import { Column, DynamicTable } from "../DynamicTable";
+import { Column, DynamicTable } from "../../../Shared/DynamicTable";
 import { eyeIcon } from "@AssetsFolder/assets";
 import { BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
-import SkeletonLoader from "../SkeletonLoader";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import ApplicantScreeningTable from "./BulkCvApplicants";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 
@@ -30,14 +30,14 @@ const ScreeningListView: FunctionComponent = () => {
   const params: Omit<CursorPaginationBulkScreenedJobsParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
   };
 
   const { data, isLoading, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, refetch, reset } = useCursorPagination<BulkScreeningListItemDto, CursorPaginationBulkScreenedJobsParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!userDetails.companyId, params],
+    queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, params],
     queryFn: CorporateServiceObj.fetchBulkScreenedJobs,
     baseParams: params,
-    enabled: !!userDetails.companyId, // only run if companyId exists
+    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
 
   /**
@@ -93,15 +93,11 @@ const ScreeningListView: FunctionComponent = () => {
   );
 
   // Define columns for the table
-  const columns:Column<ScreeningRecord>[] = [
+  const columns: Column<ScreeningRecord>[] = [
     {
       key: "jobTitle",
       label: "Job title",
-      render: (row: ScreeningRecord) => (
-        <span className="w-full capitalize font-bold " >
-          {row.jobTitle}
-        </span>
-    ),
+      render: (row: ScreeningRecord) => <span className="w-full capitalize font-bold ">{row.jobTitle}</span>,
     },
     {
       key: "location",
@@ -123,7 +119,7 @@ const ScreeningListView: FunctionComponent = () => {
       key: "doneBy",
       label: "Done by",
     },
-    
+
     {
       key: "actions",
       label: "Actions",
@@ -131,7 +127,7 @@ const ScreeningListView: FunctionComponent = () => {
     },
   ];
 
-/*   const toggleSelectAll = useCallback(() => {
+  /*   const toggleSelectAll = useCallback(() => {
     if (transformedData && selectedRows.length === transformedData.length) {
       setSelectedRows([]);
     } else if (transformedData) {
@@ -156,7 +152,7 @@ const ScreeningListView: FunctionComponent = () => {
     <div className="min-h-screen bg-gray-50">
       <div className="p-6">
         <div className="max-w-full mx-auto">
-          <DynamicTable columns={columns} rows={transformedData ?? []}  enableSelect={false}    pageSize={pageSize} setPageSize={setPageSize} handlePreviousPage={goToPreviousPage} handleNextPage={goToNextPage} hasNextPage={hasNextPage} hasPrevPage={hasPreviousPage} />
+          <DynamicTable columns={columns} rows={transformedData ?? []} enableSelect={false} pageSize={pageSize} setPageSize={setPageSize} handlePreviousPage={goToPreviousPage} handleNextPage={goToNextPage} hasNextPage={hasNextPage} hasPrevPage={hasPreviousPage} />
         </div>
       </div>
 

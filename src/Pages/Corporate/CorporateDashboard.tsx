@@ -3,7 +3,7 @@ import MainLoader from "@Components/Loader/Loader";
 import { Navigate, useRoutes } from "react-router-dom";
 import PageNotFound from "../errors/404/PageNotFound";
 import DashboardLayout from "@Layouts/Dashboard.layout";
-import SkeletonLoader from "@Components/Dashboard/Corporate/SkeletonLoader";
+import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 
@@ -54,7 +54,7 @@ const CorporateDashboard = () => {
               path: "noID",
               element: (
                 <Suspense fallback={<MainLoader />}>
-                  <JobSelectorModal isOpen={true} onClose={() =>null} path="APPLICATIONS" />
+                  <JobSelectorModal isOpen={true} onClose={() => null} path="APPLICATIONS" />
                 </Suspense>
               ),
             },

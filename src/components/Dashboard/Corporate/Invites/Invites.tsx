@@ -1,12 +1,12 @@
 import { Send } from "lucide-react";
 import InviteTable from "./InvitesTable";
 import { useEffect, useState } from "react";
-import Modal from "../Modal";
+import Modal from "../../../Shared/Modal";
 import InviteForm from "./SendInviteForm";
-import {  CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
-import SkeletonLoader from "../SkeletonLoader";
+import { CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { useAppContext } from "@Context/App.context";
-import { CursorPaginationInviteDataParams } from "src/types/corporateServices.types";
+import { CursorPaginationInviteDataParams } from "@Interfaces/CorporateServices.dto";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import CorporateServiceObj from "../Services/Corporate.service";
 
@@ -15,13 +15,13 @@ const Invites = () => {
 
   const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
   const [pageSize, setPageSize] = useState(10);
- 
+
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
 
   const params: Omit<CursorPaginationInviteDataParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
-    companyId: userDetails.companyId ?? "", // Now guaranteed to be string
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     // Add search text if it exists and is not emp
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
@@ -36,10 +36,10 @@ const Invites = () => {
     refetch,
     reset,
   } = useCursorPagination<CorporateInvite, CursorPaginationInviteDataParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!userDetails.companyId, !!searchBarText, params],
+    queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchInvites,
     baseParams: params,
-    enabled: !!userDetails.companyId, // only run if companyId exists
+    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
 
   /**
@@ -61,7 +61,7 @@ const Invites = () => {
           <span>Invite Team</span>
         </button>
       </div>
-      <InviteTable data={data} fetchInvites={refetch} pagination={{goToNextPage,goToPreviousPage,hasNextPage,hasPreviousPage,pageSize,setPageSize}} />
+      <InviteTable data={data} fetchInvites={refetch} pagination={{ goToNextPage, goToPreviousPage, hasNextPage, hasPreviousPage, pageSize, setPageSize }} />
       <Modal isOpen={isSendInviteModalOpen} onClose={() => setIsSendInviteModalOpen(false)} className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]">
         <InviteForm />
       </Modal>

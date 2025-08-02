@@ -16,21 +16,24 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { CorporateUserDetail } from "@Context/App.context";
 import { getToastOptions } from "lib-worko-ui";
-import { JobDto } from "@Interfaces/JobsAndCompany.dto";
+import { CompanyShortDto, JobDto } from "@Interfaces/JobsAndCompany.dto";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
 import { useQueryClient } from "@tanstack/react-query";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import CompanyInput from "../CompanyInput";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 
 type JobFormMode = "CREATE" | "UPDATE" | "DUPLICATE";
 
 interface JobFormProps {
   onClose: () => void;
   jobDetails: JobDetails | null;
-  userDetailsOne: Partial<CorporateUserDetail>;
+  userDetailsOne: NormalizedUser | null;
   mode: JobFormMode;
   onSuccess?: () => void; // Callback to refresh the jobs list
 }
 
-const getFormTitle = (mode:JobFormMode) => {
+const getFormTitle = (mode: JobFormMode) => {
   switch (mode) {
     case "UPDATE":
       return "Edit Job";
@@ -41,7 +44,7 @@ const getFormTitle = (mode:JobFormMode) => {
   }
 };
 
-const getSubmitButtonText = (mode:JobFormMode) => {
+const getSubmitButtonText = (mode: JobFormMode) => {
   switch (mode) {
     case "UPDATE":
       return "Update Job";
@@ -54,10 +57,13 @@ const getSubmitButtonText = (mode:JobFormMode) => {
 
 export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onSuccess }: JobFormProps) {
   const queryClient = useQueryClient();
-      
+
   const [selectedLocations, setSelectedLocations] = useState<OptionType[]>([]);
   const [hasFormChanged, setHasFormChanged] = useState(false);
   const [initialFormData, setInitialFormData] = useState<string>("");
+  const [companyDetails, setCompanyDetails] = useState<CompanyShortDto>();
+  const isSubmitDisabled = mode === "DUPLICATE" && !hasFormChanged;
+  const userRole =  secureStorage.getItem<UserRole>(SecureStorageKeyEnum.USERTYPE) || UserRole.GENERAL_USER;
   const {
     register,
     handleSubmit,
@@ -66,13 +72,14 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
     formState: { errors },
     watch,
     trigger,
+    clearErrors,
     control,
     reset,
   } = useForm<JobFormSchema>({
     defaultValues: {
       jobTitle: jobDetails?.jobTitle ?? "",
       status: jobDetails?.status || "PUBLISHED",
-      companyId: userDetailsOne.companyId,
+      companyId: userDetailsOne?.companyId,
       numOfOpenings: 1,
       department: jobDetails?.department || "",
       workMode: jobDetails?.workMode || "WFH",
@@ -102,12 +109,12 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
   });
 
   const invalidateJobs = () => {
+    const queryKey = userRole === UserRole.ADMIN ? ["AdminJobsQuery"] : ["CorporateJobsQuery"] 
     queryClient.invalidateQueries({
-      queryKey: ['CorporateJobsQuery'], // You can use partial key
+      queryKey: queryKey, // You can use partial key
     });
   };
-  
-  
+
   // Detect form changes for duplicate mode
   useEffect(() => {
     if (mode !== "DUPLICATE") return;
@@ -164,7 +171,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
         }, 0);
       }
     }
-  }, [jobDetails, mode, reset, userDetailsOne.companyId, setValue]);
+  }, [jobDetails, mode, reset, userDetailsOne?.companyId, setValue]);
 
   useEffect(() => {
     setValue("companyId", userDetailsOne?.companyId || "");
@@ -228,8 +235,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
     } catch (err) {
       console.error("Unexpected error:", err);
       toast.error("An unexpected error occurred", getToastOptions({ autoClose: false }));
-    }
-    finally{
+    } finally {
       invalidateJobs();
     }
   };
@@ -285,10 +291,11 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
     return () => subscription.unsubscribe();
   }, [watch, trigger]);
 
-
-
-  const isSubmitDisabled = mode === "DUPLICATE" && !hasFormChanged;
-
+  const handleCompanySelect = (company: CompanyShortDto) => {
+    setCompanyDetails(company);
+    setValue("companyId", company.id || company.SK.split("ID#")[1]); // Remove "ID#" prefix if present
+    clearErrors("companyId");
+  }
   return (
     <div className="overflow-auto p-2 sm:p-4 lg:p-6 text-start">
       <h2 className="text-xl font-semibold mb-4">{getFormTitle(mode)}</h2>
@@ -316,6 +323,13 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
 
         {/* Rest of your existing form fields remain the same... */}
         <div className="max-sm:flex max-sm:flex-col sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+          {/* Company Name */}
+          {(userRole === UserRole.ADMIN) && <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
+            <CompanyInput errors={errors} clearErrors={clearErrors} setCompanyName={handleCompanySelect} />
+            {errors.companyId && <p className="text-sm text-left text-red-500">{errors.companyId.message?.toString()}</p>}
+            {/* <Controller name="companyId" control={control} rules={validationRules.name} render={({ field }) => <Input label="Select Company*" {...field} error={errors.jobTitle?.message} />} /> */}
+          </div>}
+
           {/* Job Title */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <Controller name="jobTitle" control={control} rules={validationRules.name} render={({ field }) => <Input label="Job Title*" {...field} error={errors.jobTitle?.message} />} />
