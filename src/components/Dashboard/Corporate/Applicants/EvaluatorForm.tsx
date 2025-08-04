@@ -21,6 +21,7 @@ export type EvaluatorFormProps = {
     jobTitle: string;
     companyId: string;
     applicantUserId: string[];
+    applicantUserName: string[];
     applicantUserEmail: string[];
     hrName: string;
     hrCurrentCompanyName: string;
@@ -46,6 +47,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
           jobId: Defaultvalues.jobId ?? "",
           jobTitle: Defaultvalues.jobTitle ?? "",
           companyId: Defaultvalues.companyId ?? "",
+          applicantName: Defaultvalues.applicantUserName?.join(",") ?? "",
           applicantUserId: Defaultvalues.applicantUserId?.join(",") ?? "",
           applicantUserEmail: Defaultvalues.applicantUserEmail?.join(",") ?? "",
           evaluatorDetails: {
@@ -97,6 +99,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
     const applicantIds = Defaultvalues.applicantUserId;
     const jobApplicationIds = Defaultvalues.jobApplicationId;
     const emails = Defaultvalues.applicantUserEmail;
+    const applicantName = Defaultvalues.applicantUserName;
   
     // Safety check
     if (applicantIds.length !== jobApplicationIds.length || applicantIds.length !== emails.length) {
@@ -108,6 +111,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
       jobApplicationId: jobApplicationIds[index],
       jobId: Defaultvalues.jobId,
       jobTitle: Defaultvalues.jobTitle,
+      applicantName: applicantName[index] , // Use empty string if name is not available
       companyId: Defaultvalues.companyId,
       applicantUserId: applicantId,
       applicantUserEmail: emails[index],
@@ -187,6 +191,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
                 jobId: Defaultvalues.jobId,
                 jobTitle: Defaultvalues.jobTitle,
                 companyId: Defaultvalues.companyId,
+                applicantName: Defaultvalues.applicantUserName.join(","), // assuming it's an array
                 applicantUserId: Defaultvalues.applicantUserId.join(","), // assuming it's an array
                 applicantUserEmail: Defaultvalues.applicantUserEmail.join(","),
                 evaluatorDetails: {

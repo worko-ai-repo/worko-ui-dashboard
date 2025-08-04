@@ -201,11 +201,13 @@ const Applicants = () => {
       return;
     }
     setIsAddEvaluatorModalOpen(true);
+    debugger;
     setEvaluatorFormProps({
       Defaultvalues: {
         jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
         jobId: data[0]?.jobId ?? "",
         jobTitle: data[0]?.jobTitle ?? "",
+        applicantUserName: ListSelection.selectedRows.map((row) => row.applicantName),
         companyId: data[0]?.companyId ?? "",
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),

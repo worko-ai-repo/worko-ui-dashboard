@@ -16,40 +16,41 @@ const ErrorFallback = ({ error }: { error?: Error }) => {
 
   React.useEffect(() => {
     if (error instanceof UnauthorizedAccessError) {
-      switch (error.message) {
-        case UserRole.CORPORATE:
-          setModalData({
-            type: "error",
-            heading: { message: "Corporate Access Denied", type: "error" },
-            message: "You do not have access to this page.",
-            buttons: [
-              { label: "Go to Home", action: () => (window.location.href = `/${import.meta.env.APP_PROXY_DASH}/corporate/jobs`), type: "primary" },
-              { label: "Contact Us", action: () => window.open("mailto:support@worko.ai"), type: "warning" },
-            ],
-          });
-          break;
-        case UserRole.ADMIN:
-          setModalData({
-            type: "error",
-            heading: { message: "Admin Access Denied", type: "error" },
-            message: "You do not have access to this page.",
-            buttons: [
-              { label: "Go to Home", action: () => nav("/"), type: "primary" },
-              { label: "Login as Admin", action: () => nav("/auth/login"), type: "warning" },
-            ],
-          });
-          break;
-        default:
-          setModalData({
-            type: "error",
-            heading: { message: "Access Denied", type: "error" },
-            message: "You do not have access to this page. Please contact your administrator.",
-            buttons: [
-              { label: "Go to Home", action: () => nav("/"), type: "primary" },
-              { label: "Login", action: () => nav("/auth/login"), type: "warning" },
-            ],
-          });
-          break;
+      // Get the primary role (first role or the most specific one)
+      const primaryRole = error.userRoles?.[0];
+      const hasRole = (role: UserRole) => error.userRoles?.includes(role) || false;
+
+      // Check for specific roles and handle accordingly
+      if (hasRole(UserRole.CORPORATE)) {
+        setModalData({
+          type: "error",
+          heading: { message: "Corporate Access Denied", type: "error" },
+          message: "You do not have access to this page.",
+          buttons: [
+            { label: "Go to Home", action: () => (window.location.href = `/${import.meta.env.APP_PROXY_DASH}/corporate/jobs`), type: "primary" },
+            { label: "Contact Us", action: () => window.open("mailto:support@worko.ai"), type: "warning" },
+          ],
+        });
+      } else if (hasRole(UserRole.ADMIN)) {
+        setModalData({
+          type: "error",
+          heading: { message: "Admin Access Denied", type: "error" },
+          message: "You do not have access to this page.",
+          buttons: [
+            { label: "Go to Home", action: () => nav("/"), type: "primary" },
+            { label: "Login as Admin", action: () => nav("/auth/login"), type: "warning" },
+          ],
+        });
+      } else {
+        setModalData({
+          type: "error",
+          heading: { message: "Access Denied", type: "error" },
+          message: "You do not have access to this page. Please contact your administrator.",
+          buttons: [
+            { label: "Go to Home", action: () => nav("/"), type: "primary" },
+            { label: "Login", action: () => nav("/auth/login"), type: "warning" },
+          ],
+        });
       }
     }
   }, [error, nav]);

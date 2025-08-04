@@ -337,32 +337,34 @@ class CognitoService {
       }
 
       if (Array.isArray(userType)) {
+        const roles: UserRole[] = [];
         for (const role of userType) {
           switch (role) {
-            case UserRole.CORPORATE_ADMIN:
-            case UserRole.CORPORATE_RECRUITER: {
-              secureStorage.setItem<typeof role>(SecureStorageKeyEnum.CORPORATEUSERTYPE, role);
-              secureStorage.setItem(SecureStorageKeyEnum.USERTYPE, UserRole.CORPORATE);
-              break;
-            }
-            case UserRole.ADMIN: {
-              secureStorage.setItem(SecureStorageKeyEnum.USERTYPE, UserRole.ADMIN);
-              break;
-            }
-            case UserRole.EVALUATOR: {
-              secureStorage.setItem(SecureStorageKeyEnum.USERTYPE, UserRole.EVALUATOR);
-              break;
-            }
-            case UserRole.LINKEDIN: {
-              secureStorage.setItem(SecureStorageKeyEnum.USERTYPE, UserRole.LINKEDIN);
-              break;
-            }
-            case UserRole.GENERAL_USER: {
-              secureStorage.setItem(SecureStorageKeyEnum.USERTYPE, UserRole.GENERAL_USER);
-              break;
-            }
+        case UserRole.CORPORATE_ADMIN:
+        case UserRole.CORPORATE_RECRUITER: {
+          secureStorage.setItem<typeof role>(SecureStorageKeyEnum.CORPORATEUSERTYPE, role);
+          roles.push(UserRole.CORPORATE);
+          break;
+        }
+        case UserRole.ADMIN: {
+          roles.push(UserRole.ADMIN);
+          break;
+        }
+        case UserRole.EVALUATOR: {
+          roles.push(UserRole.EVALUATOR);
+          break;
+        }
+        case UserRole.LINKEDIN: {
+          roles.push(UserRole.LINKEDIN);
+          break;
+        }
+        case UserRole.GENERAL_USER: {
+          roles.push(UserRole.GENERAL_USER);
+          break;
+        }
           }
         }
+        secureStorage.setItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE, roles);
       }
 
       for (let i = 0; i < localStorage.length; i++) {

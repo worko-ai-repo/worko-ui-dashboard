@@ -292,6 +292,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
                       Defaultvalues: {
                         jobApplicationId: [row.id],
                         jobId: row.jobId,
+                        applicantUserName: [row.applicantDetails.name],
                         jobTitle: row.jobTitle,
                         companyId: row.companyId,
                         applicantUserId: [row.applicantDetails.userId],

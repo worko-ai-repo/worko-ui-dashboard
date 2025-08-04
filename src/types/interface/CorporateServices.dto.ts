@@ -227,6 +227,7 @@ export interface FileUploadResponseMetadataDto {
     jobId: string;
     jobTitle: string;
     companyId: string;
+    applicantName: string;
     applicantUserId: string;
     applicantUserEmail: string;
     evaluatorDetails: EvaluatorDetails;

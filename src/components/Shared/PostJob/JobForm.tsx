@@ -63,7 +63,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
   const [initialFormData, setInitialFormData] = useState<string>("");
   const [companyDetails, setCompanyDetails] = useState<CompanyShortDto>();
   const isSubmitDisabled = mode === "DUPLICATE" && !hasFormChanged;
-  const userRole =  secureStorage.getItem<UserRole>(SecureStorageKeyEnum.USERTYPE) || UserRole.GENERAL_USER;
+  const userRole =  secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE) || UserRole.GENERAL_USER;
   const {
     register,
     handleSubmit,
@@ -109,7 +109,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
   });
 
   const invalidateJobs = () => {
-    const queryKey = userRole === UserRole.ADMIN ? ["AdminJobsQuery"] : ["CorporateJobsQuery"] 
+    const queryKey = userRole.includes(UserRole.ADMIN) ? ["AdminJobsQuery"] : ["CorporateJobsQuery"] 
     queryClient.invalidateQueries({
       queryKey: queryKey, // You can use partial key
     });
@@ -324,7 +324,7 @@ export default function JobForm({ onClose, jobDetails, userDetailsOne, mode, onS
         {/* Rest of your existing form fields remain the same... */}
         <div className="max-sm:flex max-sm:flex-col sm:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           {/* Company Name */}
-          {(userRole === UserRole.ADMIN) && <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
+          {(userRole.includes(UserRole.ADMIN)) && <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
             <CompanyInput errors={errors} clearErrors={clearErrors} setCompanyName={handleCompanySelect} />
             {errors.companyId && <p className="text-sm text-left text-red-500">{errors.companyId.message?.toString()}</p>}
             {/* <Controller name="companyId" control={control} rules={validationRules.name} render={({ field }) => <Input label="Select Company*" {...field} error={errors.jobTitle?.message} />} /> */}

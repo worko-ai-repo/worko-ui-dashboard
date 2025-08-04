@@ -36,7 +36,7 @@ export interface DecodedCognitoToken {
 /**
  * Interface defining the props for the ProtectedRoute component.
  * @property {JSX.Element} element - The component/element to render if the user is authorized.
- * @property {string[]} [requiredRoles] - Optional array of roles that are allowed to access this route.
+ * @property {UserRole[]} [requiredRoles] - Optional array of roles that are allowed to access this route.
  */
 interface ProtectedRouteProps {
 	element: JSX.Element;
@@ -54,7 +54,7 @@ interface ProtectedRouteProps {
  * If any check fails, the user is redirected to the appropriate page.
  * 
  * @param {JSX.Element} element - The component to render if authorization passes
- * @param {string[]} [requiredRoles] - Optional roles required for access
+ * @param {UserRole[]} [requiredRoles] - Optional roles required for access
  * @returns {JSX.Element} Either the protected component or a redirect
  */
 
@@ -64,7 +64,7 @@ const ProtectedRoute = ({
 	tokenRequired = true,
 }: ProtectedRouteProps) => {
 	const token: any = CognitoServiceObj.getAccessToken();
-	const userType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.USERTYPE);
+	const userType = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE);
 
 	const currentTime = Date.now() / 1000;
 
@@ -100,12 +100,12 @@ const ProtectedRoute = ({
 			}
 			return <Navigate to="/auth/login" />;
 		}
-		if (userType && !requiredRoles.includes(userType)) {
+		if (Array.isArray(userType) && !userType.some(role => requiredRoles.includes(role))) {
 			return (
 				<ErrorFallback
 					error={
 						new UnauthorizedAccessError(
-							userType === UserRole.GENERAL_USER ? UserRole.GENERAL_USER : userType
+							userType.includes(UserRole.GENERAL_USER) ? UserRole.GENERAL_USER : userType[0]
 						)
 					}
 				/>
