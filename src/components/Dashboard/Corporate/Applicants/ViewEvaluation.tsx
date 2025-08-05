@@ -76,17 +76,6 @@ interface Props {
 
 const ResponseEvaluation: React.FC<Props> = ({ jobApplicationId }) => {
   const [activeTab, setActiveTab] = useState(0);
-
-  // In real implementation, uncomment this
-  // const { data, isLoading, error } = useQuery({
-  //   queryKey: ["evaluation-responses", jobApplicationId],
-  //   queryFn: async () => {
-  //     const response = await CorporateServiceObj.getEvaluationResponses({ jobApplicationId });
-  //     return response?.data || [];
-  //   },
-  //   enabled: !!jobApplicationId,
-  // });
-
   const responses = MOCK_DATA;
   const isLoading = false;
   const error = null;
@@ -96,88 +85,74 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationId }) => {
   if (!responses || responses.length === 0) return <div>No evaluations found</div>;
 
   const currentEvaluation = responses[activeTab];
-  const latest = currentEvaluation?.statusTracker?.[currentEvaluation.statusTracker.length - 1];
+  const latest = currentEvaluation?.statusTracker?.[currentEvaluation?.statusTracker?.length - 1] || null;
   const interviews = currentEvaluation?.scheduledInterviewDetails || [];
 
   return (
-    <div className="w-full max-w-md mx-auto  bg-white overflow-hidden">
+    <div className="w-full max-w-md mx-auto bg-white overflow-hidden">
       {/* Tab Headers */}
       <div className="flex">
-  {responses.map((response, index) => (
-    <div key={response.id} className="flex items-center">
-      <button
-        onClick={() => setActiveTab(index)}
-        className={`px-4 py-3 text-sm font-semibold ${
-          index === activeTab ? 'text-black border-b-2 border-black' : 'text-gray-400'
-        }`}
-        style={{ fontFamily: 'Poppins' }}
-      >
-        Evaluator {index + 1}
-      </button>
+        {responses.map((response, index) => (
+          <div key={response.id} className="flex items-center">
+            <button onClick={() => setActiveTab(index)} className={`px-4 py-3 text-sm font-semibold ${index === activeTab ? "text-black border-b-2 border-black" : "text-gray-400"}`} style={{ fontFamily: "Poppins" }}>
+              Evaluator {index + 1}
+            </button>
 
-      {/* Vertical separator (not after last tab) */}
-      {index < responses.length - 1 && (
-        <div className="w-px h-5 bg-gray-300 mx-1" />
-      )}
-    </div>
-  ))}
-</div>
-
-
-      {/* Vertical separator for tabs */}
-      {responses.length > 1 && (
-        <div className="absolute w-px h-5 bg-gray-300 left-1/2 transform -translate-x-1/2 top-6"></div>
-      )}
+            {/* Vertical separator (not after last tab) */}
+            {index < responses.length - 1 && <div className="w-px h-5 bg-gray-300 mx-1" />}
+          </div>
+        ))}
+      </div>
 
       {/* Tab Content */}
       <div className="p-6">
         {/* Evaluator Info Section */}
         <div className="space-y-2 mb-6">
           <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: 'Inter' }}>
+            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
               Evaluated by
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: 'Poppins' }}>
-              {currentEvaluation.evaluatorName}
+            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+              {currentEvaluation?.evaluatorName || "N/A"}
             </span>
           </div>
-          
+
           <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: 'Inter' }}>
+            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
               Date
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: 'Poppins' }}>
-              {new Date(currentEvaluation.createdAt).toLocaleDateString('en-GB')}
+            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+              {currentEvaluation?.createdAt ? new Date(currentEvaluation.createdAt).toLocaleDateString("en-GB") : "N/A"}
             </span>
           </div>
-          
+
           {latest?.score !== undefined && (
             <div className="flex items-center gap-3">
-              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: 'Inter' }}>
+              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
                 Evaluation score
               </span>
-              <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: 'Poppins' }}>
+              <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
                 {latest.score}/5
               </span>
             </div>
           )}
-          
+
           {latest?.detailedFeedback && (
             <div className="flex items-start gap-3">
-              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: 'Inter' }}>
+              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
                 Feedback
               </span>
-              <span className="text-gray-900 text-xs font-normal leading-tight max-w-xs" style={{ fontFamily: 'Poppins' }}>
+              <span className="text-gray-900 text-xs font-normal leading-tight max-w-xs" style={{ fontFamily: "Poppins" }}>
                 {latest.detailedFeedback}
               </span>
             </div>
           )}
-          
+
           <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: 'Inter' }}>
+            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
               Schedule interview
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: 'Poppins' }}>
+            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
               {interviews.length > 0 ? "Yes" : "No"}
             </span>
           </div>
@@ -185,87 +160,43 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationId }) => {
 
         {/* Availability Schedule Section */}
         {interviews.length > 0 && (
-  <div className=" flex justify-between items-start ">
-    <span className="text-gray-500 text-xs font-medium " style={{ fontFamily: 'Inter' }}>
-      Availability Schedule
-    </span>
+          <div className="flex justify-between items-start">
+            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
+              Availability Schedule
+            </span>
 
-    <div className="flex flex-col w-1/2 gap-2 ">
-      {/* Table Headers */}
-      <div className="flex text-gray-500 text-xs font-medium mb-2" style={{ fontFamily: 'Inter' }}>
-        <div className="w-1/2">Date</div>
-        <div className="w-1/2">Time</div>
-      </div>
-
-      {/* Table Rows */}
-      <div className="space-y-2">
-        {interviews.map((interview, index) => (
-          <div key={index} className="flex">
-            <div className="w-1/2">
-              <div className="bg-cyan-100 rounded-[9px] px-3  inline-block">
-                <span className="text-black text-xs font-medium" style={{ fontFamily: 'Inter' }}>
-                  {new Date(interview.date).toLocaleDateString('en-GB')}
-                </span>
+            <div className="flex flex-col w-1/2 gap-2">
+              {/* Table Headers */}
+              <div className="flex text-gray-500 text-xs font-medium mb-2" style={{ fontFamily: "Inter" }}>
+                <div className="w-1/2">Date</div>
+                <div className="w-1/2">Time</div>
               </div>
-            </div>
-            <div className="w-1/2">
-              <div className="bg-cyan-100 rounded-[9px] px-3  inline-block">
-                <span className="text-black text-xs font-medium" style={{ fontFamily: 'Inter' }}>
-                  {interview.startTime}
-                </span>
+
+              {/* Table Rows */}
+              <div className="space-y-2">
+                {interviews.map((interview, index) => (
+                  <div key={index} className="flex">
+                    <div className="w-1/2">
+                      <div className="bg-cyan-100 rounded-[9px] px-3 inline-block">
+                        <span className="text-black text-xs font-medium" style={{ fontFamily: "Inter" }}>
+                          {interview.date ? new Date(interview.date).toLocaleDateString("en-GB") : "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="w-1/2">
+                      <div className="bg-cyan-100 rounded-[9px] px-3 inline-block">
+                        <span className="text-black text-xs font-medium" style={{ fontFamily: "Inter" }}>
+                          {interview.startTime || "N/A"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
-        ))}
+        )}
       </div>
-    </div>
-  </div>
-)}
-
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 pt-4">
-          <button
-            className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-[10px] text-xs font-semibold"
-            style={{ fontFamily: 'Poppins' }}
-            onClick={() => window.open("https://www.figma.com/proto/ENzqo1AmC80w4cmN6alJgz/Worko-Dashboards?node-id=156-6188")}
-          >
-            <svg width="15" height="15" viewBox="0 0 15 15" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M2 2L13 8L2 14V2Z" fill="white"/>
-            </svg>
-            Process interview
-          </button>
-          
-          <button
-            className="flex items-center gap-2 border border-red-500 text-red-500 px-4 py-2 rounded-[10px] text-xs font-semibold"
-            style={{ fontFamily: 'Poppins' }}
-            onClick={() => alert("Reject action")}
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 1L13 13M1 13L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-            </svg>
-            Reject
-          </button>
-          
-          <button
-            className="flex items-center gap-2 border border-green-500 text-green-500 px-4 py-2 rounded-[10px] text-xs font-semibold"
-            style={{ fontFamily: 'Poppins' }}
-            onClick={() => alert("Hire action")}
-          >
-            <svg width="14" height="11" viewBox="0 0 14 11" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <path d="M1 5L5 9L13 1" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            Hire
-          </button>
-        </div>
-      </div>
-
-      {/* Expand/Collapse Button */}
-      <button className="absolute top-4 right-4 w-5 h-5 bg-white rounded shadow-md flex items-center justify-center">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M6 1V11M1 6H11" stroke="#316BFF" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      </button>
     </div>
   );
 };

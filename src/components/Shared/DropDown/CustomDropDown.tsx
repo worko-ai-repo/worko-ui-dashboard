@@ -32,8 +32,8 @@ const CustomDropdown = ({ options = [], value, placeholder = 'Select...', onChan
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const handleClickOutside = (e:any) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
       }
     };
@@ -42,7 +42,7 @@ const CustomDropdown = ({ options = [], value, placeholder = 'Select...', onChan
   }, []);
 
   // Find label of selected value
-  const selectedLabel = options.find((opt) => opt.value === value)?.label;
+  const selectedLabel = options.find((opt:DropdownOption) => opt.value === value)?.label;
 
   return (
     <div className="relative" ref={dropdownRef}>

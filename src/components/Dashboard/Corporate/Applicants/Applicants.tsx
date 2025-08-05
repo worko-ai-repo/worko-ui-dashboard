@@ -68,7 +68,7 @@ export async function handleJobApplicationStatusUpdate(payload: JobApplicationUp
 /**
  * getJobStatus
  */
-const getJobStatus = (data: any) => {
+const getJobStatus = (data: JobApplicationDetailsDto[] | undefined) => {
   if (data && data.length > 0) {
     switch (data[0].status) {
       case "PUBLISHED":
@@ -87,7 +87,7 @@ export interface ApplicationListSelectionDto {
   selectedRows: BulkJobApplicationUpdateItem[];
   toggleRow: (item: JobApplicationDetailsDto) => void;
   toggleSelectAll: (items: JobApplicationDetailsDto[]) => void;
-  isSelected: (item: JobApplicationDetailsDto) => boolean;
+  getAllSelected: (items: JobApplicationDetailsDto[]) => boolean;
   reset: () => void;
 }
 const Applicants = () => {
@@ -104,7 +104,7 @@ const Applicants = () => {
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
   const ListSelection: ApplicationListSelectionDto = useListSelection({
-    limit: 5, //@TODO change this to 30
+    limit: 30, 
     mapFn: (application: JobApplicationDetailsDto): BulkJobApplicationUpdateItem => ({
       id: application.id,
       emailId: application.applicantDetails.email,

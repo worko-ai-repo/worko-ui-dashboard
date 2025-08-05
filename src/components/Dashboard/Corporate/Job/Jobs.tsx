@@ -42,7 +42,8 @@ const Jobs = () => {
     toggleRow,
     toggleSelectAll,
     isSelected,
-    reset: resetSelection,
+    getAllSelected,
+    reset:resetSelection
   } = useListSelection({
     limit: 5, //@TODO change this to 30
     mapFn: (job: JobData) => ({
@@ -165,7 +166,7 @@ const Jobs = () => {
       {isLoading ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
-        <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} selectRows={toggleRow} selectAllRows={toggleSelectAll} handleJobCreation={handleJobCreation} reset={reset} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage} hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} />
+        <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} selectRows={toggleRow} selectAllRows={toggleSelectAll} handleJobCreation={handleJobCreation} reset={resetSelection} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage} hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} getAllSelected={getAllSelected} />
       )}
       <Modal isOpen={isJobFormModalOpen} onClose={() => setIsJobFormModalOpen(false)} title="Check the details" className="w-[100dvw] lg:w-[70dvw] h-full text-left no-scrl no-scrl-web ">
         <JobForm onClose={() => setIsJobFormModalOpen(false)} jobDetails={jobDetails} userDetailsOne={userDetails} mode={jobFormMode} />
