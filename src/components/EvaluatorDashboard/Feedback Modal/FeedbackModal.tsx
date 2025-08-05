@@ -35,9 +35,6 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         feedback,
         setFeedback,
         nextStep,
-        showNextStepDetails,
-        setShowNextStepDetails,
-
 
         // Comment fields
         comment,
@@ -45,13 +42,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         htmlComment,
         setHtmlComment,
 
-
         // Schedule states
         scheduledSlots,
         availabilityIndex,
         setAvailabilityIndex,
         updateScheduledSlot,
-
 
         // Rejection states
         selectedRejectionReason,
@@ -73,78 +68,13 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         isNextStepValid
     } = useFeedbackForm();
 
+    const canSelectNextStep = feedback.trim().length > 0;
+
     const getScoreColor = (score: number) => {
         if (score <= 2) return 'bg-red-500';
         if (score <= 3.5) return 'bg-yellow-500';
         return 'bg-green-500';
     };
-
-    const handleInitialSubmit = () => {
-        if (!isInitialFormValid) {
-            return;
-        }
-
-        setShowNextStepDetails(true);
-
-        // Auto-generate time slot for schedule
-        if (nextStep === 'schedule') {
-            // const timeSlot = `From ${formatTime(startTime)} to ${formatTime(endTime)}`;
-            // // This will be handled by the time slider change
-        }
-    };
-
-    // const handleFinalSubmit = () => {
-    //     if (!isNextStepValid()) {
-    //         alert('Please fill all required fields');
-    //         return;
-    //     }
-
-    //     let submitData: any = {
-    //         candidateId,
-    //         score,
-    //         feedback,
-    //         nextStep,
-    //         timestamp: new Date().toISOString()
-    //     };
-
-    //     if (nextStep === 'schedule') {
-    //         submitData = {
-    //             ...submitData,
-    //             scheduleDetails: {
-    //                 duration: selectedDuration,
-    //                 date: `${selectedDate}${getDateSuffix(selectedDate)} March`,
-    //                 timeSlot: selectedTimeSlot,
-    //                 startTime: formatTime(startTime),
-    //                 endTime: formatTime(endTime)
-    //             }
-    //         };
-    //     } else if (nextStep === 'reject') {
-    //         submitData = {
-    //             ...submitData,
-    //             rejectionDetails: {
-    //                 reason: selectedRejectionReason,
-    //                 detailedFeedback: rejectionFeedback
-    //             }
-    //         };
-    //     } else if (nextStep === 'hold') {
-    //         submitData = {
-    //             ...submitData,
-    //             holdDetails: {
-    //                 reason: selectedHoldReason,
-    //                 detailedFeedback: holdFeedback
-    //             }
-    //         };
-    //     }
-
-    //     console.log('Final submission:', submitData);
-
-    //     if (onSubmitComplete) {
-    //         onSubmitComplete(submitData);
-    //     }
-
-    //     alert(`${nextStep === 'schedule' ? 'Interview scheduled' : nextStep === 'reject' ? 'Rejection submitted' : 'Candidate put on hold'} successfully!`);
-    //     onClose();
-    // };
 
     const handleFinalSubmit = async () => {
         if (!isNextStepValid()) {
@@ -172,7 +102,6 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
             applicantUserEmail: selectedRequest.applicantUserEmail
         };
 
-        // Conditionally adding requester ID here
         if (selectedRequest.createdByCorporateUserId) {
             basePayload.evaluationRequesterCorporateUserId = selectedRequest.createdByCorporateUserId;
         } else if (selectedRequest.createdByUserId) {
@@ -241,7 +170,6 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         }
     };
 
-
     return (
         <div className="h-full flex flex-col max-h-[95vh] w-full">
             {/* Header */}
@@ -286,7 +214,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                                         value={score}
                                         onChange={(e) => setScore(parseFloat(e.target.value))}
                                         className="absolute inset-0 w-full h-3 opacity-0 cursor-pointer"
-                                        disabled={showNextStepDetails}
+                                        disabled={false}
                                     />
                                     <div
                                         className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-indigo-600 rounded-full border-2 border-white shadow-lg transition-all duration-300"
@@ -300,23 +228,30 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     {/* Feedback Section */}
                     <div className="space-y-4">
                         <label className="block text-sm font-medium text-gray-700">
-                            Write detailed feedback
+                        Write detailed feedback <span className="text-red-500">*</span>
                         </label>
                         <textarea
                             value={feedback}
                             onChange={(e) => setFeedback(e.target.value)}
                             placeholder="Write a detailed feedback here"
-                            className="w-full h-36 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 resize-none text-sm"
-                            disabled={showNextStepDetails}
+                            className={`w-full h-36 px-4 py-3 border rounded-lg resize-none text-sm 
+                            ${feedback === '' ? 'focus:ring-red-500 focus:border-red-500' : 'focus:ring-indigo-500 focus:border-indigo-500'} 
+                            border-gray-300 focus:ring-2`}
+                            aria-required="true"
                         />
                     </div>
 
                     {/* Next Step Section */}
                     <div className="space-y-4">
+                        {!canSelectNextStep && (
+                            <p className="text-xs text-gray-500 mt-1">Please enter feedback to proceed</p>
+                        )}
+
                         <label className="block text-sm font-medium text-gray-700">
                             Next step
                         </label>
-                        {showNextStepDetails && nextStep ? (
+                        
+                        {canSelectNextStep && nextStep ? (
                             <div className="flex items-center gap-2 px-4 py-3 rounded-lg border w-fit opacity-50">
                                 {nextStep === 'schedule' && <Calendar size={18} className="text-indigo-600" />}
                                 {nextStep === 'reject' && <X size={18} className="text-red-600" />}
@@ -329,43 +264,49 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         ) : (
                             <div className="flex flex-wrap gap-3">
                                 <button
-                                    onClick={() => handleNextStepClick('schedule')}
-                                    className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${nextStep === 'schedule'
-                                        ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
-                                        : 'bg-white border-indigo-500 text-indigo-600 hover:bg-indigo-50'
-                                        }`}
+                                  onClick={() => canSelectNextStep && handleNextStepClick('schedule')}
+                                  disabled={!canSelectNextStep}
+                                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${
+                                    nextStep === 'schedule'
+                                      ? 'bg-indigo-50 border-indigo-500 text-indigo-700'
+                                      : 'bg-white border-indigo-500 text-indigo-600 hover:bg-indigo-50'
+                                  } ${!canSelectNextStep ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
                                     <Calendar size={16} />
                                     <span className="text-sm font-medium">Schedule interview</span>
                                 </button>
 
                                 <button
-                                    onClick={() => handleNextStepClick('reject')}
-                                    className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${nextStep === 'reject'
-                                        ? 'bg-red-50 border-red-500 text-red-700'
-                                        : 'bg-white border-red-500 text-red-600 hover:bg-red-50'
-                                        }`}
+                                  onClick={() => canSelectNextStep && handleNextStepClick('reject')}
+                                  disabled={!canSelectNextStep}
+                                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${
+                                    nextStep === 'reject'
+                                      ? 'bg-red-50 border-red-500 text-red-700'
+                                      : 'bg-white border-red-500 text-red-600 hover:bg-red-50'
+                                  } ${!canSelectNextStep ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
-                                    <X size={16} />
-                                    <span className="text-sm font-medium">Reject</span>
+                                  <X size={16} />
+                                  <span className="text-sm font-medium">Reject</span>
                                 </button>
 
                                 <button
-                                    onClick={() => handleNextStepClick('hold')}
-                                    className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${nextStep === 'hold'
-                                        ? 'bg-yellow-50 border-yellow-500 text-yellow-700'
-                                        : 'bg-white border-yellow-500 text-yellow-600 hover:bg-yellow-50'
-                                        }`}
+                                  onClick={() => canSelectNextStep && handleNextStepClick('hold')}
+                                  disabled={!canSelectNextStep}
+                                  className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${
+                                    nextStep === 'hold'
+                                      ? 'bg-yellow-50 border-yellow-500 text-yellow-700'
+                                      : 'bg-white border-yellow-500 text-yellow-600 hover:bg-yellow-50'
+                                  } ${!canSelectNextStep ? 'opacity-50 cursor-not-allowed' : ''}`}
                                 >
-                                    <Clock size={16} />
-                                    <span className="text-sm font-medium">On hold</span>
+                                  <Clock size={16} />
+                                  <span className="text-sm font-medium">On hold</span>
                                 </button>
                             </div>
                         )}
                     </div>
 
                     {/* Expanded Sections */}
-                    {showNextStepDetails && (
+                    {canSelectNextStep && nextStep && (
                         <div className="border-t border-gray-200 pt-6">
                             {/* Schedule Interview Details */}
                             {nextStep === 'schedule' && (
@@ -411,39 +352,31 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="border-t border-gray-200 px-8 py-6 flex-shrink-0">
-                <div className="flex justify-between items-center">
-                    <button
-                        onClick={onClose}
-                        className="px-6 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
-                    >
-                        Cancel
-                    </button>
+{/* Footer */}
+<div className="border-t border-gray-200 px-8 py-6 flex justify-between gap-4 flex-shrink-0">
+  <button
+    type="button"
+    onClick={onClose}
+    className="px-8 py-3 rounded-lg bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+  >
+    Cancel
+  </button>
 
-                    {!showNextStepDetails ? (
-                        <button
-                            onClick={handleInitialSubmit}
-                            disabled={!isInitialFormValid}
-                            className="flex items-center gap-2 px-8 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                        >
-                            <Send size={16} />
-                            <span className="text-sm font-medium">Submit Feedback</span>
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleFinalSubmit}
-                            className={`flex items-center gap-2 px-8 py-3 text-white rounded-lg hover:opacity-90 transition-colors ${nextStep === 'schedule' ? 'bg-indigo-600' :
-                                nextStep === 'reject' ? 'bg-red-600' :
-                                    'bg-yellow-600'
-                                }`}
-                        >
-                            <Send size={16} />
-                            <span className="text-sm font-medium">Submit</span>
-                        </button>
-                    )}
-                </div>
-            </div>
+  <button
+    onClick={handleFinalSubmit}
+    disabled={!canSelectNextStep || !nextStep}
+    className={`flex items-center gap-2 px-8 py-3 text-white rounded-lg hover:opacity-90 transition-colors ${
+      nextStep === 'schedule' ? 'bg-indigo-600' :
+      nextStep === 'reject' ? 'bg-red-600' :
+      nextStep === 'hold' ? 'bg-yellow-600' :
+      'bg-gray-400 cursor-not-allowed'
+    }`}
+  >
+    <Send size={16} />
+    <span className="text-sm font-medium">Submit</span>
+  </button>
+</div>
+
         </div>
     );
 };

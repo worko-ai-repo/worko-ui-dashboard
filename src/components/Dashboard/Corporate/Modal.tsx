@@ -7,6 +7,7 @@ interface ModalProps {
   title?: string;
   showCloseButton?: boolean;
   className?: string;
+  fullHeight?: boolean;
 }
 
 const Modal = ({
@@ -16,6 +17,7 @@ const Modal = ({
   title,
   showCloseButton = true,
   className = "",
+  fullHeight=false,
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(isOpen);
@@ -55,31 +57,32 @@ const Modal = ({
   if (!visible) return null;
 
   return (
-    <div
-      ref={modalRef}
-      className={`fixed top-0 right-0 z-[9999] bg-white rounded-xl shadow-lg ${
-        isAnimatingOut ? "animate-slide-out" : "animate-slide-in"
-      } ${className}`}
-      style={{ overflowY: "auto" }}
-    >
-      {showCloseButton && (
-        <div className="sticky top-0 right-0 w-full bg-white z-10 pt-2 pr-2 flex justify-end">
-          <button
-            className="text-xl text-gray-500 hover:text-gray-800"
-            onClick={onClose}
-            aria-label="Close modal"
-            title="Close modal"
-          >
-            ×
-          </button>
-        </div>
-      )}
-      <div className="p-6 pt-0">
+  <div
+    ref={modalRef}
+    className={`fixed top-0 right-0 z-[9999] bg-white rounded-xl shadow-lg
+      ${isAnimatingOut ? "animate-slide-out" : "animate-slide-in"}
+      ${fullHeight ? "h-screen max-h-screen rounded-none w-full" : ""}
+      ${className}`}
+    style={{ overflowY: "auto" }}
+  >
+    {showCloseButton && (
+      <div className="sticky top-0 right-0 w-full bg-white z-10 pt-2 pr-2 flex justify-end">
+        <button
+          className="text-xl text-gray-500 hover:text-gray-800"
+          onClick={onClose}
+          aria-label="Close modal"
+          title="Close modal"
+        >
+          ×
+        </button>
+      </div>
+    )}
+    <div className={`p-6 pt-0 ${fullHeight ? "h-full flex flex-col" : ""}`}>
       {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
       {children}
-      </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Modal;

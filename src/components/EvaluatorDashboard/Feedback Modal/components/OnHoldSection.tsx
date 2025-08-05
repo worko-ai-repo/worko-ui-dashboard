@@ -39,7 +39,7 @@ const OnHoldSection: React.FC<OnHoldSectionProps> = ({
       {/* Reason Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
-          Select reason for holding
+          Select reason for holding <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <button
@@ -75,7 +75,7 @@ const OnHoldSection: React.FC<OnHoldSectionProps> = ({
       {/* Comments */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
-          Comments
+          Comments <span className="text-red-500">*</span>
         </label>
         <textarea
           value={comment}

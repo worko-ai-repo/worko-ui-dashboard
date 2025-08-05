@@ -2,6 +2,7 @@ import React from 'react';
 import { FileText, Play, Send, Info } from 'lucide-react';
 import { CandidateDetails, EvaluationRequestDetails } from 'src/types/index';
 import { toTitleCase } from "@Utils/Titlecase.utils";
+import CognitoServiceObj from '@Utils/Cognito.utils';
 
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
@@ -11,6 +12,16 @@ interface MainContentProps {
   onViewFeedback: () => void;
   onViewVideo: () => void
 }
+
+const handleLogout = async () => {
+  try {
+    await CognitoServiceObj.handleSignOut();
+    sessionStorage.clear();
+    window.location.href = 'http://localhost:8080/v0/auth/evaluator-dashboard/login?evaluatorEmail';
+  } catch (err) {
+    console.error('Logout failed', err);
+  }
+};
 
 const MainContent: React.FC<MainContentProps> = ({
   EvaluationRequestDetails,
@@ -35,6 +46,7 @@ const MainContent: React.FC<MainContentProps> = ({
             <span className="text-[#316BFF] font-semibold" >Recruiter name: </span>
             <span className="text-slate-800">{toTitleCase(EvaluationRequestDetails.recruiterName)}</span>
           </span>
+          <button onClick={handleLogout}>Logout</button>
         </div>
       </div>
 

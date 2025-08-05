@@ -39,7 +39,7 @@ const RejectionSection: React.FC<RejectionSectionProps> = ({
       {/* Reason Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
-          Select rejection reason
+          Select rejection reason <span className="text-red-500">*</span>
         </label>
         <div className="relative">
           <button
@@ -75,7 +75,7 @@ const RejectionSection: React.FC<RejectionSectionProps> = ({
       {/* Detailed Feedback */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">
-          Comments
+          Comments <span className="text-red-500">*</span>
         </label>
         <textarea
           value={comment}

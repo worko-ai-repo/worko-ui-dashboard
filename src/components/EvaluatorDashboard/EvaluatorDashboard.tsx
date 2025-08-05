@@ -319,6 +319,7 @@ const EvaluatorView: React.FC = () => {
         isOpen={isViewCVModalOpen}
         onClose={() => setIsViewCVModalOpen(false)}
         className="w-[90vw] sm:max-w-4xl h-full"
+        fullHeight
       >
         <div className="w-full h-full flex flex-col gap-4 p-4">
           {/* CV Header */}
