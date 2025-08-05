@@ -31,6 +31,7 @@ interface JobsTableProps {
   fetchPreviousPage: () => void;
   pageSize: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  getAllSelected: (data: JobData[]) => boolean;
 }
 
 const JobTableWrapper: React.FC<JobsTableProps> = ({
@@ -48,6 +49,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   fetchPreviousPage,
   pageSize,
   setPageSize,
+  getAllSelected
 }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{ id: string; companyId: string } | null>(null);
@@ -119,10 +121,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
-
+  const allSelected = getAllSelected(data);
   return (
     <div>
-      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset}>
+      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset()}>
         <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
@@ -134,7 +136,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
         toggleSelectAll={() => selectAllRows(data)}
-        allSelected={selectedRows?.length === data.length && data.length > 0}
+        allSelected={allSelected}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div className="col-span-2">

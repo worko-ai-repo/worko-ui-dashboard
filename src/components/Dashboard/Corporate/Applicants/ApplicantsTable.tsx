@@ -499,7 +499,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
         toggleSelectAll={() => ListSelection.toggleSelectAll(data)}
         toggleRow={(id) => ListSelection.toggleRow(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
-        allSelected={ListSelection.selectedRows?.length === data.length && data.length > 0}
+        allSelected={ListSelection.getAllSelected(sortedData)}
         renderExpandedDetails={renderExpandedDetails}
         enableSelect={activeTab !== "Joined"}
         onSortChange={onSortChange}

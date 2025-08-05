@@ -43,6 +43,12 @@ export function useListSelection<T, U>({
     return selectedRows.some((r) => keySelector(r) === key);
   };
 
+  // Add a function to calculate if all available items are selected
+  const getAllSelected = (items: T[]): boolean => {
+    const maxSelectableItems = Math.min(items.length, limit);
+    return selectedRows.length === maxSelectableItems && items.length > 0;
+  };
+
   const reset = () => setSelectedRows([]);
 
   return {
@@ -50,6 +56,7 @@ export function useListSelection<T, U>({
     toggleRow,
     toggleSelectAll,
     isSelected,
+    getAllSelected, // Add this new function
     reset,
   };
 }
