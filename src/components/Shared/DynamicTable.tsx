@@ -46,7 +46,7 @@ export function DynamicTable<T extends { id: string }>({
   allSelected = false,
   renderExpandedDetails,
   enableSelect = true,
-  // @claude: Destructured pagination props with defaults
+  //  Destructured pagination props with defaults
   pageSize = 10,
   setPageSize,
   hasPrevPage = false,
@@ -54,7 +54,7 @@ export function DynamicTable<T extends { id: string }>({
   handlePreviousPage,
   handleNextPage,
   onSortChange,
-  // @claude: Destructured empty state props with defaults
+  //  Destructured empty state props with defaults
   emptyStateMessage = "No data available",
   emptyStateSubMessage = "There are no items to display at the moment.",
 }: DynamicTableProps<T>) {
@@ -65,7 +65,7 @@ export function DynamicTable<T extends { id: string }>({
     return col.render ? col.render(row) : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value.toString() : "-";
   };
 
-  // @claude: Render empty state when no rows are available
+  //  Render empty state when no rows are available
   if (rows.length === 0) {
     return (
       <div className="bg-white rounded-lg p-2 md:p-4 overflow-x-auto w-full">
@@ -91,7 +91,7 @@ export function DynamicTable<T extends { id: string }>({
           </tbody>
         </table>
 
-        {/* @claude: Empty state component */}
+        {/*  Empty state component */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -215,9 +215,9 @@ export function DynamicTable<T extends { id: string }>({
           </tbody>
         </table>
       </div>
-      {/* @claude: Added pagination controls container */}
+      {/*  Added pagination controls container */}
       <div className=" h-12 flex flex-col sm:flex-row justify-between items-center">
-        {/* @claude: Page size selector on the left */}
+        {/*  Page size selector on the left */}
         <div className="flex items-center z-50">
           <label htmlFor="pageSize" className="text-sm text-gray-600">
             Show rows:
@@ -228,7 +228,7 @@ export function DynamicTable<T extends { id: string }>({
               value={pageSize}
               placeholder="Show rows"
               onChange={(val) => {
-                console.log("Selected value:", val); // e.g., 20
+                // console.log("Selected value:", val); // e.g., 20
                 setPageSize(val);
               }}
             />
@@ -236,7 +236,7 @@ export function DynamicTable<T extends { id: string }>({
         </div>
 
         <div className="flex items-center ">
-          {/* @claude: Previous and Next buttons */}
+          {/*  Previous and Next buttons */}
           <div className="flex gap-2  ">
             <button onClick={handlePreviousPage} disabled={!hasPrevPage} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${!hasPrevPage ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}>
               <ChevronLeft className="w-4 h-4" />
