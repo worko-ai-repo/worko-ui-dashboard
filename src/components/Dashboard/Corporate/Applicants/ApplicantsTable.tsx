@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { Eye, NotebookIcon, User } from "lucide-react";
 
 // Component imports
-import CVPreview from "./CVPreview";
-import RejectionForm from "./RejectForm";
-import EvaluatorForm, { EvaluatorFormProps } from "./EvaluatorForm";
-import HireNowForm from "./HireNowForm";
+import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
+import RejectionForm from "../../../Shared/ApplicantsPage/RejectForm";
+import EvaluatorForm, { EvaluatorFormProps } from "../../../Shared/ApplicantsPage/EvaluatorForm";
+import HireNowForm from "../../../Shared/ApplicantsPage/HireNowForm";
 import ProgressCircle from "../../../Shared/CircularBar";
-import RequestDocumentModal from "./RequestDocModal";
+import RequestDocumentModal from "../../../Shared/ApplicantsPage/RequestDocModal";
 import Modal from "../../../Shared/Modal";
 import { DynamicTable } from "../../../Shared/DynamicTable";
-import Notes from "./Notes";
+
 
 // Assets and interfaces
 import { hireNow, Not_Responding, onHold } from "@Assets";
@@ -19,10 +19,11 @@ import { ApplicationListSelectionDto, JobApplicationStatusType, JobApplicationUp
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { CorporateUserDetail, useAppContext } from "@Context/App.context";
+import { useAppContext } from "@Context/App.context";
 import { CommonCursorPaginationProp } from "src/types/interface/CorporateServices.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { NormalizedUser } from "@Utils/NormalizeUser";
+import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -557,7 +558,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
       </Modal>
 
       <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} className="w-full sm:max-w-4xl h-auto">
-        <Notes />
+        <NotesApp />
       </Modal>
     </>
   );

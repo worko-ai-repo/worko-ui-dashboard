@@ -10,7 +10,7 @@ import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 // Lazy load components
 
 const AdminJobs = lazy(() => import("@Components/Dashboard/WorkoAdmin/Job/AdminJobs"));
-const Applicants = lazy(() => import("@Components/Dashboard/Corporate/Applicants/Applicants"));
+const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants"));
 const BulkCVCheck = lazy(() => import("@Components/Dashboard/Corporate/BulkCvCheck/BulkCvCheck"));
 const Invites = lazy(() => import("@Components/Dashboard/Corporate/Invites/Invites"));
 const Interview = lazy(() => import("@Components/Dashboard/Corporate/Interviews/Interview"));
@@ -36,6 +36,31 @@ const AdminDashboard = () => {
               <AdminJobs />
             </Suspense>
           ),
+        },
+        {
+          path: "cApplicants",
+          children: [
+            {
+              index: true, // this means "/cApplicants"
+              element: <Navigate to="noID" replace />,
+            },
+            {
+              path: "noID",
+              element: (
+                <Suspense fallback={<MainLoader />}>
+                  <JobSelectorModal isOpen={true} onClose={() => null} path="APPLICATIONS" dashboard="ADMIN"/>
+                </Suspense>
+              ),
+            },
+            {
+              path: ":id", // this means "/cApplicants/:id"
+              element: (
+                <Suspense fallback={<MainLoader />}>
+                  <Applicants />
+                </Suspense>
+              ),
+            },
+          ],
         },
       ],
     },

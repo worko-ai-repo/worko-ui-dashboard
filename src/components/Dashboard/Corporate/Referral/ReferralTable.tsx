@@ -3,7 +3,7 @@ import { Check, X, Eye } from "lucide-react";
 import { DynamicTable } from "../../../Shared/DynamicTable";
 import ProgressCircle from "../../../Shared/CircularBar";
 import Modal from "../../../Shared/Modal";
-import RejectionForm from "../Applicants/RejectForm";
+import RejectionForm from "../../../Shared/ApplicantsPage/RejectForm";
 
 interface WorkoRow {
   id: string;

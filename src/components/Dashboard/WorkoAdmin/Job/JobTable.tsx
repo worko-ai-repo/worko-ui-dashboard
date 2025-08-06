@@ -31,9 +31,10 @@ interface JobsTableProps {
   fetchPreviousPage: () => void;
   pageSize: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  getAllSelected: (item: JobData[]) => boolean;
 }
 
-const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, selectRows, selectAllRows, reset, handleJobCreation, updateJobStatus, hasNextPage, hasPrevPage, fetchNextPage, fetchPreviousPage, pageSize, setPageSize }) => {
+const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRows, selectRows, selectAllRows, reset, handleJobCreation, updateJobStatus, hasNextPage, hasPrevPage, fetchNextPage, fetchPreviousPage, pageSize, setPageSize,getAllSelected }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{ id: string; companyId: string } | null>(null);
 
@@ -45,7 +46,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
       key: "jobTitle",
       label: "Job Title",
       render: (row: JobData) => (
-        <span className="font-bold w-full capitalize truncate block max-w-[99.3%] cursor-pointer" data-tooltip-id="my-tooltip" data-tooltip-content={row.jobTitle} data-tooltip-place="top" data-tooltip-delay-show={500} data-tooltip-delay-hide={500}>
+        <span className="w-full capitalize truncate block max-w-[99.3%] cursor-pointer" data-tooltip-id="my-tooltip" data-tooltip-content={row.jobTitle} data-tooltip-place="top" data-tooltip-delay-show={500} data-tooltip-delay-hide={500}>
           {row.jobTitle}
         </span>
       ),
@@ -58,7 +59,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
         return (
           <div className="flex items-center gap-2">
             <img src={finalLogoUrl} alt={row.companyName} className="w-8 h-8 object-contain rounded-full" />
-            <span className="font-bold">{row.companyName}</span>
+            <span>{row.companyName}</span>
           </div>
         );
       },
@@ -128,7 +129,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
 
   return (
     <div>
-      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset}>
+      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset()}>
         <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
@@ -140,7 +141,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
         toggleSelectAll={() => selectAllRows(data)}
-        allSelected={selectedRows?.length === data.length && data.length > 0}
+        allSelected={getAllSelected(data)}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div className="col-span-2">

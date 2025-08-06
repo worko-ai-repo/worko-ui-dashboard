@@ -1,4 +1,4 @@
-import { JobApplicationStatusType } from "@Components/Dashboard/Corporate/Applicants/BulkStatusDropDown";
+import { JobApplicationStatusType } from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
 
 export interface JobApiResponse {
   data: JobData[];
@@ -116,7 +116,7 @@ export interface CorporateInvite {
 }
 
 export interface JobDetails {
-  id?:string;
+  id?: string;
   jobTitle?: string;
   company?: string;
   offerings?: string;
@@ -152,10 +152,8 @@ export interface JobDetails {
   variableComponent?: number;
 }
 
-
-
 //========================================JOB APPLICATIONS INTERFACES========================================
-export interface JobApplicationDetailsDto   {
+export interface JobApplicationDetailsDto {
   id: string;
   companyId: string;
   jobId: string;

@@ -1,10 +1,8 @@
 import { useEffect, useState } from "react";
-import BulkOption from "@Components/Dashboard/Corporate/Bulk";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
-import { useQuery } from "@tanstack/react-query";
-import { ApiResponseDto, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
@@ -16,11 +14,11 @@ import { toast } from "react-toastify";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataParams } from "src/types/interface/CorporateServices.dto";
 import Modal from "../../../Shared/Modal";
-import ResponseEvaluation from "./ViewEvaluation";
-import BulkStatusDropDown from "./BulkStatusDropDown";
+import ResponseEvaluation from "../../../Shared/ApplicantsPage/ViewEvaluation";
+import BulkStatusDropDown from "../../../Shared/ApplicantsPage/BulkStatusDropDown";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 import { BulkJobApplicationUpdateItem } from "@Interfaces/CorporateServices.dto";
-import { EvaluatorFormProps } from "./EvaluatorForm";
+import { EvaluatorFormProps } from "../../../Shared/ApplicantsPage/EvaluatorForm";
 import { useListSelection } from "@Hooks/useListSelection.hook";
 
 const stats = [
@@ -104,7 +102,7 @@ const Applicants = () => {
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
   const ListSelection: ApplicationListSelectionDto = useListSelection({
-    limit: 30, 
+    limit: 30,
     mapFn: (application: JobApplicationDetailsDto): BulkJobApplicationUpdateItem => ({
       id: application.id,
       emailId: application.applicantDetails.email,
@@ -149,7 +147,8 @@ const Applicants = () => {
    */
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
-  }, [activeTab, searchBarText, pageSize]);
+    ListSelection.reset();
+  }, [activeTab, searchBarText, pageSize,apiStatus]);
 
   const onBulkUpdate = async (type: JobApplicationStatusType) => {
     try {

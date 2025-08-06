@@ -190,7 +190,6 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
         ...baseParams,
         ...(currentCursor ? { lastKey: currentCursor } : {}),
       } as TParams;
-
       return await queryFn(params);
     },
     initialPageParam: "",

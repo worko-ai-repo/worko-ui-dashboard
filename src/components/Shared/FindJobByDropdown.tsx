@@ -1,22 +1,12 @@
-import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
-import { AlertCircle, IdCard } from "lucide-react";
-import secureStorage from "@Utils/SecureStorage.utils";
-import { CognitoMetaDataDto, CorporateUserDetail } from "@Context/App.context";
-import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { AlertCircle } from "lucide-react";
 import JobListDropdown from "./DropDown/JobListDropdown";
-
-type Job = {
-  id: string;
-  jobTitle: string;
-  status: string;
-};
 
 interface JobSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   path : "APPLICATIONS" | "BULKCVCHECK", 
+  dashboard?: "CORPORATE" | "ADMIN";
 }
 
 export const STATUS_COLORS: Record<string, string> = {
@@ -29,13 +19,14 @@ export const STATUS_COLORS: Record<string, string> = {
 const JobSelectorModal: React.FC<JobSelectorModalProps> = ({ 
   isOpen, 
   onClose, 
-  path = "APPLICATIONS", 
+  path = "APPLICATIONS",
+  dashboard = "CORPORATE" 
 }) => {
 
 const navigate = useNavigate();
 
 const onSelect = (jobId: string) => {
-  navigate(`/corporate/cApplicants/${jobId}`);
+  navigate(`/${dashboard.toLocaleLowerCase()}/cApplicants/${jobId}`);
   onClose();
 };
 return (
@@ -61,12 +52,12 @@ return (
             </div>
 
         {/* Search */}
-        <JobListDropdown onSelect={(job) => onSelect(job.id)} />
+        <JobListDropdown onSelect={(job) => onSelect(job.id)} dashboard={dashboard}/>
 
         {/* Close Button */}
         <div className="mt-6 flex justify-end">
           <button
-            onClick={() => { onClose(); navigate("/corporate/Jobs"); }}
+            onClick={() => { onClose(); navigate(`/${dashboard.toLocaleLowerCase()}/Jobs`); }}
             className="btn_primary px-4 py-2 text-sm font-medium text-white hover:text-gray-800 transition-colors"
           >
             Back to jobs

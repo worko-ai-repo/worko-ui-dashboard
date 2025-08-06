@@ -1,6 +1,6 @@
 import React from "react";
 import { X, Check, Send, ClipboardCheck } from "lucide-react";
-import { JobApplicationStatusType, JobApplicationUpdatePayloadDto, handleJobApplicationStatusUpdate } from "./Applicants";
+import { JobApplicationStatusType, JobApplicationUpdatePayloadDto, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";//@TODO:Make it generic
 import { useQueryClient } from "@tanstack/react-query";
 
 const sampleCV = "https://www.africau.edu/images/default/sample.pdf";
