@@ -28,7 +28,7 @@ export type EvaluatorFormProps = {
 };
 
 const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
-  console.log("Defaultvalues", Defaultvalues);
+  // console.log("Defaultvalues", Defaultvalues);
   const {
     control,
     register,

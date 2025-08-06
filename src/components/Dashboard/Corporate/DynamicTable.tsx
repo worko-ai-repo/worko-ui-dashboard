@@ -4,7 +4,7 @@ import CustomDropdown from "@Components/Shared/DropDown/CustomDropDown";
 import { CommonPaginationPageSizeOptions } from "../../../types/common.constants";
 import { sortOrder } from "@AssetsFolder/assets";
 
-             export interface Column<T> {
+export interface Column<T> {
   key: (keyof T & string) | string;
   label: string;
   sortable?: boolean;
@@ -24,7 +24,7 @@ interface DynamicTableProps<T extends { id: string }> {
   enableSelect?: boolean;
   //Added pagination props
   pageSize: number;
-  setPageSize:React.Dispatch<React.SetStateAction<number>>;
+  setPageSize: React.Dispatch<React.SetStateAction<number>>;
   handlePreviousPage: () => void;
   handleNextPage: () => void;
   hasPrevPage?: boolean;
@@ -46,7 +46,7 @@ export function DynamicTable<T extends { id: string }>({
   allSelected = false,
   renderExpandedDetails,
   enableSelect = true,
-  // @claude: Destructured pagination props with defaults
+  //  Destructured pagination props with defaults
   pageSize = 10,
   setPageSize,
   hasPrevPage = false,
@@ -54,19 +54,18 @@ export function DynamicTable<T extends { id: string }>({
   handlePreviousPage,
   handleNextPage,
   onSortChange,
-  // @claude: Destructured empty state props with defaults
+  //  Destructured empty state props with defaults
   emptyStateMessage = "No data available",
   emptyStateSubMessage = "There are no items to display at the moment.",
 }: DynamicTableProps<T>) {
   const totalCols = columns.length + (enableSelect ? 1 : 0);
-  
 
   const getCellValue = (row: T, col: Column<T>): React.ReactNode => {
     const value = row[col.key as keyof T];
     return col.render ? col.render(row) : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value.toString() : "-";
   };
 
-  // @claude: Render empty state when no rows are available
+  //  Render empty state when no rows are available
   if (rows.length === 0) {
     return (
       <div className="bg-white rounded-lg p-2 md:p-4 overflow-x-auto w-full">
@@ -92,7 +91,7 @@ export function DynamicTable<T extends { id: string }>({
           </tbody>
         </table>
 
-        {/* @claude: Empty state component */}
+        {/*  Empty state component */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
             <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,28 +117,28 @@ export function DynamicTable<T extends { id: string }>({
                   <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" />
                 </th>
               )}
-             {columns.map((col) => {
-              return (
-                <th key={col.key} className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
-                  <span className="flex items-center justify-center gap-1">
-                    {col.label}
-                    {col.sortable  && onSortChange && (
-                      <span className="cursor-pointer  h-auto w-8">
-                        <img
-                          src={sortOrder}
-                          onClick={(e) => {
-                            onSortChange(col.key);
-                            e.currentTarget.style.transform = e.currentTarget.style.transform === "rotate(180deg)" ? "rotate(0deg)" : "rotate(180deg)";
-                          }}
-                          className="inline ml-2 transition-transform duration-300"
-                          alt="sortOrder"
-                        />
-                      </span>
-                    )}
-                  </span>
-                </th>
-              );
-            })}
+              {columns.map((col) => {
+                return (
+                  <th key={col.key} className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
+                    <span className="flex items-center justify-center gap-1">
+                      {col.label}
+                      {col.sortable && onSortChange && (
+                        <span className="cursor-pointer  h-auto w-8">
+                          <img
+                            src={sortOrder}
+                            onClick={(e) => {
+                              onSortChange(col.key);
+                              e.currentTarget.style.transform = e.currentTarget.style.transform === "rotate(180deg)" ? "rotate(0deg)" : "rotate(180deg)";
+                            }}
+                            className="inline ml-2 transition-transform duration-300"
+                            alt="sortOrder"
+                          />
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
 
@@ -178,47 +177,47 @@ export function DynamicTable<T extends { id: string }>({
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
                           ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""}`}>
-                        {getCellValue(row, col)}
-                      </td>
-                    );
-                  })}
-                </tr>
-
-                {/* Expand Button */}
-                {renderExpandedDetails && !isExpanded && (
-                  <tr className="relative h-0">
-                    <td colSpan={totalCols} className="p-0 border-t-0">
-                      <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
-                        <ChevronDownIcon />
-                      </div>
-                    </td>
+                          {getCellValue(row, col)}
+                        </td>
+                      );
+                    })}
                   </tr>
-                )}
 
-                {renderExpandedDetails && isExpanded && (
-                  <>
-                    <tr>
-                      <td colSpan={totalCols} className="relative bg-white p-0 text-sm text-gray-600">
-                        <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
-                        <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
-                          <ChevronUpIcon />
+                  {/* Expand Button */}
+                  {renderExpandedDetails && !isExpanded && (
+                    <tr className="relative h-0">
+                      <td colSpan={totalCols} className="p-0 border-t-0">
+                        <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
+                          <ChevronDownIcon />
                         </div>
                       </td>
                     </tr>
-                    <tr>
-                      <td colSpan={totalCols} className="h-4" />
-                    </tr>
-                  </>
-                )}
+                  )}
+
+                  {renderExpandedDetails && isExpanded && (
+                    <>
+                      <tr>
+                        <td colSpan={totalCols} className="relative bg-white p-0 text-sm text-gray-600">
+                          <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
+                          <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
+                            <ChevronUpIcon />
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={totalCols} className="h-4" />
+                      </tr>
+                    </>
+                  )}
                 </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
-      {/* @claude: Added pagination controls container */}
+      {/*  Added pagination controls container */}
       <div className=" h-12 flex flex-col sm:flex-row justify-between items-center">
-        {/* @claude: Page size selector on the left */}
+        {/*  Page size selector on the left */}
         <div className="flex items-center z-50">
           <label htmlFor="pageSize" className="text-sm text-gray-600">
             Show rows:
@@ -229,7 +228,7 @@ export function DynamicTable<T extends { id: string }>({
               value={pageSize}
               placeholder="Show rows"
               onChange={(val) => {
-                console.log("Selected value:", val); // e.g., 20
+                // console.log("Selected value:", val); // e.g., 20
                 setPageSize(val);
               }}
             />
@@ -237,7 +236,7 @@ export function DynamicTable<T extends { id: string }>({
         </div>
 
         <div className="flex items-center ">
-          {/* @claude: Previous and Next buttons */}
+          {/*  Previous and Next buttons */}
           <div className="flex gap-2  ">
             <button onClick={handlePreviousPage} disabled={!hasPrevPage} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${!hasPrevPage ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}>
               <ChevronLeft className="w-4 h-4" />
