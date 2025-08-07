@@ -2,6 +2,7 @@ import React from 'react';
 import { Calendar } from 'lucide-react';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
+import { Button } from 'lib-worko-ui';
 
 export interface ScheduledSlot {
   availability: 1 | 2 | 3;
@@ -77,48 +78,13 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Slot Selector */}
-      <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-900">Select slot</label>
-        <div className="flex gap-3">
-          {[1, 2, 3].map((i) => (
-            <button
-              key={i}
-             onClick={() => setAvailabilityIndex(i as 1 | 2 | 3)}
-              className={`w-10 h-9 rounded border text-lg font-semibold transition-colors ${availabilityIndex === i
-                ? 'bg-indigo-600 text-white border-indigo-600'
-                : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-100'}`}
-            >
-              {i}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Date Picker */}
-      <div className="space-y-4">
-  <label className="block text-sm font-medium text-gray-900">Pick a date</label>
-  <div className="relative">
-    <DatePicker
-      selected={new Date(currentSlot.date)}
-      onChange={(date: Date | null) => {
-        if (date) handleDateChange(date);
-      }}
-      dateFormat="yyyy-MM-dd"
-      placeholderText="Select a date"
-      className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
-      calendarClassName="!z-50"
-    />
-    <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
-      <Calendar size={16} />
-    </div>
-  </div>
-</div>
+
 
 
       {/* Duration Selector */}
       <div className="space-y-4">
-        <label className="block text-sm font-medium text-gray-900">Select duration</label>
+        <label className="block text-sm font-medium text-gray-900">Select time slot</label>
         <div className="flex flex-wrap gap-2">
           {durations.map((duration) => (
             <button
@@ -134,11 +100,61 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({
         </div>
       </div>
 
+          <br />
+      {/* Slot Selector */}
+      <div className="space-y-4">
+        <div className="flex gap-3">
+          <div className="flex flex-col leading-tight">
+            <span className="block text-sm font-medium text-gray-900">Share your availability</span>
+            <span className='text-start align-middle block text-sm font-medium text-gray-900'>for interview</span>
+          </div>
+          &nbsp; &nbsp; &nbsp;
+          {[1, 2, 3].map((i) => (
+            <button
+              key={i}
+             onClick={() => setAvailabilityIndex(i as 1 | 2 | 3)}
+              className={`w-auto px-3 h-9 rounded border text-lg font-semibold transition-colors ${availabilityIndex === i
+                ? 'bg-indigo-600 text-white border-indigo-600'
+                : 'bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-100'}`}
+            >
+              Slot {i}
+            </button>
+          ))}
+        </div>
+      </div>
+
+          <hr />
+          
+      <div className="space-y-4">
+        {/* <label className="block text-sm font-medium text-gray-900">Pick a date</label> */}
+        <div className="relative">
+          <DatePicker
+            selected={new Date(currentSlot.date)}
+            onChange={(date: Date | null) => {
+              if (date) handleDateChange(date);
+            }}
+            customInput={
+              <button className="p-2 border rounded bg-white shadow hover:bg-gray-100" type="button">
+                <Calendar size={24} />
+              </button>
+            }
+            dateFormat="yyyy-MM-dd"
+            placeholderText="Select a date"
+            className="w-full py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
+            calendarClassName="!z-50"
+          />
+          
+          {/* <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
+            <Calendar size={30} />
+          </div> */}
+        </div>
+      </div>
+
       {/* Time Slider */}
       <div className="space-y-4">
         <div className="flex justify-between text-sm text-gray-600">
           <span>12:00 AM</span>
-          <span>11:59 PM</span>
+          <span>12:00 PM</span>
         </div>
         <div className="relative">
           <div className="w-full h-1 bg-gray-200 rounded-full">

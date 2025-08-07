@@ -1,8 +1,15 @@
 import React from 'react';
 import { FileText, Play, Send, Info } from 'lucide-react';
-import { CandidateDetails, EvaluationRequestDetails } from 'src/types/index';
+import { CandidateDetails, EvaluationRequestDetails, SocialLinks} from 'src/types/index';
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import CognitoServiceObj from '@Utils/Cognito.utils';
+import { useEffect,useState } from 'react';
+import { useParams, useLocation } from 'react-router-dom';
+import { evaluationRequest } from '@AssetsFolder/assets';
+import {fetchCandidateSocial} from "@Services/EvaluationService.service"
+import { jwtDecode } from 'jwt-decode';
+import { fetchAuthSession } from '@aws-amplify/auth';
+
 
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
@@ -17,7 +24,7 @@ const handleLogout = async () => {
   try {
     await CognitoServiceObj.handleSignOut();
     sessionStorage.clear();
-    window.location.href = 'http://localhost:8080/v0/auth/evaluator-dashboard/login?evaluatorEmail';
+    window.location.href = 'https://worko.ai/';
   } catch (err) {
     console.error('Logout failed', err);
   }
@@ -31,6 +38,85 @@ const MainContent: React.FC<MainContentProps> = ({
   onViewFeedback,
   onViewVideo
 }) => {
+
+  const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
+  const location = useLocation();
+
+
+  useEffect(() => {
+    const fetchSocialLinks = async () => {
+    const accessToken = CognitoServiceObj.getAccessToken();
+
+    if (!accessToken) {
+      alert("No session found please login using the verified link");
+      // window.location.href = 'https://worko.ai/';
+      const paramEmail = window.location.search.split("=")[1]
+      window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
+      return;
+    }
+
+    if (EvaluationRequestDetails.email) {
+      try {
+        const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
+        const filteredSocialLinks = {};
+    Object.entries(data[0]).forEach(([key, value]) => {
+      if (Array.isArray(value)) {
+        filteredSocialLinks[key] = value;
+      }
+    });
+
+    setSocialLinks(filteredSocialLinks);
+      } catch (error) {
+        console.error('Fetch error:', error);
+        setSocialLinks({});
+      }
+    }
+  };
+
+  fetchSocialLinks();
+}, [location.search,EvaluationRequestDetails]);
+
+  useEffect(()=>{
+    const checkSession = async () => {
+      try {
+        const session = await fetchAuthSession();
+
+        if (session?.tokens?.idToken) {
+          const token = session.tokens.idToken.toString();
+          const payload = JSON.parse(atob(token.split('.')[1]));
+            
+          const tokenEmail = encodeURIComponent(payload.email)
+          const paramEmail = window.location.search.split("=")[1]
+
+          if(tokenEmail !== paramEmail){
+            alert('email does not match with the current session please login again');
+                await CognitoServiceObj.handleSignOut();
+                sessionStorage.clear();
+            //  window.location.href = 'https://worko.ai/';
+            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
+          }
+        }
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    checkSession();
+  },[])
+if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
+  return (
+    <div className="flex items-center justify-center w-full h-screen bg-gray-100">
+      <div className="flex flex-col items-center text-center max-w-md w-full p-8 bg-white shadow-lg rounded-xl">
+        <FileText className="w-12 h-12 text-gray-400 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">No Data Available</h2>
+        <p className="text-base text-gray-600">Looks like there are no candidates to evaluate.</p>
+      </div>
+    </div>
+  );
+}
+
+
+
   return (
     <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
       {/* Header */}
@@ -46,7 +132,7 @@ const MainContent: React.FC<MainContentProps> = ({
             <span className="text-[#316BFF] font-semibold" >Recruiter name: </span>
             <span className="text-slate-800">{toTitleCase(EvaluationRequestDetails.recruiterName)}</span>
           </span>
-          <button onClick={handleLogout}>Logout</button>
+          {/* <button className='text-red-600' onClick={handleLogout}>Logout</button> */}
         </div>
       </div>
 
@@ -83,6 +169,36 @@ const MainContent: React.FC<MainContentProps> = ({
             </p>
           </div>
         </div>
+
+        {/* Social Links Card */}
+          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-slate-800 text-start">Social Links</h3>
+              </div>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-slate-700">
+              {
+                Object.entries(socialLinks).length > 0 ? (
+                  Object.entries(socialLinks).map(([key, urls]) =>
+                    Array.isArray(urls) && urls.length > 0 && (
+                      <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
+                        <a
+                          href={urls[0]}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline"
+                        >
+                          {toTitleCase(key)}
+                        </a>
+                      </div>
+                    )
+                  )
+                ) : (
+                  <div>N/A</div>
+                )
+              }
+            </div>
+          </div>
+
 
         {/* Worko Feedback Card */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">

@@ -97,7 +97,7 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleFeedbackComplete = (data: any) => {
-    console.log('Feedback completed:', data);
+    // console.log('Feedback completed:', data);
     refreshRequests(); // Re-fetch updated list
     // Handle the complete feedback data here
     // You can add API calls or state updates here
@@ -183,6 +183,7 @@ const EvaluatorView: React.FC = () => {
         const candidateEmail = selectedRequest.applicantUserEmail;
         if (candidateEmail) {
           const candidate = await fetchCandidateDetails(candidateEmail);
+          console.log(candidate)
           if (candidate.length > 0) {
             setSelectedCandidateDetails(candidate[0]);
           }
@@ -217,6 +218,7 @@ const EvaluatorView: React.FC = () => {
             email: r.applicantUserEmail,
             sentTime: new Date(r.createdAt).toLocaleString(),
             isNew: false,
+            applicantName: r.applicantName,
           }))
           : []}
         selectedCandidateId={selectedRequest?.id || ''}
@@ -258,8 +260,8 @@ const EvaluatorView: React.FC = () => {
                   return scoreOrRejection;
                 }
               })(),
-              evaluationResponseId: selectedRequest?.evaluationResponseId
-
+              evaluationResponseId: selectedRequest?.evaluationResponseId,
+              email: selectedRequest?.applicantUserEmail ?? '',
             }
             : {
               id: '',
@@ -280,6 +282,7 @@ const EvaluatorView: React.FC = () => {
 
               matchingScore: 0,
               scoreDetails: [],
+              email: '',
             }
         }
         companyLogo=""
