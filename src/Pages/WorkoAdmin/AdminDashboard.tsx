@@ -38,7 +38,7 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "cApplicants",
+          path: "aApplicants",
           children: [
             {
               index: true, // this means "/cApplicants"

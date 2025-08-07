@@ -90,7 +90,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({ activeTab, data, selectedRo
           }[]
         > = {
           PUBLISHED: [
-            { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants", onClick: () => nav(`/admin/cApplicants/${row.id}`) },
+            { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants", onClick: () => nav(`/admin/aApplicants/${row.id}`) },
             { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes", onClick: () => nav(`/admin/bulk-cv-check/${row.companyDetails.id}`) },
             { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) },
             { icon: <img src={Edit} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Update Job", onClick: () => handleJobCreation("UPDATE", row) },

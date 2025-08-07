@@ -19,6 +19,7 @@ import AdminServiceObj from "../Services/Admin.service";
 import { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
 import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
+import { useParams } from "react-router-dom";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -84,6 +85,8 @@ const Applicants = () => {
   const { userDetails } = useAppContext();
   const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
   const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
+  // Extract the job Id from the URL using useParams
+  const { id: jobId } = useParams<{ id: string }>();
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
@@ -112,6 +115,7 @@ const Applicants = () => {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: "ADMIN",
+    jobId: jobId ?? undefined, // Use the jobId from the URL or an empty string if not available
     pageSize: pageSize,
     sortOrder: "descending",
   };
@@ -129,6 +133,7 @@ const Applicants = () => {
     queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params],
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
+    enabled: !!jobId, // Only run the query if jobId is available
   });
 
   /**
@@ -211,7 +216,7 @@ const Applicants = () => {
         <div className="flex flex-col gap-[35px]">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails />
-            <div className="bg-white max-w-[150px] shadow-md rounded-xl px-2 text-xs gap-2 py-4 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mt-4 h-min  shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <div className="flex border rounded-lg items-center">
                 <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">{data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}</div>
@@ -225,11 +230,11 @@ const Applicants = () => {
                     }
                   }}
                   className="bg-blue-500  p-1 w-auto h-full rounded-lg active:scale-95 ">
-                  <img src={clipboard} alt="Clipboard icon" className=" w-12 h-auto  " />
+                  <img src={clipboard} alt="Clipboard icon" className=" min-w-4 min-h-4  " />
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 bg-white rounded-xl px-7 py-4 shadow-md">
+            <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
             </div>
@@ -285,6 +290,10 @@ const Applicants = () => {
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}
             setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
             ListSelection={ListSelection}
+            sendApplicationToRecruiter={(applicationId) => console.log(`Send application ${applicationId} to recruiter`)}
+            showRejectReason={(applicationId) => console.log(`Show reject reason for application ${applicationId}`)}
+            viewDuplicacyDetails={(applicationId) => console.log(`View duplicacy details for application ${applicationId}`)}
+            formatCvDownloadedDate={(date) => new Date(date).toLocaleDateString()}
           />
         )}
       </div>

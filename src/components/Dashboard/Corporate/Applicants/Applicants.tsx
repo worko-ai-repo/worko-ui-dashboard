@@ -20,6 +20,7 @@ import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 import { BulkJobApplicationUpdateItem } from "@Interfaces/CorporateServices.dto";
 import { EvaluatorFormProps } from "../../../Shared/ApplicantsPage/EvaluatorForm";
 import { useListSelection } from "@Hooks/useListSelection.hook";
+import { useParams } from "react-router-dom";
 
 const stats = [
   { label: "Total Applicants", value: 106 },
@@ -100,6 +101,8 @@ const Applicants = () => {
   const [pageSize, setPageSize] = useState(10);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
+  // Extract the job Id from the URL using useParams
+  const { id: jobId } = useParams<{ id: string }>();
 
   const ListSelection: ApplicationListSelectionDto = useListSelection({
     limit: 30,
@@ -121,7 +124,7 @@ const Applicants = () => {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: userType,
-    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
+    jobId: jobId || undefined, 
     pageSize: pageSize,
     sortOrder: "descending",
   };
@@ -139,7 +142,7 @@ const Applicants = () => {
     queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, activeTab, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchApplications,
     baseParams: params,
-    enabled: !!userDetails?.companyId, // only run if companyId exists
+    enabled: !!jobId, // only run if companyId exists
   });
 
   /**
@@ -222,7 +225,7 @@ const Applicants = () => {
         <div className="flex flex-col gap-[35px]">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails />
-            <div className="bg-white max-w-[150px] shadow-md rounded-xl px-2 text-xs gap-2 py-4 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mt-4 h-min  shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <div className="flex border rounded-lg items-center">
                 <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">{data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}</div>
@@ -236,11 +239,11 @@ const Applicants = () => {
                     }
                   }}
                   className="bg-blue-500  p-1 w-auto h-full rounded-lg active:scale-95 ">
-                  <img src={clipboard} alt="Clipboard icon" className=" w-12 h-auto  " />
+                  <img src={clipboard} alt="Clipboard icon" className="  min-w-4 min-h-4  " />
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 bg-white rounded-xl px-7 py-4 shadow-md">
+            <div className="flex flex-col gap-2 h-min mt-4 bg-white rounded-xl px-7 py-3  shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
             </div>

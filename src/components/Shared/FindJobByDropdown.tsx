@@ -24,9 +24,9 @@ const JobSelectorModal: React.FC<JobSelectorModalProps> = ({
 }) => {
 
 const navigate = useNavigate();
-
+const applicationPath = dashboard === "CORPORATE" ? "cApplicants" : "aApplicants";
 const onSelect = (jobId: string) => {
-  navigate(`/${dashboard.toLocaleLowerCase()}/cApplicants/${jobId}`);
+  navigate(`/${dashboard.toLocaleLowerCase()}/${applicationPath}/${jobId}`);
   onClose();
 };
 return (

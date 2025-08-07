@@ -38,6 +38,7 @@ export interface CursorPaginationApplicationDataAdminParams {
   sortOrder: "ascending" | "descending";
   status?: "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
   searchText?: string;
+  jobId: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
 }

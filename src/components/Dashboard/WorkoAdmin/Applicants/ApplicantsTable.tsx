@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, NotebookIcon, User } from "lucide-react";
+import { Eye, NotebookIcon, Send, User } from "lucide-react";
 
 // Component imports
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
@@ -37,9 +37,30 @@ interface ApplicationTableProps {
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   EvaluatorFormProps: EvaluatorFormProps | null;
   setEvaluatorFormProps: React.Dispatch<React.SetStateAction<EvaluatorFormProps | null>>;
+  // Add these new props to match improved functionality
+  sendApplicationToRecruiter?: (applicationId: string) => void;
+  showRejectReason?: (application: JobApplicationDetailsDto) => void;
+  viewDuplicacyDetails?: (portal: string, date: string) => void;
+  formatCvDownloadedDate?: (statusTracker: any) => string;
 }
 
-export default function ApplicationTable({ activeTab, setActiveTab, ListSelection, data, handleUpdate, userType, Pagination, isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen, EvaluatorFormProps, setEvaluatorFormProps }: ApplicationTableProps) {
+export default function ApplicationTable({ 
+  activeTab, 
+  setActiveTab, 
+  ListSelection, 
+  data, 
+  handleUpdate, 
+  userType, 
+  Pagination, 
+  isAddEvaluatorModalOpen, 
+  setIsAddEvaluatorModalOpen, 
+  EvaluatorFormProps, 
+  setEvaluatorFormProps,
+  sendApplicationToRecruiter,
+  showRejectReason,
+  viewDuplicacyDetails,
+  formatCvDownloadedDate
+}: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
@@ -62,6 +83,10 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
     };
   }>();
 
+  // Add dropdown state for status updates (improved functionality)
+  const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
+  const [selectedStatusDropdown, setSelectedStatusDropdown] = useState<string>("");
+
   const keyFallbacks = {
     yoe: ["yoe", "applicantDetails.YOE"],
     matchingScore: ["matchingScore", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
@@ -69,11 +94,67 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
 
-  // Common column definitions
+  // Helper functions (improved functionality)
+  const shouldShowUpdateIcon = (row: JobApplicationDetailsDto) => {
+    return row.status !== "REJECTED" && row.status !== "HIRED";
+  };
+
+  const toggleDropdown = (rowIndex: string) => {
+    setDropdownVisibleRows(prev => 
+      prev.includes(rowIndex) 
+        ? prev.filter(id => id !== rowIndex)
+        : [...prev, rowIndex]
+    );
+  };
+
+  const isDropdownVisible = (rowIndex: string) => {
+    return dropdownVisibleRows.includes(rowIndex);
+  };
+
+  // Status array for dropdown
+  const statusArray = [
+    "APPLIED",
+    "CV_DOWNLOADED", 
+    "UNDER_EVALUATION",
+    "PROCESSING_INTERVIEW",
+    "INTERVIEW_DONE",
+    "HIRED",
+    "REJECTED"
+  ];
+
+  const isOptionDisabled = (option: string, currentStatus: string) => {
+    const statusOrder = {
+      "APPLIED": 0,
+      "CV_DOWNLOADED": 1,
+      "UNDER_EVALUATION": 2,
+      "PROCESSING_INTERVIEW": 3,
+      "INTERVIEW_DONE": 4,
+      "HIRED": 5,
+      "REJECTED": 6
+    };
+    
+    return option !== "REJECTED" && statusOrder[option as keyof typeof statusOrder] <= statusOrder[currentStatus as keyof typeof statusOrder];
+  };
+
+  const transformStatus = (status: string) => {
+    const statusMap: Record<string, string> = {
+      APPLIED: "Applied",
+      CV_DOWNLOADED: "CV Downloaded", 
+      UNDER_EVALUATION: "Under Evaluation",
+      PROCESSING_INTERVIEW: "Processing Interview",
+      INTERVIEW_DONE: "Interview Done",
+      HIRED: "Hired",
+      REJECTED: "Rejected",
+      ON_HOLD: "On Hold"
+    };
+    return statusMap[status] || status;
+  };
+
+  // Common column definitions - keeping original styling with improved functionality
   const commonColumns = {
     name: {
       key: "name",
-      label: "Applicants name",
+      label: "Applicants name", // Keep original label
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <User size={20} />
@@ -100,12 +181,60 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
         </div>
       ),
     },
+    experience: {
+      key: "experience", 
+      label: "Experience",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>
+            {row.applicantDetails.YOE 
+              ? (row.applicantDetails.YOE === 1 
+                  ? `${row.applicantDetails.YOE} year` 
+                  : `${row.applicantDetails.YOE} years`)
+              : '0 years'
+            }
+          </span>
+        </div>
+      ),
+    },
     location: {
       key: "location",
       label: "Location",
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>{row.applicantDetails?.location ?? "Not Disclosed"}</span>
+        </div>
+      ),
+    },
+    currentCTC: {
+      key: "currentCTC",
+      label: "Current CTC", 
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>{row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : '-'}</span>
+        </div>
+      ),
+    },
+    expectedCTC: {
+      key: "expectedCTC",
+      label: "Expected CTC",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>{row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : '-'}</span>
+        </div>
+      ),
+    },
+    currentCompany: {
+      key: "currentCompany",
+      label: "Current Company",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2" title={row.applicantDetails?.candidateExperience?.companyName}>
+          <span className="truncate max-w-[120px]">
+            {row.applicantDetails?.candidateExperience?.companyName 
+              ? row.applicantDetails.candidateExperience.companyName.slice(0, 20).toUpperCase()
+              : '-'
+            }
+          </span>
         </div>
       ),
     },
@@ -121,16 +250,43 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
 
               setScorePointsModal({
                 title: row.matchingScore ?? 0 >= 70 ? "Matching Score Details" : "Rejected Reason",
-                data: row.matchingScore ?? 0 >= 70 ? row.scoreDetails : row.rejectionFeedbackBySystem, // Assuming matchingScore is an object with details
+                data: row.matchingScore ?? 0 >= 70 ? row.scoreDetails : row.rejectionFeedbackBySystem,
                 matchingScore: row.matchingScore ?? 0,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
-              // console.log("Matching Score Details:", scorePointsModal);
             }}
             value={row.matchingScore}
           />
+        </div>
+      ),
+    },
+    scoreDetails: {
+      key: "scoreDetails",
+      label: "Score Details",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex justify-center">
+          {row.scoreDetails ? (
+            <button 
+              className="text-blue-600 hover:text-blue-800 text-sm btn_t1"
+              onClick={() => {
+                setFeedbackModalOpen(true);
+                setScorePointsModal({
+                  title: "Detailed Analysis",
+                  data: row.scoreDetails,
+                  matchingScore: row.matchingScore ?? 0,
+                  details: true,
+                  showCloseButton: true,
+                  onClose: () => setFeedbackModalOpen(false),
+                });
+              }}
+            >
+              View Detailed Analysis
+            </button>
+          ) : (
+            <span>-</span>
+          )}
         </div>
       ),
     },
@@ -138,7 +294,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
       key: "status",
       label: "Status",
       render: (row: JobApplicationDetailsDto) => {
-        // Status color mapping
+        // Status color mapping - keeping original colors
         const statusColors: Record<JobApplicationStatusType, string> = {
           APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
           REJECTED: "bg-[#FFD0D0] text-[#D40000]",
@@ -151,6 +307,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
           ON_HOLD: "bg-[#FFF3CD] text-[#856404]",
           JOINED: "bg-[#D1E7DD] text-[#0F5132]",
         };
+        
         const newDisplayStatus: Record<JobApplicationStatusType, string> = {
           APPLIED: "Pending",
           REJECTED: "Rejected",
@@ -167,17 +324,121 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
         const colorClass = statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>{newDisplayStatus[row.status as JobApplicationStatusType]}</span>
+          <div className="flex flex-col items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span 
+                className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass} ${row.status === 'REJECTED' ? 'cursor-pointer' : ''}`}
+                onClick={() => row.status === 'REJECTED' && showRejectReason && showRejectReason(row)}
+              >
+                {newDisplayStatus[row.status as JobApplicationStatusType]}
+              </span>
+              {shouldShowUpdateIcon(row) && (
+                <button
+                  className="text-blue-600 hover:text-blue-800"
+                  title="Update status"
+                  onClick={() => toggleDropdown(row.id)}
+                >
+                  ✏️
+                </button>
+              )}
+            </div>
+            
+            {isDropdownVisible(row.id) && (
+              <div className="flex flex-col gap-2 p-2 border rounded bg-white shadow-lg">
+                <select 
+                  className="form-select text-sm border rounded p-1"
+                  value={selectedStatusDropdown}
+                  onChange={(e) => setSelectedStatusDropdown(e.target.value)}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <option value="" disabled>Select Next Status</option>
+                  {statusArray.map(option => (
+                    <option 
+                      key={option}
+                      value={option}
+                      disabled={isOptionDisabled(option, row.status)}
+                    >
+                      {transformStatus(option)}
+                    </option>
+                  ))}
+                </select>
+                <button 
+                  className="bg-blue-600 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
+                  disabled={!selectedStatusDropdown}
+                  onClick={() => {
+                    if (selectedStatusDropdown) {
+                      const payload: JobApplicationUpdatePayloadDto = {
+                        applicantName: row.applicantDetails.name,
+                        emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
+                        status: selectedStatusDropdown as JobApplicationStatusType,
+                        userId: userDetails ? userDetails?.id : "",
+                        userType: userType,
+                      };
+                      handleUpdate(payload, row.id);
+                      setDropdownVisibleRows(prev => prev.filter(id => id !== row.id));
+                      setSelectedStatusDropdown("");
+                    }
+                  }}
+                >
+                  Update
+                </button>
+              </div>
+            )}
           </div>
         );
       },
+    },
+    applicationDate: {
+      key: "applicationDate", 
+      label: "Application Date",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center">
+          <span>
+            {new Date(row.createdAt).toLocaleDateString('en-GB', {
+              day: 'numeric',
+              month: 'short', 
+              year: 'numeric',
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true
+            })}
+          </span>
+        </div>
+      ),
+    },
+    cvViewedDate: {
+      key: "cvViewedDate",
+      label: "CV Viewed Date", 
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center">
+          <span>{formatCvDownloadedDate ? formatCvDownloadedDate(row.statusTracker) : '-'}</span>
+        </div>
+      ),
+    },
+    duplicateCV: {
+      key: "duplicateCV",
+      label: "Duplicate CV",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex justify-center">
+          {row.hiredFromOtherPortal?.portal && row.hiredFromOtherPortal?.date ? (
+            <button 
+              className="text-blue-600 hover:text-blue-800 text-sm underline"
+              onClick={() => row.hiredFromOtherPortal && viewDuplicacyDetails && viewDuplicacyDetails(row.hiredFromOtherPortal.portal, row.hiredFromOtherPortal.date)}
+            >
+              View Duplicacy Details
+            </button>
+          ) : (
+            <span>-</span>
+          )}
+        </div>
+      ),
     },
     actions: {
       key: "actions",
       label: "Actions",
       render: (row: JobApplicationDetailsDto) => {
-        // Common action buttons
+        // Common action buttons - keeping original styling
         const viewCvBtn = (
           <button
             title="View CV"
@@ -204,27 +465,28 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
           </button>
         );
 
-        const viewEvaluatorBtn = (
+        const sendToRecevaluatorBtn = (
           <button
-            title="View Evaluation"
+            title="Send to Evaluator"
             onClick={() => {
               setIsAddEvaluatorModalOpen(true);
-              /*  setEvaluatorFormProps({
+              setEvaluatorFormProps({
                 Defaultvalues: {
-                  jobApplicationId: row.id,
+                  jobApplicationId: [row.id],
                   jobId: row.jobId,
+                  applicantUserName: [row.applicantDetails.name],
                   jobTitle: row.jobTitle,
                   companyId: row.companyId,
                   applicantUserId: [row.applicantDetails.userId],
-                  applicantUserEmail: row.applicantDetails.email,
-                  hrName: userDetails?.name ?? "",
-                  hrCurrentCompanyName: userDetails?.companyId ?? "",
+                  applicantUserEmail: [row.applicantDetails.email],
+                  hrName: userDetails?.fullName,
+                  hrCurrentCompanyName: userDetails?.companyId || "",
                 },
-              }); */
+              });
             }}
             className="flex items-center gap-2 btn-sky">
             <Eye size={16} />
-            View evaluation
+            Send to Evaluator
           </button>
         );
 
@@ -255,9 +517,25 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
           </button>
         );
 
+        const sendToRecruiterBtn = (
+          <button
+            title={row.displayToCorporate ? "Already sent to recruiter" : "Send to Recruiter"}
+            onClick={() => !row.displayToCorporate && sendApplicationToRecruiter && sendApplicationToRecruiter(row.id)}
+            disabled={row.displayToCorporate}
+            className={`flex gap-2 items-center bg-green-600 text-white p-2 rounded-xl ${
+              row.displayToCorporate 
+                ? 'btn-gray cursor-not-allowed opacity-60' 
+                : 'btn-sky'
+            }`}
+          >
+            <Send size={16} />
+            Send to Recruiter
+          </button>
+        );
+
         // Return different actions based on tab and status
         if (activeTab === "All") {
-          if (row.status === "APPLIED") {
+       /*    if (row.status === "APPLIED") {
             return (
               <div className="flex space-x-2 justify-center">
                 <button
@@ -280,32 +558,11 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
                 </button>
               </div>
             );
-          } else if (row.status === "CV_DOWNLOADED") {
+          } else  */if (row.status === "CV_DOWNLOADED") {
             return (
               <div className="flex gap-2 justify-center">
                 {viewCvBtn}
-                <button
-                  title="Send to Evaluator"
-                  onClick={() => {
-                    setIsAddEvaluatorModalOpen(true);
-                    setEvaluatorFormProps({
-                      Defaultvalues: {
-                        jobApplicationId: [row.id],
-                        jobId: row.jobId,
-                        applicantUserName: [row.applicantDetails.name],
-                        jobTitle: row.jobTitle,
-                        companyId: row.companyId,
-                        applicantUserId: [row.applicantDetails.userId],
-                        applicantUserEmail: [row.applicantDetails.email],
-                        hrName: userDetails?.fullName,
-                        hrCurrentCompanyName: userDetails?.companyId || "",
-                      },
-                    });
-                  }}
-                  className="flex items-center gap-2 btn-sky">
-                  <Eye size={16} />
-                  Send to Evaluator
-                </button>
+                {sendToRecevaluatorBtn}
               </div>
             );
           }
@@ -316,15 +573,24 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
               <div className="flex gap-2 justify-center">
                 {viewCvBtn}
                 {noteBtn}
-                {/* {row.viewdCv && viewEvaluatorBtn} */}
-                {viewEvaluatorBtn}
               </div>
             );
-          } else if (row.status === "rejected") {
+          } else if (row.status === "REJECTED") {
             // Show rejection date for rejected applications
-            return <span>{row.status === "rejected" ? row.updatedAt : undefined}</span>;
+            return <div className="flex gap-2 justify-center">{viewCvBtn}</div>; // No actions for rejected applications
           } else {
-            return <div className="flex gap-2 justify-center">---------</div>;
+            // Show "Send to Recruiter" button based on improved logic
+            const showSendToRecruiter = row.status !== "REJECTED" && 
+              (((row.matchingScore ?? 0) < 70 && row.rejectionFeedbackBySystem) ||
+               ((row.matchingScore ?? 0) >= 90 && row.scoreDetails));
+            
+            return (
+              <div className="flex gap-2 justify-center">
+                {viewCvBtn}
+                {showSendToRecruiter && sendToRecruiterBtn}
+                {/* <span>---------</span> */}
+              </div>
+            );
           }
         }
 
@@ -378,26 +644,49 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
         </div>
       ),
     },
-    currentCompany: {
-      key: "company",
-      label: "Current Company",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.companyName}</span>
-        </div>
-      ),
-    },
   };
 
   /**
-   * Get column configuration based on active tab
+   * Get column configuration based on active tab - enhanced with new columns
    */
   const getColumnsForTab = (tab: string): any[] => {
     switch (tab) {
       case "All":
-        return [commonColumns.name, commonColumns.company, commonColumns.profile, commonColumns.yoe, commonColumns.location, commonColumns.matchingScore, commonColumns.status, commonColumns.actions, commonColumns.response];
+        return [
+          commonColumns.name,
+          commonColumns.company, 
+          commonColumns.profile,
+          commonColumns.experience, // Enhanced from yoe
+          commonColumns.location,
+          commonColumns.currentCTC, // New column
+          commonColumns.expectedCTC, // New column
+          commonColumns.matchingScore,
+          commonColumns.scoreDetails, // New column
+          commonColumns.status,
+          commonColumns.applicationDate, // New column
+          commonColumns.cvViewedDate, // New column
+          commonColumns.duplicateCV, // New column
+          commonColumns.actions,
+          commonColumns.response
+        ];
       case "Hired":
-        return [commonColumns.name, commonColumns.currentCompany, commonColumns.profile, commonColumns.yoe, commonColumns.location, commonColumns.matchingScore, commonColumns.status, commonColumns.actions, commonColumns.response];
+        return [
+          commonColumns.name,
+          commonColumns.currentCompany,
+          commonColumns.profile,
+          commonColumns.experience,
+          commonColumns.location,
+          commonColumns.currentCTC,
+          commonColumns.expectedCTC,
+          commonColumns.matchingScore,
+          commonColumns.scoreDetails,
+          commonColumns.status,
+          commonColumns.applicationDate,
+          commonColumns.cvViewedDate,
+          commonColumns.duplicateCV,
+          commonColumns.actions,
+          commonColumns.response
+        ];
       case "Joined":
         return [
           { key: "name", label: "Candidate name" },
@@ -427,17 +716,6 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
   const applicationColumns = getColumnsForTab(activeTab);
 
   /**
-   * Toggle select all rows
-   */
-  /*   const toggleSelectAll = () => {
-    if (ListSelection.selectedRows.length === data.length) {
-      ListSelection.reset();
-    } else {
-      data.forEach((row) => ListSelection.toggleRow(row));
-    }
-  }; */
-
-  /**
    * Toggle row expansion
    */
   const toggleExpand = (id: string) => {
@@ -460,7 +738,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, ListSelectio
           <>
             <div>
               <span className="font-semibold text-gray-500">Rejected by</span>
-              <p>{row.rejectionAwsScheduleId ?? "--------"}</p> {/* @TODO- Add Updated By */}
+              <p>{row.rejectionAwsScheduleId ?? "--------"}</p>
             </div>
             <div>
               <span className="font-semibold text-gray-500">Reason</span>

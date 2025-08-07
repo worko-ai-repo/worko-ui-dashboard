@@ -21,7 +21,9 @@ export type TabId =
 | 'hire'
 | 'bulk-cv-check'
 | 'referrals'
-| 'invoice-&-payment';
+| 'invoice-&-payment'
+// Admin Dashboard Tabs
+| 'aApplicants';
 
 export interface NavItem {
     id: TabId;

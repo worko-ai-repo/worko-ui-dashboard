@@ -57,7 +57,13 @@ const navigationItems: NavItem[] = [
         id: 'cApplicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
-        dashboardTypes: ['CORPORATE',"ADMIN"],
+        dashboardTypes: ['CORPORATE'],
+    }, 
+    {
+        id: 'aApplicants',
+        label: 'Applicants',
+        icon: ApplicantsIcon,
+        dashboardTypes: ['ADMIN'],
     },
     {
         id: 'interviews',
