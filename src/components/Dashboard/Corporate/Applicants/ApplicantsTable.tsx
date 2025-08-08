@@ -1,39 +1,46 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Eye, NotebookIcon, User } from "lucide-react";
 
 // Component imports
-import CVPreview from "./CVPreview";
-import RejectionForm from "./RejectForm";
-import EvaluatorForm from "./EvaluatorForm";
-import HireNowForm from "./HireNowForm";
+import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
+import RejectionForm from "../../../Shared/ApplicantsPage/RejectForm";
+import EvaluatorForm, { EvaluatorFormProps } from "../../../Shared/ApplicantsPage/EvaluatorForm";
+import HireNowForm from "../../../Shared/ApplicantsPage/HireNowForm";
 import ProgressCircle from "../../../Shared/CircularBar";
-import RequestDocumentModal from "./RequestDocModal";
-import InterviewFeedbackCard from "./InterviewFeedbackCard";
-import Modal from "../Modal";
-import { DynamicTable } from "../DynamicTable";
-import Notes from "./Notes";
+import RequestDocumentModal from "../../../Shared/ApplicantsPage/RequestDocModal";
+import Modal from "../../../Shared/Modal";
+import { DynamicTable } from "../../../Shared/DynamicTable";
+
 
 // Assets and interfaces
-import { email, hireNow, Not_Responding, onHold } from "@Assets";
+import { hireNow, Not_Responding, onHold } from "@Assets";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
-import { applcationType, JobApplicationUpdatePayloadDto } from "./Applicants";
+import { ApplicationListSelectionDto, JobApplicationStatusType, JobApplicationUpdatePayloadDto } from "./Applicants";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { CorporateUserDetail, useAppContext } from "@Context/App.context";
+import { useAppContext } from "@Context/App.context";
+import { CommonCursorPaginationProp } from "src/types/interface/CorporateServices.dto";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Component props interface
 interface ApplicationTableProps {
   activeTab: "All" | "Hired" | "Joined";
   setActiveTab: (tab: "All" | "Hired" | "Joined") => void;
-  selectedRows: string[];
-  setSelectedRows: React.Dispatch<React.SetStateAction<string[]>>;
+  ListSelection: ApplicationListSelectionDto;
   data: JobApplicationDetailsDto[];
   handleUpdate: (payload: JobApplicationUpdatePayloadDto, jobId: string) => void;
   userType: string;
+  Pagination: CommonCursorPaginationProp;
+  isAddEvaluatorModalOpen: boolean;
+  setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  EvaluatorFormProps: EvaluatorFormProps | null;
+  setEvaluatorFormProps: React.Dispatch<React.SetStateAction<EvaluatorFormProps | null>>;
 }
 
-export default function ApplicationTable({ activeTab, setActiveTab, selectedRows, setSelectedRows, data, handleUpdate, userType }: ApplicationTableProps) {
+export default function ApplicationTable({ activeTab, setActiveTab, ListSelection, data, handleUpdate, userType, Pagination, isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen, EvaluatorFormProps, setEvaluatorFormProps }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
@@ -41,21 +48,27 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
     payload: JobApplicationUpdatePayloadDto;
     jobId: string;
   } | null>(null);
-  const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
   const [isHireNowModalOpen, setIsHireNowModalOpen] = useState(false);
   const [isRequestDocModalOpen, setIsRequestDocModalOpen] = useState(false);
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
-  const { userDetails } = useAppContext() as { userDetails: CorporateUserDetail };
+  const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const [pdfViewDetails, setPdfViewDetails] = useState<{
     pdfUri: string | undefined;
-    mode: applcationType;
+    mode: JobApplicationStatusType;
     misData: {
       payload: JobApplicationUpdatePayloadDto;
       jobId: string;
     };
   }>();
+
+  const keyFallbacks = {
+    yoe: ["yoe", "applicantDetails.YOE"],
+    matchingScore: ["matchingScore", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
+  };
+
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
 
   // Common column definitions
   const commonColumns = {
@@ -74,13 +87,14 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
       label: "Profile",
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
-          <span>{row.applicantDetails?.candidateExperience.designation ?? "FRESHER"}</span>
+          <span>{row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}</span>
         </div>
       ),
     },
     yoe: {
       key: "yoe",
       label: "YOE",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>{row.applicantDetails.YOE ?? 0}</span>
@@ -99,6 +113,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
     matchingScore: {
       key: "matchingScore",
       label: "Matching Score",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex justify-center">
           <ProgressCircle
@@ -125,7 +140,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
       label: "Status",
       render: (row: JobApplicationDetailsDto) => {
         // Status color mapping
-        const statusColors: Record<applcationType, string> = {
+        const statusColors: Record<JobApplicationStatusType, string> = {
           APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
           REJECTED: "bg-[#FFD0D0] text-[#D40000]",
           UNDER_EVALUATION: "bg-[#EFEFEF] text-[#616161]",
@@ -137,7 +152,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
           ON_HOLD: "bg-[#FFF3CD] text-[#856404]",
           JOINED: "bg-[#D1E7DD] text-[#0F5132]",
         };
-        const newDisplayStatus: Record<applcationType, string> = {
+        const newDisplayStatus: Record<JobApplicationStatusType, string> = {
           APPLIED: "Pending",
           REJECTED: "Rejected",
           UNDER_EVALUATION: "Evaluation Pending",
@@ -150,11 +165,11 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
           JOINED: "Joined",
         };
 
-        const colorClass = statusColors[row.status as applcationType] ?? "bg-gray-100 text-gray-500";
+        const colorClass = statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
           <div className="flex justify-center">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>{newDisplayStatus[row.status as applcationType]}</span>
+            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>{newDisplayStatus[row.status as JobApplicationStatusType]}</span>
           </div>
         );
       },
@@ -171,12 +186,12 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
               setIsViewCVModalOpen(true);
               setPdfViewDetails({
                 pdfUri: row.applicantDetails.cvAwsS3SignedUrl,
-                mode: row.status as applcationType,
+                mode: row.status as JobApplicationStatusType,
                 misData: {
                   payload: {
                     applicantName: row.applicantDetails.name,
                     emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
-                    status: row.status as applcationType,
+                    status: row.status as JobApplicationStatusType,
                     userId: userDetails ? userDetails?.id : "",
                     userType: userType,
                   },
@@ -186,12 +201,29 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
             }}
             className="flex gap-2 items-center btn-sky">
             <Eye size={16} />
-            View CV
+            View Cv
           </button>
         );
 
         const viewEvaluatorBtn = (
-          <button title="View Evaluation" onClick={() => setIsAddEvaluatorModalOpen(true)} className="flex items-center gap-2 btn-sky">
+          <button
+            title="View Evaluation"
+            onClick={() => {
+              setIsAddEvaluatorModalOpen(true);
+              /*  setEvaluatorFormProps({
+                Defaultvalues: {
+                  jobApplicationId: row.id,
+                  jobId: row.jobId,
+                  jobTitle: row.jobTitle,
+                  companyId: row.companyId,
+                  applicantUserId: [row.applicantDetails.userId],
+                  applicantUserEmail: row.applicantDetails.email,
+                  hrName: userDetails?.name ?? "",
+                  hrCurrentCompanyName: userDetails?.companyId ?? "",
+                },
+              }); */
+            }}
+            className="flex items-center gap-2 btn-sky">
             <Eye size={16} />
             View evaluation
           </button>
@@ -199,7 +231,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
 
         const hireNowBtn = (
           <button title="Hire Now" onClick={() => setIsHireNowModalOpen(true)} className="btn-sky flex gap-2 items-center">
-           <img src={hireNow} alt="hireNow" className="h-[19px] w-[18px]"/>
+            <img src={hireNow} alt="hireNow" className="h-[19px] w-[18px]" />
             Hire Now
           </button>
         );
@@ -253,7 +285,25 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
             return (
               <div className="flex gap-2 justify-center">
                 {viewCvBtn}
-                <button title="Send to Evaluator" onClick={() => setIsAddEvaluatorModalOpen(true)} className="flex items-center gap-2 btn-sky">
+                <button
+                  title="Send to Evaluator"
+                  onClick={() => {
+                    setIsAddEvaluatorModalOpen(true);
+                    setEvaluatorFormProps({
+                      Defaultvalues: {
+                        jobApplicationId: [row.id],
+                        jobId: row.jobId,
+                        applicantUserName: [row.applicantDetails.name],
+                        jobTitle: row.jobTitle,
+                        companyId: row.companyId,
+                        applicantUserId: [row.applicantDetails.userId],
+                        applicantUserEmail: [row.applicantDetails.email],
+                        hrName: userDetails?.fullName,
+                        hrCurrentCompanyName: userDetails?.companyId || "",
+                      },
+                    });
+                  }}
+                  className="flex items-center gap-2 btn-sky">
                   <Eye size={16} />
                   Send to Evaluator
                 </button>
@@ -261,8 +311,8 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
             );
           }
 
-          const statusActions: applcationType[] = ["UNDER_EVALUATION", "PROCESSING_INTERVIEW", "HIRED"];
-          if (statusActions.includes(row.status as applcationType)) {
+          const statusActions: JobApplicationStatusType[] = ["UNDER_EVALUATION", "PROCESSING_INTERVIEW", "HIRED"];
+          if (statusActions.includes(row.status as JobApplicationStatusType)) {
             return (
               <div className="flex gap-2 justify-center">
                 {viewCvBtn}
@@ -380,20 +430,13 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
   /**
    * Toggle select all rows
    */
-  const toggleSelectAll = () => {
-    if (selectedRows.length === data.length) {
-      setSelectedRows([]);
+  /*   const toggleSelectAll = () => {
+    if (ListSelection.selectedRows.length === data.length) {
+      ListSelection.reset();
     } else {
-      setSelectedRows(data.map((row) => row.id));
+      data.forEach((row) => ListSelection.toggleRow(row));
     }
-  };
-
-  /**
-   * Toggle single row selection
-   */
-  const toggleRow = (id: string) => {
-    setSelectedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
-  };
+  }; */
 
   /**
    * Toggle row expansion
@@ -445,13 +488,31 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
   return (
     <>
       {/* Deselect button - only show when rows are selected */}
-      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => setSelectedRows([])}>
+      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${ListSelection.selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => ListSelection.reset()}>
         <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
-        <span>deselect {selectedRows.length} rows</span>
+        <span>deselect {ListSelection.selectedRows.length} rows</span>
       </button>
 
       {/* Main table component */}
-      <DynamicTable columns={applicationColumns} rows={data} selectedRows={selectedRows} expandedRows={expandedRows} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selectedRows.length === data.length} renderExpandedDetails={renderExpandedDetails} enableSelect={activeTab !== "Joined"} />
+      <DynamicTable
+        columns={applicationColumns}
+        rows={sortedData ?? []}
+        selectedRows={ListSelection.selectedRows.map((row) => row.id)}
+        expandedRows={expandedRows}
+        toggleSelectAll={() => ListSelection.toggleSelectAll(data)}
+        toggleRow={(id) => ListSelection.toggleRow(data.find((row) => row.id === id)!)}
+        toggleExpand={toggleExpand}
+        allSelected={ListSelection.getAllSelected(sortedData)}
+        renderExpandedDetails={renderExpandedDetails}
+        enableSelect={activeTab !== "Joined"}
+        onSortChange={onSortChange}
+        pageSize={Pagination.pageSize}
+        setPageSize={Pagination.setPageSize}
+        handlePreviousPage={Pagination.goToPreviousPage}
+        handleNextPage={Pagination.goToNextPage}
+        hasNextPage={Pagination.hasNextPage}
+        hasPrevPage={Pagination.hasPreviousPage}
+      />
 
       {/* Modal components */}
       <Modal
@@ -481,7 +542,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
       </Modal>
 
       <Modal isOpen={isAddEvaluatorModalOpen} onClose={() => setIsAddEvaluatorModalOpen(false)} className="w-[90vw] sm:w-[455px] h-auto">
-        <EvaluatorForm />
+        {EvaluatorFormProps && <EvaluatorForm Defaultvalues={EvaluatorFormProps?.Defaultvalues} />}
       </Modal>
 
       <Modal isOpen={isHireNowModalOpen} onClose={() => setIsHireNowModalOpen(false)} className="w-[90vw] sm:w-[532px] h-full">
@@ -497,7 +558,7 @@ export default function ApplicationTable({ activeTab, setActiveTab, selectedRows
       </Modal>
 
       <Modal isOpen={isNoteModalOpen} onClose={() => setIsNoteModalOpen(false)} className="w-full sm:max-w-4xl h-auto">
-        <Notes />
+        <NotesApp />
       </Modal>
     </>
   );

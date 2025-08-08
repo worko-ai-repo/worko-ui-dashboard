@@ -100,6 +100,8 @@ import clipboard from './svgs/clipboard.svg';
 import inviteTick from './svgs/inviteTick.svg';
 import hireNow from './svgs/hireNow.svg';
 import onHold from './svgs/onHold.svg';
+import sortOrder from './svgs/sortOrder.svg.svg';
+
 export { 
     // Backgrounds
     bg_plexus,
@@ -194,5 +196,6 @@ export {
     Submit,
     inviteTick,
     hireNow,
-    onHold
+    onHold,
+    sortOrder,
 };

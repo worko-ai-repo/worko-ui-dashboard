@@ -4,6 +4,7 @@ export type DashboardType = 'CORPORATE' | 'EMPLOYEE' | 'CANDIDATE' | 'ADMIN';
 
 export type TabId =
 //Candidate Dashboard Tabs
+| 'switch-dashboard'
 | 'profile'
 | 'jobs'
 | 'referral'
@@ -20,12 +21,14 @@ export type TabId =
 | 'hire'
 | 'bulk-cv-check'
 | 'referrals'
-| 'invoice-&-payment';
+| 'invoice-&-payment'
+// Admin Dashboard Tabs
+| 'aApplicants';
 
 export interface NavItem {
     id: TabId;
     label: string;
-    icon: ComponentType<SVGProps<SVGSVGElement>>;
+    icon: ComponentType<SVGProps<SVGSVGElement>> | React.ReactNode; //<i class="fa-solid fa-left-right"></i>
     dashboardTypes?: DashboardType[];
 }
 

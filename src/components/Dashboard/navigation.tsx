@@ -4,16 +4,28 @@ import { ApplicantsIcon, BulkCVIcon, HomeIcon, InterviewIcon, InviteIcon, Invoic
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
     {
+        id: 'switch-dashboard',
+        label: 'Switch Dashboard',
+        icon: <i className="fa-solid fa-left-right"></i>,
+        dashboardTypes: ['CANDIDATE', 'ADMIN'],
+      },
+    {
         id:'profile',
         label:'Profile',
         icon:InterviewIcon,
         dashboardTypes: ['CANDIDATE']
     },
     {
+        id: 'home',
+        label: 'Home',
+        icon: HomeIcon,
+        dashboardTypes: ['CORPORATE']
+    },
+    {
         id: 'jobs',
         label: 'Jobs',
         icon: JobIcon,
-        dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE'],
+        dashboardTypes: ['CORPORATE', 'EMPLOYEE', 'CANDIDATE',"ADMIN"],
     },
     {
         id: 'referral',
@@ -40,20 +52,15 @@ const navigationItems: NavItem[] = [
         icon: HomeIcon,
         dashboardTypes: ['CANDIDATE']
       },
-   /*  {
-        id: 'home',
-        label: 'Home',
-        icon: HomeIcon,
-        dashboardTypes: ['CORPORATE']
-    }, */
+   
     {
         id: 'cApplicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
         dashboardTypes: ['CORPORATE'],
-    },
+    }, 
     {
-        id: 'Aapplicants',
+        id: 'aApplicants',
         label: 'Applicants',
         icon: ApplicantsIcon,
         dashboardTypes: ['ADMIN'],

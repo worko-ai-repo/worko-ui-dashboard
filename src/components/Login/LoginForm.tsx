@@ -109,8 +109,6 @@ const LoginForm = () => {
 				reset(undefined, { keepValues: false });
 				throw new Error(error.message);
 			} else {
-				// Fetch stored user data and check if the user is a corporate user
-				const userType = secureStorage.getItem(SecureStorageKeyEnum.USERTYPE);
 
 				/**
 				 * After successful sign-in, check if the user account is a corporate account.

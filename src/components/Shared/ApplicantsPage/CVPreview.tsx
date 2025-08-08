@@ -1,6 +1,6 @@
 import React from "react";
 import { X, Check, Send, ClipboardCheck } from "lucide-react";
-import { applcationType, JobApplicationUpdatePayloadDto, handleJobApplicationStatusUpdate } from "./Applicants";
+import { JobApplicationStatusType, JobApplicationUpdatePayloadDto, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";//@TODO:Make it generic
 import { useQueryClient } from "@tanstack/react-query";
 
 const sampleCV = "https://www.africau.edu/images/default/sample.pdf";
@@ -12,7 +12,7 @@ interface CVPreviewProps {
   setIsRejectModalOpen?: React.Dispatch<React.SetStateAction<{ payload: { [key: string]: any }; jobId: string } | null>>;
   setIsHireNowModalOpen?: React.Dispatch<React.SetStateAction<boolean>>;
   pdfuri: string;
-  mode: applcationType;
+  mode: JobApplicationStatusType;
   misData: {
     payload: JobApplicationUpdatePayloadDto;
     jobId: string;
@@ -45,7 +45,7 @@ const CVPreview = ({ onClose, onSubmit, setIsAddEvaluatorModal, setIsRejectModal
    * | ON_HOLD               |   1    |  0   |     0      |     0     |    0    |
    * | JOINED                |   0    |  0   |     0      |     0     |    0    |
    */
-  const visibilityConfig: Record<applcationType, Record<string, boolean>> = {
+  const visibilityConfig: Record<JobApplicationStatusType, Record<string, boolean>> = {
     ALL: { reject: false, hire: false, evaluation: false, interview: false, onHold: false },
     APPLIED: { reject: true, hire: true, evaluation: true, interview: true, onHold: true },
     CV_DOWNLOADED: { reject: true, hire: false, evaluation: true, interview: true, onHold: true },

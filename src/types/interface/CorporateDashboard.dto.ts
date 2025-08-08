@@ -1,6 +1,12 @@
+import { JobApplicationStatusType } from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
+
 export interface JobApiResponse {
   data: JobData[];
   pagination: {
+    lastKey?: string;
+    sortOrder?: string;
+    timesQueried?: number;
+    queriedCount?: number;
     count: number;
     pageSize: number;
   };
@@ -110,7 +116,7 @@ export interface CorporateInvite {
 }
 
 export interface JobDetails {
-  id?:string;
+  id?: string;
   jobTitle?: string;
   company?: string;
   offerings?: string;
@@ -146,10 +152,8 @@ export interface JobDetails {
   variableComponent?: number;
 }
 
-
-
 //========================================JOB APPLICATIONS INTERFACES========================================
-export interface JobApplicationDetailsDto   {
+export interface JobApplicationDetailsDto {
   id: string;
   companyId: string;
   jobId: string;
@@ -183,10 +187,10 @@ export interface JobApplicationDetailsDto   {
 }
 
 export interface StatusTracker {
-  userType: 'CAND' | 'ADMIN' | string;
-  newStatus: string;
-  oldStatus: string;
-  actionDate: string;
+  userType: "ADMIN" | "CAND" | string; // you can extend this union as needed
+  newStatus: JobApplicationStatusType;
+  oldStatus: JobApplicationStatusType;
+  actionDate: string; // ISO string
   userId: string;
 }
 

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
-import { DynamicTable } from "../DynamicTable";
+import { DynamicTable } from "../../../Shared/DynamicTable";
 import { Calendar, Eye } from "lucide-react";
-import Modal from "../Modal";
+import Modal from "../../../Shared/Modal";
 import DateTimePicker from "./DateTimePicker/DateTimePicker";
 import ProgressCircle from "../../../Shared/CircularBar";
 import CVPreview from "../Applicants/CVPreview";

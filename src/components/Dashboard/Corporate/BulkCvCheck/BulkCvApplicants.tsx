@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
 import { Eye, FileText, ArrowLeft } from "lucide-react";
-import { DynamicTable, Column } from "../DynamicTable";
+import { DynamicTable, Column } from "../../../Shared/DynamicTable";
 import ProgressCircle from "@Components/Shared/CircularBar";
 import { useQuery } from "@tanstack/react-query";
-import { ResumeScreeningRecordDto } from "src/types/corporateServices.types";
+import { CursorPaginationResumeScreeningRecordsParams, ResumeScreeningRecordDto } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
 import CorporateServiceObj from "../Services/Corporate.service";
+import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
+import SkeletonLoader from "../../../Shared/SkeletonLoader";
 
 interface ApplicantScreeningRecord {
   id: string;
@@ -19,45 +21,49 @@ interface ApplicantScreeningRecord {
   rejectedDate: string | null;
   viewedDate: string | null;
 }
-export default function ApplicantScreeningTable({ BulkResumeId ,onClose }: { BulkResumeId: string,onClose: () => void }) {
+export default function ApplicantScreeningTable({ BulkResumeId, onClose }: { BulkResumeId: string; onClose: () => void }) {
   const { userDetails } = useAppContext();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [applicantsData, setApplicantsData] = useState<ApplicantScreeningRecord[]>([]);
-  const params: {
-    pageSize: string;
-    sortOrder: string;
-    companyId?: string;
-    corporateRecruiterUserId?: string;
-    corporateBulkJdId: string;
-  } = {
-    corporateBulkJdId: BulkResumeId,
-    pageSize: "25",
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const params: Omit<CursorPaginationResumeScreeningRecordsParams, "lastKey"> = {
+    pageSize: pageSize,
     sortOrder: "descending",
+    companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
+    corporateBulkJdId: BulkResumeId, // Use the BulkResumeId prop to filter records
   };
+
   const {
     data,
     isLoading: queryIsJobsLoading,
-    error,
+    hasNextPage,
+    hasPreviousPage,
+    goToNextPage,
+    goToPreviousPage,
     refetch,
-  } = useQuery<{ data: ResumeScreeningRecordDto[] } | null>({
-    queryKey: ["ApplicantScreeningBulkQuery", userDetails.companyId],
-    queryFn: async () => {
-      if (!userDetails.companyId) {
-        return Promise.reject("No Bulk Screening List available for this company.");
-      }
-      let updatedParams = { ...params, companyId: userDetails.companyId };
-      return await CorporateServiceObj.getBulkScreeningResumes(updatedParams);
-    },
-    enabled: !!userDetails.companyId, // only run if companyId exists
+    reset,
+  } = useCursorPagination<ResumeScreeningRecordDto, CursorPaginationResumeScreeningRecordsParams>({
+    queryKey: ["ApplicantScreeningBulkQuery", !!userDetails?.companyId, params],
+    queryFn: CorporateServiceObj.getBulkScreeningResumes,
+    baseParams: params,
+    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
+
+  /**
+   * UseEffect to reset selected rows when the active tab changes
+   */
+  useEffect(() => {
+    reset(); // Reset pagination when active tab changes
+  }, [pageSize]);
 
   // useEffect to transform and set data when API call is successful
   useEffect(() => {
     // console.log("Data from API:", data);
 
-    if (data && Array.isArray(data.data)) {
-      const transformedData: ApplicantScreeningRecord[] = data.data
+    if (data && Array.isArray(data)) {
+      const transformedData: ApplicantScreeningRecord[] = data
         .filter((item) => !!item.cvExtractedParsed) // skip undefined parsed data
         .map((item) => ({
           id: item.id,
@@ -105,6 +111,7 @@ export default function ApplicantScreeningTable({ BulkResumeId ,onClose }: { Bul
               {row.name
                 .split(" ")
                 .map((n: string) => n[0])
+                .slice(0, 3) // limit to max 3 initials
                 .join("")}
             </span>
           </div>
@@ -192,7 +199,13 @@ export default function ApplicantScreeningTable({ BulkResumeId ,onClose }: { Bul
       </div>
     </div>
   );
-
+  if (queryIsJobsLoading) {
+    return (
+      <div className="max-h-screen bg-gray-50 min-w-[60vw] ">
+        <SkeletonLoader showButtons={true} buttonCount={1} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
+      </div>
+    );
+  }
   return (
     <div className="max-h-screen bg-gray-50 ">
       {/* Header Section */}
@@ -239,7 +252,7 @@ export default function ApplicantScreeningTable({ BulkResumeId ,onClose }: { Bul
       </div>
 
       {/* Table Section */}
-      <DynamicTable columns={columns} rows={applicantsData} selectedRows={selectedRows} expandedRows={expandedRows} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selectedRows.length === applicantsData.length} renderExpandedDetails={renderExpandedDetails} enableSelect={true} />
+      <DynamicTable columns={columns} rows={applicantsData} selectedRows={selectedRows} enableSelect={false} allSelected={selectedRows.length === applicantsData.length} pageSize={pageSize} setPageSize={setPageSize} hasNextPage={hasNextPage} hasPrevPage={hasPreviousPage} handleNextPage={goToNextPage} handlePreviousPage={goToPreviousPage} />
     </div>
   );
 }

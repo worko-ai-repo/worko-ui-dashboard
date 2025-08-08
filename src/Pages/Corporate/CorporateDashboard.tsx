@@ -3,8 +3,9 @@ import MainLoader from "@Components/Loader/Loader";
 import { Navigate, useRoutes } from "react-router-dom";
 import PageNotFound from "../errors/404/PageNotFound";
 import DashboardLayout from "@Layouts/Dashboard.layout";
-import SkeletonLoader from "@Components/Dashboard/Corporate/SkeletonLoader";
+import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
+import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 
 // Lazy load components
 const Jobs = lazy(() => import("@Components/Dashboard/Corporate/Job/Jobs"));
@@ -26,7 +27,13 @@ const CorporateDashboard = () => {
       children: [
         {
           index: true,
-          element: <Navigate to="jobs" replace />,
+          path: "home",
+          // element: <Navigate to="jobs" replace />,
+          element: (
+            <Suspense fallback={<SkeletonLoader showHeaderCards={true} showSearchBar={true} showButtons={true} buttonCount={1} showTabs={true} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />}>
+              <CorporateHome />
+            </Suspense>
+          ),
         },
         {
           path: "jobs",
@@ -47,7 +54,7 @@ const CorporateDashboard = () => {
               path: "noID",
               element: (
                 <Suspense fallback={<MainLoader />}>
-                  <JobSelectorModal isOpen={true} onClose={() =>null} path="APPLICATIONS" />
+                  <JobSelectorModal isOpen={true} onClose={() => null} path="APPLICATIONS" />
                 </Suspense>
               ),
             },

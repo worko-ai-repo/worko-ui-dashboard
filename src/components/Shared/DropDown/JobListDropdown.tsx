@@ -16,18 +16,21 @@ export type DropDownSelectedJobData = {
 type JobListDropdownProps = {
   onSelect: (job: DropDownSelectedJobData) => void;
   placeholder?: string;
+  dashboard?: "CORPORATE" | "ADMIN";
 };
 
-const fetchJobs = async (search: string): Promise<DropDownSelectedJobData[]> => {
+const fetchJobs = async (search: string, dashboard: "CORPORATE" | "ADMIN" = "CORPORATE"): Promise<DropDownSelectedJobData[]> => {
   const userCognitoDetails = secureStorage.getItem<any>(SecureStorageKeyEnum.COGNITOUSERDETAILS);
   const userType = userCognitoDetails?.["cognito:groups"]?.[0];
 
   const payload = {
     pageSize: 25,
     sortOrder: "desc",
-    dashboard: "CORPORATE",
-    userRole: userType,
-    companyId: secureStorage.getItem<any>(SecureStorageKeyEnum.CORPORATECOMPANYID)?.companyId || secureStorage.getItem<any>(SecureStorageKeyEnum.LOGINDETAILS)?.companyId,
+    dashboard: dashboard,
+    ...(dashboard !== "ADMIN" && {
+      userRole: userType,
+      companyId: secureStorage.getItem<any>(SecureStorageKeyEnum.CORPORATECOMPANYID)?.companyId || secureStorage.getItem<any>(SecureStorageKeyEnum.LOGINDETAILS)?.companyId,
+    }),
     searchText: search.trim(),
   };
 
@@ -35,14 +38,14 @@ const fetchJobs = async (search: string): Promise<DropDownSelectedJobData[]> => 
   return response?.data || [];
 };
 
-const JobListDropdown: React.FC<JobListDropdownProps> = ({ onSelect, placeholder = "Search jobs..." }) => {
+const JobListDropdown: React.FC<JobListDropdownProps> = ({ onSelect, placeholder = "Search jobs...", dashboard = "CORPORATE" }) => {
   const [searchText, setSearchText] = useState("");
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const { data: jobs = [], isLoading } = useQuery({
     queryKey: ["jobsPopup", searchText],
-    queryFn: () => fetchJobs(searchText),
+    queryFn: () => fetchJobs(searchText, dashboard),
     enabled: true,
     staleTime: 5 * 60 * 1000,
   });
