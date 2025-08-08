@@ -19,13 +19,11 @@ const OnHoldSection: React.FC<OnHoldSectionProps> = ({
   onDropdownToggle
 }) => {
   const onHoldReasons = [
-    'Waiting for additional documentation',
-    'Need to verify references',
-    'Budget approval pending',
-    'Position requirements under review',
-    'Candidate requested more time to decide',
-    'Internal team discussion needed',
-    'Waiting for background check completion',
+    'Profile is a potential fit, but position is currently on hold',
+    'Awaiting additional openings/team approval',
+    'Role requirements may change; keeping candidate in consideration',
+    'Good profile, but stronger candidates in process',
+    'Internal business priorities shifted temporarily',
     'Other'
   ];
 

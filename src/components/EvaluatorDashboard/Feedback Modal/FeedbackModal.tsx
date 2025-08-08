@@ -6,7 +6,8 @@ import RejectionSection from './components/RejectionSection';
 import OnHoldSection from './components/OnHoldSection';
 import { ApplicationDetails, CandidateDetails, EvaluationRequest } from 'src/types';
 import { SubmitEvaluationPayload, submitEvaluationResponse } from '@Services/EvaluationService.service';
-
+import { getToastOptions } from "@Utils/Toast.utils";
+import { toast } from "react-toastify";
 interface FeedbackModalProps {
     onClose: () => void;
     candidateId?: string;
@@ -78,12 +79,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     const handleFinalSubmit = async () => {
         if (!isNextStepValid()) {
-            alert('Please fill all required fields');
+            toast.error('Please fill all required fields',getToastOptions({}));
             return;
         }
 
         if (!selectedRequest || !selectedCandidateDetails || !applicationDetails) {
-            alert('Missing data to submit feedback');
+            toast.error('Missing data to submit feedback',getToastOptions({}));
             return;
         }
 
@@ -117,7 +118,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     comment,
                     htmlComment,
                 } as SubmitEvaluationPayload);
-                alert('Rejection submitted successfully!');
+                toast.success('Rejection submitted successfully!',getToastOptions({}));
             } else if (nextStep === 'hold') {
                 await submitEvaluationResponse({
                     ...basePayload,
@@ -126,7 +127,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     comment,
                     htmlComment,
                 } as SubmitEvaluationPayload);
-                alert('Candidate put on hold successfully!');
+                toast.success('Candidate put on hold successfully!',getToastOptions({}));
             }
             else if (nextStep === 'schedule') {
                 const scheduledInterviewDetails = scheduledSlots
@@ -139,14 +140,14 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         endTime: formatTime(slot.endTime),
                         actionDate: new Date().toISOString(),
                     }));
-
+                    
                 await submitEvaluationResponse({
                     ...basePayload,
                     status: 'INTERVIEW_SCHEDULED',
                     scheduledInterviewDetails,
                 } as SubmitEvaluationPayload);
 
-                alert('Interview scheduled successfully!');
+                toast.success('Interview scheduled successfully!',getToastOptions({}));
             }
 
             if (onSubmitComplete) {
@@ -165,7 +166,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
             onClose();
         } catch (error) {
-            alert('Failed to submit feedback. Please try again.');
+            toast.error('Failed to submit feedback. Please try again.',getToastOptions({}));
             console.error('Submission error:', error);
         }
     };

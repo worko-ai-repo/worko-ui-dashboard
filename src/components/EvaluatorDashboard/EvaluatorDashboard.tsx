@@ -1,20 +1,24 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Routes, Route, useParams, Navigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import MainContent from './MainContent';
-import Modal from '@Components/Dashboard/Corporate/Modal';
+import Modal from '@Components/Shared/Modal'; 
 import FeedbackModal from './Feedback Modal/FeedbackModal';
 import { EvaluationRequest, EvaluationDetails, CandidateDetails, EvaluationRequestDetails, ApplicationDetails } from 'src/types';
 import { fetchEvaluationRequests, fetchEvaluationDetails, fetchCandidateDetails, fetchApplicationDetails, getEvaluationResponse, EvaluationResponse } from '../../../src/services/EvaluationService.service';
 import { useSearchParams } from 'react-router-dom';
 import ViewFeedbackModal from './ViewFeedbackModal';
-
+import { getToastOptions } from "@Utils/Toast.utils";
+import { toast } from "react-toastify";
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const evaluatorEmail = searchParams.get('evaluatorEmail') || '';
+  // const evaluatorEmail = searchParams.get('evaluatorEmail') || '';
+  const jobApplicationId = searchParams.get('jobApplicationId') || '';
+  const evaluationRequestId = searchParams.get('evaluationRequestId') || '';
   const [selectedCandidateId, setSelectedCandidateId] = useState<string>('1');
 
+  // console.log(jobApplicationId,evaluationRequestId)
   // Modal states
 
   const [details, setDetails] = useState<EvaluationDetails | null>(null);
@@ -24,6 +28,7 @@ const EvaluatorView: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<EvaluationRequest | null>(null);
   const [selectedCandidateDetails, setSelectedCandidateDetails] = useState<CandidateDetails | null>(null);
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
+  const [evaluatorEmail, setevaluatorEmail] = useState<string>();
 
   //View Feedback Modal states
   const [viewFeedbackData, setViewFeedbackData] = useState<EvaluationResponse | null>(null);
@@ -34,7 +39,17 @@ const EvaluatorView: React.FC = () => {
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
 
 
-
+    useEffect(() => {
+    const getEvaluationDetails = async () => {
+      try {
+        const details = await fetchEvaluationDetails(jobApplicationId,evaluationRequestId);
+        setevaluatorEmail(details.evaluatorDetails.email)
+      } catch (err) {
+        console.error('Error fetching evaluation details:', err);
+      } 
+    }
+    getEvaluationDetails()
+  }, [])
   // Dummy candidate list
   // const candidates: Candidate[] = [
   //   {
@@ -111,7 +126,7 @@ const EvaluatorView: React.FC = () => {
 
   const handleViewFeedback = async () => {
     if (!selectedRequest?.evaluationResponseId) return;
-
+    
     try {
       const feedback = await getEvaluationResponse(
         selectedRequest.jobApplicationId,
@@ -120,7 +135,7 @@ const EvaluatorView: React.FC = () => {
       setViewFeedbackData(feedback);
       setIsViewFeedbackOpen(true);
     } catch (err) {
-      alert("Failed to fetch feedback");
+      toast.error("Failed to fetch feedback");
       console.error(err);
     }
   };
@@ -131,8 +146,9 @@ const EvaluatorView: React.FC = () => {
   };
 
   // 1. Declare once
-  const refreshRequests = async () => {
+  const refreshRequests =  useCallback(async() => {
     try {
+      if (!evaluatorEmail) return;
       const data = await fetchEvaluationRequests(evaluatorEmail);
       setRequests(data);
       if (data.length > 0) {
@@ -141,7 +157,7 @@ const EvaluatorView: React.FC = () => {
     } catch (err) {
       console.error('Failed to fetch requests:', err);
     }
-  };
+  }, [evaluatorEmail]); // <- Add evaluatorEmail as dependency
 
   // 2. Initial fetch on email load
   useEffect(() => {
@@ -183,7 +199,7 @@ const EvaluatorView: React.FC = () => {
         const candidateEmail = selectedRequest.applicantUserEmail;
         if (candidateEmail) {
           const candidate = await fetchCandidateDetails(candidateEmail);
-          console.log(candidate)
+          // console.log(candidate)
           if (candidate.length > 0) {
             setSelectedCandidateDetails(candidate[0]);
           }
@@ -322,7 +338,6 @@ const EvaluatorView: React.FC = () => {
         isOpen={isViewCVModalOpen}
         onClose={() => setIsViewCVModalOpen(false)}
         className="w-[90vw] sm:max-w-4xl h-full"
-        fullHeight
       >
         <div className="w-full h-full flex flex-col gap-4 p-4">
           {/* CV Header */}

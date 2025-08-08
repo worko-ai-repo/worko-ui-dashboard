@@ -19,13 +19,15 @@ const RejectionSection: React.FC<RejectionSectionProps> = ({
   onDropdownToggle
 }) => {
   const rejectionReasons = [
-    'Skills not matching job requirements',
-    'Lack of relevant experience',
-    'Communication issues during interview',
-    'Cultural fit concerns',
-    'Salary expectations too high',
-    'Technical assessment performance',
-    'Availability/scheduling conflicts',
+    'Profile does not match the required skills or experience',
+    'Relevant industry/domain experience not founde',
+    'Academic qualifications do not meet role requirements',
+    'Overqualified for this position',
+    'Career gap(s) do not meet policy criteria',
+    'Stability / Frequent job change',
+    'Role already filled/position closed',
+    'Already in process with another candidate',
+    'Salary expectations not aligned with role',
     'Other'
   ];
 

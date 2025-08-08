@@ -6,7 +6,7 @@ import ProtectedRoute from "@Services/SessionValidator.service";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import AdminDashboard from "@Pages/WorkoAdmin/AdminDashboard";
 
-const EvaluatorDashboard = lazy(() => import('@Components/EvaluatorDashboard/EvaluatorDashboard'));
+const EvaluatorDashboard = lazy(() => import("@Components/EvaluatorDashboard/EvaluatorDashboard"));
 const CorporateDashboard = lazy(() => import("@Pages/Corporate/CorporateDashboard"));
 const PageNotFound = lazy(() => import("@Pages/errors/404/PageNotFound"));
 const JobCardGrid = lazy(() => import("@Pages/test"));
@@ -25,9 +25,7 @@ const AppRoutes = createBrowserRouter(
         },
         {
           path: "test/*",
-          element: (
-            <JobCardGrid />
-          ),
+          element: <JobCardGrid />,
         },
         {
           path: "corporate/*",
@@ -49,7 +47,7 @@ const AppRoutes = createBrowserRouter(
           path: "candidate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN,UserRole.GENERAL_USER]} element={<CandidateDashboard />} />
+              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<CandidateDashboard />} />
             </Suspense>
           ),
         },

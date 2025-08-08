@@ -4,12 +4,14 @@ import { CandidateDetails, EvaluationRequestDetails, SocialLinks} from 'src/type
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import CognitoServiceObj from '@Utils/Cognito.utils';
 import { useEffect,useState } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation,useSearchParams } from 'react-router-dom';
 import { evaluationRequest } from '@AssetsFolder/assets';
-import {fetchCandidateSocial} from "@Services/EvaluationService.service"
+import {fetchCandidateSocial, fetchEvaluationDetails} from "@Services/EvaluationService.service"
 import { jwtDecode } from 'jwt-decode';
 import { fetchAuthSession } from '@aws-amplify/auth';
-
+import { getToastOptions } from "@Utils/Toast.utils";
+import { toast } from "react-toastify";
+import { useAppContext } from 'lib-worko-ui';
 
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
@@ -19,8 +21,8 @@ interface MainContentProps {
   onViewFeedback: () => void;
   onViewVideo: () => void
 }
-
-const handleLogout = async () => {
+  
+  const handleLogout = async () => {
   try {
     await CognitoServiceObj.handleSignOut();
     sessionStorage.clear();
@@ -40,25 +42,31 @@ const MainContent: React.FC<MainContentProps> = ({
 }) => {
 
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
+  const [evaluatorEmail, setEvaluatorEmail] = useState<string>('');
   const location = useLocation();
-
+  const [searchParams] = useSearchParams();
+  const jobApplicationId = searchParams.get('jobApplicationId') || '';
+  const evaluationRequestId = searchParams.get('evaluationRequestId') || '';
 
   useEffect(() => {
     const fetchSocialLinks = async () => {
-    const accessToken = CognitoServiceObj.getAccessToken();
-
+    // const {isLoggedIn} = useAppContext()
+    
+    const accessToken = CognitoServiceObj.getAccessToken()
     if (!accessToken) {
-      alert("No session found please login using the verified link");
+      toast.error("No session found please login using the verified link",getToastOptions({}));
       // window.location.href = 'https://worko.ai/';
-      const paramEmail = window.location.search.split("=")[1]
-      window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
+      // const paramEmail = window.location.search.split("=")[1]
+      //@TODO remove v0
+      // window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
+      window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
       return;
     }
 
     if (EvaluationRequestDetails.email) {
       try {
         const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
-        const filteredSocialLinks = {};
+        const filteredSocialLinks:any = {};
     Object.entries(data[0]).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         filteredSocialLinks[key] = value;
@@ -76,46 +84,122 @@ const MainContent: React.FC<MainContentProps> = ({
   fetchSocialLinks();
 }, [location.search,EvaluationRequestDetails]);
 
-  useEffect(()=>{
-    const checkSession = async () => {
-      try {
-        const session = await fetchAuthSession();
-
-        if (session?.tokens?.idToken) {
-          const token = session.tokens.idToken.toString();
-          const payload = JSON.parse(atob(token.split('.')[1]));
-            
-          const tokenEmail = encodeURIComponent(payload.email)
-          const paramEmail = window.location.search.split("=")[1]
-
-          if(tokenEmail !== paramEmail){
-            alert('email does not match with the current session please login again');
-                await CognitoServiceObj.handleSignOut();
-                sessionStorage.clear();
-            //  window.location.href = 'https://worko.ai/';
-            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
-          }
-        }
-      } catch (err) {
-        console.log(err);
+useEffect(() => {
+  const getEvaluationDetails = async () => {
+    try {
+      const details = await fetchEvaluationDetails(jobApplicationId, evaluationRequestId);
+      if (details?.evaluatorDetails?.email) {
+        setEvaluatorEmail(encodeURIComponent(details.evaluatorDetails.email.trim().toLowerCase()));
       }
-    };
+    } catch (err) {
+      console.error('Error fetching evaluation details:', err);
+      // await CognitoServiceObj.handleSignOut();
+      //     sessionStorage.clear();
+      //     window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+    }
+  };
+  getEvaluationDetails();
+}, [jobApplicationId, evaluationRequestId]);
 
-    checkSession();
-  },[])
+  
+  useEffect(() => {
+  const checkSession = async () => {
+    if (!evaluatorEmail) return;
+
+    try {
+      const session = await fetchAuthSession();
+      if (session?.tokens?.idToken) {
+        const token = session.tokens.idToken.toString();
+        const payload = JSON.parse(atob(token.split('.')[1]));
+
+        const tokenEmail = encodeURIComponent(payload.email.trim().toLowerCase());
+
+        console.log("Token Email:", tokenEmail);
+        console.log("Evaluator Email:", evaluatorEmail);
+
+        if (tokenEmail !== evaluatorEmail) {
+          toast.error(
+            'Email does not match the current session. Please login again.',
+            getToastOptions({})
+          );
+          console.log("not matching")
+          // await CognitoServiceObj.handleSignOut();
+          // sessionStorage.clear();
+          // window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+        }
+      }
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  checkSession();
+}, [evaluatorEmail, jobApplicationId, evaluationRequestId]);
+
+
 if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
   return (
-    <div className="flex items-center justify-center w-full h-screen bg-gray-100">
-      <div className="flex flex-col items-center text-center max-w-md w-full p-8 bg-white shadow-lg rounded-xl">
-        <FileText className="w-12 h-12 text-gray-400 mb-4" />
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">No Data Available</h2>
-        <p className="text-base text-gray-600">Looks like there are no candidates to evaluate.</p>
+    <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-8 sm:py-12 bg-gradient-to-br from-white-50 to-indigo-100 rounded-2xl relative overflow-hidden w-full h-screen bg-gray-100">
+      {/* Main Message */}
+<div className="flex flex-col justify-center items-center text-center w-full max-w-3xl min-h-[600px] p-8 bg-white shadow-lg rounded-xl">
+      <div className="text-center max-w-sm sm:max-w-lg mb-8 sm:mb-12">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
+          You're all caught up!
+        </h2>
+        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+          Right now you have no CVs to evaluate, or you've already evaluated all pending applications.
+        </p>
       </div>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 w-full max-w-xs sm:max-w-lg">
+        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-gray-800">All Evaluated</p>
+              <p className="text-xs text-gray-500">Great job!</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-gray-800">Queue Empty</p>
+              <p className="text-xs text-gray-500">No pending CV to review</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="text-center">
+        <div className="flex items-center justify-center space-x-2 text-gray-500 mb-3 sm:mb-4">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <span className="text-xs sm:text-sm">Perfect time for a coffee break!</span>
+        </div>
+        
+        <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
+          New applications will appear here automatically when they're ready for review.
+        </p>
+        
+      </div>
+    </div>
     </div>
   );
 }
-
-
 
   return (
     <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
@@ -179,7 +263,7 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
               {
                 Object.entries(socialLinks).length > 0 ? (
                   Object.entries(socialLinks).map(([key, urls]) =>
-                    Array.isArray(urls) && urls.length > 0 && (
+                    Array.isArray(urls) && urls.length > 0 ? (
                       <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
                         <a
                           href={urls[0]}
@@ -187,10 +271,12 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {toTitleCase(key)}
+                          {toTitleCase(key) || "NA"}
                         </a>
                       </div>
-                    )
+                    ):(
+                  <div key={key} className="mb-4">N/A</div>
+                )
                   )
                 ) : (
                   <div>N/A</div>
