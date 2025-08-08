@@ -2,7 +2,8 @@ import React from 'react';
 import { Users, FileText } from 'lucide-react';
 import { Candidate } from 'src/types/index';
 import { toTitleCase } from "@Utils/Titlecase.utils";
-
+import { Menu, X, ChevronDown, LogOut, User } from "lucide-react";
+import CognitoServiceObj from '@Utils/Cognito.utils';
 interface SidebarProps {
   candidates: Candidate[];
   selectedCandidateId: string;
@@ -18,9 +19,20 @@ const Sidebar: React.FC<SidebarProps> = ({
   userName,
   companyLogo
 }) => {
+  
+  const handleLogout = async () => {
+  try {
+    await CognitoServiceObj.handleSignOut();
+    sessionStorage.clear();
+    window.location.href = 'https://worko.ai/';
+  } catch (err) {
+    console.error('Logout failed', err);
+  }
+};
+
   return (
-    <div className="w-64 bg-[#316BFF] text-white h-full overflow-hidden rounded-tr-xl rounded-br-xl">
-      <div className="p-4">
+    <div className="w-64 bg-[#316BFF] text-white h-full flex flex-col overflow-hidden rounded-tr-xl rounded-br-xl">
+      <div className="p-4 flex-1 overflow-auto">
         {/* User Profile Section */}
         <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-indigo-700/50">
           <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
@@ -45,7 +57,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="space-y-2">
           {candidates.map((candidate) => {
             const isSelected = selectedCandidateId === candidate.id;
-            console.log('Candidate:', candidate.id, 'Selected ID:', selectedCandidateId, 'isSelected:', isSelected)
+            // console.log('Candidate:', candidate.id, 'Selected ID:', selectedCandidateId, 'isSelected:', isSelected)
             return (
               <div
                 key={candidate.id}
@@ -62,12 +74,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                       className={`text-sm truncate font-semibold ${
                         isSelected ? 'text-slate-800' : 'text-white'
                       }`}
-                      title={candidate.email}
+                      title={candidate.applicantName || candidate.email}
                     >
-                      {candidate.email.length > 25
-                        ? `${candidate.email.slice(0, 22)}...`
-                        : candidate.email}
+                      {(candidate.applicantName || candidate.email).length > 25
+                        ? `${(candidate.applicantName || candidate.email).slice(0, 22)}...`
+                        : candidate.applicantName || candidate.email}
                     </div>
+
                     <div
                       className={`text-xs mt-1 ${
                         isSelected ? 'text-slate-500' : 'text-indigo-200'
@@ -93,6 +106,13 @@ const Sidebar: React.FC<SidebarProps> = ({
             );
           })}
         </div>
+      </div>
+      <div className="border-t border-white/20 pt-4 hover:text-red-600 pb-3">
+        <button onClick={handleLogout} className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 rounded"
+            aria-label="Logout">
+              <p>Logout</p>
+            <LogOut className="cursor-pointer self-center" />
+        </button>
       </div>
     </div>
   );

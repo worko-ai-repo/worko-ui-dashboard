@@ -4,8 +4,15 @@ export interface Candidate {
   email: string;
   sentTime: string;
   isNew: boolean;
+  applicantName:string;
 }
 
+export interface SocialLinks {
+  linkedin?: string[];
+  github?: string[];
+  twitter?: string[];
+  portfolio?: string[];
+}
 export interface RouteParams {
   companyId: string;
   applicationId: string;
@@ -27,6 +34,7 @@ export interface EvaluationRequest {
     name: string;
     email: string;
   };
+  applicantName:string;
   createdByUserId?:string;
   createdByCorporateUserId?:string;
   evaluationResponseId?:string;
@@ -142,5 +150,6 @@ export interface EvaluationRequestDetails {
   matchingScore?: number;
   scoreDetails?: ScoreDetail[] | string;
   evaluationResponseId?:string;
+  email?: string;
 }
 

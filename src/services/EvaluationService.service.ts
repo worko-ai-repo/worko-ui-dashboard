@@ -95,6 +95,15 @@ export const fetchCandidateDetails = async (email: string): Promise<any> => {
   return response!;
 };
 
+export const fetchCandidateSocial = async (email: string): Promise<any> => {
+  const url = `${APP_API_URI}/user/${email}/socialprofile`;
+
+  const { response, error } = await httpServiceObj.get<any>(url, true, {}, true);
+
+  if (error) throw error;
+  return response!;
+};
+
 export const fetchApplicationDetails = async (
   jobApplicationId: string
 ): Promise<any> => {
