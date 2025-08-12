@@ -67,12 +67,12 @@ const MainContent: React.FC<MainContentProps> = ({
       try {
         const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
         const filteredSocialLinks:any = {};
-    Object.entries(data[0]).forEach(([key, value]) => {
+      Object.entries(data[0]).forEach(([key, value]) => {
       if (Array.isArray(value)) {
         filteredSocialLinks[key] = value;
       }
     });
-
+    console.log(filteredSocialLinks)
     setSocialLinks(filteredSocialLinks);
       } catch (error) {
         console.error('Fetch error:', error);
@@ -82,7 +82,7 @@ const MainContent: React.FC<MainContentProps> = ({
   };
 
   fetchSocialLinks();
-}, [location.search,EvaluationRequestDetails]);
+}, [location.search,EvaluationRequestDetails.email]);
 
 useEffect(() => {
   const getEvaluationDetails = async () => {
@@ -262,7 +262,7 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
               <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-slate-700">
               {
                 Object.entries(socialLinks).length > 0 ? (
-                  Object.entries(socialLinks).map(([key, urls]) =>
+                  Object.entries(socialLinks).map(([key, urls]) => 
                     Array.isArray(urls) && urls.length > 0 ? (
                       <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
                         <a
@@ -271,15 +271,13 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
                           rel="noopener noreferrer"
                           className="text-blue-600 hover:underline"
                         >
-                          {toTitleCase(key) || "NA"}
+                          {toTitleCase(key)}
                         </a>
                       </div>
-                    ):(
-                  <div key={key} className="mb-4">N/A</div>
-                )
+                    ) : null 
                   )
                 ) : (
-                  <div>N/A</div>
+                  <div className="text-gray-500 text-sm">N/A</div>
                 )
               }
             </div>

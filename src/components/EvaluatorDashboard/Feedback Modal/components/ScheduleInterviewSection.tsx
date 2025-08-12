@@ -33,7 +33,7 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
       ...currentSlot,
       duration,
       endTime: newEndTime,
-      timeSlot: newTimeSlot,
+      timeSlot: duration,
     });
   };
 
@@ -45,17 +45,17 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
     });
   };
 
-  const handleTimeSliderChange = (start: number) => {
-    const durationHours = currentSlot.duration === "30 mins" ? 0.5 : currentSlot.duration === "45 mins" ? 0.75 : currentSlot.duration === "1 hour" ? 1 : 1.5;
-    const end = start + durationHours;
-    const newTimeSlot = `From ${formatTime(start)} to ${formatTime(end)}`;
-    onScheduledSlotChange(availabilityIndex - 1, {
-      ...currentSlot,
-      startTime: start,
-      endTime: end,
-      timeSlot: newTimeSlot,
-    });
-  };
+  // const handleTimeSliderChange = (start: number) => {
+  //   const durationHours = currentSlot.duration === "30 mins" ? 0.5 : currentSlot.duration === "45 mins" ? 0.75 : currentSlot.duration === "1 hour" ? 1 : 1.5;
+  //   const end = start + durationHours;
+  //   const newTimeSlot = `From ${formatTime(start)} to ${formatTime(end)}`;
+  //   onScheduledSlotChange(availabilityIndex - 1, {
+  //     ...currentSlot,
+  //     startTime: start,
+  //     endTime: end,
+  //     // timeSlot: newTimeSlot,
+  //   });
+  // };
 
   const formatTime = (time: number) => {
     const hours = Math.floor(time);
@@ -194,7 +194,7 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
               else if (durationHours === 1.5) durationStr = "1.30 hour";
               else durationStr = `${durationHours} hrs`;
 
-              newSlot.duration = durationStr;
+              // newSlot.duration = durationStr;
               newSlot.timeSlot = `From ${formatTime(newSlot.startTime)} to ${formatTime(newSlot.endTime)}`;
 
               onScheduledSlotChange(availabilityIndex - 1, newSlot);

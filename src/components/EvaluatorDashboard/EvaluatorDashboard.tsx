@@ -339,28 +339,29 @@ const EvaluatorView: React.FC = () => {
         onClose={() => setIsViewCVModalOpen(false)}
         className="w-[90vw] sm:max-w-4xl h-full"
       >
-        <div className="w-full h-full flex flex-col gap-4 p-4">
-          {/* CV Header */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-gray-800">CV</h2>
-            <button
-              onClick={() => setIsViewCVModalOpen(false)}
-              className="text-sm font-medium text-red-500 hover:underline"
-            >
-              Close
-            </button>
-          </div>
+        <div className="w-full h-full flex flex-col gap-4 p-4 bg-white">
+    {/* CV Header */}
+    <div className="flex items-center justify-between">
+      <h2 className="text-lg font-semibold text-gray-800">CV</h2>
+      <button
+        onClick={() => setIsViewCVModalOpen(false)}
+        className="text-sm font-medium text-red-500 hover:underline"
+      >
+        Close
+      </button>
+    </div>
 
-          {/* CV Viewer */}
-          <div className="flex-1 border-2 border-gray-300 rounded-xl overflow-hidden">
-            <iframe
-              src={selectedCandidateDetails?.cvAwsS3SignedUrl}
-              title="CV Preview"
-              className="w-full h-full"
-            />
-          </div>
-        </div>
-      </Modal>
+    {/* CV Viewer */}
+    <div className="flex-1 border-2 border-gray-300 rounded-xl overflow-hidden">
+      <iframe
+        src={selectedCandidateDetails?.cvAwsS3SignedUrl}
+        title="CV Preview"
+        className="w-full h-[calc(100vh-100px)]"
+        style={{ border: 'none' }}
+      />
+    </div>
+  </div>
+</Modal>
 
 
 
