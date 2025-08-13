@@ -132,6 +132,7 @@ const EvaluatorView: React.FC = () => {
         selectedRequest.jobApplicationId,
         selectedRequest.evaluationResponseId
       );
+      console.log(feedback.status)
       setViewFeedbackData(feedback);
       setIsViewFeedbackOpen(true);
     } catch (err) {
@@ -145,19 +146,45 @@ const EvaluatorView: React.FC = () => {
     console.log('Viewing video for candidate:', selectedCandidateId);
   };
 
-  // 1. Declare once
-  const refreshRequests =  useCallback(async() => {
-    try {
-      if (!evaluatorEmail) return;
-      const data = await fetchEvaluationRequests(evaluatorEmail);
-      setRequests(data);
-      if (data.length > 0) {
-        setSelectedRequest(data[0]);
+
+const refreshRequests = useCallback(async () => {
+  try {
+    if (!evaluatorEmail) return;
+    const rawData = await fetchEvaluationRequests(evaluatorEmail);
+    const filteredRequests: typeof rawData = [];
+    for (const request of rawData) {
+      if (!request.evaluationResponseId || !request.jobApplicationId) {
+        filteredRequests.push(request);
+        continue;
       }
-    } catch (err) {
-      console.error('Failed to fetch requests:', err);
+      try {
+        const feedback = await getEvaluationResponse(
+          request.jobApplicationId,
+          request.evaluationResponseId
+        );
+        const status = feedback?.status;
+        // Exclude only ON_HOLD or REJECTED
+        if (status !== "ON_HOLD" && status !== "REJECTED") {
+          filteredRequests.push(request);
+        }
+      } catch (err) {
+        console.error(`Failed to fetch feedback for request ID ${request.id}`, err);
+        filteredRequests.push(request);
+      }
     }
-  }, [evaluatorEmail]); // <- Add evaluatorEmail as dependency
+
+    setRequests(filteredRequests);
+
+    if (filteredRequests.length > 0) {
+      setSelectedRequest(filteredRequests[0]);
+    }
+
+  } catch (err) {
+    console.error("Failed to fetch requests:", err);
+  }
+}, [evaluatorEmail]);
+
+
 
   // 2. Initial fetch on email load
   useEffect(() => {
@@ -306,6 +333,7 @@ const EvaluatorView: React.FC = () => {
         onViewFeedback={handleViewFeedback}
         onViewCV={handleViewCV}
         onViewVideo={handleViewVideo}
+        requests = {requests}
       />
 
       {/*Feedback Modal*/}
@@ -343,12 +371,12 @@ const EvaluatorView: React.FC = () => {
     {/* CV Header */}
     <div className="flex items-center justify-between">
       <h2 className="text-lg font-semibold text-gray-800">CV</h2>
-      <button
+      {/* <button
         onClick={() => setIsViewCVModalOpen(false)}
         className="text-sm font-medium text-red-500 hover:underline"
       >
         Close
-      </button>
+      </button> */}
     </div>
 
     {/* CV Viewer */}

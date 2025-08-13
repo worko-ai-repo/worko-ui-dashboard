@@ -36,11 +36,12 @@ const Sidebar: React.FC<SidebarProps> = ({
         {/* User Profile Section */}
         <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-indigo-700/50">
           <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
-            <img
+            {/* <img
               src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
-            />
+            /> */}
+            <User className="w-6 h-6 text-white cursor-pointer" />
           </div>
           <div>
             <div className="font-medium text-lg">{toTitleCase(userName)}</div>
@@ -71,22 +72,26 @@ const Sidebar: React.FC<SidebarProps> = ({
                 <div className="flex items-center justify-between">
                   <div className="flex flex-col min-w-0 text-left">
                     <div
-                      className={`text-sm truncate font-semibold ${
+                      className={`text-sm truncate font-semibold w-40 ${
                         isSelected ? 'text-slate-800' : 'text-white'
                       }`}
-                      title={candidate.applicantName || candidate.email}
+                      title={toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     >
-                      {(candidate.applicantName || candidate.email).length > 25
-                        ? `${(candidate.applicantName || candidate.email).slice(0, 22)}...`
-                        : candidate.applicantName || candidate.email}
+                      {toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     </div>
-
                     <div
                       className={`text-xs mt-1 ${
                         isSelected ? 'text-slate-500' : 'text-indigo-200'
                       }`}
                     >
-                      {candidate.sentTime}
+                      {new Date(candidate.sentTime).toLocaleString(undefined, {
+                        year: 'numeric',
+                        month: 'numeric',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: 'numeric',
+                        hour12: true
+                      })}
                     </div>
                   </div>
 
@@ -108,7 +113,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
       <div className="border-t border-white/20 pt-4 hover:text-red-600 pb-3">
-        <button onClick={handleLogout} className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 rounded"
+        <button onClick={handleLogout} className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 px-4 rounded"
             aria-label="Logout">
               <p>Logout</p>
             <LogOut className="cursor-pointer self-center" />

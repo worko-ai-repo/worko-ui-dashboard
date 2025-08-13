@@ -20,6 +20,7 @@ interface MainContentProps {
   onViewCV: () => void;
   onViewFeedback: () => void;
   onViewVideo: () => void
+  requests:any[]
 }
   
   const handleLogout = async () => {
@@ -38,7 +39,8 @@ const MainContent: React.FC<MainContentProps> = ({
   onSubmitFeedback,
   onViewCV,
   onViewFeedback,
-  onViewVideo
+  onViewVideo,
+  requests
 }) => {
 
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
@@ -59,7 +61,7 @@ const MainContent: React.FC<MainContentProps> = ({
       // const paramEmail = window.location.search.split("=")[1]
       //@TODO remove v0
       // window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
-      window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+      window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
       return;
     }
 
@@ -67,11 +69,11 @@ const MainContent: React.FC<MainContentProps> = ({
       try {
         const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
         const filteredSocialLinks:any = {};
-      Object.entries(data[0]).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        filteredSocialLinks[key] = value;
-      }
-    });
+        Object.entries(data?.[0] ?? {}).forEach(([key, value]) => {
+          if (Array.isArray(value) && value.length > 0) {
+            filteredSocialLinks[key] = value;
+          }
+        });
     console.log(filteredSocialLinks)
     setSocialLinks(filteredSocialLinks);
       } catch (error) {
@@ -114,8 +116,8 @@ useEffect(() => {
 
         const tokenEmail = encodeURIComponent(payload.email.trim().toLowerCase());
 
-        console.log("Token Email:", tokenEmail);
-        console.log("Evaluator Email:", evaluatorEmail);
+        // console.log("Token Email:", tokenEmail);
+        // console.log("Evaluator Email:", evaluatorEmail);
 
         if (tokenEmail !== evaluatorEmail) {
           toast.error(
@@ -136,8 +138,23 @@ useEffect(() => {
   checkSession();
 }, [evaluatorEmail, jobApplicationId, evaluationRequestId]);
 
+if (
+  (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) &&
+  requests.length > 0
+) {
+  return (
+    <div className="flex flex-col items-center justify-center w-full min-h-[200px] text-slate-600 text-base sm:text-lg font-semibold">
+      <span className="mb-3">Please wait, loading data</span>
+      <span className="flex space-x-1 text-xl sm:text-2xl">
+        <span className="animate-bounce">.</span>
+        <span className="animate-bounce delay-200">.</span>
+        <span className="animate-bounce delay-400">.</span>
+      </span>
+    </div>
+  );
+}
 
-if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
+if ((!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) && requests.length === 0) {
   return (
     <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-8 sm:py-12 bg-gradient-to-br from-white-50 to-indigo-100 rounded-2xl relative overflow-hidden w-full h-screen bg-gray-100">
       {/* Main Message */}
@@ -211,13 +228,25 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
           className="h-10 rounded-lg object-cover"
         /> */}
         <div className="flex items-center gap-8 text-sm text-slate-500">
-          <span>Profile sent on {EvaluationRequestDetails.profileSentDate}</span>
           <span>
-            <span className="text-[#316BFF] font-semibold" >Recruiter name: </span>
-            <span className="text-slate-800">{toTitleCase(EvaluationRequestDetails.recruiterName)}</span>
+            Profile sent on {new Date(EvaluationRequestDetails.profileSentDate).toLocaleString(undefined, {
+              year: 'numeric',
+              month: 'numeric',
+              day: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric',
+              hour12: true
+            })}
           </span>
-          {/* <button className='text-red-600' onClick={handleLogout}>Logout</button> */}
+
+          <span className="flex items-center gap-1 max-w-[250px] truncate" title={toTitleCase(EvaluationRequestDetails.recruiterName)}>
+            <span className="text-[#316BFF] font-semibold whitespace-nowrap">Recruiter name:</span>
+            <span className="text-slate-800 truncate">
+              {toTitleCase(EvaluationRequestDetails.recruiterName)}
+            </span>
+          </span>
         </div>
+
       </div>
 
       {/* Content Cards */}
@@ -260,10 +289,23 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
                 <h3 className="text-lg font-semibold text-slate-800 text-start">Social Links</h3>
               </div>
               <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-slate-700">
-              {
-                Object.entries(socialLinks).length > 0 ? (
-                  Object.entries(socialLinks).map(([key, urls]) => 
-                    Array.isArray(urls) && urls.length > 0 ? (
+              {Object.values(socialLinks).some((urls: string[]) => urls.length > 0) ? (
+                Object.entries(socialLinks).map(([key, urls]: [string, string[]]) =>
+                  urls.length > 0 ? (
+                    // if want to show all links of all keys
+                    // <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
+                    //   {urls.map((url, idx) => (
+                    //     <a
+                    //       key={idx}
+                    //       href={url}
+                    //       target="_blank"
+                    //       rel="noopener noreferrer"
+                    //       className="text-blue-600 hover:underline"
+                    //     >
+                    //       {toTitleCase(key)}{urls.length > 1 ? ` #${idx + 1}` : ''}
+                    //     </a>
+                    //   ))}
+                    // </div>
                       <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
                         <a
                           href={urls[0]}
@@ -274,12 +316,11 @@ if (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) {
                           {toTitleCase(key)}
                         </a>
                       </div>
-                    ) : null 
-                  )
-                ) : (
-                  <div className="text-gray-500 text-sm">N/A</div>
+                  ) : null
                 )
-              }
+              ) : (
+                <div className="text-gray-500 text-sm">N/A</div>
+              )}
             </div>
           </div>
 
