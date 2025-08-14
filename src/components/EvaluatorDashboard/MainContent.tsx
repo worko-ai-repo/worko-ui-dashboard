@@ -95,9 +95,12 @@ useEffect(() => {
       }
     } catch (err) {
       console.error('Error fetching evaluation details:', err);
-      // await CognitoServiceObj.handleSignOut();
-      //     sessionStorage.clear();
-      //     window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+      console.log("no email found")
+      await CognitoServiceObj.handleSignOut();
+          sessionStorage.clear();
+          // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          //while deploying use the below
+          window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
     }
   };
   getEvaluationDetails();
@@ -124,10 +127,11 @@ useEffect(() => {
             'Email does not match the current session. Please login again.',
             getToastOptions({})
           );
-          console.log("not matching")
-          // await CognitoServiceObj.handleSignOut();
-          // sessionStorage.clear();
-          // window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          await CognitoServiceObj.handleSignOut();
+          sessionStorage.clear();
+          // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          //while deploying use the below
+          window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
         }
       }
     } catch (err) {
