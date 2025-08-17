@@ -5,9 +5,9 @@ import Table from '../../SharedComponents/Table';
 import Stepper from './Stepper';
 import { viewFeedback, iHaveJoined, checkAndAccept, askQuestion } from '@Assets';
 import RejectionFeedbackModal from './modals/RejectionFeedbackModal';
+import SubmitDocumentModal from './modals/SubmitDocumentModal';
 import JobService from '../../Service/JobsService';
 import { useDashboardContext } from '@Context/Dashboard.context';
-
 interface JobsTableProps {
   data: JobApiResponse | null;
   pagination: PaginationInfo;
@@ -28,7 +28,7 @@ const JobsTable = memo(({
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
-  
+  const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
   // Get user from dashboard context
   const { user } = useDashboardContext();
 
@@ -57,8 +57,17 @@ const JobsTable = memo(({
     action: job.action || getActionFromStatus(job.status)
   }));
 
-  const jobs = processedJobs || [];
-  
+
+const jobs = processedJobs || [];
+
+// fake dummy fields for upload
+const requestedDocumentNamesDummy = [
+  "Adhaar Card",
+  "PAN Card",
+  "Birth Certificate",
+  "Graduation Certificate",
+];
+
   // Function to handle opening the feedback modal
   const handleViewFeedback = useCallback((job: JobTypes) => {
     if (job.rejectionFeedbackBySystem) {
@@ -67,42 +76,125 @@ const JobsTable = memo(({
     }
   }, []);
   
-  // Function to handle action button clicks
-  const handleActionClick = useCallback(async (type: string, job: JobTypes) => {
-    if (!user?.email) return;
+  const handleSubmitDocs = (submittedFiles: Record<string, File | null>) => {
+  console.log("Submitted files:", submittedFiles);
+    // TODO: handle file upload
+  };
+  // Function to handle action button clicks (old function)
+  // const handleActionClick = useCallback(async (type: string, job: JobTypes) => {
+  //   if (!user?.email) return;
     
-    setProcessingJobId(job.id);
+  //   setProcessingJobId(job.id);
     
-    try {
-      let result;
+  //   try {
+  //     let result;
       
-      switch (type) {
-        case 'VIEW_FEEDBACK':
-          handleViewFeedback(job);
-          break;
+  //     switch (type) {
+  //       case 'VIEW_FEEDBACK':
+  //         handleViewFeedback(job);
+  //         break;
           
-        case 'CHECK_ACCEPT':
-          result = await JobService.acceptOffer(job.id, user.email);
-          if (result.response) {
-            onRefresh();
-          }
-          break;
+  //       case 'CHECK_ACCEPT':
+  //         result = await JobService.acceptOffer(job.id, user.email);
+  //         if (result.response) {
+  //           onRefresh();
+  //         }
+  //         break;
           
-        case 'JOINED':
-          result = await JobService.markAsJoined(job.id, user.email);
-          if (result.response) {
-            onRefresh();
-          }
-          break;
+  //       case 'JOINED':
+  //         result = await JobService.markAsJoined(job.id, user.email);
+  //         if (result.response) {
+  //           onRefresh();
+  //         }
+  //         break;
           
-        // Add other action handlers as needed
-      }
-    } catch (error) {
-      console.error(`Error processing action ${type}:`, error);
-    } finally {
-      setProcessingJobId(null);
+  //       // Add other action handlers as needed
+  //     }
+  //   } catch (error) {
+  //     console.error(`Error processing action ${type}:`, error);
+  //   } finally {
+  //     setProcessingJobId(null);
+  //   }
+  // }, [handleViewFeedback, onRefresh, user?.email]);
+
+  const handleActionClick = useCallback(async (type: string, job: JobTypes) => {
+  if (!user?.email) return;
+
+  setProcessingJobId(job.id);
+
+  try {
+    let result;
+
+    switch (type) {
+      case 'VIEW_FEEDBACK':
+        handleViewFeedback(job);
+        console.log(job)
+        break;
+
+      case 'CHECK_ACCEPT':
+        result = await JobService.acceptOffer(job.id, user.email);
+        if (result.response) {
+          onRefresh();
+        }
+        break;
+
+      case 'JOINED':
+        result = await JobService.markAsJoined(job.id, user.email);
+        if (result.response) {
+          onRefresh();
+        }
+        break;
+
+      case 'SUBMIT_DOCUMENT':
+        // Assuming you have a modal or a separate flow for document submission
+        // Example: openDocumentSubmissionModal(job.id);
+        setShowDocumentUploadModal(true);
+        console.log(`Submit document for job ID: ${job.id}`);
+        // TODO: Add actual document submission logic here
+        break;
+
+      case 'APPLIED':
+        // You might not need an action here, but logging for completeness
+        console.log(`Already applied for job: ${job.id}`);
+        break;
+
+      case 'CV_DOWNLOADED':
+        console.log(`CV downloaded for job: ${job.id}`);
+        break;
+
+      case 'UNDER_EVALUATION':
+        console.log(`Job under evaluation: ${job.id}`);
+        break;
+
+      case 'PROCESSING_INTERVIEW':
+        console.log(`Processing interview for job: ${job.id}`);
+        break;
+
+      case 'INTERVIEW_DONE':
+        console.log(`Interview completed for job: ${job.id}`);
+        break;
+
+      case 'HIRING_IN_PROCESS':
+        console.log(`Hiring in process for job: ${job.id}`);
+        break;
+
+      case 'DOCUMENT_REQUESTED':
+        // This is usually mapped to SUBMIT_DOCUMENT already, so could call the same logic
+        console.log(`Document requested for job: ${job.id}`);
+        // Optionally forward to SUBMIT_DOCUMENT
+        break;
+
+      default:
+        console.warn(`Unhandled action type: ${type}`);
+        break;
     }
-  }, [handleViewFeedback, onRefresh, user?.email]);
+  } catch (error) {
+    console.error(`Error processing action ${type}:`, error);
+  } finally {
+    setProcessingJobId(null);
+  }
+}, [handleViewFeedback, onRefresh, user?.email]);
+
 
   const MatchingScoreCircle = memo(({ score }: { score: number }) => (
     <div className="w-20 flex mb-2 flex-col items-center justify-center gap-px text-base text-green-500">
@@ -128,19 +220,22 @@ const JobsTable = memo(({
 
   const StatusBadge = memo(({ status }: { status: string }) => {
     const statusConfigs: Record<string, { bg: string, text: string, label: string }> = {
-      CV_DOWNLOADED: { bg: "bg-blue-100", text: "text-blue-500", label: "CV downloaded" },
-      UNDER_EVALUATION: { bg: "bg-blue-100", text: "text-blue-500", label: "Under evaluation" },
-      PROCESSING_INTERVIEW: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview Process" },
-      INTERVIEW_DONE: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview done" },
-      DOCUMENT_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Document requested" },
-      DOCUMENT_SUBMITTED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document submitted" },
-      OFFER_LETTER: { bg: "bg-blue-100", text: "text-blue-500", label: "Offer letter received" },
-      REVISED_LETTER: { bg: "bg-red-100", text: "text-red-500", label: "Revised letter received" },
-      HIRED: { bg: "bg-green-100", text: "text-green-500", label: "Hired" },
-      REJECTED: { bg: "bg-red-400", text: "text-white", label: "Rejected" },
-      JOINED: { bg: "bg-green-100", text: "text-green-500", label: "Joined" },
-      OFFER_ACCEPTED: { bg: "bg-green-100", text: "text-green-500", label: "Offer accepted/Hired" },
-      APPLIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Applied" },
+    APPLIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Applied" },
+    CV_DOWNLOADED: { bg: "bg-blue-100", text: "text-blue-500", label: "CV downloaded" },
+    UNDER_EVALUATION: { bg: "bg-blue-100", text: "text-blue-500", label: "Under evaluation" },
+    PROCESSING_INTERVIEW: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview Process" },
+    INTERVIEW_DONE: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview done" },
+    HIRING_IN_PROCESS: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Hiring in process" },
+    DOCUMENT_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Document requested" },
+    ADDITIONAL_DOCUMENT_REQUESTED: { bg: "bg-orange-100", text: "text-orange-500", label: "Additional document requested" },
+    REVISION_DOCUMENT_SUBMISSION: { bg: "bg-purple-100", text: "text-purple-500", label: "Revision document submission" },
+    DOCUMENT_SUBMITTED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document submitted" },
+    OFFER_LETTER: { bg: "bg-blue-100", text: "text-blue-500", label: "Offer letter received" },
+    REVISED_LETTER: { bg: "bg-red-100", text: "text-red-500", label: "Revised letter received" },
+    HIRED: { bg: "bg-green-100", text: "text-green-500", label: "Hired" },
+    JOINED: { bg: "bg-green-100", text: "text-green-500", label: "Joined" },
+    OFFER_ACCEPTED: { bg: "bg-green-100", text: "text-green-500", label: "Offer accepted/Hired" },
+    REJECTED: { bg: "bg-red-400", text: "text-white", label: "Rejected" },
     };
     
     const config = statusConfigs[status] || statusConfigs.UNDER_EVALUATION;
@@ -180,6 +275,16 @@ const JobsTable = memo(({
         color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
         icon: <img src={viewFeedback} alt="View feedback" />,
         label: "View feedback"
+      },
+      ADDITIONAL_DOCUMENT_REQUESTED: {
+        color: "bg-yellow-400",
+        icon: null,
+        label: "Submit additional document"
+      },
+      REVISION_DOCUMENT_SUBMISSION: {
+        color: "bg-orange-400",
+        icon: null,
+        label: "Submit revision document"
       }
     };
     
@@ -238,14 +343,20 @@ const JobsTable = memo(({
       render: (value: any, item: JobTypes) => value ? <ActionButton type={value} job={item} /> : null
     },
     {
-      key: "",
+      key: "followUp",
       header: "Follow up",
       render: () => (
         <button className="w-14 h-11 rounded-xl bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6] flex items-center justify-center">
           <img src={askQuestion} alt="Ask question" />
         </button>
       )
-    }
+    },    
+    {
+      key: "jobType",
+      header: "Job Type",
+      sortable: true,
+      render: (value: any) => <StatusBadge status={value} />
+    },
   ];
 
   return (
@@ -281,6 +392,12 @@ const JobsTable = memo(({
         feedbackContent={feedbackContent} 
         onClose={() => setShowFeedbackModal(false)} 
       />
+      <SubmitDocumentModal
+      show={showDocumentUploadModal}
+      documents={requestedDocumentNamesDummy}
+      onClose={() => setShowDocumentUploadModal(false)}
+      onSubmit={handleSubmitDocs}
+    />
     </div>
   );
 });

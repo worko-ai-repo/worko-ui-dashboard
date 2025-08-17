@@ -68,6 +68,19 @@ const Profile = () => {
   const [experienceData, setExperienceData] = useState<any>(null);
   const [achievementData, setAchievementData] = useState<any>(null);
   const [skillsData, setSkillsData] = useState<any>(null);
+  const [socialLinks, setSocialLinks] = useState<any>(null);
+
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(profileData?.data?.name || user?.name || "");
+
+const [isEditingEducation, setIsEditingEducation] = useState(false);
+
+const [editedEducation, setEditedEducation] = useState({
+  collage: "",
+  degree: "",
+  passingYear: ""
+});
+
 
   // State for loading and error
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -93,8 +106,6 @@ const Profile = () => {
     }));
   };
 
-  const [isEditingName, setIsEditingName] = useState(false);
-  const [editedName, setEditedName] = useState(profileData?.data?.name || user?.name || "");
 
   const fetchData = async () => {
     try {
@@ -119,6 +130,8 @@ const Profile = () => {
       setExperienceData(userData.experience);
       setSkillsData(userData.skills);
       setAchievementData(userData.achievement);
+      setSocialLinks(userData.socialprofile)
+      console.log(userData)
     } catch (err: any) {
       console.error("Error fetching profile data:", err);
       setError(err.message || "Failed to load profile data");
@@ -144,13 +157,12 @@ const Profile = () => {
   const handleSaveAbout = async (data: any) => {
     try {
       if (!user) return false;
-
       const success = await profileService.updateDetailsData(
         user.email,
         detailsData,
         { about: data.about }
       );
-
+      console.log(data.about)
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
@@ -191,6 +203,32 @@ const Profile = () => {
     }
   };
 
+//   const handleSaveEducation = async () => {
+//     if (!user) return;
+//     console.log(user)
+//     try {
+//     const success = await profileService.updateDetailsData(
+//       user.email,
+//       detailsData,
+//       { education: editedEducation } 
+//     );
+
+//     if (success) {
+//       setEducationData((prev: any) => ({
+//         ...prev,
+//         data: {
+//           ...prev.data,
+//           education:[editedEducation]
+//         }
+//       }));
+//       setIsEditingEducation(false);
+//     } else {
+//       console.error("Failed to update education");
+//     }
+//   } catch (error) {
+//     console.error("Error while saving education:", error);
+//   }
+// };
 
   // Work Experience handlers
   const handleEditWorkExperience = () => {
@@ -260,7 +298,7 @@ const Profile = () => {
         { coreSkills: skills },
         'coreSkills'
       );
-
+      console.log("handlesavecoreskills function", user.email,skillsData,skills,)
       if (success) {
         // Update local state to reflect changes
         setSkillsData((prevData: any) => {
@@ -394,7 +432,7 @@ const Profile = () => {
 
       const success = await profileService.updateAchievementData(
         user.email,
-        achievementData[0],
+        achievementData[0] || {},
         { achievements },
         'achievement'
       );
@@ -513,7 +551,7 @@ const Profile = () => {
       setExperienceData(userData.experience);
       setSkillsData(userData.skills);
       setAchievementData(userData.achievement);
-
+      setSocialLinks(userData.socialprofile)
       setIsLoading(false);
     } catch (err: any) {
       console.error("Error retrying data fetch:", err);
@@ -521,6 +559,12 @@ const Profile = () => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+  if (detailsData?.[0]?.name) {
+    setEditedName(detailsData[0].name);
+  }
+}, [detailsData]);
 
   if (isLoading) return (
     <div className="flex items-center justify-center min-h-screen">
@@ -549,7 +593,7 @@ const Profile = () => {
 
       {/* Main Content */}
       <div className="w-full flex">
-        <div className="w-full max-w-6xl flex flex-col gap-4 sm:gap-6 text-left font-sans p-4 sm:p-8 lg:pt-0">
+        <div className="w-full max-w-6xl flex flex-col gap-3 sm:gap-3 text-left font-sans p-4 sm:p-8 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
@@ -618,10 +662,77 @@ const Profile = () => {
                       })}
                     </div>
 
-                    <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
-                      <div>{educationData[0]?.collage || "Education"}</div>
-                      <img className="w-3 h-3" alt="Location" src={Group} />
+                      <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
+                    {isEditingEducation ? (
+                      <>
+                        <input
+                          type="text"
+                          value={editedEducation.collage}
+                          onChange={(e) =>
+                            setEditedEducation({ ...editedEducation, collage: e.target.value })
+                          }
+                          placeholder="College"
+                        />
+                        <input
+                          type="text"
+                          value={editedEducation.degree}
+                          onChange={(e) =>
+                            setEditedEducation({ ...editedEducation, degree: e.target.value })
+                          }
+                          placeholder="Degree"
+                        />
+                        <input
+                          type="text"
+                          value={editedEducation.passingYear}
+                          onChange={(e) =>
+                            setEditedEducation({ ...editedEducation, passingYear: e.target.value })
+                          }
+                          placeholder="Passing Year"
+                        />
+
+                        <button onClick={handleSaveEducation}>Save</button>
+                        <button
+                          onClick={() => {
+                            setEditedEducation({
+                              collage: educationData[0]?.collage || "",
+                              degree: educationData[0]?.degree || "",
+                              passingYear: educationData[0]?.passingYear || ""
+                            });
+                            setIsEditingEducation(false);
+                          }}
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        <div>{educationData[0]?.collage || "Education"}</div>
+                        <div>{educationData[0]?.degree || "Education"}</div>
+                        <div>{educationData[0]?.passingYear || "Education"}</div>
+                        <img
+                          className="w-3 h-3"
+                          alt="Edit"
+                          src={Group}
+                          onClick={() => {
+                            const edu = educationData[0] || {};
+                            setEditedEducation({
+                              collage: edu.collage || "",
+                              degree: edu.degree || "",
+                              passingYear: edu.passingYear || ""
+                            });
+                            setIsEditingEducation(true);
+                          }}
+                        />
+                      </>
+                    )}
+
                     </div>
+                    {/* <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
+                      <div>{educationData[0]?.collage || "Education"}</div>
+                      <div>{educationData[0]?.degree || "Education"}</div>
+                      <div>{educationData[0]?.passingYear || "Education"}</div>
+                      <img className="w-3 h-3" alt="Location" src={Group} />
+                    </div> */}
 
                     <div className="border border-gray-300 opacity-50 w-full my-4"></div>
 
@@ -701,12 +812,12 @@ const Profile = () => {
                     }}
                   />
 
-                  {/* <button
-                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600"
+                  <button
+                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 mt-9"
                   >
                     <Video className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="text-xs font-semibold">Initiate video interview</span>
-                  </button> */}
+                  </button>
                 </div>
               </div>
             </div>
@@ -714,6 +825,7 @@ const Profile = () => {
 
           {/* About Section */}
           {detailsData && (
+            <div id="about">
             <ProfileSection
               title="About"
               editMode={editMode.about || false}
@@ -731,14 +843,16 @@ const Profile = () => {
               ]}
               formData={{ about: detailsData[0]?.about || "" }}
             >
-              <p id='about' className="text-sm text-gray-800 leading-relaxed">
+              <p className="text-sm text-gray-800 leading-relaxed">
                 {detailsData[0]?.about || "No information provided."}
               </p>
             </ProfileSection>
+            </div>
           )}
 
           {/* Work Experience */}
           {detailsData && (
+          <div id="experience">
             <ProfileSection
               title="Work experience"
               editMode={editMode.workExperience || false}
@@ -783,7 +897,7 @@ const Profile = () => {
               }}
             >
               {detailsData[0]?.candidateExperience ? (
-                <div id='experience' className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
+                <div className="flex flex-col sm:flex-row sm:items-start gap-4 mb-4">
                   <Briefcase strokeWidth={1.5} className="flex-shrink-0 mt-1" />
                   <div className="flex-1 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-2 lg:gap-4">
                     <div className="font-medium text-base">
@@ -805,6 +919,7 @@ const Profile = () => {
                 <div className="text-gray-500">No work experience added yet.</div>
               )}
             </ProfileSection>
+          </div>
           )}
 
           {/* Skills Sections */}
@@ -869,38 +984,35 @@ const Profile = () => {
           )}
 
           {/* Preference Sections */}
-          {[
+         {[
             {
+              id: "roles",
               title: "Roles I am looking for",
-              skills: [
-                "Communication",
-                "UI/UX",
-                "Design manager",
-                "Java developer",
-              ],
+              skills: ["Communication", "UI/UX", "Design manager", "Java developer"],
             },
             {
+              id: "industry",
               title: "Industry preference",
               skills: ["IT", { skillName: "Manufacturing", canRemove: true }],
             },
             {
+              id: "department",
               title: "Department preference",
-              skills: [
-                "IT",
-                { skillName: "Manufacturing", canRemove: true },
-              ],
+              skills: ["IT", { skillName: "Manufacturing", canRemove: true }],
             },
             {
+              id: "locations",
               title: "Location preference",
               skills: [{ skillName: "Kolkata", canRemove: true }],
             },
-          ].map((section, index) =>
-            renderSkillsSection({
-              key: index,
-              title: section.title,
-              skills: section.skills,
-            })
-          )}
+          ].map((section, index) => (
+            <div id={section.id} key={section.id}>
+              {renderSkillsSection({
+                title: section.title,
+                skills: section.skills,
+              })}
+            </div>
+          ))}
 
           {/* Achievements */}
           <div id="achievements">
@@ -948,55 +1060,124 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Salary */}
-          {detailsData && (
-            <div id="salary">
-              <ProfileSection
-                title="Salary"
-                editMode={editMode.salary || false}
-                onEdit={handleEditSalary}
-                onCancel={handleCancelSalary}
-                onSave={handleSaveSalary}
-                formFields={[
-                  {
-                    name: "CTC",
-                    label: "Current CTC (LPA)",
-                    type: "number",
-                    placeholder: "Enter current CTC",
-                    required: true
-                  },
-                  {
-                    name: "ECTC",
-                    label: "Expected CTC (LPA)",
-                    type: "number",
-                    placeholder: "Enter expected CTC",
-                    required: true
-                  }
-                ]}
-                formData={{
-                  CTC: detailsData[0]?.CTC || "",
-                  ECTC: detailsData[0]?.ECTC || ""
-                }}
-              >
-                <div className="flex items-start gap-20">
-                  {[
-                    { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
-                    { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
-                  ].map((item, index) => (
-                    <div key={index} className="flex items-center gap-4">
-                      <img className="w-6 h-6" alt="Money" src={salary} />
-                      <div>
-                        <span className="font-medium">{item.label} - </span>
-                        <span className="font-semibold text-blue-600">
-                          {item.value}
-                        </span>
-                      </div>
+          {/* Social Links */}
+          <div id="social-links">
+            {editMode.responsibilities ? (
+              <ListEditor
+                title="Social Links"
+                items={(achievementData && achievementData[0]?.responsibilities) || []}
+                // onSave={handleSaveResponsibilities}
+                // onCancel={handleCancelResponsibilities}
+              />
+            ) : (
+            renderListSection({
+              title: "Social Links",
+              items: (socialLinks || []).flatMap((item, index) =>
+                Object.entries(item)
+                  .filter(([key]) => !["SK", "PK", "createdAt", "updatedAt"].includes(key))
+                  .map(([key, value]) => (
+                    <div key={`${index}-${key}`}>
+                      <a href={value[0]} target="_blank" rel="noopener noreferrer">
+                        {key}
+                      </a>
                     </div>
-                  ))}
-                </div>
-              </ProfileSection>
-            </div>
-          )}
+                  ))
+              ),
+              // onEdit: handleEditResponsibilities
+            })
+            )}
+          </div>
+
+          {/* Salary */}
+            {detailsData && (
+              <div id="salary-availability" className="scroll-mt-16">
+                <ProfileSection
+                  title="Salary & Availability"
+                  editMode={editMode.salary || false}
+                  onEdit={handleEditSalary}
+                  onCancel={handleCancelSalary}
+                  onSave={handleSaveSalary}
+                  formFields={[
+                    {
+                      name: "CTC",
+                      label: "Current CTC (LPA)",
+                      type: "number",
+                      placeholder: "Enter current CTC",
+                      required: true
+                    },
+                    {
+                      name: "ECTC",
+                      label: "Expected CTC (LPA)",
+                      type: "number",
+                      placeholder: "Enter expected CTC",
+                      required: true
+                    },
+                    {
+                      name: "noticePeriod",
+                      label: "Notice Period (in days)",
+                      type: "number",
+                      placeholder: "Enter notice period",
+                      required: false
+                    },
+                    {
+                      name: "noticeNegotiable",
+                      label: "Is the notice period negotiable?",
+                      type: "select", // Assuming your component supports select
+                      options: [
+                        { label: "Negotiable", value: "negotiable" },
+                        { label: "Non-negotiable", value: "non-negotiable" }
+                      ],
+                      required: false
+                    }
+                  ]}
+                  formData={{
+                    CTC: detailsData[0]?.CTC || "",
+                    ECTC: detailsData[0]?.ECTC || "",
+                    noticePeriod: detailsData[0]?.noticePeriod || "",
+                    noticeNegotiable: detailsData[0]?.noticeNegotiable || ""
+                  }}
+                >
+                  <div className="flex flex-col gap-4">
+                    {/* Salary Info */}
+                    <div className="flex items-start gap-20">
+                      {[
+                        { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
+                        { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
+                        // { label: "Notice Period", value: `${detailsData[0]?.noticePeriod || "30"} days` },
+                        // { label: "Notice period Negotiable?", value: `${detailsData[0]?.noticeNegotiable  || "Yes"}` },
+                      ].map((item, index) => (
+                        <div key={index} className="flex items-center gap-4">
+                          <img className="w-6 h-6" alt="Money" src={salary} />
+                          <div>
+                            <span className="font-medium">{item.label} - </span>
+                            <span className="font-semibold text-blue-600">
+                              {item.value}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    {/* Notice Period Info */}
+                      {detailsData ? (
+                        <div className="flex items-center gap-4">
+                          <img className="w-6 h-6" alt="Notice Period" src={salary} />
+                          <div>
+                            <span className="font-medium">Notice Period - </span>
+                            <span className="font-semibold text-blue-600">
+                              {detailsData[0]?.noticePeriod ?? "30"} days
+                            </span>
+                            <span className="ml-2 text-sm italic font-semibold text-blue-600">
+                              ({detailsData[0]?.noticeNegotiable ?? "Negotiable"})
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-gray-500 italic">Loading notice period info...</div>
+                      )}
+                    </div>
+                  </div>
+                </ProfileSection>
+              </div>
+            )}
         </div>
       </div>
     </div>

@@ -12,7 +12,8 @@ const SECTIONS = [
   { id: 'industry', label: 'Industry' },
   { id: 'department', label: 'Department' },
   { id: 'locations', label: 'Locations' },
-  { id: 'salary', label: 'Salary' }
+  { id: 'social-links', label: 'Social Links' },
+  { id: 'salary-availability', label: 'Salary & Availability' }
 ];
 
 const QuickLinks: FunctionComponent = () => {
@@ -53,8 +54,9 @@ const QuickLinks: FunctionComponent = () => {
   // Handle click on a quick link
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
+    console.log(element,"element")
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
   };
 

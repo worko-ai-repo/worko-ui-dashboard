@@ -5,7 +5,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 const APP_API_URI = import.meta.env.APP_API_URI || '';
 
 // Data entity types for API calls
-export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription';
+export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription' | 'socialprofile';
 
 export interface CognitoUserDetails {
   aud: string;
@@ -47,7 +47,7 @@ class ProfileService {
       {}, 
       true
     );
-    
+    // console.log(response,"response")
     if (error) throw error;
     return response;
   }
@@ -63,7 +63,8 @@ class ProfileService {
       'education', 
       'experience', 
       'skills', 
-      'achievement'
+      'achievement',
+      'socialprofile',
     ];
 
     const result: Partial<Record<DataEntity, any>> = {};
@@ -78,6 +79,7 @@ class ProfileService {
       
       // Execute all promises in parallel
       await Promise.all(fetchPromises);
+      // console.log("✅ All user data fetched:\n", JSON.stringify(result, null, 2));
       return result as Record<DataEntity, any>;
     } catch (err) {
       console.error("Failed to fetch user data:", err);
@@ -100,7 +102,7 @@ class ProfileService {
         {}, 
         true
       );
-      
+      // console.log(response)
       if (error) throw error;
       return true;
     } catch (err) {
@@ -116,28 +118,45 @@ class ProfileService {
 
   // Update details data
   async updateDetailsData(email: string, currentData: any, newData: Partial<any>): Promise<boolean> {
+    
     if (!currentData) {
       console.error("Details data is null or undefined");
       return false;
     }
-    
+    console.log(currentData,newData)
     // Handle both array and object formats for detailsData
     let updatedDetailsData;
     
     if (Array.isArray(currentData)) {
       // If it's an array, update the first item
-      updatedDetailsData = {
-        ...currentData[0],
-        ...newData
-      };
+      if(!currentData[0]?.isCandidateFresher){
+        updatedDetailsData = {
+          ...currentData[0],
+          ...newData,
+          isCandidateFresher:true
+        };
+      }else{
+        updatedDetailsData = {
+          ...currentData[0],
+          ...newData
+        };
+      }
     } else {
       // If it's already an object, just update it directly
-      updatedDetailsData = {
-        ...currentData,
-        ...newData
-      };
+      if(!currentData?.isCandidateFresher){
+        updatedDetailsData = {
+          ...currentData,
+          ...newData,
+          isCandidateFresher:true
+        };
+      }else{
+        updatedDetailsData = {
+          ...currentData,
+          ...newData
+        };
+      }
     }
-    
+    console.log(updatedDetailsData)
     return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
   }
 
@@ -184,7 +203,7 @@ class ProfileService {
       ...updatedSkills[0],             // Keep all existing data
       [skillType]: data[skillType],    // Update only the specific skill type
     };
-      
+      // console.log(updatedSkills,"updated skills")
     return await this.updateUserData(email, 'skills', updatedSkills[0]);
   }
 
@@ -196,8 +215,9 @@ class ProfileService {
     type: 'achievement' | 'responsibility', 
     index?: number
   ): Promise<boolean> {
-    if (!currentData) return false;
-    
+    // console.log("currentData",currentData)
+    // if (!currentData) return false;
+    // console.log("currentData",currentData)
     let updatedData = { ...currentData };
     
     if (type === 'achievement') {
@@ -237,7 +257,7 @@ class ProfileService {
         ];
       }
     }
-    
+    console.log("currentData",updatedData)
     return await this.updateUserData(email, 'achievement', updatedData);
   }
 
