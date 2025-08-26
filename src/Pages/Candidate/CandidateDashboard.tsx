@@ -8,6 +8,7 @@ import Guidance from "@Components/Dashboard/Candidate/Pages/Guidance/Guidance";
 import Support from "@Components/Dashboard/Candidate/Pages/Support/Support";
 import Subscription from "@Components/Dashboard/Candidate/Pages/Subscription/Subscription";
 import PageNotFound from "../errors/404/PageNotFound";
+import Referrals from "@Components/Dashboard/Candidate/Pages/Referral/Referral";
 
 const Jobs = lazy(() => import("@Components/Dashboard/Candidate/Pages/Job/Jobs"));
 
@@ -36,6 +37,10 @@ const CandidateDashboard = () => {
               <Jobs />
             </Suspense>
           ),
+        },
+        {
+          path: "referral",
+          element: <Referrals />,
         },
         {
           path: "guidance",

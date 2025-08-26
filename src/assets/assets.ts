@@ -1,3 +1,4 @@
+import { joining_success } from '@Assets';
 import bg_plexus from './backgrounds/plexus.webp';
 import employee_hero from './backgrounds/employee_hero.webp';
 import employee_hero_mobile from './backgrounds/employee_hero_mobile.webp';
@@ -57,6 +58,7 @@ import f1 from './backgrounds/f1.webp';
 import f2 from './backgrounds/f2.webp';
 import f3 from './backgrounds/f3.webp';
 import gb_form from './backgrounds/gb_form.webp';
+import joining_success_img from './backgrounds/joining_success_img.webp';
 
 // svg
 import coin from './svgs/coin.svg'
@@ -101,6 +103,7 @@ import inviteTick from './svgs/inviteTick.svg';
 import hireNow from './svgs/hireNow.svg';
 import onHold from './svgs/onHold.svg';
 import sortOrder from './svgs/sortOrder.svg.svg';
+import cancel from './svgs/cancel.svg';
 
 export { 
     // Backgrounds
@@ -133,7 +136,7 @@ export {
     
     c11, c12, c13, c14,
     c21, c22, c23, c24,
-    f1, f2, f3, gb_form,
+    f1, f2, f3, gb_form,joining_success_img,
 
 
     // Worko Assets
@@ -198,4 +201,5 @@ export {
     hireNow,
     onHold,
     sortOrder,
+    cancel,
 };

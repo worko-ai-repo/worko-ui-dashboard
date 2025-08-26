@@ -5,7 +5,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 const APP_API_URI = import.meta.env.APP_API_URI || '';
 
 // Data entity types for API calls
-export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription' | 'socialprofile';
+export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription' | 'socialprofile' | 'preference' | 'multipleCandidateExperience';
 
 export interface CognitoUserDetails {
   aud: string;
@@ -38,65 +38,161 @@ class ProfileService {
   async fetchUserData(email: string, entity: DataEntity): Promise<any> {
     if (!email) throw new Error("Email is required");
 
-    // Handle the special case for skills endpoint
     const endpoint = entity === 'skills' ? 'Skill' : entity;
-    
-    const { response, error } = await httpServiceObj.get(
-      `${APP_API_URI}/user/${email}/${endpoint}`, 
-      true, 
-      {}, 
-      true
-    );
-    // console.log(response,"response")
-    if (error) throw error;
-    return response;
-  }
-
-  // Fetch all user data types
-  async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
-    if (!email) throw new Error("Email is required");
-    
-    // Define entities to fetch
-    const entitiesToFetch: DataEntity[] = [
-      'profile', 
-      'details', 
-      'education', 
-      'experience', 
-      'skills', 
-      'achievement',
-      'socialprofile',
-    ];
-
-    const result: Partial<Record<DataEntity, any>> = {};
+    // const url = entity === 'preference'
+    //   ? `${APP_API_URI}/user/${endpoint}/${email}`
+    //   : `${APP_API_URI}/user/${email}/${endpoint}`;
+    const url = `${APP_API_URI}/user/${email}/${endpoint}`
 
     try {
-      // Create array of promises for all entities
-      const fetchPromises = entitiesToFetch.map(async entity => {
-        const data = await this.fetchUserData(email, entity);
-        result[entity] = data;
-        return data;
-      });
-      
-      // Execute all promises in parallel
-      await Promise.all(fetchPromises);
-      // console.log("✅ All user data fetched:\n", JSON.stringify(result, null, 2));
-      return result as Record<DataEntity, any>;
-    } catch (err) {
-      console.error("Failed to fetch user data:", err);
-      throw new Error("Failed to fetch user data");
+      const { response } = await httpServiceObj.get(`${url}`, true, {}, true);
+      return response;
+    } catch (error: any) {
+      const status = error?.response?.status || error?.status;
+
+      if (entity === 'preference' && status === 404) {
+        return {}; 
+      }
+
+      throw error; 
     }
   }
 
-  // Generic data updating function
-  async updateUserData(email: string, entity: DataEntity, data: any, method: 'POST' | 'PUT' = 'POST'): Promise<boolean> {
-    if (!email) return false;
+async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
+  if (!email) throw new Error("Email is required");
+
+  const entitiesToFetch: DataEntity[] = [
+    'profile',
+    'details',
+    'education',
+    'experience',
+    'skills',
+    'achievement',
+    'socialprofile',
+    'preference',
+  ];
+
+  const result: Partial<Record<DataEntity, any>> = {};
+
+  // Map each fetch to a try/catch wrapper to isolate failures
+  const fetchPromises = entitiesToFetch.map(async (entity) => {
+    try {
+      const data = await this.fetchUserData(email, entity);
+      result[entity] = data;
+    } catch (err) {
+      if (
+        entity === 'preference' &&
+        typeof err === 'object' &&
+        err !== null &&
+        'status' in err &&
+        (err as any).status === 404
+      ) {
+        result[entity] = {}; // Treat 404 as empty object
+      } else {
+        console.error(`Failed to fetch entity ${entity}`, err);
+        throw err;
+      }
+    }
+  });
+
+  await Promise.all(fetchPromises);
+
+  return result as Record<DataEntity, any>;
+}
+  //Generic data fetching function (old one was breaking because calling preference api initially fails wit 404)
+
+  // async fetchUserData(email: string, entity: DataEntity): Promise<any> {
+  //   if (!email) throw new Error("Email is required");
+
+  //   // Handle the special case for skills endpoint
+  //   const endpoint = entity === 'skills' ? 'Skill' : entity;
     
+  //   // backend api changed so condition statement has been used
+  //   const url = entity === 'preference'
+  //     ? `${APP_API_URI}/user/${endpoint}/${email}`   
+  //     : `${APP_API_URI}/user/${email}/${endpoint}`; 
+
+  //   const { response, error } = await httpServiceObj.get(
+  //     `${url}`, 
+  //     true, 
+  //     {}, 
+  //     true
+  //   );
+  //   // console.log(response,"response")
+  //   if (error) {
+  //     if (entity === 'preference' && (error as any).status === 404) {
+  //       return {};
+  //     }
+  //     throw error;
+  //   }
+
+  //   return response;
+  // }
+  
+  // Fetch all user data types (old one was breaking because calling preference api initially fails wit 404)
+  // async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
+  //   if (!email) throw new Error("Email is required");
+    
+  //   // Define entities to fetch
+  //   const entitiesToFetch: DataEntity[] = [
+  //     'profile', 
+  //     'details', 
+  //     'education', 
+  //     'experience', 
+  //     'skills', 
+  //     'achievement',
+  //     'socialprofile',
+  //     'preference',
+  //   ];
+
+  //   const result: Partial<Record<DataEntity, any>> = {};
+
+  //   try {
+  //     // Create array of promises for all entities
+  //     const fetchPromises = entitiesToFetch.map(async entity => {
+  //       const data = await this.fetchUserData(email, entity);
+  //       result[entity] = data;
+  //       return data;
+  //     });
+      
+  //     // Execute all promises in parallel
+  //     await Promise.all(fetchPromises);
+  //     // console.log("✅ All user data fetched:\n", JSON.stringify(result, null, 2));
+  //     return result as Record<DataEntity, any>;
+  //   } catch (err) {
+  //     console.error("Failed to fetch user data:", err);
+  //     throw new Error("Failed to fetch user data");
+  //   }
+  // }
+
+
+
+  // Generic data updating function
+  async updateUserData(email: string, entity: DataEntity, data: any, method: 'POST' | 'PUT' | "PATCH" = 'POST'): Promise<boolean> {
+    if (!email) return false;
     try {
       // Handle the special case for skills endpoint
       const endpoint = entity === 'skills' ? 'Skill' : entity;
+      const url = `${APP_API_URI}/user/${email}/${endpoint}`
+      // const url = entity === 'preference'
+      // ? `${APP_API_URI}/user/${endpoint}/${email}`   
+      // : `${APP_API_URI}/user/${email}/${endpoint}`;
+
+      console.log(email, entity,data,method,url)
+      if(entity === 'preference' && method === "POST"){
+        const { response, error } = await httpServiceObj[method.toLowerCase() as 'post'](
+          `${APP_API_URI}/user/${endpoint}/`, 
+          data,
+          true, 
+          {}, 
+          true
+        );
+        if (error) throw error;
+        return true;
+      }
       
       const { response, error } = await httpServiceObj[method.toLowerCase() as 'post' | 'put'](
-        `${APP_API_URI}/user/${email}/${endpoint}`, 
+        `${url}`, 
         data,
         true, 
         {}, 
@@ -123,7 +219,14 @@ class ProfileService {
       console.error("Details data is null or undefined");
       return false;
     }
-    console.log(currentData,newData)
+    //below fields are allowed only and compulsory as per old api that is why its done
+    const allowedFields = new Set([
+    "CTC","ECTC","PK","SK","YOE","about","candidateExperience","country","emailList","isCandidateFresher","isCvUpdated","isEmailVerified","isNumberVerified","isSubscribed","lastAccessedDash","linkedinUrl","location","name","noticePeriod","number","referralCount","userType","isNoticePeriodNegotiable","gender","responsibilities","isNumberVerified","multipleCandidateExperience"
+  ]);
+  const sanitizedNewData = Object.fromEntries(
+    Object.entries(newData).filter(([key]) => allowedFields.has(key))
+  );
+
     // Handle both array and object formats for detailsData
     let updatedDetailsData;
     
@@ -132,13 +235,13 @@ class ProfileService {
       if(!currentData[0]?.isCandidateFresher){
         updatedDetailsData = {
           ...currentData[0],
-          ...newData,
-          isCandidateFresher:true
+          ...sanitizedNewData,
+          isCandidateFresher:false
         };
       }else{
         updatedDetailsData = {
           ...currentData[0],
-          ...newData
+          ...sanitizedNewData
         };
       }
     } else {
@@ -146,34 +249,36 @@ class ProfileService {
       if(!currentData?.isCandidateFresher){
         updatedDetailsData = {
           ...currentData,
-          ...newData,
-          isCandidateFresher:true
+          ...sanitizedNewData,
+          isCandidateFresher:false
         };
       }else{
         updatedDetailsData = {
           ...currentData,
-          ...newData
+          ...sanitizedNewData
         };
       }
     }
-    console.log(updatedDetailsData)
+    // console.log(typeof(updatedDetailsData.multipleCandidateExperience[0].YOE))
+    // return
     return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
   }
 
   // Update education data
   async updateEducationData(email: string, data: any, currentData: any[] | null, index?: number): Promise<boolean> {
+    // console.log(email,data,"data",currentData,"currentdata",index)
     // If index is provided, update existing education entry
-    if (index !== undefined && currentData && currentData[index]) {
+    // if (currentData && currentData[index || 0]) {
       const updatedData = {
-        ...currentData[index],
         ...data
       };
-      return await this.updateUserData(email, 'education', updatedData, 'PUT');
-    } 
+      console.log("updateddata",updatedData)
+      return await this.updateUserData(email, 'education', [updatedData], 'POST');
+    // } 
     // Otherwise add new education entry
-    else {
-      return await this.updateUserData(email, 'education', data);
-    }
+    // else {
+    //   return await this.updateUserData(email, 'education', [data],"POST");
+    // }
   }
 
   // Update experience data
@@ -203,8 +308,27 @@ class ProfileService {
       ...updatedSkills[0],             // Keep all existing data
       [skillType]: data[skillType],    // Update only the specific skill type
     };
-      // console.log(updatedSkills,"updated skills")
+    console.log(updatedSkills,"updated skills")
     return await this.updateUserData(email, 'skills', updatedSkills[0]);
+  }
+
+  // Update preference data
+  async updatePreferenceData(email: string, currentData: any, data: Partial<any>, preferenceType: string): Promise<boolean> {
+    let updatedPreference = {...currentData}; 
+      updatedPreference = {
+        ...updatedPreference,            
+        [preferenceType]: data[preferenceType], 
+    };
+      const {userPreferredRoles, userPreferredIndustries, userPreferredDepartments, userPreferredlocations} = updatedPreference
+      console.log(userPreferredRoles, userPreferredIndustries, userPreferredDepartments, userPreferredlocations,"updated skills")
+      console.log(updatedPreference,"updatedPreference")
+      return await this.updateUserData(email, 'preference', {
+      email,
+      userPreferredRoles: userPreferredRoles,
+      userPreferredIndustries: userPreferredIndustries,
+      userPreferredDepartments: userPreferredDepartments ,
+      userPreferredlocations: userPreferredlocations,
+    }, "POST");
   }
 
   // Update achievement data
@@ -259,6 +383,16 @@ class ProfileService {
     }
     console.log("currentData",updatedData)
     return await this.updateUserData(email, 'achievement', updatedData);
+  }
+
+  async updateSocialData(email: string,currentData: any, index?: number): Promise<boolean> {
+
+    if (!currentData) return false;
+
+    console.log(currentData,"currentdata")
+    const updatedSocials = currentData
+    console.log(updatedSocials)
+    return await this.updateUserData(email, 'socialprofile', updatedSocials);
   }
 
   // Remove skill

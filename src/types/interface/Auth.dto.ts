@@ -110,6 +110,7 @@ export interface AwsS3FileUploadResponse {
 	fileMimeType: string;
 	userFileName: string;
 	awsS3Tag:any;
+    objectUrl: string;
 }
 
 /**

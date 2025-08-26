@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import JobsTable from './JobsTable';
 import JobService from '../../Service/JobsService';
 import { JobApiResponse, PaginationInfo, JobFilters } from './JobTypes';
-import { debounce } from 'lodash';
+import { debounce, last } from 'lodash';
 import { useDashboardContext } from '@Context/Dashboard.context';
 import httpServiceObj from '@Services/ApiHandler.service';
 import secureStorage from '@Utils/SecureStorage.utils';
@@ -35,41 +35,39 @@ const Jobs = () => {
   const [filters, setFilters] = useState<JobFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>(initialPaginationState);
   
-const dummyJobs = [
-  { id: "dummy1", jobTitle: "DevOps Engineer", companyName: "InfraTech", createdAt: new Date().toISOString(), matchingScore: 88, status: "DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
-  { id: "dummy2", jobTitle: "Backend Engineer", companyName: "DataCloud", createdAt: new Date().toISOString(), matchingScore: 85, status: "HIRED", action: "JOINED" },
-  { id: "dummy3", jobTitle: "UI/UX Designer", companyName: "Designify", createdAt: new Date().toISOString(), matchingScore: 78, status: "REJECTED", action: "VIEW_FEEDBACK", rejectionFeedbackBySystem: "Portfolio didn't match the project style" },
-  { id: "dummy4", jobTitle: "Frontend Developer", companyName: "PixelSoft", createdAt: new Date().toISOString(), matchingScore: 92, status: "INTERVIEW_DONE", action: "CHECK_ACCEPT" },
-  { id: "dummy5", jobTitle: "Additional Document Specialist", companyName: "TechFlow", createdAt: new Date().toISOString(), matchingScore: 85, status: "ADDITIONAL_DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
-  { id: "dummy6", jobTitle: "Revision Document Specialist", companyName: "CodeBase", createdAt: new Date().toISOString(), matchingScore: 90, status: "REVISION_DOCUMENT_SUBMISSION", action: "SUBMIT_DOCUMENT" },
-  { id: "dummy7", jobTitle: "Data Analyst", companyName: "InsightsAI", createdAt: new Date().toISOString(), matchingScore: 74, status: "APPLIED", action: null },
-  { id: "dummy8", jobTitle: "QA Engineer", companyName: "Testify", createdAt: new Date().toISOString(), matchingScore: 80, status: "CV_DOWNLOADED", action: null },
-  { id: "dummy9", jobTitle: "Cloud Architect", companyName: "SkyNet", createdAt: new Date().toISOString(), matchingScore: 90, status: "UNDER_EVALUATION", action: "HIRED" },
-  { id: "dummy10", jobTitle: "ML Engineer", companyName: "MLSoft", createdAt: new Date().toISOString(), matchingScore: 89, status: "PROCESSING_INTERVIEW", action: "HIRED" },
-  { id: "dummy11", jobTitle: "Product Manager", companyName: "ProdSync", createdAt: new Date().toISOString(), matchingScore: 86, status: "HIRING_IN_PROCESS", action: null },
-  { id: "dummy12", jobTitle: "Business Analyst", companyName: "BizLogic", createdAt: new Date().toISOString(), matchingScore: 76, status: "JOINED", action: null },
-  { id: "dummy13", jobTitle: "Marketing Manager", companyName: "BrandBoost", createdAt: new Date().toISOString(), matchingScore: 83, status: "INTERVIEW_DONE", action: "CHECK_ACCEPT" },
-  { id: "dummy14", jobTitle: "Security Analyst", companyName: "SecureNet", createdAt: new Date().toISOString(), matchingScore: 82, status: "HIRED", action: "JOINED" },
-  { id: "dummy15", jobTitle: "Graphic Designer", companyName: "Designify", createdAt: new Date().toISOString(), matchingScore: 68, status: "REJECTED", action: "VIEW_FEEDBACK", rejectionFeedbackBySystem: "Design aesthetics not aligned" },
-  { id: "dummy16", jobTitle: "System Admin", companyName: "InfraTech", createdAt: new Date().toISOString(), matchingScore: 79, status: "DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
-  { id: "dummy17", jobTitle: "SEO Specialist", companyName: "SearchWave", createdAt: new Date().toISOString(), matchingScore: 70, status: "APPLIED", action: null },
-  { id: "dummy18", jobTitle: "Network Engineer", companyName: "NetServe", createdAt: new Date().toISOString(), matchingScore: 77, status: "CV_DOWNLOADED", action: null },
-  { id: "dummy19", jobTitle: "AI Researcher", companyName: "DeepThink", createdAt: new Date().toISOString(), matchingScore: 93, status: "UNDER_EVALUATION", action: "HIRED" },
-  { id: "dummy20", jobTitle: "Data Engineer", companyName: "BigDataCo", createdAt: new Date().toISOString(), matchingScore: 81, status: "PROCESSING_INTERVIEW", action: "HIRED" },
-  { id: "dummy21", jobTitle: "IT Support", companyName: "HelpDeskPro", createdAt: new Date().toISOString(), matchingScore: 65, status: "HIRING_IN_PROCESS", action: null },
-  { id: "dummy22", jobTitle: "Operations Manager", companyName: "OpsGuru", createdAt: new Date().toISOString(), matchingScore: 75, status: "JOINED", action: null },
-  { id: "dummy23", jobTitle: "Copywriter", companyName: "ContentLab", createdAt: new Date().toISOString(), matchingScore: 69, status: "INTERVIEW_DONE", action: "CHECK_ACCEPT" },
-  { id: "dummy24", jobTitle: "Accountant", companyName: "LedgerPro", createdAt: new Date().toISOString(), matchingScore: 82, status: "HIRED", action: "JOINED" },
-  { id: "dummy25", jobTitle: "Illustrator", companyName: "DrawIt", createdAt: new Date().toISOString(), matchingScore: 72, status: "REJECTED", action: "VIEW_FEEDBACK", rejectionFeedbackBySystem: "Illustration style mismatch" },
-  { id: "dummy26", jobTitle: "Cloud Support Engineer", companyName: "SkyNet", createdAt: new Date().toISOString(), matchingScore: 84, status: "DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
-  { id: "dummy27", jobTitle: "HR Associate", companyName: "PeopleMatter", createdAt: new Date().toISOString(), matchingScore: 73, status: "APPLIED", action: null },
-  { id: "dummy28", jobTitle: "Tech Recruiter", companyName: "TalentHunt", createdAt: new Date().toISOString(), matchingScore: 66, status: "CV_DOWNLOADED", action: null },
-  { id: "dummy29", jobTitle: "Robotics Engineer", companyName: "RoboCorp", createdAt: new Date().toISOString(), matchingScore: 95, status: "UNDER_EVALUATION", action: "HIRED" },
-  { id: "dummy30", jobTitle: "Business Dev", companyName: "SalesMax", createdAt: new Date().toISOString(), matchingScore: 87, status: "PROCESSING_INTERVIEW", action: "HIRED" },
-  { id: "dummy31", jobTitle: "IT Auditor", companyName: "SecureNet", createdAt: new Date().toISOString(), matchingScore: 79, status: "HIRING_IN_PROCESS", action: null },
-  { id: "dummy32", jobTitle: "Project Manager", companyName: "ManageIt", createdAt: new Date().toISOString(), matchingScore: 91, status: "JOINED", action: null },
-];
+//   const dummyJobs = [
+//   { id: "dummy1", jobTitle: "Data Analyst", companyName: "InsightsAI", createdAt: new Date().toISOString(), matchingScore: 74, status: "APPLIED", action: null },
 
+//   { id: "dummy2", jobTitle: "QA Engineer", companyName: "Testify", createdAt: new Date().toISOString(), matchingScore: 80, status: "CV_DOWNLOADED", action: null },
+
+//   { id: "dummy3", jobTitle: "Cloud Architect", companyName: "SkyNet", createdAt: new Date().toISOString(), matchingScore: 90, status: "UNDER_EVALUATION", action: null },
+
+//   { id: "dummy4", jobTitle: "ML Engineer", companyName: "MLSoft", createdAt: new Date().toISOString(), matchingScore: 89, status: "PROCESSING_INTERVIEW", action: null },
+
+//   { id: "dummy5", jobTitle: "Frontend Developer", companyName: "PixelSoft", createdAt: new Date().toISOString(), matchingScore: 92, status: "INTERVIEW_DONE", action: null },
+
+//   { id: "dummy6", jobTitle: "Product Manager", companyName: "ProdSync", createdAt: new Date().toISOString(), matchingScore: 86, status: "HIRING_IN_PROCESS", action: null },
+
+//   { id: "dummy7", jobTitle: "DevOps Engineer", companyName: "InfraTech", createdAt: new Date().toISOString(), matchingScore: 88, status: "DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
+
+//   { id: "dummy8", jobTitle: "Additional Document Specialist", companyName: "TechFlow", createdAt: new Date().toISOString(), matchingScore: 85, status: "DOCUMENT_ADDITIONAL_REQUESTED", action: "SUBMIT_DOCUMENT" },
+
+//   { id: "dummy9", jobTitle: "Revision Document Specialist", companyName: "CodeBase", createdAt: new Date().toISOString(), matchingScore: 90, status: "DOCUMENT_REVISION_REQUESTED", action: "SUBMIT_DOCUMENT" },
+
+//   { id: "dummy10", jobTitle: "Verification Officer", companyName: "VerifyPro", createdAt: new Date().toISOString(), matchingScore: 83, status: "DOCUMENT_VERIFIED", action: null },
+
+//   { id: "dummy11", jobTitle: "Backend Engineer", companyName: "DataCloud", createdAt: new Date().toISOString(), matchingScore: 85, status: "OFFER_SENT", action: "CHECK_ACCEPT" },
+
+//   { id: "dummy12", jobTitle: "Support Analyst", companyName: "Helpify", createdAt: new Date().toISOString(), matchingScore: 78, status: "OFFER_ISSUE_RAISED", action: null },
+
+//   { id: "dummy13", jobTitle: "Revised Offer Candidate", companyName: "FlexJobs", createdAt: new Date().toISOString(), matchingScore: 82, status: "REVISED_OFFER_SENT", action: "CHECK_ACCEPT" },
+
+//   { id: "dummy14", jobTitle: "Security Analyst", companyName: "SecureNet", createdAt: new Date().toISOString(), matchingScore: 82, status: "HIRED", action: "JOINED" },
+
+//   { id: "dummy15", jobTitle: "Business Analyst", companyName: "BizLogic", createdAt: new Date().toISOString(), matchingScore: 76, status: "JOINED", action: null },
+
+//   { id: "dummy16", jobTitle: "UI/UX Designer", companyName: "Designify", createdAt: new Date().toISOString(), matchingScore: 78, status: "REJECTED", action: "VIEW_FEEDBACK", rejectionFeedbackBySystem: "Portfolio didn't match the project style" }
+// ];
 
   // Store pagination keys for each page
   const paginationKeysRef = useRef<Record<number, string>>({
@@ -104,7 +102,8 @@ const dummyJobs = [
           searchText: searchBarText || undefined
         }
       );
-
+      console.log(user.email,size,lastKey,searchFilters,searchBarText)
+      console.log(response)
       if (response) {
         setData(response);
         if (response.pagination) {

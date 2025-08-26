@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Briefcase, Plus, X } from 'lucide-react';
+import { toast } from 'react-toastify';
+import { getToastOptions } from 'lib-worko-ui';
 
 interface ListEditorProps {
   title: string;
@@ -19,20 +21,102 @@ const ListEditor: React.FC<ListEditorProps> = ({
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [achievTitle, setAchievTitle] = useState('');
+  const [acquiredFrom, setAcquiredFrom] = useState('');
+  const [achievDate, setAchievDate] = useState('');
+  const [socialLabel, setSocialLabel] = useState('');
+  const [socialLink, setSocialLink] = useState('');
+
 
   const handleAddItem = () => {
-    if (!newItem.trim()) return;
-    
-    if (editingIndex !== null) {
-      const updatedItems = [...editedItems];
-      updatedItems[editingIndex] = newItem.trim();
-      setEditedItems(updatedItems);
-      setEditingIndex(null);
+      if (title === "Achievements") {
+      const trimmedTitle = achievTitle.trim();
+      const trimmedFrom = acquiredFrom.trim();
+      const trimmedDate = achievDate.trim();
+      const year = parseInt(trimmedDate);
+      const currentYear = new Date().getFullYear();
+
+      // Basic checks
+      if (!trimmedTitle || !trimmedFrom || !trimmedDate) {
+        toast.error("All fields are required", getToastOptions({}));
+        return;
+      }
+      // Year validation
+      if (isNaN(year) || year > currentYear || year < 1990) {
+        toast.error(`Enter a valid year between 1990 and ${currentYear}`, getToastOptions({}));
+        return;
+      }
+      // Length validation
+      if (trimmedTitle.length <= 3) {
+        toast.error("Achievement title is too short", getToastOptions({}));
+        return;
+      }
+
+      if (trimmedFrom.length <= 3) {
+        toast.error("Acquired From is too short", getToastOptions({}));
+        return;
+      }
+
+      const formattedItem = `${trimmedTitle} - ${trimmedFrom} (${year})`;
+        if (editingIndex !== null) {
+        const updatedItems = [...editedItems];
+        updatedItems[editingIndex] = formattedItem;
+        setEditedItems(updatedItems);
+        setEditingIndex(null);
+      } else {
+        setEditedItems([...editedItems, formattedItem]);
+      }
+
+      // Reset achievement fields
+      setAchievTitle('');
+      setAcquiredFrom('');
+      setAchievDate('');
+    } else if (title === "Social Links") {
+      const label = socialLabel.trim();
+      const url = socialLink.trim();
+
+      if (!label || !url) {
+        toast.error("Both label and URL are required", getToastOptions({}));
+        return;
+      }
+
+      try {
+        const parsedUrl = new URL(url);
+        if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+          throw new Error("Invalid protocol");
+        }
+      } catch {
+        toast.error("Enter a valid URL", getToastOptions({}));
+        return;
+      }
+
+      const formattedItem = `${label} - ${url}`;
+
+      if (editingIndex !== null) {
+        const updatedItems = [...editedItems];
+        updatedItems[editingIndex] = formattedItem;
+        setEditedItems(updatedItems);
+        setEditingIndex(null);
+      } else {
+        setEditedItems([...editedItems, formattedItem]);
+      }
+
+      setSocialLabel('');
+      setSocialLink('');
     } else {
-      setEditedItems([...editedItems, newItem.trim()]);
+      if (!newItem.trim()) return;
+
+      if (editingIndex !== null) {
+        const updatedItems = [...editedItems];
+        updatedItems[editingIndex] = newItem.trim();
+        setEditedItems(updatedItems);
+        setEditingIndex(null);
+      } else {
+        setEditedItems([...editedItems, newItem.trim()]);
+      }
+
+      setNewItem('');
     }
-    
-    setNewItem('');
   };
 
   const handleRemoveItem = (index: number) => {
@@ -43,10 +127,19 @@ const ListEditor: React.FC<ListEditorProps> = ({
     }
   };
 
-  const handleEditItem = (index: number) => {
-    setNewItem(editedItems[index]);
-    setEditingIndex(index);
-  };
+const handleEditItem = (index: number) => {
+  const item = editedItems[index];
+  setEditingIndex(index);
+
+  if (title === "Social Links") {
+    const [label, url] = item.split(" - ");
+    setSocialLabel(label.trim());
+    setSocialLink(url.trim());
+  } else {
+    setNewItem(item);
+  }
+};
+
 
   const handleSubmit = async () => {
     setIsSubmitting(true);
@@ -96,7 +189,7 @@ const ListEditor: React.FC<ListEditorProps> = ({
       {editedItems.map((item, index) => (
         <React.Fragment key={index}>
           <div className="flex items-start gap-4 mb-4">
-            <Briefcase strokeWidth={1.5} />
+            {/* <Briefcase strokeWidth={1.5} /> */}
             <div className="flex-1">
               <div className="font-medium">{item}</div>
             </div>
@@ -128,19 +221,87 @@ const ListEditor: React.FC<ListEditorProps> = ({
           <label htmlFor="newItem" className="block text-xs font-medium text-gray-700 mb-1">
             {editingIndex !== null ? 'Edit item' : 'Add a new item'}
           </label>
-          <input
-            type="text"
-            id="newItem"
-            value={newItem}
-            onChange={(e) => setNewItem(e.target.value)}
-            className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
-            placeholder={`Type ${title.toLowerCase()} text`}
-          />
+        {title === "Achievements" ? (
+        <div className="flex flex-col gap-2 w-full">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Title</label>
+            <input
+              type="text"
+              value={achievTitle}
+              onChange={(e) => setAchievTitle(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+              placeholder="e.g., Best Intern"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Acquired From</label>
+            <input
+              type="text"
+              value={acquiredFrom}
+              onChange={(e) => setAcquiredFrom(e.target.value)}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+              placeholder="e.g., Google"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Achievement Year</label>
+            <input
+              type="number"
+              value={achievDate}
+              onChange={(e) => {
+              setAchievDate(e.target.value); 
+              }}
+              className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+              placeholder="e.g., 2023"
+              max={new Date().getFullYear()}
+            />
+          </div>
+        </div>
+      ) : title === "Social Links" ? (
+  <div className="flex flex-col gap-2 w-full">
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">Label</label>
+      <input
+        type="text"
+        value={socialLabel}
+        onChange={(e) => setSocialLabel(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+        placeholder="e.g., LinkedIn"
+      />
+    </div>
+    <div>
+      <label className="block text-xs font-medium text-gray-700 mb-1">URL</label>
+      <input
+        type="url"
+        value={socialLink}
+        onChange={(e) => setSocialLink(e.target.value)}
+        className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+        placeholder="https://..."
+      />
+    </div>
+  </div>
+) : (
+  <input
+    type="text"
+    id="newItem"
+    value={newItem}
+    onChange={(e) => setNewItem(e.target.value)}
+    className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
+    placeholder={`Type ${title.toLowerCase()} text`}
+  />
+)}
+
         </div>
         
         <button
           onClick={handleAddItem}
-          disabled={!newItem.trim()}
+            disabled={
+              title === "Achievements"
+                ? !achievTitle.trim() || !acquiredFrom.trim() || !achievDate.trim()
+                : title === "Social Links"
+                  ? !socialLabel.trim() || !socialLink.trim()
+                  : !newItem.trim()
+            }
           className="flex items-center justify-center h-9 w-9 rounded-md bg-blue-600 text-white disabled:bg-blue-300"
         >
           {editingIndex !== null ? (

@@ -2,25 +2,170 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import httpServiceObj from "@Services/ApiHandler.service";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { getToastOptions } from "lib-worko-ui";
-import { X,Send,Upload } from "lucide-react";
+import { X, Send, Upload, CheckCircle, Clock, AlertCircle } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
-
+import { JobApplicationDetailsDto, JobApplicationDocumentStatusType } from "@Interfaces/CorporateDashboard.dto";
+ 
 interface SubmitDocumentModalProps {
   show: boolean;
-  documents: string[];          // Document names coming from backend
+  documents: JobApplicationDetailsDto;
   onClose: () => void;
-  onSubmit: (submittedDocs: Record<string, File | null>) => void;  // Pass selected files back
+  onSubmit: (submittedDocs: Record<string, File | null>) => void;
+  userID: string;
+  jobId: string;
 }
-
-const SubmitDocumentModal = ({ show, documents, onClose, onSubmit }: SubmitDocumentModalProps) => {
-    const [isVisible, setIsVisible] = useState(false);
-    const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-    const [fileDetails, setFileDetails] = useState<{ corporateRequestedFileName: string; file: File | null }[]>([]);
-    const [error, setError] = useState<string | null>(null);
-    const allUploaded = fileDetails.length === documents.length && fileDetails.every(f => f.file !== null);
-    
+ 
+interface DocumentItem {
+  name: string;
+  currentStatus: JobApplicationDocumentStatusType;
+  targetStatus: JobApplicationDocumentStatusType;
+  isSubmittable: boolean;
+  isSubmitted: boolean;
+  displayStatus: string;
+  statusColor: string;
+  statusIcon: React.ReactNode;
+}
+ 
+interface FormData {
+  [documentName: string]: File | null;
+}
+ 
+const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId }: SubmitDocumentModalProps) => {
+  const [isVisible, setIsVisible] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+ 
+  const { control, handleSubmit, reset, watch, formState: { errors } } = useForm<FormData>({
+    defaultValues: {}
+  });
+ 
+  const watchedFiles = watch();
+ 
+  // Helper function to determine target status based on current status
+  const getTargetStatus = (currentStatus: JobApplicationDocumentStatusType): JobApplicationDocumentStatusType => {
+    switch (currentStatus) {
+      case "DOCUMENT_REQUESTED":
+        return "DOCUMENT_SUBMITTED";
+      case "DOCUMENT_REVISION_REQUESTED":
+        return "DOCUMENT_REVISION_REQUEST_SUBMITTED";
+      case "DOCUMENT_ADDITIONAL_REQUESTED":
+        return "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED";
+      default:
+        return "DOCUMENT_SUBMITTED";
+    }
+  };
+ 
+  // Helper function to check if document can be submitted
+  const isDocumentSubmittable = (status: JobApplicationDocumentStatusType): boolean => {
+    const submittableStatuses = [
+      "DOCUMENT_REQUESTED",
+      "DOCUMENT_REVISION_REQUESTED", 
+      "DOCUMENT_ADDITIONAL_REQUESTED"
+    ];
+    return submittableStatuses.includes(status);
+  };
+ 
+  // Helper function to check if document is already submitted
+  const isDocumentSubmitted = (status: JobApplicationDocumentStatusType): boolean => {
+    const submittedStatuses = [
+      "DOCUMENT_SUBMITTED",
+      "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED",
+      "DOCUMENT_REVISION_REQUEST_SUBMITTED"
+    ];
+    return submittedStatuses.includes(status);
+  };
+ 
+  // Helper function to get display status and styling
+  const getDocumentDisplayInfo = (status: JobApplicationDocumentStatusType) => {
+    switch (status) {
+      case "DOCUMENT_REQUESTED":
+        return {
+          displayStatus: "Required",
+          statusColor: "text-red-600 bg-red-50",
+          statusIcon: <AlertCircle size={16} className="text-red-600" />
+        };
+      case "DOCUMENT_REVISION_REQUESTED":
+        return {
+          displayStatus: "Needs Revision",
+          statusColor: "text-orange-600 bg-orange-50",
+          statusIcon: <AlertCircle size={16} className="text-orange-600" />
+        };
+      case "DOCUMENT_ADDITIONAL_REQUESTED":
+        return {
+          displayStatus: "Additional Required",
+          statusColor: "text-blue-600 bg-blue-50",
+          statusIcon: <Clock size={16} className="text-blue-600" />
+        };
+      case "DOCUMENT_SUBMITTED":
+        return {
+          displayStatus: "Submitted",
+          statusColor: "text-green-600 bg-green-50",
+          statusIcon: <CheckCircle size={16} className="text-green-600" />
+        };
+      case "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED":
+        return {
+          displayStatus: "Additional Submitted",
+          statusColor: "text-green-600 bg-green-50",
+          statusIcon: <CheckCircle size={16} className="text-green-600" />
+        };
+      case "DOCUMENT_REVISION_REQUEST_SUBMITTED":
+        return {
+          displayStatus: "Revision Submitted",
+          statusColor: "text-green-600 bg-green-50",
+          statusIcon: <CheckCircle size={16} className="text-green-600" />
+        };
+      default:
+        return {
+          displayStatus: "Unknown",
+          statusColor: "text-gray-600 bg-gray-50",
+          statusIcon: <Clock size={16} className="text-gray-600" />
+        };
+    }
+  };
+ 
+  // Get all unique documents from the application data
+  const getAllDocuments = (): DocumentItem[] => {
+    if (!documents.requestedDocumentDetails) {
+      return [];
+    }
+ 
+    const allDocNames = new Set<string>();
+ 
+    // Collect all document names from all requests
+    documents.requestedDocumentDetails.forEach(request => {
+      request.requestedDocumentNames.forEach(docName => {
+        allDocNames.add(docName);
+      });
+    });
+ 
+    // Convert to DocumentItem array with current status
+    return Array.from(allDocNames).map(docName => {
+      const currentStatus = documents.documentCurrentStatusMap?.[docName] || "DOCUMENT_REQUESTED";
+      const isSubmittable = isDocumentSubmittable(currentStatus);
+      const isSubmitted = isDocumentSubmitted(currentStatus);
+      const displayInfo = getDocumentDisplayInfo(currentStatus);
+ 
+      return {
+        name: docName,
+        currentStatus,
+        targetStatus: getTargetStatus(currentStatus),
+        isSubmittable,
+        isSubmitted,
+        ...displayInfo
+      };
+    }).sort((a, b) => {
+      // Sort by: submittable first, then by status priority
+      if (a.isSubmittable && !b.isSubmittable) return -1;
+      if (!a.isSubmittable && b.isSubmittable) return 1;
+      return a.name.localeCompare(b.name);
+    });
+  };
+ 
+  // Modal visibility effects
   useEffect(() => {
     if (show) {
       setIsVisible(true);
@@ -32,105 +177,196 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit }: SubmitDocum
       return () => clearTimeout(timer);
     }
   }, [show]);
-
-  // Reset files when documents change or modal closes
+ 
+  // Initialize documents and form when modal opens
   useEffect(() => {
-    if (!show) setFileDetails([]);
-    else {
-      const initialFiles = documents.map(doc => ({
-      corporateRequestedFileName: doc,
-      file: null as File | null,
-    }));
-      setFileDetails(initialFiles);
+    if (show && documents) {
+      const allDocs = getAllDocuments();
+      setAllDocuments(allDocs);
+ 
+      // Initialize form with null values for submittable documents only
+      const initialFormData: FormData = {};
+      allDocs.forEach(doc => {
+        initialFormData[doc.name] = null;
+      });
+      reset(initialFormData);
+    } else {
+      setAllDocuments([]);
+      reset({});
     }
-  }, [documents, show]);
-
+  }, [documents, show, reset]);
+ 
   if (!isVisible && !show) return null;
-
-  const handleFileChange = (docName: string, file: File | null) => {
-        if (!file) {
-            return;
-        }
-        if (file.type !== "application/pdf") {
-            toast.error("only pdf files are allowed",getToastOptions({}))
-            setError("Only PDF files are allowed.");
-            return;
-        }
-        if (file.size > 2 * 1024 * 1024) {
-            toast.error("file size should be less than 2MB",getToastOptions({}))
-            setError("File must be less than 2MB.");
-            return;
-        }
-        setError("");
-        setFileDetails(prev => {
-        const existingIndex = prev.findIndex(item => item.corporateRequestedFileName === docName);
-        if (existingIndex !== -1) {
-        const updated = [...prev];
-        updated[existingIndex] = { ...updated[existingIndex], file };
-        return updated;
-        } else {
-        return [...prev, { corporateRequestedFileName: docName, file }];
-        }
-    });
-  };
-
-  const handleSubmit = async () => {
-    const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
-    const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
-
-    const payload = {
-        jobApplicationId: "01K2KJHXT1BE0NCSG22PX3CJCV", // fetch it from secure storage
-        userId: userId || "51d34dda-b0e1-70ae-c852-c195d340db5c", // fetch it from secure storage
-        fileDetails: fileDetails
-        .filter(item => item.file)
-        .map(item => ({
-            corporateRequestedFileName: item.corporateRequestedFileName,
-            fileName: item.file!.name,
-            fileMimeType: item.file!.type,
-        }))
-    };
-
-    console.log("Final Payload:", payload);
-    console.log(userId,email,payload)
-    const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>("/file/gsu2u/USER_JOB_APPL_DOC", payload, true);
-
-    if (error || !response?.awsS3SignedUrl || !response?.cloudFileName) {
-        throw new Error("Could not get signed URL");
+ 
+  // File validation
+  const validateFile = (file: File | null): string | true => {
+    if (!file) return true; // Optional files are allowed
+ 
+    if (file.type !== "application/pdf") {
+      return "Only PDF files are allowed.";
     }
-    // ill be getting a response after sending the payload that response should have "userFileName","cloudFileName", "fileMimeType", "fileExtension", "awsS3SignedUrl", "corporateRequestedFileName" in an array format
-    // ill put or Upload all the documents to `s3` using `Pre-signed urls` like below
-    // const uploadResult = await httpServiceObj.put(awsS3SignedUrl,file,
-    //     false,
-    //     { awsS3Tag, fileType: file.type },
-    //     true
-    // );
-
-    // after that ill update job application status using below
-    // const patchResult = await httpServiceObj.patch(`job-application/:id/applicant-action`);
-    //with payload of below
-    //        {
-    //       "userId": "51d34dda-b0e1-70ae-c852-c195d340db5c",
-    //       "emailId": "rohithappala777+candidate3@gmail.com",
-    //       "userType": "CAND",
-    //       "status": "DOCUMENT_SUBMITTED",
-    //       "documentMapping": [
-    //          {
-    //             "documentName": "resume",
-    //             "cloudFileName": "01K2KP3M3N2SDSGSR70GVN34C9.docx",
-    //          },
-    //          {
-    //             "documentName": "internship certificate",
-    //             "cloudFileName": "01K2KP3M2JREDFT9JTVV0STD9Q.pdf",
-    //          }
-    //       ]
-    //    }
-
-    // after that ill get response
-
-    // onSubmit(payload);
-    // onClose();
+ 
+    if (file.size > 2 * 1024 * 1024) {
+      return "File must be less than 2MB.";
+    }
+ 
+    return true;
   };
-
+ 
+  // Handle file change with validation
+  const handleFileChange = (docName: string, file: File | null) => {
+    const validation = validateFile(file);
+    if (validation !== true) {
+      toast.error(validation, getToastOptions({}));
+      return null;
+    }
+    return file;
+  };
+ 
+  // Form submission handler
+  const onFormSubmit = async (formData: FormData) => {
+    setIsUploading(true);
+ 
+    try {
+      const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
+      const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
+ 
+      // Filter out null files and only include submittable documents
+      const submittableDocuments = allDocuments.filter(doc => doc.isSubmittable);
+      const fileDetails = Object.entries(formData)
+        .filter(([docName, file]) => {
+          const doc = submittableDocuments.find(d => d.name === docName);
+          return file !== null && doc;
+        })
+        .map(([docName, file]) => ({
+          corporateRequestedFileName: docName,
+          fileName: file!.name,
+          fileMimeType: file!.type,
+        }));
+ 
+      if (fileDetails.length === 0) {
+        toast.error("Please select at least one document to upload.", getToastOptions({}));
+        setIsUploading(false);
+        return;
+      }
+ 
+      const payload = {
+        jobApplicationId: jobId,
+        userId: userId,
+        fileDetails
+      };
+ 
+      console.log("Upload Payload:", payload);
+ 
+      // Step 1: Get signed URLs
+      const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
+        "https://jobs.dev.worko.work/file/gsu2u/USER_JOB_APPL_DOC", 
+        payload, 
+        true, 
+        {}, 
+        true
+      );
+ 
+      if (error || !Array.isArray(response)) {
+        throw new Error("Failed to get upload URLs");
+      }
+ 
+      // Step 2: Upload files to S3
+      const uploadPromises = response.map(async (uploadInfo) => {
+        const { awsS3SignedUrl, fileMimeType, awsS3Tag, corporateRequestedFileName } = uploadInfo;
+        const file = formData[corporateRequestedFileName];
+ 
+        if (!file) {
+          console.warn(`File not found for ${corporateRequestedFileName}`);
+          return null;
+        }
+ 
+        const uploadResult = await httpServiceObj.put(
+          awsS3SignedUrl,
+          file,
+          false,
+          { awsS3Tag, fileType: fileMimeType },
+          true
+        );
+ 
+        if (uploadResult.error) {
+          throw new Error(`Upload failed for ${corporateRequestedFileName}`);
+        }
+ 
+        return uploadInfo;
+      });
+ 
+      const uploadResults = await Promise.all(uploadPromises);
+      const successfulUploads = uploadResults.filter(result => result !== null);
+ 
+      // Step 3: Group documents by their target status for separate API calls
+      const statusGroups: Record<string, typeof successfulUploads> = {};
+ 
+      successfulUploads.forEach(uploadInfo => {
+        if (!uploadInfo) return;
+ 
+        const docName = uploadInfo.corporateRequestedFileName;
+        const document = allDocuments.find(doc => doc.name === docName);
+ 
+        if (document) {
+          const targetStatus = document.targetStatus;
+          if (!statusGroups[targetStatus]) {
+            statusGroups[targetStatus] = [];
+          }
+          statusGroups[targetStatus].push(uploadInfo);
+        }
+      });
+ 
+      // Step 4: Update application status for each group
+      const updatePromises = Object.entries(statusGroups).map(async ([status, uploads]) => {
+        const documentMapping = uploads.map(upload => ({
+          documentName: upload!.corporateRequestedFileName,
+          cloudFileName: upload!.cloudFileName
+        }));
+ 
+        const updatePayload = {
+          userId: userId,
+          emailId: email,
+          userType: "CAND",
+          status: status,
+          documentMapping,
+        };
+ 
+        const patchResult = await httpServiceObj.patch(
+          `https://jobs.dev.worko.work/job-application/${jobId}/applicant-action`, 
+          updatePayload, 
+          true, 
+          {}, 
+          true
+        );
+ 
+        if (patchResult.status !== 200) {
+          throw new Error(`Failed to update application status for ${status}`);
+        }
+ 
+        return { status, documentMapping };
+      });
+ 
+      await Promise.all(updatePromises);
+ 
+      toast.success("Documents uploaded successfully!", getToastOptions({}));
+      onClose();
+ 
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Failed to upload documents", 
+        getToastOptions({})
+      );
+    } finally {
+      setIsUploading(false);
+    }
+  };
+ 
+  // Check if any submittable files are selected
+  const submittableDocuments = allDocuments.filter(doc => doc.isSubmittable);
+  const hasSelectedFiles = submittableDocuments.some(doc => watchedFiles[doc.name] !== null);
+ 
   return (
     <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
       isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
@@ -142,59 +378,130 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit }: SubmitDocum
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">Upload Documents</h3>
-          <h3 className="text-xs text-gray-400">document requested on</h3>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-100">
+          <h3 className="text-lg font-semibold">Document Management</h3>
+          <h3 className="text-xs text-gray-400">All requested documents</h3>
+          <button 
+            onClick={onClose} 
+            className="p-1 rounded-full hover:bg-gray-100"
+            disabled={isUploading}
+          >
             <X className="w-5 h-5" />
           </button>
         </div>
-
-        {/* Document upload fields */}
-        <div className="p-6 overflow-y-auto flex-1">
-            {documents.map((doc) => (
-                <div key={doc} className="mb-4 w-full">
-                <label className="flex items-center gap-4 w-full">
-                    <div className="relative w-full">
-                    <input
-                        type="file"
-                        accept="application/pdf"
-                        onChange={(e) =>
-                        handleFileChange(doc, e.target.files?.[0] || null)
-                        }
-                        className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
-                    />
-                    <div className="border border-gray-300 rounded-2xl px-6 py-5 w-full bg-white text-gray-500">
-            {fileDetails.find(f => f.corporateRequestedFileName === doc)?.file?.name
-              || `${doc} (in PDF format max 2 MB)`}
+ 
+        {/* Document upload form */}
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1">
+          <div className="p-6 overflow-y-auto flex-1">
+            {allDocuments.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                No documents found for this application
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {allDocuments.map((document) => (
+                  <div key={document.name} className="border rounded-lg p-4 bg-gray-50">
+                    {/* Document header with status */}
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="text-md font-medium text-gray-800 capitalize">
+                        {document.name}
+                      </h4>
+                      <div className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${document.statusColor}`}>
+                        {document.statusIcon}
+                        {document.displayStatus}
+                      </div>
+                    </div>
+ 
+                    {/* File upload section */}
+                    {document.isSubmittable ? (
+                      <Controller
+                        name={document.name}
+                        control={control}
+                        rules={{
+                          validate: validateFile
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                          <div>
+                            <label className="flex items-center gap-4 w-full">
+                              <div className="relative flex-1">
+                                <input
+                                  type="file"
+                                  accept="application/pdf"
+                                  onChange={(e) => {
+                                    const file = e.target.files?.[0] || null;
+                                    const validatedFile = handleFileChange(document.name, file);
+                                    onChange(validatedFile);
+                                  }}
+                                  className="opacity-0 absolute inset-0 w-full h-full cursor-pointer z-10"
+                                  disabled={isUploading}
+                                />
+                                <div className={`border rounded-lg px-4 py-3 w-full bg-white text-gray-600 text-sm ${
+                                  errors[document.name] ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                                }`}>
+                                  {value?.name || `Upload ${document.name} (PDF, max 2MB)`}
+                                </div>
+                              </div>
+                              <div className={`flex items-center text-white cursor-pointer p-3 rounded-lg ${
+                                isUploading ? 'bg-gray-400' : 'bg-blue-500 hover:bg-blue-600'
+                              }`}>
+                                <Upload size={20} />
+                              </div>
+                            </label>
+                            {errors[document.name] && (
+                              <p className="text-red-500 text-sm mt-2">{errors[document.name]?.message}</p>
+                            )}
+                          </div>
+                        )}
+                      />
+                    ) : (
+                      <div className="flex items-center gap-4 w-full">
+                        <div className="flex-1 px-4 py-3 bg-gray-200 border border-gray-300 rounded-lg text-gray-500 text-sm">
+                          Document already submitted - no action required
+                        </div>
+                        <div className="flex items-center text-gray-400 p-3 rounded-lg bg-gray-200">
+                          <CheckCircle size={20} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
-        </div>
-
-        <div className="flex items-center text-white bg-blue-500 cursor-pointer p-4 rounded-2xl">
-          <Upload size={30} />
-        </div>
-      </label>
-    </div>
-  ))}
-</div>
-
-
-
-        {/* Footer */}
-            <div className="px-8 py-6 flex justify-between gap-4 flex-shrink-0">
-            <button
-                onClick={handleSubmit}
-                disabled={!allUploaded}
-                className={`flex items-center gap-2 px-8 py-3 text-white rounded-lg hover:opacity-90 transition-colors ${
-                    allUploaded ? 'bg-blue-500' : 'bg-gray-400 cursor-not-allowed'
-                }`}
-            >
-                <Send size={16} />
-                <span className="text-sm font-medium">Submit</span>
-            </button>
+ 
+          {/* Footer */}
+          <div className="px-8 py-6 flex justify-between items-center gap-4 flex-shrink-0 border-t">
+            <div className="text-sm text-gray-600">
+              <div>Total documents: {allDocuments.length}</div>
+              <div>Pending: {submittableDocuments.length} | Submitted: {allDocuments.filter(d => d.isSubmitted).length}</div>
             </div>
+ 
+            <div className="flex items-center gap-4">
+              {hasSelectedFiles && (
+                <div className="text-sm text-gray-600">
+                  {Object.values(watchedFiles).filter(file => file !== null).length} file(s) ready to upload
+                </div>
+              )}
+ 
+              <button
+                type="submit"
+                disabled={!hasSelectedFiles || isUploading || submittableDocuments.length === 0}
+                className={`flex items-center gap-2 px-6 py-3 text-white rounded-lg transition-colors ${
+                  hasSelectedFiles && !isUploading && submittableDocuments.length > 0
+                    ? 'bg-blue-500 hover:bg-blue-600' 
+                    : 'bg-gray-400 cursor-not-allowed'
+                }`}
+              >
+                <Send size={16} />
+                <span className="text-sm font-medium">
+                  {isUploading ? 'Uploading...' : 'Submit Documents'}
+                </span>
+              </button>
+            </div>
+          </div>
+        </form>
       </div>
     </div>
   );
 };
-
+ 
 export default SubmitDocumentModal;

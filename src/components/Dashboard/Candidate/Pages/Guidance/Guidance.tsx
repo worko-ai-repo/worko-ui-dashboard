@@ -4,6 +4,8 @@ import GuidanceTable from "./GuidanceTable";
 import { magnifyingQuestion } from "@Assets";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { Button } from "lib-worko-ui";
+import { DynamicTable, Column } from "@Components/Shared/DynamicTable";
+
 
 // Define types
 export interface GuidanceRequest {
@@ -66,6 +68,7 @@ const Guidance = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<GuidanceFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<GuidancePaginationInfo>(initialPaginationState);
+  
 
   // Store pagination keys for each page
   const paginationKeysRef = useRef<Record<number, string>>({
@@ -93,7 +96,7 @@ const Guidance = () => {
           },
           true
         );
-
+        console.log(response)
         if (response) {
           // Process the data to include status formatting
           if (Array.isArray(response.data)) {
@@ -179,6 +182,10 @@ const Guidance = () => {
     [fetchGuidanceRequests]
   );
 
+  // navigating to guidance page
+  const handleRedirect = ()=>{
+    window.location.href = '/v0/guidance';
+  }
   // Initial data load
   useEffect(() => {
     if (user?.email) {
@@ -205,10 +212,12 @@ const Guidance = () => {
     <div className="w-full relative rounded-xl overflow-hidden text-base text-slate-900 font-poppins">
       {/* Help button container at top with right alignment */}
       <div className="w-full flex justify-end p-2">
-        <div className="relative rounded-lg bg-[#316bff] h-11 flex flex-row items-center justify-center p-4 px-4 box-border gap-1.5 cursor-pointer text-center text-xs text-white font-poppins">
+        <button 
+        onClick={handleRedirect}
+        className="relative rounded-lg bg-[#316bff] h-11 flex flex-row items-center justify-center p-4 px-4 box-border gap-1.5 cursor-pointer text-center text-xs text-white font-poppins">
           <img className="w-5 h-5 mr-1" alt="" src={magnifyingQuestion} />
           <div className="relative tracking-[0.2px] leading-[114%] font-semibold">Request new guidance</div>
-        </div>
+        </button>
       </div>
 
       <div className="w-full space-y-[35px] px-0">

@@ -13,6 +13,11 @@ const stats = [
     { label: 'Hired', value: 90 },
   ];
   
+  const handleRedirect = () => {
+    const baseUrl = window.location.origin;
+    window.location.href = `${baseUrl}/v0/jobs?dashboard=USER`;
+  };
+
   const ReferAndEarn = () => {
     const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
     const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
@@ -36,7 +41,7 @@ const stats = [
                 </div>
               ))}
             </div>
-  
+              
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
               <input
                 type="text"
@@ -52,7 +57,14 @@ const stats = [
               </button>
               
             </div>
-            
+          <div className="w-max">
+            <button
+              onClick={handleRedirect}
+              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white text-sm font-medium shadow hover:bg-blue-700"
+            >
+              Refer a friend
+            </button>
+          </div>
           </div>
           <EarningsDropdown />
         </div>

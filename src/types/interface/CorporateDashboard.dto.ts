@@ -159,9 +159,23 @@ export interface JobApplicationDetailsDto {
   jobId: string;
   jobTitle: string;
   companyName: string;
+  offerLetterDetails?: Array<{
+    userType: string;
+    userId: string;
+    actionDate: string;
+    remarks: string;
+    cloudFileName: string;
+  }>;
+  offerLetterIssueRaisedDetails: Array<{
+    userId: string
+    userType: string
+    actionDate:string
+    cloudFileName: string
+    remarks: string
+  }>;
   jobPortal: string;
   jobUrl: string;
-  status: string;
+  status: JobApplicationStatusType;
   rejectionAwsScheduleId?: string;
   rejectionFeedbackBySystem?: string;
   jdMatchErrorCode?: number;
@@ -178,13 +192,36 @@ export interface JobApplicationDetailsDto {
   };
   statusTracker: StatusTracker[];
   applicantDetails: ApplicantDetails;
+  isEvaluatorResponded?: boolean;
   GSI1PK: string;
   GSI1SK: string;
   GSI2PK: string;
   GSI2SK: string;
   PK: string;
   SK: string;
+  // @_CL - Document management properties
+  requestedDocumentDetails?: Array<{
+    requestedDocumentNames: string[];
+    documentStatus: JobApplicationDocumentStatusType;
+    userType: string;
+    userId: string;
+    actionDate: string;
+  }>;
+  responseDocumentDetails?: Array<{
+    documentMapping: Array<{
+      documentName: string;
+      cloudFileName: string;
+    }>;
+    documentStatus: JobApplicationDocumentStatusType;
+    userType: string;
+    userId: string;
+    actionDate: string;
+  }>;
+  documentCurrentStatusMap?: Record<string, JobApplicationDocumentStatusType>;
+  documentCurrentMapping?: Record<string, string>;
 }
+
+export type JobApplicationDocumentStatusType = "DOCUMENT_ADDITIONAL_REQUESTED" | "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" | "DOCUMENT_SUBMITTED" | "DOCUMENT_REVISION_REQUESTED" | "DOCUMENT_REQUESTED" | "DOCUMENT_REVISION_REQUEST_SUBMITTED";
 
 export interface StatusTracker {
   userType: "ADMIN" | "CAND" | string; // you can extend this union as needed

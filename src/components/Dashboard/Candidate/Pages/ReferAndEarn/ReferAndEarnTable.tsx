@@ -2,6 +2,7 @@ import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useState, useEffect } from "react";
 import Table from "../../SharedComponents/Table";
+import WithdrawDialog from "./WithdrawDialog";
 
 const ReferralsTable = ({searchbarText}: any) => {
   const { user } = useDashboardContext();
@@ -19,6 +20,133 @@ const ReferralsTable = ({searchbarText}: any) => {
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedReferral, setSelectedReferral] = useState(null);
+  const [statusData, setStatusData] = useState<any>(null); // Placeholder for now
+
+//   const dummyReferrals = [
+//   {
+//     id: "1",
+//     name: "Alice",
+//     jobTitle: "Frontend Developer",
+//     email: "alice@example.com",
+//     phone: "1234567890",
+//     dateReferred: "01/08/2025",
+//     dateApplied: "02/08/2025",
+//     status: "NOT_ACHIEVED_YET",
+//     jobApplicationStatus: "APPLIED",
+//     referralBonus: 500,
+//   },
+//   {
+//     id: "2",
+//     name: "Bob",
+//     jobTitle: "Backend Developer",
+//     email: "bob@example.com",
+//     phone: "2345678901",
+//     dateReferred: "03/08/2025",
+//     dateApplied: "04/08/2025",
+//     status: "ACHIEVED",
+//     jobApplicationStatus: "PROCESSING_INTERVIEW",
+//     referralBonus: 800,
+//   },
+//   {
+//     id: "3",
+//     name: "Charlie",
+//     jobTitle: "UI/UX Designer",
+//     email: "charlie@example.com",
+//     phone: "3456789012",
+//     dateReferred: "05/08/2025",
+//     dateApplied: "06/08/2025",
+//     status: "WITHDRAWAL_REQUESTED",
+//     jobApplicationStatus: "HIRED",
+//     referralBonus: 1000,
+//   },
+//   {
+//     id: "4",
+//     name: "Diana",
+//     jobTitle: "QA Engineer",
+//     email: "diana@example.com",
+//     phone: "4567890123",
+//     dateReferred: "07/08/2025",
+//     dateApplied: "08/08/2025",
+//     status: "WITHDRAWAL_ACCEPTED",
+//     jobApplicationStatus: "JOINED",
+//     referralBonus: 1500,
+//   },
+//   {
+//     id: "5",
+//     name: "Ethan",
+//     jobTitle: "DevOps Engineer",
+//     email: "ethan@example.com",
+//     phone: "5678901234",
+//     dateReferred: "09/08/2025",
+//     dateApplied: "10/08/2025",
+//     status: "WITHDRAWAL_REJECTED",
+//     jobApplicationStatus: null,
+//     referralBonus: 0,
+//   },
+//   {
+//     id: "6",
+//     name: "Fiona",
+//     jobTitle: "Project Manager",
+//     email: "fiona@example.com",
+//     phone: "6789012345",
+//     dateReferred: "11/08/2025",
+//     dateApplied: "12/08/2025",
+//     status: "PAYMENT_COMPLETED",
+//     jobApplicationStatus: null,
+//     referralBonus: 2000,
+//   },
+//   {
+//     id: "7",
+//     name: "George",
+//     jobTitle: "Business Analyst",
+//     email: "george@example.com",
+//     phone: "7890123456",
+//     dateReferred: "13/08/2025",
+//     dateApplied: "14/08/2025",
+//     status: "PENDING",
+//     jobApplicationStatus: null,
+//     referralBonus: 0,
+//   },
+//   {
+//     id: "8",
+//     name: "Hannah",
+//     jobTitle: "Security Engineer",
+//     email: "hannah@example.com",
+//     phone: "8901234567",
+//     dateReferred: "15/08/2025",
+//     dateApplied: "16/08/2025",
+//     status: "IN_PROCESS",
+//     jobApplicationStatus: null,
+//     referralBonus: 300,
+//   },
+//   {
+//     id: "9",
+//     name: "Isaac",
+//     jobTitle: "AI Specialist",
+//     email: "isaac@example.com",
+//     phone: "9012345678",
+//     dateReferred: "17/08/2025",
+//     dateApplied: "18/08/2025",
+//     status: "BONUS_ACHIEVED",
+//     jobApplicationStatus: null,
+//     referralBonus: 400,
+//   },
+//   {
+//     id: "10",
+//     name: "Julia",
+//     jobTitle: "Marketing Lead",
+//     email: "julia@example.com",
+//     phone: "0123456789",
+//     dateReferred: "19/08/2025",
+//     dateApplied: "20/08/2025",
+//     status: "CLOSED",
+//     jobApplicationStatus: null,
+//     referralBonus: 0,
+//   }
+// ];
+
 
   const fetchReferrals = async (page = 1, pageSize = 10) => {
     if (!user?.email) {
@@ -34,9 +162,9 @@ const ReferralsTable = ({searchbarText}: any) => {
       // Include lastKey in the request if it exists for the requested page
       const lastKey = page > 1 ? lastKeyMap[page - 1] : undefined;
       const lastKeyParam = lastKey ? `&lastKey=${encodeURIComponent(lastKey)}` : '';
-      
+      const encodedEmail  = encodeURIComponent(user.email)
       const { response }: {response:any} = await httpServiceObj.get(
-        `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${user.email}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ''}`,
+        `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ''}`,
         true,
         {},
         true
@@ -67,14 +195,15 @@ const ReferralsTable = ({searchbarText}: any) => {
           console.warn("Null or undefined item in response data");
           return null;
         }
-
+        console.log(item)
         return {
           id: item.id || `temp-${Math.random()}`, // Fallback ID if missing
           name: item.recipientDetails?.name || "N/A",
           jobTitle: item.jobDetails?.title || "N/A",
           email: item.recipientDetails?.email || "N/A",
           phone: item.recipientDetails?.phoneNumber || "N/A",
-          dateReferred: item.referredDate 
+          jobApplicationStatus:item.jobApplicationStatus,
+          dateReferred: item.referredDate        
             ? new Date(item.referredDate).toLocaleDateString("en-GB")
             : "N/A",
           dateApplied: item.jobApplicationStatus && item.updatedAt
@@ -137,7 +266,12 @@ const ReferralsTable = ({searchbarText}: any) => {
   };
 
   useEffect(() => {
+    // uncomment the below to check with real data
     fetchReferrals(currentPage, pagination.pageSize);
+
+    // uncomment the below to check with dummy data
+    // setReferrals(dummyReferrals);
+    setLoading(false);
   }, [user?.email, currentPage, pagination.pageSize, searchbarText]);
 
   const handlePageChange = (page:number) => {
@@ -164,16 +298,20 @@ const ReferralsTable = ({searchbarText}: any) => {
     }
   
     const map: Record<string, {label: string, style: string}> = {
-      WITHDRAWAL_ACCEPTED: { label: "Withdrawal Accepted", style: "bg-[#d6e2ff] text-[#0f172a]" },
-      IN_PROCESS: { label: "In process", style: "text-[#0f172a]" },
+      NOT_ACHIEVED_YET: { label: "Not Achieved Yet", style: "text-[#0f172a]" },
       ACHIEVED: { label: "Hired", style: "text-[#0f172a]" },
       WITHDRAWAL_REQUESTED: { label: "WITHDRAWAL REQUESTED", style: "text-[#0f172a]" },
-      BONUS_ACHIEVED: { label: "Bonus Achieved", style: "text-[#0f172a]" },
-      PAYMENT_COMPLETED: { label: "Payment Completed", style: "text-[#0f172a]" },
+      WITHDRAWAL_ACCEPTED: { label: "Withdrawal Accepted", style: "bg-[#d6e2ff] text-[#0f172a]" },
       WITHDRAWAL_REJECTED: { label: "Withdrawal Rejected", style: "text-[#0f172a]" },
-      CLOSED: { label: "Cancelled/Closed", style: "text-[#0f172a]" },
-      NOT_ACHIEVED_YET: { label: "Not Achieved Yet", style: "text-[#0f172a]" },
+      PAYMENT_COMPLETED: { label: "Payment Completed", style: "text-[#0f172a]" },
       PENDING: { label: "Pending", style: "text-[#0f172a]" },
+      IN_PROCESS: { label: "In process", style: "text-[#0f172a]" },
+      BONUS_ACHIEVED: { label: "Bonus Achieved", style: "text-[#0f172a]" },
+      CLOSED: { label: "Cancelled/Closed", style: "text-[#0f172a]" },
+      APPLIED: { label: "Applied", style: "text-blue-600" },
+      PROCESSING_INTERVIEW: { label: "Interviewing", style: "text-indigo-600" },
+      HIRED: { label: "Hired", style: "text-green-600" },
+      JOINED: { label: "Joined", style: "text-emerald-700 font-medium" },
     };
     return map[status] || { label: "Unknown", style: "text-[#0f172a]" };
   };
@@ -228,6 +366,48 @@ const ReferralsTable = ({searchbarText}: any) => {
       key: "status",
       className: "text-xs",
       header: "Status",
+      sortable: true,
+      render: (_value: any, item: any) => {
+        if (item.jobApplicationStatus === "JOINED") {
+          return (
+            <button
+              className="px-4 py-1 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
+              onClick={() => {
+                setSelectedReferral(item);
+                setStatusData({
+                  transactionId: "mock-tx-123",
+                  eligibleAmount: item.referralBonus,
+                  status: "Eligible",
+                  lastUpdated: new Date().toISOString(),
+                  reason: "Joined successfully"
+                });
+
+                setShowDialog(true);
+              }}
+            >
+              Withdraw
+            </button>
+          );
+        }
+
+        const statusInfo = getStatusLabelAndStyle(item.status);
+        const { label, style } = statusInfo;
+        return (
+          <div
+            className={`px-8 py-2 rounded-full border truncate border-gray-300 ${style}`}
+            onClick={() => {
+              console.log(item); 
+            }}
+          >
+            <span className="text-xs">{label}</span>
+          </div>
+        );
+      },
+    },
+    {
+      key: "jobApplicationStatus",
+      className: "text-xs",
+      header: "Job Status",
       sortable: true,
       render: (value:any) => {
         const statusInfo = getStatusLabelAndStyle(value);
@@ -297,6 +477,12 @@ const ReferralsTable = ({searchbarText}: any) => {
           }
         />
       </div>
+      <WithdrawDialog
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        referral={selectedReferral}
+        statusData={statusData}
+      />
     </div>
   );
 };

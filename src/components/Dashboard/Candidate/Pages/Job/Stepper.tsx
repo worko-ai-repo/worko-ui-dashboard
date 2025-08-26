@@ -18,6 +18,9 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
     { key: "UNDER_EVALUATION", label: "Under evaluation" },
     { key: "PROCESSING_INTERVIEW", label: "Interview processing" },
     { key: "INTERVIEW_DONE", label: "Interviewed" },
+    { key: "HIRING_IN_PROCESS", label: "Hiring in Process" },
+    { key: "DOCUMENT_REQUESTED", label: "Document requested" },
+    { key: "DOCUMENT_SUBMITTED", label: "Document submitted" },
     { key: "HIRED", label: "Hired" }
   ];
 
@@ -70,7 +73,11 @@ const Stepper: FunctionComponent<StepperProps> = ({ steps, statusTracker }) => {
               <div className={`h-0.5 w-16 md:w-24 ${displaySteps[index].completed && displaySteps[index + 1].completed ? 'bg-green-500' : 'bg-gray-300'}`}></div>
             )}
           </div>
-          <div className="text-xs mt-1 font-medium">{step.step}</div>
+         <div className="text-xs mt-1 font-medium text-center">
+            {step.step.split(' ').map((word, i) => (
+              <div key={i}>{word}</div>
+            ))}
+          </div>
           <div className="text-xs text-gray-500">{step.date}</div>
         </div>
       ))}

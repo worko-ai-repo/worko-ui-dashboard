@@ -8,6 +8,7 @@ const SECTIONS = [
   { id: 'core-skills', label: 'Core Skills' },
   { id: 'soft-skills', label: 'Soft Skills' },
   { id: 'technical-skills', label: 'Technical Skills' },
+  { id: 'roles', label: 'Roles' },
   { id: 'achievements', label: 'Achievements' },
   { id: 'industry', label: 'Industry' },
   { id: 'department', label: 'Department' },
@@ -62,7 +63,7 @@ const QuickLinks: FunctionComponent = () => {
 
   return (
     <div className="sticky top-0 left-0 h-screen w-[198px] z-10">
-      <div className="absolute top-0 left-0 rounded-3xl bg-white w-[198px] h-[610px] overflow-auto shadow-md">
+      <div className="absolute top-0 left-0 rounded-3xl bg-white w-[198px] h-[650px] overflow-auto shadow-md">
         <div className="px-4 pt-8 pb-2">
           <div className="text-[16px] text-black text-left font-semibold">Quick links</div>
         </div>
@@ -73,7 +74,7 @@ const QuickLinks: FunctionComponent = () => {
               key={id}
               onClick={() => scrollToSection(id)}
               className={`w-full rounded-[10px] px-3 py-2 text-left transition-colors duration-200 hover:bg-gray-100 ${
-                activeSection === id ? 'bg-whitesmoke font-medium text-black' : 'text-darkslategray'
+                activeSection === id ? 'bg-gray-200 font-medium text-black' : 'text-darkslategray'
               }`}
             >
               <div className="leading-[20px]">{label}</div>

@@ -16,7 +16,18 @@ export interface JobTypes {
   scoreDetails: string;
   action: string | null;
   applicationSteps?: ApplicationStep[];
+  jobType: string;
+  requestedDocumentDetails?: RequestedDocumentDetail[];
 }
+
+export interface RequestedDocumentDetail {
+  actionDate: string;
+  documentStatus: string;
+  requestedDocumentNames: string[];
+  userId: string;
+  userType: string;
+}
+
 
 export interface StatusTracker {
   userType: string;
