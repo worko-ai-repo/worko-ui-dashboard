@@ -1,4 +1,10 @@
-import { JobApplicationStatusType } from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
+import {
+  JobApplicationStatusType,
+  JobStatusType,
+  JobTypeofEmploymentType,
+  ReferralStatusType,
+} from "../JobsAndApplication.type";
+import { UserRole } from "./RoleBasedAccessControl";
 
 export interface JobApiResponse {
   data: JobData[];
@@ -20,7 +26,7 @@ export interface ApiResponseDto<T> {
 }
 
 export interface JobData {
-  status: string;
+  status: string; //@TODO: Change to JobStatusType
   companyId: string;
   coreSkills: string[];
   department: string;
@@ -141,8 +147,8 @@ export interface JobDetails {
   softSkills?: string[];
   goodSkills?: string[];
   otherRequirements?: string;
-  typeofEmployment: "FULL_TIME" | "PART_TIME" | "CONTRACT" | "INTERNSHIP";
-  status: "PUBLISHED" | "ARCHIVED" | "CLOSED";
+  typeofEmployment: JobTypeofEmploymentType;
+  status: JobStatusType;
   noticePeriod: number;
   displaySalaryRange: boolean;
   miscellaneousSkills?: any;
@@ -151,18 +157,38 @@ export interface JobDetails {
   fixedComponent?: number;
   variableComponent?: number;
 }
-
-//========================================JOB APPLICATIONS INTERFACES========================================
 export interface JobApplicationDetailsDto {
   id: string;
   companyId: string;
   jobId: string;
   jobTitle: string;
   companyName: string;
+  jobCreatedByCorporateUserId?: string;
+  offerLetterDetails?: Array<{
+    userType: string;
+    userId: string;
+    actionDate: string;
+    remarks: string;
+    cloudFileName: string;
+  }>;
+  offerLetterIssueRaisedDetails: Array<{
+    userId: string;
+    userType: string;
+    actionDate: string;
+    cloudFileName: string;
+    remarks: string;
+  }>;
   jobPortal: string;
   jobUrl: string;
-  status: string;
+  status: JobApplicationStatusType;
   rejectionAwsScheduleId?: string;
+  rejectedByUserId?: {
+    actionDate: string;
+    reason: string;
+    userType: UserRole;
+    userComment: string;
+    userId: string;
+  };
   rejectionFeedbackBySystem?: string;
   jdMatchErrorCode?: number;
   jdMatchErrorDesc?: string;
@@ -178,16 +204,44 @@ export interface JobApplicationDetailsDto {
   };
   statusTracker: StatusTracker[];
   applicantDetails: ApplicantDetails;
+  isEvaluatorResponded?: boolean;
   GSI1PK: string;
   GSI1SK: string;
   GSI2PK: string;
   GSI2SK: string;
   PK: string;
   SK: string;
+  // @_CL - Document management properties
+  requestedDocumentDetails?: Array<{
+    requestedDocumentNames: string[];
+    documentStatus: JobApplicationDocumentStatusType;
+    userType: string;
+    userId: string;
+    actionDate: string;
+  }>;
+  responseDocumentDetails?: Array<{
+    documentMapping: Array<{
+      documentName: string;
+      cloudFileName: string;
+    }>;
+    documentStatus: JobApplicationDocumentStatusType;
+    userType: string;
+    userId: string;
+    actionDate: string;
+  }>;
+  documentCurrentStatusMap?: Record<string, JobApplicationDocumentStatusType>;
+  documentCurrentMapping?: Record<string, string>;
 }
 
+export type JobApplicationDocumentStatusType =
+  | "DOCUMENT_REVISION_REQUEST_SUBMITTED"
+  | "DOCUMENT_ADDITIONAL_REQUESTED"
+  | "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED"
+  | "DOCUMENT_SUBMITTED"
+  | "DOCUMENT_REVISION_REQUESTED"
+  | "DOCUMENT_REQUESTED";
 export interface StatusTracker {
-  userType: "ADMIN" | "CAND" | string; // you can extend this union as needed
+  userType: "ADMIN" | "CAND" | string;
   newStatus: JobApplicationStatusType;
   oldStatus: JobApplicationStatusType;
   actionDate: string; // ISO string
@@ -233,7 +287,9 @@ export interface ApplicantDetails {
   GSI1PK: string;
   GSI1SK: string;
   SK: string;
+  companyEmailId?: string;
   cvExtractParsed: CVExtractParsed;
+  personalDetails: UsersPersonalDetails;
   candidateExperience: {
     companyName: string;
     department: string;
@@ -241,12 +297,13 @@ export interface ApplicantDetails {
   };
 }
 
+interface UsersPersonalDetails {
+  name: string;
+  phone: string;
+  email: string;
+}
 export interface CVExtractParsed {
-  personalDetails: {
-    name: string;
-    phone: string;
-    email: string;
-  };
+  personalDetails: UsersPersonalDetails;
   roleAndResponsibilities: RoleAndResponsibility[];
   industryExperience: IndustryExperience[];
   education: Education[];
@@ -278,4 +335,39 @@ export interface ProfessionalExperience {
   company: string;
   period: string;
   role: string;
+}
+
+/**
+ * ReferralDetailsDto
+ *
+ * @description - Data Transfer Object representing the details of a referral made by an employee.
+ */
+export interface ReferralDetailsDto {
+  jobUrl: string;
+  companyId: string;
+  status: ReferralStatusType;
+  jobId?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string;
+  emailFeedback?: string;
+  scoreDetails?: {
+    heading: string;
+    detail: string;
+  }[];
+  matchingScore: number;
+  jobPortal: string;
+  jdExtracted?: string;
+  userSubscriptionId: string;
+  scoreFetchedDate?: string;
+  jdMatchErrorDesc?: string;
+  jdMatchErrorCode?: number;
+  rejectionFeedbackBySystem?: {
+    heading: string;
+    detail: string;
+  }[];
+  id: string;
+  PK: string;
+  SK: string;
+  GSI1PK: string;
+  GSI1SK: string;
 }

@@ -1,10 +1,9 @@
-import { JobApplicationStatusType } from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
-import { JobStatusType } from "../jobs.type";
+import { JobApplicationStatusType, JobStatusType } from "../JobsAndApplication.type";
 import { StatusTracker } from "@Components/Dashboard/Candidate/Pages/Job/JobTypes";
 
 /**
  * APIResponseDto
- * 
+ *
  * @description - This interface defines the structure of a generic API response for paginated data.
  */
 export interface ApiResponseDto<T> {
@@ -36,13 +35,35 @@ export interface CursorPaginationAdminJobDataParams {
 export interface CursorPaginationApplicationDataAdminParams {
   pageSize: number;
   sortOrder: "ascending" | "descending";
-  status?: "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
+  status?: JobApplicationStatusType;
   searchText?: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
 }
 
+/**
+ * CursorPaginationEmployeeDataAdminParams
+ */
+export interface CursorPaginationUsersDataAdminParams {
+  pageSize: number;
+  userType: 'CAND' | 'EMP' ;
+  sortOrder: "ascending" | "descending";
+  searchText?: string; //@TODO:Rohit: Add more filters if required
+  lastKey?: string | undefined;
+}
+
+/**
+ * CursorPaginationReferralsDataAdminParams
+ * 
+ * @description - Parameters for paginating referral data in admin services.
+ */
+export interface CursorPaginationReferralsDataAdminParams {
+  pageSize: number;
+  sortOrder: "ascending" | "descending";
+  searchText?: string; //@TODO:Rohit: Add more filters if required
+  lastKey?: string | undefined;
+}
 /**
  * AdminBulkJobApplicationUpdateItem
  */

@@ -1,5 +1,7 @@
-import { parseScorePoints } from "@Utils/DetailedAnalysis.utils";
+
 import React, { useState } from "react";
+import NoDataPresent from "./NoDataPresent";
+import { parseScorePoints } from "@Utils/DetailedAnalysis.utils";
 
 interface ScorePoint {
   heading: string;
@@ -17,9 +19,9 @@ export interface ScorePointsModalProps {
 }
 
 const ScorePointsModal: React.FC<ScorePointsModalProps> = ({ title, data, matchingScore, details = true, showCloseButton = false, onClose }) => {
-  // console.log("Score Points Modal Data:", data!);
-  const scorePoints: ScorePoint[] = parseScorePoints(data);
-  // console.log("Score Points Heading:", scorePoints);
+  
+  if(!data) return <NoDataPresent />;
+   const scorePoints: ScorePoint[] = parseScorePoints(data);
 
   return (
     <section className="rounded-md">

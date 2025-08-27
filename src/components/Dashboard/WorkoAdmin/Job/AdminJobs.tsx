@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { JobStatusType } from "src/types/jobs.type";
+import { JobStatusType } from "src/types/JobsAndApplication.type";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import JobForm from "@Components/Shared/PostJob/JobForm";
 import BulkOption from "@Components/Dashboard/Corporate/Bulk";
@@ -105,7 +105,7 @@ const AdminJobs = () => {
   }
 
   async function updateJobStatus(
-    type: "ARCHIVED" | "CLOSED" | "PUBLISHED",
+    type: JobStatusType,
     data: {
       id: string;
       companyId: string;

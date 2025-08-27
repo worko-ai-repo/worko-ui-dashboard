@@ -9,9 +9,10 @@ import { toast } from "react-toastify";
 import { SelectedRow } from "./Jobs";
 import { getToastOptions } from "lib-worko-ui";
 import { useNavigate } from "react-router-dom";
+import { JobStatusType } from "src/types/JobsAndApplication.type";
 
 interface JobsTableProps {
-  activeTab: "PUBLISHED" | "CLOSED" | "ARCHIVED";
+  activeTab: JobStatusType;
   data: JobData[];
   selectedRows: SelectedRow[];
   selectRows: (row: JobData) => void;
@@ -19,7 +20,7 @@ interface JobsTableProps {
   reset: () => void;
   handleJobCreation: (mode: "UPDATE" | "DUPLICATE", row: JobData) => void;
   updateJobStatus: (
-    status: "CLOSED" | "PUBLISHED" | "ARCHIVED",
+    status:JobStatusType,
     data: {
       id: string;
       companyId: string;

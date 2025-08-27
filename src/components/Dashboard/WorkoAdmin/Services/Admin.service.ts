@@ -1,7 +1,13 @@
 import { SelectedRow } from "@Components/Dashboard/Corporate/Job/Jobs";
 import { JobFormSchema } from "@Components/Dashboard/types";
 import { AdminBulkJobApplicationUpdateItem, ApiResponseDto } from "@Interfaces/AdminServices.dto";
-import { JobApiResponse, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import {
+  ApplicantDetails,
+  JobApiResponse,
+  JobApplicationDetailsDto,
+  ReferralDetailsDto,
+} from "@Interfaces/CorporateDashboard.dto";
+import { JobEvaluationRequestDto } from "@Interfaces/CorporateServices.dto";
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 
@@ -24,7 +30,14 @@ class AdminService {
    */
   async postJobs(payload: JobFormSchema, params: object): Promise<JobDto | []> {
     try {
-      const { response } = await httpServiceObj.post<JobDto>("/job", payload, true, params, false, "JOB");
+      const { response } = await httpServiceObj.post<JobDto>(
+        "/job",
+        payload,
+        true,
+        params,
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -47,7 +60,13 @@ class AdminService {
    */
   async fetchJobs(params: object): Promise<JobApiResponse> {
     try {
-      const { response } = await httpServiceObj.get<JobApiResponse>("/job", true, params, false, "JOB");
+      const { response } = await httpServiceObj.get<JobApiResponse>(
+        "/job",
+        true,
+        params,
+        false,
+        "JOB"
+      );
       if (response) return response;
       throw new Error("Empty response");
     } catch (error: any) {
@@ -83,7 +102,14 @@ class AdminService {
     jobId: string
   ): Promise<JobDto | null> {
     try {
-      const { response } = await httpServiceObj.put<JobDto>(`/job/${jobId}`, payload, true, params, false, "JOB");
+      const { response } = await httpServiceObj.put<JobDto>(
+        `/job/${jobId}`,
+        payload,
+        true,
+        params,
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -106,7 +132,14 @@ class AdminService {
    */
   async bulkUpdate(payload: { bulkJobUpdate: SelectedRow[] }): Promise<any> {
     try {
-      const { response } = await httpServiceObj.patch<any>("/job/bulk-update", payload, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.patch<any>(
+        "/job/bulk-update",
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
       if (response) return response;
       else {
         throw new Error();
@@ -132,9 +165,19 @@ class AdminService {
          }
    * @return {Promise<JobApplicationDetailsDto>} -= Common job data that will be listed in the corporate dashboard.
    */
-  async updateApplicationStatus(payload: any, jobId: string): Promise<JobApplicationDetailsDto | null> {
+  async updateApplicationStatus(
+    payload: any,
+    jobId: string
+  ): Promise<JobApplicationDetailsDto | null> {
     try {
-      const { response } = await httpServiceObj.patch<JobApplicationDetailsDto>(`/job-application/${jobId}/corp-action`, payload, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.patch<JobApplicationDetailsDto>(
+        `/job-application/${jobId}/corp-action`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -158,13 +201,19 @@ class AdminService {
   async fetchApplications(params: object): Promise<ApiResponseDto<JobApplicationDetailsDto>> {
     try {
       //path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType: ApiType = "BASE"
-      const { response } = await httpServiceObj.get<ApiResponseDto<JobApplicationDetailsDto>>("/job-application", true, params, false, "JOB");
+      const { response } = await httpServiceObj.get<ApiResponseDto<JobApplicationDetailsDto>>(
+        "/job-application",
+        true,
+        params,
+        false,
+        "JOB"
+      );
       if (response) return response;
       else {
         throw new Error();
       }
     } catch (error: any) {
-      console.error("[CORPORATE SERVICE]: Failed to fetch Applications.");
+      console.error("[ADMIN SERVICE]: Failed to fetch Applications.");
       return {
         data: [],
         pagination: {
@@ -180,7 +229,9 @@ class AdminService {
    *
    * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
    */
-  async postBulkApplicationUpdate(payload: { bulkJobApplicationUpdate: AdminBulkJobApplicationUpdateItem[] }): Promise<any> {
+  async postBulkApplicationUpdate(payload: {
+    bulkJobApplicationUpdate: AdminBulkJobApplicationUpdateItem[];
+  }): Promise<any> {
     try {
       const { response, status } = await httpServiceObj.post<any>(
         "/job-application/bulk-update",
@@ -197,8 +248,195 @@ class AdminService {
 
       return response;
     } catch (error) {
-      console.error("[CORPORATE SERVICE]: Failed to post Bulk Application Update Request.", error);
+      console.error("[ADMIN SERVICE]: Failed to post Bulk Application Update Request.", error);
       throw error;
+    }
+  }
+
+  /**
+   * sendApplicationToRecruiters
+   *
+   * @description - This API is used to send a job application to recruiters for further processing.
+   *
+   * @param {string} applicationId - The ID of the application for which the application is being sent.
+   */
+  async sendApplicationToRecruiters(
+    applicationId: string
+  ): Promise<JobApplicationDetailsDto | null> {
+    try {
+      const { response } = await httpServiceObj.patch<JobApplicationDetailsDto>(
+        `/job-application/${applicationId}/display-to-corporate`,
+        {
+          displayToCorporate: true, // Assuming this is the intended action
+        },
+        true,
+        {},
+        false,
+        "JOB"
+      );
+
+      if (!response) {
+        throw new Error("No response received from sending application to recruiters.");
+      }
+      return response;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to send application to recruiters.", error);
+      return null;
+    }
+  }
+
+  /**
+   * postBulkEvaluatorFeedbackRequest
+   *
+   * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
+   */
+  async postBulkEvaluatorFeedbackRequest(payload: {
+    requestEvaluations: JobEvaluationRequestDto[];
+  }): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.post<any>(
+        "/request-evaluation/bulk",
+        payload,
+        true, // withAuth
+        {}, // headers
+        false, // noContentTypeHeader
+        "JOB" // serviceIdentifier (optional)
+      );
+
+      if (status === 409) {
+        const error = new Error("Some evaluator feedback requests already exist.");
+        (error as any).status = 409;
+        throw error;
+      }
+
+      if (!response) {
+        throw new Error("No response received from bulk evaluation request.");
+      }
+
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to post Bulk Evaluator Feedback Request.", error);
+      throw error;
+    }
+  }
+
+  /**
+   * postEvaluatorFeedbackRequest
+   *
+   * @description - This api is used to post the evaluator feedback request for a job application.
+   */
+
+  async postEvaluatorFeedbackRequest(payload: JobEvaluationRequestDto): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.post<any>(
+        "/request-evaluation/",
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+
+      if (status === 409) {
+        const error = new Error(
+          `The application evaluator feedback request already exists against ${
+            payload.evaluatorDetails.email || "this evaluator"
+          }.`
+        );
+        (error as any).status = 409;
+        throw error;
+      }
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error) {
+      console.error("[CORPORATE SERVICE]: Failed to post Evaluator Feedback Request.", error);
+      throw error; // Re-throw to let the caller handle it
+    }
+  }
+
+  /**
+   * fetchAdminUsers
+   *
+   * @description - This api is used to get employees based on the tab .
+   */
+  async fetchAdminUsers(params: object): Promise<ApiResponseDto<ApplicantDetails>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<ApplicantDetails>>(
+        "/admin/user",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Employees.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
+
+  /**
+   * Delete User
+   *
+   * @description - This api is used to delete a user.
+   */
+  async deleteUser(userId: string): Promise<boolean> {
+    try {
+      const { response, status } = await httpServiceObj.patch<{ message: string }>(
+        `/admin/user/${userId}/delete`,
+        { isDeleted: true },
+        true,
+        {},
+        false,
+        "BASE"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return true;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to delete User.", error);
+      return false;
+    }
+  }
+
+  /**
+   * ferchReferrals
+   *
+   * @description - This api is used to get referrals based on the tab .
+   */
+  async fetchReferrals(params: object): Promise<ApiResponseDto<ReferralDetailsDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<ReferralDetailsDto>>(
+        "/admin/referral",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Referrals.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
     }
   }
 }

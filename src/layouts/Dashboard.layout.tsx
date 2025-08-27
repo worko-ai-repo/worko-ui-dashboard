@@ -26,7 +26,7 @@ function CorporateDashboardLayout(): JSX.Element {
                         sidebarOpen={sidebarOpen}
                         setSidebarOpen={setSidebarOpen}
                     />
-                    <main className="overflow-auto p-0 lg:p-8 pt-2">
+                    <main className=" overflow-auto p-0 lg:py-0 lg:px-4">
                         <Outlet />
                     </main>
                 </div>

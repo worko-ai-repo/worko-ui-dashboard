@@ -3,7 +3,7 @@ import SearchBar from "../../../Shared/SearchBar";
 import HeaderDetails from "../../../Shared/Stats";
 import { useEffect, useState } from "react";
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
-import { JobStatusType } from "src/types/jobs.type";
+import { JobStatusType } from "src/types/JobsAndApplication.type";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import JobForm from "@Components/Shared/PostJob/JobForm";
 import BulkOption from "@Components/Dashboard/Corporate/Bulk";
@@ -43,7 +43,7 @@ const Jobs = () => {
     toggleSelectAll,
     isSelected,
     getAllSelected,
-    reset:resetSelection
+    reset: resetSelection,
   } = useListSelection({
     limit: 5, //@TODO change this to 30
     mapFn: (job: JobData) => ({
@@ -109,7 +109,7 @@ const Jobs = () => {
   }
 
   async function updateJobStatus(
-    type: "ARCHIVED" | "CLOSED" | "PUBLISHED",
+    type: JobStatusType,
     data: {
       id: string;
       companyId: string;

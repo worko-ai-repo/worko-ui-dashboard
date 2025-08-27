@@ -57,7 +57,10 @@ return (
         {/* Close Button */}
         <div className="mt-6 flex justify-end">
           <button
-            onClick={() => { onClose(); navigate(`/${dashboard.toLocaleLowerCase()}/Jobs`); }}
+            onClick={() => { onClose();
+              if(dashboard === 'ADMIN') navigate(`/${dashboard.toLocaleLowerCase()}/aJobs`);
+              else navigate(`/${dashboard.toLocaleLowerCase()}/Jobs`);
+            }}
             className="btn_primary px-4 py-2 text-sm font-medium text-white hover:text-gray-800 transition-colors"
           >
             Back to jobs

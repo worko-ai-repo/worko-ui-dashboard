@@ -133,8 +133,9 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
       const text = await extractTextFromPDF(selectedFile);
 
       // If text extraction is successful, set it to form value
-      setValue("description", text);
-      trigger("description"); // Trigger validation for description field
+      // setValue("description", text);
+      // // trigger("description"); // Trigger validation for description field
+      onSubmit({ description: text, file: null }); // Submit with extracted text
     } catch (error) {
       // Cleanup: bad PDF or OCR, so remove uploaded file
       setUploadedFile(null); // Assuming you store uploaded file

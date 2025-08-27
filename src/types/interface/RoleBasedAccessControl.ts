@@ -18,7 +18,21 @@ export enum UserRole {
  *
  * @description   This type refer to user roles to their respective actions in the application.
  */
-export type UserRolesActions = "view_jobs" | "apply_jobs" | "create_jobs" | "delete_jobs" | "manage_users" | "evaluate_candidates";
+export type UserRolesActions =
+  | "view_jobs"
+  | "apply_jobs"
+  | "create_jobs"
+  | "delete_jobs"
+  | "manage_users"
+  | "evaluate_candidates"
+  | "push_to_recruiter"
+  | "play_admin"
+  | "play_corporate"
+  | "play_corporate_recruiter"
+  | "play_corporate_admin"
+  | "play_evaluator"
+  | "play_general_user"
+  | "play_linkedin";
 
 /**
  * RolePermissions
@@ -28,11 +42,25 @@ export type UserRolesActions = "view_jobs" | "apply_jobs" | "create_jobs" | "del
  * @description   This object defines the permissions associated with each user role in the application.
  */
 export const RolePermissions: Record<UserRole, UserRolesActions[]> = {
-  [UserRole.ADMIN]: ["view_jobs", "create_jobs", "delete_jobs", "manage_users","apply_jobs"],
-  [UserRole.CORPORATE]: ["view_jobs", "create_jobs", "delete_jobs", "manage_users", "apply_jobs"],
-  [UserRole.CORPORATE_ADMIN]: ["view_jobs", "create_jobs", "delete_jobs", "manage_users"],
-  [UserRole.EVALUATOR]: ["view_jobs", "evaluate_candidates"],
-  [UserRole.CORPORATE_RECRUITER]: ["view_jobs", "create_jobs"],
-  [UserRole.LINKEDIN]: ["view_jobs", "apply_jobs"],
-  [UserRole.GENERAL_USER]: ["view_jobs", "apply_jobs"],
+  [UserRole.ADMIN]: [
+    "view_jobs",
+    "create_jobs",
+    "delete_jobs",
+    "manage_users",
+    "apply_jobs",
+    "push_to_recruiter",
+    "play_admin",
+  ],
+  [UserRole.CORPORATE]: ["play_corporate","view_jobs", "create_jobs", "delete_jobs", "manage_users", "apply_jobs"],
+  [UserRole.CORPORATE_ADMIN]: [
+    "play_corporate_admin",
+    "view_jobs",
+    "create_jobs",
+    "delete_jobs",
+    "manage_users",
+  ],
+  [UserRole.EVALUATOR]: ["play_evaluator", "view_jobs", "evaluate_candidates"],
+  [UserRole.CORPORATE_RECRUITER]: ["play_corporate_recruiter", "view_jobs", "create_jobs"],
+  [UserRole.LINKEDIN]: ["play_linkedin", "view_jobs", "apply_jobs"],
+  [UserRole.GENERAL_USER]: ["play_general_user", "view_jobs", "apply_jobs"],
 };

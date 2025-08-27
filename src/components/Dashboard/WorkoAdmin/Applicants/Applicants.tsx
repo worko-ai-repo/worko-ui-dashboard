@@ -20,6 +20,7 @@ import { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorF
 import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
+import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -30,7 +31,6 @@ export interface JobApplicationUpdatePayloadDto {
 }
 
 const tabs = ["All", "Hired", "Joined"] as const;
-export type JobApplicationStatusType = "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
 
 /**
  * handleJobApplicationStatusUpdate - Function to handle status updates for applications
@@ -39,14 +39,21 @@ export type JobApplicationStatusType = "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UN
  *
  * @return void
  */
-export async function handleJobApplicationStatusUpdate(payload: JobApplicationUpdatePayloadDto, jobId: string, refetch: () => void): Promise<void> {
+export async function handleJobApplicationStatusUpdate(
+  payload: JobApplicationUpdatePayloadDto,
+  jobId: string,
+  refetch: () => void
+): Promise<void> {
   try {
     // Here you would typically make an API call to update the status
     const response = await AdminServiceObj.updateApplicationStatus(payload, jobId);
     if (!response) {
       throw new Error("Failed to update application status");
     }
-    toast.success(`Application status updated to ${payload.status.toLocaleLowerCase()}`, getToastOptions({}));
+    toast.success(
+      `Application status updated to ${payload.status.toLocaleLowerCase()}`,
+      getToastOptions({})
+    );
     console.log(`Status updated to ${payload.status}`);
     // Optionally, you can refresh the data or perform other actions after updating
   } catch (error) {
@@ -59,7 +66,7 @@ export async function handleJobApplicationStatusUpdate(payload: JobApplicationUp
 /**
  * getJobStatus
  */
-const getJobStatus = (data: JobApplicationDetailsDto[] | undefined) => {
+/* const getJobStatus = (data: JobApplicationDetailsDto[] | undefined) => {
   if (data && data.length > 0) {
     switch (data[0].status) {
       case "PUBLISHED":
@@ -73,7 +80,7 @@ const getJobStatus = (data: JobApplicationDetailsDto[] | undefined) => {
     }
     return "N/A"; // Default case if no status matches
   }
-};
+}; */
 export interface ApplicationListSelectionDto {
   selectedRows: BulkJobApplicationUpdateItem[];
   toggleRow: (item: JobApplicationDetailsDto) => void;
@@ -81,7 +88,11 @@ export interface ApplicationListSelectionDto {
   getAllSelected: (items: JobApplicationDetailsDto[]) => boolean;
   reset: () => void;
 }
-const Applicants = () => {
+interface ApplicantsProps {
+  isAllApplicants?: boolean;
+}
+
+const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
   const { userDetails } = useAppContext();
   const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
   const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
@@ -90,7 +101,7 @@ const Applicants = () => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(200);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
@@ -100,8 +111,8 @@ const Applicants = () => {
       id: application.id,
       emailId: application.applicantDetails.email,
       jobApplicationId: application.id,
-      status: application.status as JobApplicationStatusType,
-      oldStatus: application.status as JobApplicationStatusType,
+      status: application.status,
+      oldStatus: application.status,
       userType: "ADMIN",
       applicantName: application.applicantDetails.name,
       oldStatusTracker: application.statusTracker ?? [],
@@ -115,9 +126,9 @@ const Applicants = () => {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: "ADMIN",
-    jobId: jobId ?? undefined, // Use the jobId from the URL or an empty string if not available
     pageSize: pageSize,
     sortOrder: "descending",
+    ...(isAllApplicants ? {} : { jobId: jobId ?? undefined }),
   };
 
   const {
@@ -130,10 +141,10 @@ const Applicants = () => {
     refetch,
     reset,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataAdminParams>({
-    queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params],
+    queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params,isAllApplicants],
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
-    enabled: !!jobId, // Only run the query if jobId is available
+    enabled: isAllApplicants ? true : !!jobId,
   });
 
   /**
@@ -142,7 +153,7 @@ const Applicants = () => {
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
     ListSelection.reset(); // Reset selected rows when active tab changes
-  }, [activeTab, searchBarText, pageSize,apiStatus]);
+  }, [activeTab, searchBarText, pageSize, apiStatus]);
 
   const onBulkUpdate = async (type: JobApplicationStatusType) => {
     try {
@@ -154,7 +165,9 @@ const Applicants = () => {
         ...row,
         status: type, // Set the new status based on the dropdown selection
       }));
-      const data = await AdminServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload }); //@TODO-Use the data somewhere atleast in both corporate and admin component
+      const data = await AdminServiceObj.postBulkApplicationUpdate({
+        bulkJobApplicationUpdate: payload,
+      }); //@TODO-Use the data somewhere atleast in both corporate and admin component
     } catch (error) {
       console.error("Error in bulk update:", error);
     }
@@ -166,7 +179,7 @@ const Applicants = () => {
         setApiStatus(undefined);
         break;
       case "Hired":
-        setApiStatus("HIRED");
+        setApiStatus("HIRING_IN_PROCESS");
         break;
       case "Joined":
         setApiStatus("JOINED");
@@ -190,11 +203,13 @@ const Applicants = () => {
 
   const handleBulkEvaluatorUpdate = () => {
     if (ListSelection.selectedRows.length === 0) {
-      toast.error("Please select at least one application to send to evaluator.", getToastOptions({}));
+      toast.error(
+        "Please select at least one application to send to evaluator.",
+        getToastOptions({})
+      );
       return;
     }
     setIsAddEvaluatorModalOpen(true);
-    debugger;
     setEvaluatorFormProps({
       Defaultvalues: {
         jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
@@ -207,19 +222,51 @@ const Applicants = () => {
         hrName: userDetails?.fullName ?? "",
         hrCurrentCompanyName: data[0]?.companyName ?? "",
       },
+      isBulk: true,
+      onClose: () => {
+        setIsAddEvaluatorModalOpen(false);
+        setEvaluatorFormProps(null);
+      },
+      formLimit: 10,
     });
     //@TODO:Update the status
   };
+
+  /**
+   * handleSendToRecruiter - Function to handle sending application to recruiter
+   *
+   * @description This function sends the selected application to the recruiter for further processing.
+   *
+   * @param {string} applicationId - The ID of the application to be sent to the recruiter.
+   * @param {Function} refetch - Function to refetch the application data after sending to recruiter.
+   */
+  const handleSendToRecruiter = async (applicationId: string, refetch: () => void) => {
+    try {
+      // Call the service to send the application to the recruiter
+      const response = await AdminServiceObj.sendApplicationToRecruiters(applicationId);
+      if (!response) {
+        throw new Error("Failed to send application to recruiter");
+      }
+      toast.success("Application sent to recruiter successfully", getToastOptions({}));
+      refetch(); // Refetch the data to reflect the changes
+    } catch (error) {
+      console.error("Error sending application to recruiter:", error);
+      toast.error(`Failed to send application to recruiter: ${error}`, getToastOptions({}));
+    }
+  };
+
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
-        <div className="flex flex-col gap-[35px]">
+        <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails />
             <div className="bg-white max-w-[150px] mt-4 h-min  shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <div className="flex border rounded-lg items-center">
-                <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">{data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}</div>
+                <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">
+                  {data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
+                </div>
                 <button
                   onClick={() => {
                     const jobUrl = data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "";
@@ -234,17 +281,26 @@ const Applicants = () => {
                 </button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
+            {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
-            </div>
+            </div> */}
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
-            <SearchBar searchBarText={searchBarText} setSearchBarText={setSearchBarText} handleClick={() => console.log("Search clicked")} />
+            <SearchBar
+              searchBarText={searchBarText}
+              setSearchBarText={setSearchBarText}
+              handleClick={() => console.log("Search clicked")}
+            />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              <GenericDropdown selectTitle="Status" tooltipMessage="Select Status to filter applications" disabled={activeTab !== "All"} options={StatusFilterDropdown} />
+              <GenericDropdown
+                selectTitle="Status"
+                tooltipMessage="Select Status to filter applications"
+                disabled={activeTab !== "All"}
+                options={StatusFilterDropdown}
+              />
               <BulkStatusDropDown
                 options={[
                   { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
@@ -254,14 +310,19 @@ const Applicants = () => {
                       handleBulkEvaluatorUpdate();
                     },
                   },
-                  { label: "Initiate Interview", onClick: () => onBulkUpdate("PROCESSING_INTERVIEW") },
+                  {
+                    label: "Initiate Interview",
+                    onClick: () => onBulkUpdate("PROCESSING_INTERVIEW"),
+                  },
                   { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
                   { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
                   { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
                   { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
                 ]}
                 apiStatus={apiStatus} // Change this to test
-                disabled={apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"}
+                disabled={
+                  apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"
+                }
                 tooltipMessage="Select a bulk status update"
                 selectTitle="Bulk"
               />
@@ -270,37 +331,58 @@ const Applicants = () => {
         </div>
         <div className="flex justify-center gap-[57px]">
           {tabs.map((tab) => (
-            <button key={tab} className={`pb-2 border-b-2 text-sm ${activeTab === tab ? "border-blue-500 text-blue-700 font-semibold" : "border-transparent text-gray-500"}`} onClick={() => setActiveTab(tab)}>
+            <button
+              key={tab}
+              className={`pb-2 border-b-2 text-sm ${
+                activeTab === tab
+                  ? "border-blue-500 text-blue-700 font-semibold"
+                  : "border-transparent text-gray-500"
+              }`}
+              onClick={() => setActiveTab(tab)}>
               {tab === "All" ? "All" : tab === "Hired" ? "Hired" : "Joined"}
             </button>
           ))}
         </div>
         {queryIsJobsLoading ? (
-          <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
+          <SkeletonLoader
+            showTableHeader={true}
+            showTableRows={true}
+            tableColumns={5}
+            rowCount={5}
+          />
         ) : (
           <ApplicationTable
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             data={data}
-            handleUpdate={(payload, jobId) => handleJobApplicationStatusUpdate(payload, jobId, refetch)}
+            handleUpdate={(payload, jobId) =>
+              handleJobApplicationStatusUpdate(payload, jobId, refetch)
+            }
             userType={"ADMIN"}
-            Pagination={{ hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, pageSize, setPageSize }}
+            Pagination={{
+              hasNextPage,
+              hasPreviousPage,
+              goToNextPage,
+              goToPreviousPage,
+              pageSize,
+              setPageSize,
+            }}
             EvaluatorFormProps={EvaluatorFormProps}
             setEvaluatorFormProps={setEvaluatorFormProps}
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}
             setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
             ListSelection={ListSelection}
-            sendApplicationToRecruiter={(applicationId) => console.log(`Send application ${applicationId} to recruiter`)}
-            showRejectReason={(applicationId) => console.log(`Show reject reason for application ${applicationId}`)}
-            viewDuplicacyDetails={(applicationId) => console.log(`View duplicacy details for application ${applicationId}`)}
-            formatCvDownloadedDate={(date) => new Date(date).toLocaleDateString()}
+            sendApplicationToRecruiter={(applicationId) =>
+              handleSendToRecruiter(applicationId, refetch)
+            }
+            showRejectReason={(applicationId) =>
+              console.log(`Show reject reason for application ${applicationId}`)
+            }
+            isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
+            onBulkUpdate={onBulkUpdate}
           />
         )}
       </div>
-      <Modal isOpen={false} onClose={() => null} className="!p-0">
-        <ResponseEvaluation jobApplicationId="dcsadascdsaccsdacsda" />
-        {/*  //@TODO: Pass the correct jobApplicationId */}
-      </Modal>
     </div>
   );
 };

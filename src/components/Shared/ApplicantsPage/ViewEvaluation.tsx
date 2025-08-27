@@ -1,158 +1,182 @@
 import React, { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
+import { ApiResponseDto, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { EvaluationResponseItemDto } from "@Interfaces/CorporateServices.dto";
+import { Check, ClipboardCheck, Plus, X } from "lucide-react";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import { JobApplicationUpdatePayloadDto } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import { useAppContext } from "@Context/App.context";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+// Updated import - replace the old import with the new one
 
-// Mock data structure based on your provided interface
-const MOCK_DATA = [
-  {
-    id: "01JZAWEYNEM7BJPCTB79P0ZGGH",
-    evaluatorName: "Sam Das",
-    jobId: "01JYZP3SKMZTSRSBVDCEN5W5N5",
-    jobApplicationId: "01JZ851T8XBSMHCMH5Z213XETC",
-    status: "INTERVIEW_SCHEDULED",
-    companyId: "01JWAQF1G96E0SE9XHXSFGHNWW",
-    createdAt: "2025-04-24T14:11:49.551Z",
-    updatedAt: "2025-04-24T14:11:49.551Z",
-    applicantUserId: "e1134dca-6071-70ff-2941-54fcce656f38",
-    evaluationRequesterCorporateUserId: "5HJEPQMC51E3SGPFFT1Z2RFKVZ",
-    createdByUserEmail: "rohith.appala@worko.ai",
-    evaluationRequestId: "01JZAWB03PBJD3VWSAN5CMF044",
-    statusTracker: [
-      {
-        detailedFeedback: "Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.",
-        score: 2,
-        htmlDetailedFeedback: "<p>Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.</p>",
-        newStatus: "INTERVIEW_SCHEDULED",
-        actionDate: "2025-04-24T14:11:49.508+00:00",
-      },
-    ],
-    scheduledInterviewDetails: [
-      {
-        date: "2025-05-24",
-        startTime: "7:00 pm",
-        endTime: "8:00 pm",
-        availability: 1,
-        actionDate: "2025-05-24T11:36:46.753Z",
-        timeSlot: "60 mins",
-      },
-      {
-        date: "2025-05-24",
-        startTime: "7:00 pm",
-        endTime: "8:00 pm",
-        availability: 1,
-        actionDate: "2025-05-24T11:36:46.753Z",
-        timeSlot: "60 mins",
-      },
-    ],
-  },
-  {
-    id: "01JZAWEYNEM7BJPCTB79P0ZGGJ",
-    evaluatorName: "Jane Smith",
-    jobId: "01JYZP3SKMZTSRSBVDCEN5W5N5",
-    jobApplicationId: "01JZ851T8XBSMHCMH5Z213XETC",
-    status: "PENDING",
-    companyId: "01JWAQF1G96E0SE9XHXSFGHNWW",
-    createdAt: "2025-04-25T14:11:49.551Z",
-    updatedAt: "2025-04-25T14:11:49.551Z",
-    applicantUserId: "e1134dca-6071-70ff-2941-54fcce656f38",
-    evaluationRequesterCorporateUserId: "5HJEPQMC51E3SGPFFT1Z2RFKVZ",
-    createdByUserEmail: "jane.smith@worko.ai",
-    evaluationRequestId: "01JZAWB03PBJD3VWSAN5CMF045",
-    statusTracker: [
-      {
-        detailedFeedback: "Candidate shows strong technical skills but needs improvement in communication. Overall performance is above average with room for growth.",
-        score: 4,
-        htmlDetailedFeedback: "<p>Candidate shows strong technical skills but needs improvement in communication. Overall performance is above average with room for growth.</p>",
-        newStatus: "PENDING",
-        actionDate: "2025-04-25T14:11:49.508+00:00",
-      },
-    ],
-    scheduledInterviewDetails: [],
-  },
-];
+import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { shouldShowAction, TabType } from "@Utils/ApplicationButtonVisibility.utils";
+import NoDataPresent from "../NoDataPresent";
 
 interface Props {
-  jobApplicationId: string;
+  jobApplicationData: JobApplicationDetailsDto;
+  handleUpdate: (status: JobApplicationStatusType, row: JobApplicationDetailsDto, hasRefetch?: boolean) => void;
+  setIsRejectModalOpen: React.Dispatch<
+    React.SetStateAction<{
+      payload: JobApplicationUpdatePayloadDto;
+      jobId: string;
+    } | null>
+  >;
+  setOpenAddEvaluatorModal : (count:number , jobApplicationId:string)=>void;
+  onClose: () => void;
 }
 
-const ResponseEvaluation: React.FC<Props> = ({ jobApplicationId }) => {
+const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate, setIsRejectModalOpen, onClose,setOpenAddEvaluatorModal }) => {
+  const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
+  const corporateUserType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
+  const userType = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE)?.includes(UserRole.ADMIN) ? UserRole.ADMIN : corporateUserType || UserRole.CORPORATE_ADMIN;
   const [activeTab, setActiveTab] = useState(0);
-  const responses = MOCK_DATA;
-  const isLoading = false;
-  const error = null;
+
+  const { data:response, isLoading, error } = useQuery<ApiResponseDto<EvaluationResponseItemDto>>({
+    queryKey: ["evaluations", jobApplicationData.id],
+    queryFn: async () => {
+      return await CorporateServiceObj.getEvaluationResponses({ jobApplicationId: jobApplicationData.id });
+    },
+    refetchOnWindowFocus: false,
+    enabled: !!jobApplicationData.id,
+  });
 
   if (isLoading) return <div>Loading...</div>;
   if (error) return <div>Error loading evaluations</div>;
-  if (!responses || responses.length === 0) return <div>No evaluations found</div>;
+  if (!response || response?.data.length === 0)
+    return (
+     <NoDataPresent />
+    );
 
-  const currentEvaluation = responses[activeTab];
+  const finalData = response.data as EvaluationResponseItemDto[];
+  const currentEvaluation = finalData[activeTab];
   const latest = currentEvaluation?.statusTracker?.[currentEvaluation?.statusTracker?.length - 1] || null;
   const interviews = currentEvaluation?.scheduledInterviewDetails || [];
 
+  // Updated: Use the new action visibility system
+  // Since this is a modal/evaluation view, we'll use "All" as the default tab type
+  const activeTabType: TabType = "All";
+  const handleAddMoreEvaluators = () => {
+    const data = response.data[0];
+    if (!data) return;
+    else {
+     setOpenAddEvaluatorModal?.(8-response.data.length  , data.jobApplicationId)
+    }
+    // Use setTimeout to ensure state is set before opening modal
+    setTimeout(() => {
+      onClose()
+    }, 0);
+  };
   return (
-    <div className="w-full max-w-md mx-auto bg-white overflow-hidden">
+    <div className="mx-auto mt-6 bg-white overflow-hidden ">
       {/* Tab Headers */}
-      <div className="flex">
-        {responses.map((response, index) => (
-          <div key={response.id} className="flex items-center">
-            <button onClick={() => setActiveTab(index)} className={`px-4 py-3 text-sm font-semibold ${index === activeTab ? "text-black border-b-2 border-black" : "text-gray-400"}`} style={{ fontFamily: "Poppins" }}>
+      <div className="flex  items-center no-scrl no-scrl-web flex-wrap w-[95%] overflow-auto">
+        {finalData.map((response, index) => (
+          <div key={response.id} className="flex justify-start items-center">
+            <button onClick={() => setActiveTab(index)} className={`px-4 py-3 text-sm text-nowrap font-semibold ${index === activeTab ? "text-black border-b-2 border-black" : "text-gray-400"}`} style={{ fontFamily: "Poppins" }}>
               Evaluator {index + 1}
             </button>
 
             {/* Vertical separator (not after last tab) */}
-            {index < responses.length - 1 && <div className="w-px h-5 bg-gray-300 mx-1" />}
+            {index < finalData.length - 1 && <div className="w-px h-5 bg-gray-300 mx-1" />}
           </div>
         ))}
       </div>
+      <button
+        className="addEvaluator absolute right-2 top-8  "
+        onClick={() => {
+          handleAddMoreEvaluators();
+        }}
+        disabled={response.data.length >= 8}>
+        <Plus className={`w-8 h-8 border rounded-lg font-bold bg-white shadow-md ${response.data.length >= 8 ? "bg-gray-300 text-gray-500 cursor-not-allowed" : "text-blue-500 cursor-pointer"}`} />
+      </button>
 
       {/* Tab Content */}
-      <div className="p-6">
+      <div className="p-6 space-y-6">
         {/* Evaluator Info Section */}
-        <div className="space-y-2 mb-6">
-          <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
-              Evaluated by
+        <div className="space-y-4">
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+              Evaluated by:
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+            <span className="text-gray-900 font-medium capitalize" style={{ fontFamily: "Poppins" }}>
               {currentEvaluation?.evaluatorName || "N/A"}
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
-              Date
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+              Date:
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+            <span className="text-gray-900 font-medium" style={{ fontFamily: "Poppins" }}>
               {currentEvaluation?.createdAt ? new Date(currentEvaluation.createdAt).toLocaleDateString("en-GB") : "N/A"}
             </span>
           </div>
 
           {latest?.score !== undefined && (
-            <div className="flex items-center gap-3">
-              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
-                Evaluation score
+            <div className="flex items-center gap-4">
+              <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+                Evaluation Score:
               </span>
-              <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+              <span className="text-gray-900 font-medium" style={{ fontFamily: "Poppins" }}>
                 {latest.score}/5
               </span>
             </div>
           )}
 
-          {latest?.detailedFeedback && (
-            <div className="flex items-start gap-3">
-              <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
-                Feedback
+          {latest?.newStatus !== "INTERVIEW_SCHEDULED" && (
+            <div className="flex items-center gap-4">
+              <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+                Status:
               </span>
-              <span className="text-gray-900 text-xs font-normal leading-tight max-w-xs" style={{ fontFamily: "Poppins" }}>
+              <span className={`px-3 py-1 rounded-full font-medium text-white capitalize ${latest?.newStatus === "REJECTED" ? "bg-red-500" : "bg-yellow-500"}`} style={{ fontFamily: "Poppins" }}>
+                {latest.newStatus.replace(/_/g, " ").toLowerCase()}
+              </span>
+            </div>
+          )}
+
+          {latest?.detailedFeedback && (
+            <div className="flex items-start gap-4">
+              <span className="text-gray-500 font-medium capitalize" style={{ fontFamily: "Inter" }}>
+                Feedback:
+              </span>
+              <span className="text-gray-900 font-normal text-left leading-tight capitalize" style={{ fontFamily: "Poppins" }}>
                 {latest.detailedFeedback}
               </span>
             </div>
           )}
 
-          <div className="flex items-center gap-3">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
-              Schedule interview
+          {latest?.comment && (
+            <div className="flex items-start gap-4">
+              <span className="text-gray-500 font-medium capitalize" style={{ fontFamily: "Inter" }}>
+                Comment:
+              </span>
+              <span className="text-gray-900 font-normal leading-tight capitalize" style={{ fontFamily: "Poppins" }}>
+                {latest.comment}
+              </span>
+            </div>
+          )}
+
+          {latest?.reason && (
+            <div className="flex items-start gap-4">
+              <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+                Reason:
+              </span>
+              <span className="text-gray-900 font-normal leading-tight" style={{ fontFamily: "Poppins" }}>
+                {latest.reason}
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4">
+            <span className="text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+              Schedule Interview:
             </span>
-            <span className="text-gray-900 text-xs font-medium" style={{ fontFamily: "Poppins" }}>
+            <span className="text-gray-900 font-medium" style={{ fontFamily: "Poppins" }}>
               {interviews.length > 0 ? "Yes" : "No"}
             </span>
           </div>
@@ -160,41 +184,99 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationId }) => {
 
         {/* Availability Schedule Section */}
         {interviews.length > 0 && (
-          <div className="flex justify-between items-start">
+          <div className="flex justify-start items-start">
             <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
               Availability Schedule
             </span>
 
-            <div className="flex flex-col w-1/2 gap-2">
+            <div className="flex flex-col w-1/3 gap-2">
               {/* Table Headers */}
-              <div className="flex text-gray-500 text-xs font-medium mb-2" style={{ fontFamily: "Inter" }}>
+              <div className="flex text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
                 <div className="w-1/2">Date</div>
                 <div className="w-1/2">Time</div>
               </div>
 
               {/* Table Rows */}
-              <div className="space-y-2">
-                {interviews.map((interview, index) => (
-                  <div key={index} className="flex">
-                    <div className="w-1/2">
-                      <div className="bg-cyan-100 rounded-[9px] px-3 inline-block">
-                        <span className="text-black text-xs font-medium" style={{ fontFamily: "Inter" }}>
-                          {interview.date ? new Date(interview.date).toLocaleDateString("en-GB") : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="w-1/2">
-                      <div className="bg-cyan-100 rounded-[9px] px-3 inline-block">
-                        <span className="text-black text-xs font-medium" style={{ fontFamily: "Inter" }}>
-                          {interview.startTime || "N/A"}
-                        </span>
-                      </div>
+              {interviews.map((interview, index) => (
+                <div key={index} className="flex">
+                  <div className="w-1/2">
+                    <div className="bg-cyan-100 rounded-lg px-4 py-1 inline-block">
+                      <span className="text-gray-700 font-semibold  " style={{ fontFamily: "Inter" }}>
+                        {interview.date ? new Date(interview.date).toLocaleDateString("en-GB") : "N/A"}
+                      </span>
                     </div>
                   </div>
-                ))}
-              </div>
+                  <div className="w-1/2">
+                    <div className="bg-cyan-100 rounded-lg px-4 py-1 inline-block">
+                      <span className="text-gray-700 font-semibold  " style={{ fontFamily: "Inter" }}>
+                        {interview.startTime || "N/A"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
+        )}
+      </div>
+
+      {/* Action Buttons Section - Updated to use new visibility system */}
+      <div className="flex justify-between items-center px-3">
+        <div className="flex-1 flex items-center gap-4 p-2">
+          {/* Process Interview Button */}
+          {shouldShowAction("PROCESS_INTERVIEW", jobApplicationData, activeTabType) && (
+            <button
+              onClick={() => {
+                handleUpdate("PROCESSING_INTERVIEW", jobApplicationData, true);
+              }}
+              className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              <PaperAirplaneIcon className="-rotate-45 w-4 h-4" />
+              Process interview
+            </button>
+          )}
+
+          {/* Hire Button */}
+          {shouldShowAction("HIRE", jobApplicationData, activeTabType) && (
+            <button
+              onClick={() => {
+                handleUpdate("HIRING_IN_PROCESS", jobApplicationData, true);
+              }}
+              className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition">
+              <Check className="w-4 h-4" />
+              Hire
+            </button>
+          )}
+
+          {/* Reject Button */}
+          {shouldShowAction("REJECT", jobApplicationData, activeTabType) && (
+            <button
+              onClick={() => {
+                const payload: JobApplicationUpdatePayloadDto = {
+                  applicantName: jobApplicationData.applicantDetails.name,
+                  emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
+                  status: "REJECTED",
+                  userId: userDetails ? userDetails?.id : "",
+                  userType: userType,
+                };
+                onClose();
+                setIsRejectModalOpen({ payload, jobId: jobApplicationData.id });
+              }}
+              className="flex items-center gap-2 border border-red-600 text-red-600 font-medium px-4 py-2 rounded-lg transition">
+              <X className="w-4 h-4" />
+              Reject
+            </button>
+          )}
+        </div>
+
+        {/* On Hold Button */}
+        {shouldShowAction("ONHOLD", jobApplicationData, activeTabType) && (
+          <button
+            className="text-blue-700 font-medium transition border p-2.5 rounded-lg"
+            onClick={() => {
+              handleUpdate("ON_HOLD", jobApplicationData, true);
+            }}>
+            On Hold
+          </button>
         )}
       </div>
     </div>

@@ -40,10 +40,7 @@ const Modal = ({
   // Close on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target as Node)
-      ) {
+      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
         onClose();
       }
     };
@@ -57,27 +54,23 @@ const Modal = ({
   return (
     <div
       ref={modalRef}
-      className={`fixed top-0 right-0 z-[9999] bg-white rounded-xl shadow-lg ${
+      className={`fixed top-0 right-0 z-[9999] max-h-[95vh]  p-6 pt-0 bg-white rounded-xl shadow-lg ${
         isAnimatingOut ? "animate-slide-out" : "animate-slide-in"
-      } ${className}`}
-      style={{ overflowY: "auto" }}
-    >
+      }`}
+      style={{ overflowY: "auto" }}>
       {showCloseButton && (
-        <div className="sticky top-0 right-0 w-full bg-white z-10 pt-2 pr-2 flex justify-end">
+        <div className="absolute top-0 right-0 w-fit bg-white z-10 pt-0 pr-2 flex justify-end">
           <button
             className="text-xl text-gray-500 hover:text-gray-800"
             onClick={onClose}
             aria-label="Close modal"
-            title="Close modal"
-          >
+            title="Close modal">
             ×
           </button>
         </div>
       )}
-      <div className="p-6 pt-0">
       {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
-      {children}
-      </div>
+      <div className={`${className}`}>{children}</div>
     </div>
   );
 };

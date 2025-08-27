@@ -33,16 +33,26 @@ interface SidebarProps {
  * - Context-aware navigation filtering
  */
 
-const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapsed, setCollapsed }) => {
+const Sidebar: React.FC<SidebarProps> = ({
+  sidebarOpen,
+  setSidebarOpen,
+  collapsed,
+  setCollapsed,
+}) => {
   // Extract user context and dashboard context
   const navigate = useNavigate();
   const location = useLocation();
   const { activeTab, setActiveTab, dashboardType } = useDashboardContext();
-  const { userDetails, setUpdateCheck }: { userDetails: NormalizedUser | null; setUpdateCheck: any } = useAppContext();
+  const {
+    userDetails,
+    setUpdateCheck,
+  }: { userDetails: NormalizedUser | null; setUpdateCheck: any } = useAppContext();
 
   // Local state to manage finalized user details
   const [userName, setUserName] = React.useState("");
-  const [finalUserDetails, setFinalUserDetails] = React.useState<NormalizedUser | null>(userDetails);
+  const [finalUserDetails, setFinalUserDetails] = React.useState<NormalizedUser | null>(
+    userDetails
+  );
 
   /**
    * Effect to handle user details updates
@@ -62,7 +72,9 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    * Filter navigation items based on current dashboard type
    * Only shows items that are either global or match current dashboard type
    */
-  const navItems = navigationItems.filter((item) => !item.dashboardTypes || item.dashboardTypes.includes(dashboardType));
+  const navItems = navigationItems.filter(
+    (item) => !item.dashboardTypes || item.dashboardTypes.includes(dashboardType)
+  );
 
   /**
    * Handle navigation to different dashboard sections
@@ -115,47 +127,66 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
    * Avatar component - reusable user profile image/icon
    */
   const Avatar = (
-    <div>
-      <img src={finalUserDetails?.profileImageUrl || User} alt="User Avatar" className={`w-10 h-10 rounded-full ${collapsed ? "hidden" : "block"}`} />
+    <div className="w-full h-full">
+      <img
+        src={finalUserDetails?.profileImageUrl || User}
+        alt="User Avatar"
+        className={`w-10 h-10 rounded-full`}
+      />
     </div>
   );
 
   return (
     <aside
-      className={`bg-[#316bff] text-white  h-screen z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
+      className={`bg-[#316bff] text-white  h-screen  z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
                 ${collapsed ? "w-[72px]" : "w-[212px]"}
                 md:relative md:block
                 max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 
                 ${sidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}`}>
-      <div className="h-full flex flex-col justify-between  ">
-        <div className="">
-          <div className="flex justify-between items-center mb-6 ">
-            {!collapsed ? (
-              <div className="flex items-center justify-between w-full">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  {Avatar}
-                  <span className="text-base text-start font-bold capitalize">{userName}</span>
-                </div>
-                <button onClick={() => setCollapsed(true)} className="hidden sm:flex focus:outline-none" aria-label="Collapse sidebar">
-                  <ChevronLeftIcon className="w-4 h-4" />
-                </button>
-                <button onClick={() => setSidebarOpen(false)} className="block sm:hidden focus:outline-none" aria-label="Close sidebar">
-                  <XMarkIcon className="h-6 w-6" />
-                </button>
+      <div className="h-full  flex flex-col justify-between  ">
+        <div className="flex  justify-between items-center mb-6 ">
+          {!collapsed ? (
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-2 overflow-hidden">
+                {Avatar}
+                <span className="text-base text-start font-bold capitalize">{userName}</span>
               </div>
-            ) : (
-              <div className="w-full flex justify-center">{Avatar}</div>
-            )}
-          </div>
-          <nav className="space-y-3 ">
+              <button
+                onClick={() => setCollapsed(true)}
+                className="hidden sm:flex focus:outline-none"
+                aria-label="Collapse sidebar">
+                <ChevronLeftIcon className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="block sm:hidden focus:outline-none"
+                aria-label="Close sidebar">
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+          ) : (
+            <div className="w-full h-10 flex justify-center ">{Avatar}</div>
+          )}
+        </div>
+        <div className=" h-full min-w-10 flex flex-col justify-start items-center overflow-scroll no-scrl-web">
+          <nav className="space-y-2 overflow-scroll no-scrl-web">
             {navItems.map((item) => (
-              <SidebarItem key={item.id} item={item} isActive={item.label === activeTab} collapsed={collapsed} onClick={handleTabClick} />
+              <SidebarItem
+                key={item.id}
+                item={item}
+                isActive={item.label === activeTab}
+                collapsed={collapsed}
+                onClick={handleTabClick}
+              />
             ))}
           </nav>
           {/* Expand Button */}
           {collapsed && (
-            <div className="mt-6 flex justify-center">
-              <button onClick={() => setCollapsed(false)} className="text-white focus:outline-none" aria-label="Expand sidebar">
+            <div className="my-4 flex justify-center">
+              <button
+                onClick={() => setCollapsed(false)}
+                className="text-white focus:outline-none"
+                aria-label="Expand sidebar">
                 <ChevronLeftIcon className="w-5 h-5 rotate-180" />
               </button>
             </div>
@@ -163,13 +194,13 @@ const Sidebar: React.FC<SidebarProps> = ({ sidebarOpen, setSidebarOpen, collapse
         </div>
         {/* Logout Buttons */}
 
-        <div className="border-t border-white/20 pt-4 hover:text-red-600">
+        <div className="border-t  border-white/20 pt-4 hover:text-red-600">
           <button
             onClick={() => {
               CognitoServiceObj.handleSignOut();
               secureStorage.clear();
               setUpdateCheck((prev: boolean) => !prev);
-              navigate("/login");
+              window.location.href = "/";
             }}
             className="hover:text-red-500 text-[13px] text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-1 rounded"
             aria-label="Logout">

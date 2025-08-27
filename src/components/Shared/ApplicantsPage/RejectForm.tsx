@@ -12,6 +12,7 @@ type RejectionFormData = JobApplicationUpdatePayloadDto & {
   reason: string;
   userComment: string;
   jobId: string; // Assuming jobId is part of the form data for context
+  isBulk?: boolean; // Optional: If you want to handle bulk updates
 };
 
 const onSubmit = async (data: RejectionFormData, onSuccessCallback: () => void) => {

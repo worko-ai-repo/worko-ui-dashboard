@@ -31,6 +31,7 @@ export type JobFormSchema = {
     jobDescription: string;
     variableComponent?: number;
     fixedComponent?: number;
+    flexibleNotice: boolean;
   }
 
 

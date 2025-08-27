@@ -3,7 +3,7 @@ import { ApiResponseDto, CorporateInvite, JobApiResponse, JobApplicationDetailsD
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SelectedRow } from "../Job/Jobs";
-import { CorporateBulkScreeningDto, FileMetadataDto, BulkUploadResponseDto, BulkScreeningListItemDto, ResumeScreeningRecordDto, JobEvaluationRequestDto, BulkJobApplicationUpdateItem, EvaluationResponseItem } from "@Interfaces/CorporateServices.dto";
+import { CorporateBulkScreeningDto, FileMetadataDto, BulkUploadResponseDto, BulkScreeningListItemDto, ResumeScreeningRecordDto, JobEvaluationRequestDto, BulkJobApplicationUpdateItem, EvaluationResponseItemDto  } from "@Interfaces/CorporateServices.dto";
 
 /**
  * Corporate Service File
@@ -391,7 +391,7 @@ class CorporateService {
   /**
    * postBulkApplicationUpdate
    *
-   * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
+   * @description - This API is used to send multiple applications feedback requests for multiple job applications at once.
    */
   async postBulkApplicationUpdate(payload: { bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[] }): Promise<any> {
     try {
@@ -417,20 +417,26 @@ class CorporateService {
 
   async getEvaluationResponses(params: {
     jobApplicationId: string;
-  }): Promise<{ data: EvaluationResponseItem[] } | null> {
+  }): Promise<ApiResponseDto<EvaluationResponseItemDto>> {
     try {
-      const { response } = await httpServiceObj.get<{ data: EvaluationResponseItem[] }>(
+      const { response } = await httpServiceObj.get<ApiResponseDto<EvaluationResponseItemDto>>(
         "/response-evaluation/",
         true,
         params,
         false,
-        "BASE"
+        "JOB"
       );
       if (!response) throw new Error("No response received");
       return response;
     } catch (error) {
       console.error("[CORPORATE SERVICE]: Failed to fetch evaluation responses.", error);
-      return null;
+      return{
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      }
     }
   }
 
