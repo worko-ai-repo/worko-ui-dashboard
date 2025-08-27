@@ -53,7 +53,7 @@ const Referrals = () => {
 
       setIsLoading(true);
       try {
-        const url = `${APP_API_URI}/user/${user.email}/referral?status=REJECTED`;
+        const url = `${APP_API_URI}/user/${user.email}/referral?status=REJECTED` ;
         const { response, error } = await httpServiceObj.get(url, true, {}, true);
 
         if (response) {
