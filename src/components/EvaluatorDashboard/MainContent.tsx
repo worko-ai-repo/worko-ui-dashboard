@@ -245,7 +245,7 @@ if ((!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) && reque
 
           <span className="flex items-center gap-1 max-w-[250px] truncate" title={toTitleCase(EvaluationRequestDetails.recruiterName)}>
             <span className="text-[#316BFF] font-semibold whitespace-nowrap">Recruiter name:</span>
-            <span className="text-slate-800 truncate">
+            <span className="text-slate-800 truncate font-bold">
               {toTitleCase(EvaluationRequestDetails.recruiterName)}
             </span>
           </span>
@@ -254,7 +254,7 @@ if ((!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) && reque
       </div>
 
       {/* Content Cards */}
-      <div className="space-y-6">
+      <div className="space-y-2">
         {/* Role Card */}
         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
           <div className="flex items-center justify-between">

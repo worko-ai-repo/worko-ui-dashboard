@@ -1,4 +1,5 @@
 import { dashboardSort } from '@Assets';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import React, { ReactNode, useState } from 'react';
 
 interface TableColumn<T> {
@@ -194,7 +195,7 @@ export const Table = <T extends object>({
             </div>
           </div>
           
-          <div className="flex flex-row items-center justify-end gap-6 text-center text-lg text-[#94a3b8]">
+          {/* <div className="flex flex-row items-center justify-end gap-6 text-center text-lg text-[#94a3b8]">
             <button 
               className="w-12 relative rounded-xl h-12 overflow-hidden shrink-0 flex items-center justify-center border-[#e2e8f0] border-solid border-[1px]"
               onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
@@ -217,6 +218,25 @@ export const Table = <T extends object>({
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M9 18L15 12L9 6" stroke={!hasNextPage ? "#E2E8F0" : "#222831"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
+            </button>
+          </div> */}
+          <div className="flex gap-2">
+            <button
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${currentPage <= 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}
+              onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+              disabled={currentPage === 1}
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </button>
+
+            <button
+              className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${!hasNextPage ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}
+              onClick={() => handlePageChange(currentPage + 1)}
+              disabled={!hasNextPage}
+            >
+              Next
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>

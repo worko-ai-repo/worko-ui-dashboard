@@ -20,7 +20,7 @@ const RejectionSection: React.FC<RejectionSectionProps> = ({
 }) => {
   const rejectionReasons = [
     'Profile does not match the required skills or experience',
-    'Relevant industry/domain experience not founde',
+    'Relevant industry/domain experience not found',
     'Academic qualifications do not meet role requirements',
     'Overqualified for this position',
     'Career gap(s) do not meet policy criteria',

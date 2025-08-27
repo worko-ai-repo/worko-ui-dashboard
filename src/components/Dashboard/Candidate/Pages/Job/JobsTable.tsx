@@ -20,6 +20,7 @@ interface JobsTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
+  hasNextPage?: boolean; // Add this prop
 }
 
 const JobsTable = memo(({ 
@@ -28,7 +29,8 @@ const JobsTable = memo(({
   currentPage,
   onPageChange,
   onPageSizeChange,
-  onRefresh
+  onRefresh,
+  hasNextPage // Add this to destructured props
 }: JobsTableProps) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
@@ -486,6 +488,13 @@ const jobs = processedJobs || [];
   );
 };
 
+console.log({ 
+  paginationCount: pagination?.count, 
+  currentPage, 
+  pageSize,
+  hasNextPage: pagination?.count > currentPage * pageSize
+});
+
   return (
     <div className="w-full font-poppins">
       <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
@@ -497,7 +506,7 @@ const jobs = processedJobs || [];
           handlePreviousPage={() => onPageChange(currentPage - 1)}
           handleNextPage={() => onPageChange(currentPage + 1)}
           hasPrevPage={currentPage > 1}
-          hasNextPage={pagination?.count > currentPage * pageSize}
+          hasNextPage={hasNextPage}
           renderExpandedDetails={renderExpandedDetails}
           enableSelect={false}
           emptyStateMessage="No job applications found"

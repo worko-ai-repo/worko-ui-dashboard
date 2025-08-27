@@ -38,6 +38,9 @@ const Referrals = () => {
 
   const { user, isLoadingUser } = useDashboardContext();
 
+    const APP_API_URI = import.meta.env.APP_API_URI
+    const APP_JOBS_API_URI= import.meta.env.APP_JOBS_API_URI
+
   const fetchReferrals = useCallback(
     async (
       page = currentPage,
@@ -49,9 +52,8 @@ const Referrals = () => {
       if (!user?.email) return;
 
       setIsLoading(true);
-
       try {
-        const url = `https://jobs.dev.worko.work/referral-application/?pageSize=${size}&sortOrder=descending&userEmail=${user.email}&userType=CAND`;
+        const url = `${APP_API_URI}/user/${user.email}/referral?status=REJECTED`;
         const { response, error } = await httpServiceObj.get(url, true, {}, true);
 
         if (response) {
@@ -119,6 +121,10 @@ const Referrals = () => {
     [fetchReferrals]
   );
 
+  const handleGetNewReferral = () => {
+    window.location.href = `${window.location.origin}/v0/referrals`;
+  };
+
   useEffect(() => {
     if (user?.email) {
       setCurrentPage(1);
@@ -164,25 +170,39 @@ const Referrals = () => {
               </div>
             ))}
           </div> */}
+            
+          {/* search bar */}
+            <div className="flex flex-col gap-4 w-full">
+            {/* Search bar with search button */}
+            <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
+                <input
+                type="text"
+                placeholder="Search referrals"
+                value={searchBarText}
+                onChange={handleSearchChange}
+                className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"
+                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                onBlur={() => searchBarText && debouncedSearch()}
+                />
+                <button
+                onClick={handleSearch}
+                className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none"
+                >
+                Search
+                </button>
+            </div>
 
-          {/* search bar only */}
-          <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
-            <input
-              type="text"
-              placeholder="Search referrals"
-              value={searchBarText}
-              onChange={handleSearchChange}
-              className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"
-              onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-              onBlur={() => searchBarText && debouncedSearch()}
-            />
+            {/* Get New Referral Button */}
+            <div className="flex justify-start">
             <button
-              onClick={handleSearch}
-              className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none"
+                onClick={handleGetNewReferral}
+                className="bg-[#316BFF] text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-[#2555cc] transition"
             >
-              Search
+                Get New Referral
             </button>
-          </div>
+            </div>
+            </div>
+
         </div>
       </div>
 

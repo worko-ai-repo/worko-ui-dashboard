@@ -6,7 +6,10 @@ import WithdrawDialog from "./WithdrawDialog";
 
 const ReferralsTable = ({searchbarText}: any) => {
   const { user } = useDashboardContext();
+  
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
+  const APP_API_URI = import.meta.env.APP_API_URI
+
   const [referrals, setReferrals] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

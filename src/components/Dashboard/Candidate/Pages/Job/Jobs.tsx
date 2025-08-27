@@ -102,23 +102,25 @@ const Jobs = () => {
           searchText: searchBarText || undefined
         }
       );
-      console.log(user.email,size,lastKey,searchFilters,searchBarText)
-      console.log(response)
+
       if (response) {
         setData(response);
         if (response.pagination) {
           setPaginationInfo(response.pagination);
           
-          // For searches or first page load, reset pagination keys
-          if (isSearch || page === 1) {
+          // FIXED: Only reset pagination keys for searches
+          if (isSearch) {
             paginationKeysRef.current = { 1: '' };
             if (response.pagination.lastKey) {
               paginationKeysRef.current[2] = response.pagination.lastKey;
             }
           } 
-          // For normal pagination, store the next page's key
+          // For normal pagination, preserve existing keys and add new one
           else if (response.pagination.lastKey) {
-            paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+            paginationKeysRef.current = {
+              ...paginationKeysRef.current,
+              [page + 1]: response.pagination.lastKey
+            };
           }
         }
       } else if (error) {
@@ -129,7 +131,7 @@ const Jobs = () => {
     } finally {
       setIsLoading(false);
     }
-  }, [user, pageSize, searchBarText, filters, currentPage]);
+}, [user, pageSize, searchBarText, filters, currentPage]);
 
 
 // below is for the dummy data check above is the real one
@@ -252,13 +254,14 @@ const Jobs = () => {
 
   // Initial data load
   useEffect(() => {
-    if (user?.email) {
+    if (user?.email && !data) {   // only run once, on first load
       setCurrentPage(1);
-      setPaginationInfo(prev => ({...prev, lastKey: ''}));
-      paginationKeysRef.current = { 1: '' }; // Reset pagination keys
+      setPaginationInfo(prev => ({ ...prev, lastKey: '' }));
+      paginationKeysRef.current = { 1: '' };
       fetchJobs(1, pageSize, '');
     }
-  }, [user, fetchJobs, pageSize]);
+  }, [user, fetchJobs, pageSize, data]);
+
 
   // Clean up debounced function on unmount
   useEffect(() => {
@@ -274,7 +277,7 @@ const Jobs = () => {
     const fetchJobs = async () => {
         const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
         const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
-        console.log(userId,email)
+        
       const url = `https://jobs.dev.worko.work/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
       try {
         const { response, error } = await httpServiceObj.get(url, true, {}, true);
@@ -356,6 +359,8 @@ const Jobs = () => {
             const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || '' : '';
             fetchJobs(currentPage, pageSize, lastKey);
           }}
+          // Add this prop to properly handle cursor pagination
+          hasNextPage={!!paginationInfo?.lastKey} // This is the key change
         />
       )}
     </div>

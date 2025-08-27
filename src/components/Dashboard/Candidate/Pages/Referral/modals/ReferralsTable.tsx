@@ -1,5 +1,9 @@
 import React, { memo, useMemo, useState } from "react";
-import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo } from "./ReferralTypes";
+import {
+  ReferralApiResponse,
+  ReferralDetailsDto,
+  PaginationInfo,
+} from "./ReferralTypes";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 
 interface ReferralsTableProps {
@@ -8,7 +12,6 @@ interface ReferralsTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onRefresh: () => void;
 }
 
 const ReferralsTable = memo(
@@ -19,34 +22,36 @@ const ReferralsTable = memo(
 
     const referrals = data?.data || [];
 
+    const keyExtractor = (item: ReferralDetailsDto) =>
+      item.id?.toString() ?? Math.random().toString();
+
     const columns = [
       {
-        key: "candidateName",
-        label: "Candidate",
-        sortable: true,
-        render: (row: ReferralDetailsDto) => (
-          <span className="font-semibold capitalize">{row.candidateName}</span>
-        ),
-      },
-      {
-        key: "referredJobTitle",
-        label: "Job Title",
-        sortable: true,
-      },
-      {
         key: "companyName",
-        label: "Company",
+        label: "Company Name",
         sortable: true,
       },
       {
-        key: "createdAt",
-        label: "Referral Date",
+        key: "referredJobURL",
+        label: "Job URL",
         sortable: true,
-        render: (row: ReferralDetailsDto) => new Date(row.createdAt).toLocaleDateString(),
+      },
+      {
+        key: "requestedDate",
+        label: "Request Date",
+        sortable: true,
+        render: (row: ReferralDetailsDto) =>
+          new Date(row.createdAt).toLocaleDateString(),
+      },
+      {
+        key: "matchingScore",
+        label: "Matching Score",
+        sortable: true,
+        render: (row: ReferralDetailsDto) => `${row.matchingScore ?? "N/A"}%`,
       },
       {
         key: "status",
-        label: "Status",
+        label: "Current Status",
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div
@@ -62,6 +67,23 @@ const ReferralsTable = memo(
           </div>
         ),
       },
+      {
+        key: "chat",
+        label: "Chat",
+        render: (row: ReferralDetailsDto) => (
+          <a
+            href={`/chat/${row.chatId ?? ""}`}
+            className="text-blue-600 hover:underline"
+          >
+            Open Chat
+          </a>
+        ),
+      },
+      {
+        key: "refereeName",
+        label: "Referee Name",
+        render: (row: ReferralDetailsDto) => row.refereeName ?? "N/A",
+      },
     ];
 
     const handlePageSizeChange = (newPageSize: number) => {
@@ -69,11 +91,14 @@ const ReferralsTable = memo(
       onPageSizeChange(newPageSize);
     };
 
-    const sortData = (rows: ReferralDetailsDto[], field: string) => {
+    const sortData = (
+      rows: ReferralDetailsDto[],
+      field: string
+    ): ReferralDetailsDto[] => {
       if (!field) return rows;
-      return [...rows].sort((a: any, b: any) => {
-        let aValue = a[field];
-        let bValue = b[field];
+      return [...rows].sort((a, b) => {
+        let aValue = (a as any)[field];
+        let bValue = (b as any)[field];
         if (field === "createdAt") {
           aValue = new Date(aValue).getTime();
           bValue = new Date(bValue).getTime();
@@ -93,12 +118,15 @@ const ReferralsTable = memo(
       }
     };
 
-    const sortedData = useMemo(() => sortData(referrals, sortField), [referrals, sortField, sortOrder]);
+    const sortedData = useMemo(
+      () => sortData(referrals, sortField),
+      [referrals, sortField, sortOrder]
+    );
 
     return (
       <div className="w-full font-poppins">
         <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
-          <DynamicTable
+          <DynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}
             pageSize={pageSize}
@@ -106,13 +134,14 @@ const ReferralsTable = memo(
             handlePreviousPage={() => onPageChange(currentPage - 1)}
             handleNextPage={() => onPageChange(currentPage + 1)}
             hasPrevPage={currentPage > 1}
-            hasNextPage={pagination?.count > currentPage * pageSize}
-            enableSelect={false}
+            hasNextPage={!!pagination?.lastKey}
             emptyStateMessage="No referrals found"
-            emptyStateSubMessage="Try adjusting your search filters"
+            emptyStateSubMessage="Try adjusting your filters"
             onSortChange={handleSortChange}
             sortField={sortField}
             sortOrder={sortOrder}
+            enableSelect={false}
+            keyExtractor={keyExtractor}
           />
         </div>
       </div>
