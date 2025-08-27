@@ -103,6 +103,10 @@ import inviteTick from './svgs/inviteTick.svg';
 import hireNow from './svgs/hireNow.svg';
 import onHold from './svgs/onHold.svg';
 import sortOrder from './svgs/sortOrder.svg.svg';
+import adminEmployee from './svgs/adminEmployee.svg';
+import cloudUpload from './svgs/cloudUpload.svg';
+import email_sync from './svgs/email_sync.svg';
+import mobile_install from './svgs/mobile_install.svg';
 import cancel from './svgs/cancel.svg';
 
 export { 
@@ -201,5 +205,9 @@ export {
     hireNow,
     onHold,
     sortOrder,
+    adminEmployee,
+    cloudUpload,
+    email_sync,
+    mobile_install
     cancel,
 };

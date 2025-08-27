@@ -1,7 +1,5 @@
-import { JobApplicationStatusType } from "@Components/Shared/ApplicantsPage/BulkStatusDropDown";
-import exp from "constants";
 import { StatusTracker } from "./CorporateDashboard.dto";
-import { JobStatusType } from "../jobs.type";
+import { JobApplicationStatusType, JobStatusType } from "../JobsAndApplication.type";
 
 /**
  * Types for corporate services in the Worko UI Dashboard application.
@@ -256,8 +254,11 @@ interface StatusTrackerItem {
   detailedFeedback: string;
   score: number;
   htmlDetailedFeedback: string;
-  newStatus: string;
+  newStatus: 'INTERVIEW_SCHEDULED' | 'ON_HOLD' | 'REJECTED' ;
   actionDate: string;
+  comment?: string;
+  htmlComment?: string;
+  reason?: string;
 }
 
 interface ScheduledInterviewDetailsItem {
@@ -269,7 +270,7 @@ interface ScheduledInterviewDetailsItem {
   timeSlot: string;
 }
 
-export interface EvaluationResponseItem {
+export interface EvaluationResponseItemDto {
   id: string;
   evaluatorName: string;
   jobId: string;
@@ -285,6 +286,7 @@ export interface EvaluationResponseItem {
   statusTracker: StatusTrackerItem[];
   scheduledInterviewDetails: ScheduledInterviewDetailsItem[];
 }
+
 
 /**
  * CommonCursorPaginationProp
@@ -322,9 +324,9 @@ export interface CursorPaginationJobDataParams {
 export interface CursorPaginationApplicationDataParams {
   pageSize: number;
   sortOrder: "ascending" | "descending";
-  status?: "ALL" | "APPLIED" | "CV_DOWNLOADED" | "UNDER_EVALUATION" | "PROCESSING_INTERVIEW" | "INTERVIEW_DONE" | "HIRED" | "REJECTED" | "ON_HOLD" | "JOINED";
+  status?: JobApplicationStatusType;
   searchText?: string;
-  jobId: string | undefined;
+  // jobId: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
 }

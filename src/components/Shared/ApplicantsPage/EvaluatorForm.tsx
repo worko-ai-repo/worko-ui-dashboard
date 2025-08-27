@@ -9,6 +9,13 @@ import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import convertToHtml from "@Utils/ConvertTextToHtml.utils";
 import { validationRules } from "@Utils/FormValidator.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
+import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { JobApplicationUpdatePayloadDto } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import { useQueryClient } from "@tanstack/react-query";
 
 type FormValues = {
   evaluators: JobEvaluationRequestDto[];
@@ -26,10 +33,15 @@ export type EvaluatorFormProps = {
     hrName: string;
     hrCurrentCompanyName: string;
   };
+  isBulk: boolean; // Optional mode prop to handle different form behaviors
+  onBulkUpdate?: (JobApplicationStatus:JobApplicationStatusType ) => void; // Optional prop for bulk update functionality
+  onClose: () => void; // Function to close the form/modal
+  formLimit: number; // Limit for the number of evaluators
 };
 
-const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
-  console.log("Defaultvalues", Defaultvalues);
+const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues, isBulk,onBulkUpdate,onClose ,formLimit=10}) => {
+  const isAdmin = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.USERTYPE)?.includes(UserRole.ADMIN) ? true : false;
+  const queryClient = useQueryClient();
   const {
     control,
     register,
@@ -39,6 +51,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
     watch,
     setError,
     setValue,
+    reset,
   } = useForm<FormValues>({
     defaultValues: {
       evaluators: [
@@ -130,16 +143,64 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
               hrHtmlDetailedFeedback: evaluator.hrHtmlDetailedFeedback,
             })),
           };
+          if (isBulk) {
+            console.log("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
+            if (isAdmin) {
+              return AdminServiceObj.postBulkEvaluatorFeedbackRequest(payload);
+            } else {
+              return CorporateServiceObj.postBulkEvaluatorFeedbackRequest(payload);
+            }
+          } else {
+            // modify the payload to match the expected structure for single evaluator requests
+            const singlePayload: JobEvaluationRequestDto = {
+              ...applicationPayloads[0], // Use the first application data for single evaluator requests
+              evaluatorDetails: evaluator.evaluatorDetails,
+              hrDetailedFeedback: evaluator.hrDetailedFeedback,
+              hrHtmlDetailedFeedback: evaluator.hrHtmlDetailedFeedback,
+            };
 
-          console.log("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
-
-          return CorporateServiceObj.postBulkEvaluatorFeedbackRequest(payload);
+            if (isAdmin) {
+              return AdminServiceObj.postEvaluatorFeedbackRequest(singlePayload);
+            } else {
+              return CorporateServiceObj.postEvaluatorFeedbackRequest(singlePayload);
+            }
+          }
         })
       );
-
-      toast.success("All evaluation requests sent to evaluators!", getToastOptions({}));
+      toast.success("Evaluation requests sent successfully", getToastOptions({}));
+      if (isBulk && onBulkUpdate) {
+        onBulkUpdate("UNDER_EVALUATION");
+      }else{
+        const corporateUserType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
+        const applicationUpdatePayload:JobApplicationUpdatePayloadDto = {
+          status: "UNDER_EVALUATION",
+          userType: isAdmin ? UserRole.ADMIN : corporateUserType || UserRole.CORPORATE_ADMIN,
+          applicantName: Defaultvalues.applicantUserName[0] || "", 
+          userId: Defaultvalues.applicantUserId[0] || "",
+          emailId: Defaultvalues.applicantUserEmail[0] || "",
+        };
+        if (isAdmin) {
+          await AdminServiceObj.updateApplicationStatus(applicationUpdatePayload , Defaultvalues.jobApplicationId[0]);
+          //Invalidate the cache for the job application list
+          
+          queryClient.invalidateQueries({
+            queryKey: ['AdminJobsApplicationQuery'],
+          });
+        } else {
+          await CorporateServiceObj.updateApplicationStatus(applicationUpdatePayload,Defaultvalues.jobApplicationId[0]);
+          //Invalidate the cache for the job application list
+          queryClient.invalidateQueries({
+            queryKey: ['CorporateJobsApplicationQuery'],
+          });
+        }
+      }
+      
     } catch (error: any) {
       toast.error(error instanceof Error ? error.message : "Error sending bulk evaluation requests", getToastOptions({}));
+    }finally {
+      // clear the form and close the modal\
+      reset();
+      onClose()
     }
   };
 
@@ -182,7 +243,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues }) => {
           </div>
         ))}
 
-        {fields.length < 10 && (
+        {fields.length < formLimit && (
           <button
             type="button"
             onClick={() => {

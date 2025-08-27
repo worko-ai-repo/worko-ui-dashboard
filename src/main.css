@@ -217,6 +217,18 @@ label {
 	width: min-content;
 	align-items: center;
   }
+  
+  .has-notification::after {
+	content: "";
+	position: absolute;
+	top: -0.25rem;    /* similar to -top-2 */
+	right: -0.1rem; /* similar to -right-1 */
+	width: 0.8rem;   /* w-2 */
+	height: 0.8rem;  /* h-2 */
+	border-radius: 9999px; /* rounded-full */
+	background-color: #ff3c00; /* yellow-400 */
+	animation: pulse 2s infinite; /* animate-pulse replacement */
+  }
 
   .no-scrl {
     -ms-overflow-style: none;  /* Internet Explorer 10+ */

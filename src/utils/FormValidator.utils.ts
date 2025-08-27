@@ -297,9 +297,9 @@ export const validationRules = {
 
       const missingKeywords = requiredKeywords.filter((keyword) => !value.toLowerCase().includes(keyword.toLowerCase()));
 
-      if (missingKeywords.length > 0) {
+     /*  if (missingKeywords.length > 0) {
         return `Please include the following sections: ${missingKeywords.join(", ")}`;
-      }
+      } */
 
       return true; // Validation passed
     },

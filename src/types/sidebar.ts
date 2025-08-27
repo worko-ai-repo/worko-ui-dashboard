@@ -23,8 +23,19 @@ export type TabId =
 | 'referrals'
 | 'invoice-&-payment'
 // Admin Dashboard Tabs
-| 'aApplicants';
-
+| 'ajobs'
+| 'aApplicants'
+| 'aAllApplicants'
+| 'aEmployee'
+| 'aCandidate'
+| 'aReferrals'
+| 'aGuidance'
+| 'aBulkCVCheck'
+| 'aInvites'
+| 'aPayments'
+| 'aCompanies'
+| 'Refer-n-Earn'
+| 'aPackages';
 export interface NavItem {
     id: TabId;
     label: string;

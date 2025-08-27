@@ -3,13 +3,14 @@ import React from 'react';
 type InputProps = {
   label: string;
   name: string;
+  customClass?: string; // Optional custom class for additional styling
   error?: string;
 } & React.InputHTMLAttributes<HTMLInputElement>;
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, name, error, ...rest }, ref) => {
+  ({ label, name, error,customClass, ...rest }, ref) => {
     return (
-      <div className="space-y-1">
+      <div className={`space-y-1 ${customClass || ''}`}>
         <label htmlFor={name} className="text-sm font-medium text-gray-700">
           {label}
         </label>

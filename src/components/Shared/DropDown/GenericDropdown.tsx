@@ -45,14 +45,14 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-64  ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+      className={`relative min-w-48  ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
       data-tooltip-id="dropdown-tooltip"
       data-tooltip-content={tooltipMessage}
     >
       {/* Trigger Button */}
       <div
         onClick={toggleDropdown}
-        className={`flex justify-center  w-64 h-10 bg-white px-8 py-2 items-center font-semibold  transition-all ${
+        className={`flex justify-center text-left  min-w-48 h-10 bg-white px-4 py-2 items-center font-semibold  transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
@@ -62,8 +62,8 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
 
       {/* Dropdown Panel */}
       {isOpen && !disabled && (
-        <div className="absolute w-64  bg-white rounded-2xl rounded-t-none p-4 shadow-lg z-50">
-          <div className="flex flex-col gap-3">
+        <div className="absolute min-w-48  bg-white rounded-2xl rounded-t-none  shadow-lg z-50">
+          <div className="flex flex-col  gap-1">
             {options.map((option, index) => {
               const isSelected = option.label === selectedLabel;
               return (
@@ -74,7 +74,7 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
                     setSelectedLabel(option.label);
                     setIsOpen(false);
                   }}
-                  className={`text-center text-xs font-medium transition ${
+                  className={`text-left  border-b px-4 py-1  text-sm font-medium transition ${
                     isSelected
                       ? "text-blue-600 font-semibold"
                       : "text-gray-700 hover:text-blue-600"

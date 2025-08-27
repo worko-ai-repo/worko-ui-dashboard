@@ -59,10 +59,17 @@ export function DynamicTable<T extends { id: string }>({
   emptyStateSubMessage = "There are no items to display at the moment.",
 }: DynamicTableProps<T>) {
   const totalCols = columns.length + (enableSelect ? 1 : 0);
-
+  function getNestedValue(obj: any, path: string): any {
+    return path.replace(/\$/g, "_").split("_")
+      .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
+  }
   const getCellValue = (row: T, col: Column<T>): React.ReactNode => {
-    const value = row[col.key as keyof T];
-    return col.render ? col.render(row) : typeof value === "string" || typeof value === "number" || typeof value === "boolean" ? value.toString() : "-";
+    const value = getNestedValue(row, col.key);
+    return col.render
+      ? col.render(row)
+      : typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+      ? value.toString()
+      : "-";
   };
 
   //  Render empty state when no rows are available
@@ -70,15 +77,22 @@ export function DynamicTable<T extends { id: string }>({
     return (
       <div className="bg-white rounded-lg p-2 md:p-4 overflow-x-auto w-full">
         <table className="min-w-full table-auto">
-          <thead className="bg-[#EFFFFF] text-[#94A3B8]">
+          <thead className="bg-[#EFFFFF] text-[#94A3B8] ">
             <tr>
               {enableSelect && (
                 <th className="p-3 text-center rounded-l-xl">
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" />
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4"
+                  />
                 </th>
               )}
               {columns.map((col) => (
-                <th key={col.key} className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
+                <th
+                  key={col.key}
+                  className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
                   {col.label}
                 </th>
               ))}
@@ -94,8 +108,17 @@ export function DynamicTable<T extends { id: string }>({
         {/*  Empty state component */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
-            <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <svg
+              className="w-8 h-8 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24">
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
             </svg>
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">{emptyStateMessage}</h3>
@@ -110,16 +133,23 @@ export function DynamicTable<T extends { id: string }>({
       {/* Scroll wrapper */}
       <div className=" overflow-x-auto overflow-y-scroll  pb-4 rounded-md  no-scrl min-h-[calc(86vh)] max-h-[calc(100vh-200px)]">
         <table className="min-w-full table-auto">
-          <thead className="bg-[#EFFFFF] text-[#94A3B8]">
+          <thead className="bg-[#EFFFFF] text-[#94A3B8] sticky top-0 z-10">
             <tr>
               {enableSelect && (
                 <th className="p-3 text-center rounded-l-xl">
-                  <input type="checkbox" checked={allSelected} onChange={toggleSelectAll} className="w-4 h-4" />
+                  <input
+                    type="checkbox"
+                    checked={allSelected}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4"
+                  />
                 </th>
               )}
               {columns.map((col) => {
                 return (
-                  <th key={col.key} className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
+                  <th
+                    key={col.key}
+                    className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
                     <span className="flex items-center justify-center gap-1">
                       {col.label}
                       {col.sortable && onSortChange && (
@@ -128,7 +158,10 @@ export function DynamicTable<T extends { id: string }>({
                             src={sortOrder}
                             onClick={(e) => {
                               onSortChange(col.key);
-                              e.currentTarget.style.transform = e.currentTarget.style.transform === "rotate(180deg)" ? "rotate(0deg)" : "rotate(180deg)";
+                              e.currentTarget.style.transform =
+                                e.currentTarget.style.transform === "rotate(180deg)"
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)";
                             }}
                             className="inline ml-2 transition-transform duration-300"
                             alt="sortOrder"
@@ -162,8 +195,16 @@ export function DynamicTable<T extends { id: string }>({
                   <tr>
                     {/* Checkbox column */}
                     {enableSelect && (
-                      <td className={`p-3 text-center border-b rounded-tl-xl ${baseBg} ${isSelected ? "border-l-4 border-blue-500 border-b-gray-200" : ""}`}>
-                        <input type="checkbox" checked={isSelected} onChange={() => toggleRow?.(row.id)} className="w-4 h-4" />
+                      <td
+                        className={`p-3 text-center border-b rounded-tl-xl ${baseBg} ${
+                          isSelected ? "border-l-4 border-blue-500 border-b-gray-200" : ""
+                        }`}>
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleRow?.(row.id)}
+                          className="w-4 h-4"
+                        />
                       </td>
                     )}
 
@@ -176,7 +217,9 @@ export function DynamicTable<T extends { id: string }>({
                           className={`px-4 border-b py-4 text-sm whitespace-nowrap capitalize ${baseBg}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
-                          ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""}`}>
+                          ${
+                            isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          }`}>
                           {getCellValue(row, col)}
                         </td>
                       );
@@ -187,7 +230,9 @@ export function DynamicTable<T extends { id: string }>({
                   {renderExpandedDetails && !isExpanded && (
                     <tr className="relative h-0">
                       <td colSpan={totalCols} className="p-0 border-t-0">
-                        <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
+                        <div
+                          onClick={() => toggleExpand?.(row.id)}
+                          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer">
                           <ChevronDownIcon />
                         </div>
                       </td>
@@ -197,9 +242,15 @@ export function DynamicTable<T extends { id: string }>({
                   {renderExpandedDetails && isExpanded && (
                     <>
                       <tr>
-                        <td colSpan={totalCols} className="relative bg-white p-0 text-sm text-gray-600">
-                          <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
-                          <div onClick={() => toggleExpand?.(row.id)} className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
+                        <td
+                          colSpan={totalCols}
+                          className="relative bg-white p-0 text-sm text-gray-600">
+                          <div className="p-4 border border-t-0 rounded-b-xl">
+                            {renderExpandedDetails(row)}
+                          </div>
+                          <div
+                            onClick={() => toggleExpand?.(row.id)}
+                            className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer">
                             <ChevronUpIcon />
                           </div>
                         </td>
@@ -238,12 +289,26 @@ export function DynamicTable<T extends { id: string }>({
         <div className="flex items-center ">
           {/*  Previous and Next buttons */}
           <div className="flex gap-2  ">
-            <button onClick={handlePreviousPage} disabled={!hasPrevPage} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${!hasPrevPage ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}>
+            <button
+              onClick={handlePreviousPage}
+              disabled={!hasPrevPage}
+              className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
+                !hasPrevPage
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+              }`}>
               <ChevronLeft className="w-4 h-4" />
               Previous
             </button>
 
-            <button onClick={handleNextPage} disabled={!hasNextPage} className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${!hasNextPage ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}>
+            <button
+              onClick={handleNextPage}
+              disabled={!hasNextPage}
+              className={`flex items-center gap-1 px-4 py-2 rounded-lg text-base font-medium transition-colors ${
+                !hasNextPage
+                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                  : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"
+              }`}>
               Next
               <ChevronRight className="w-4 h-4" />
             </button>
