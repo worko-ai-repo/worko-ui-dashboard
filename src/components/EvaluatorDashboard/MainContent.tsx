@@ -86,25 +86,25 @@ const MainContent: React.FC<MainContentProps> = ({
   fetchSocialLinks();
 }, [location.search,EvaluationRequestDetails.email]);
 
-useEffect(() => {
-  const getEvaluationDetails = async () => {
-    try {
-      const details = await fetchEvaluationDetails(jobApplicationId, evaluationRequestId);
-      if (details?.evaluatorDetails?.email) {
-        setEvaluatorEmail(encodeURIComponent(details.evaluatorDetails.email.trim().toLowerCase()));
-      }
-    } catch (err) {
-      console.error('Error fetching evaluation details:', err);
-      console.log("no email found")
-      await CognitoServiceObj.handleSignOut();
-          sessionStorage.clear();
-          // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
-          //while deploying use the below
-          window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
-    }
-  };
-  getEvaluationDetails();
-}, [jobApplicationId, evaluationRequestId]);
+// useEffect(() => {
+//   const getEvaluationDetails = async () => {
+//     try {
+//       const details = await fetchEvaluationDetails(jobApplicationId, evaluationRequestId);
+//       if (details?.evaluatorDetails?.email) {
+//         setEvaluatorEmail(encodeURIComponent(details.evaluatorDetails.email.trim().toLowerCase()));
+//       }
+//     } catch (err) {
+//       console.error('Error fetching evaluation details:', err);
+//       console.log("no email found")
+//       await CognitoServiceObj.handleSignOut();
+//           sessionStorage.clear();
+//           // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+//           //while deploying use the below
+//           window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+//     }
+//   };
+//   getEvaluationDetails();
+// }, [jobApplicationId, evaluationRequestId]);
 
   
   useEffect(() => {

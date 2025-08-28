@@ -11,6 +11,7 @@ interface JoinedModalProps {
   onClose: () => void;
   userDetails: any;
   job: JobApplicationDetailsDto | null;
+  onSuccess: () => void;
 }
 
 export default function JoinedModal({
@@ -18,6 +19,7 @@ export default function JoinedModal({
   onClose,
   userDetails,
   job,
+  onSuccess,
 }: JoinedModalProps) {
   const [joiningDate, setJoiningDate] = useState<string>("");
   const [hrName, setHrName] = useState<string>("");
@@ -34,6 +36,7 @@ export default function JoinedModal({
     // auto-close after 5s
     setTimeout(() => {
       setShowSuccessModal(false);
+      onSuccess()
       onClose();
     }, 5000);
 
@@ -46,6 +49,7 @@ export default function JoinedModal({
   /** Close success modal manually */
   function closeSuccess() {
     setShowSuccessModal(false);
+    onSuccess()
     onClose();
   }
 

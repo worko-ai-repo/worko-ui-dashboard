@@ -10,6 +10,7 @@ import { useSearchParams } from 'react-router-dom';
 import ViewFeedbackModal from './ViewFeedbackModal';
 import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
+import { useQuery } from '@tanstack/react-query';
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -28,7 +29,7 @@ const EvaluatorView: React.FC = () => {
   const [selectedRequest, setSelectedRequest] = useState<EvaluationRequest | null>(null);
   const [selectedCandidateDetails, setSelectedCandidateDetails] = useState<CandidateDetails | null>(null);
   const [applicationDetails, setApplicationDetails] = useState<ApplicationDetails | null>(null);
-  const [evaluatorEmail, setevaluatorEmail] = useState<string>();
+  // const [evaluatorEmail, setevaluatorEmail] = useState<string>();
 
   //View Feedback Modal states
   const [viewFeedbackData, setViewFeedbackData] = useState<EvaluationResponse | null>(null);
@@ -38,18 +39,21 @@ const EvaluatorView: React.FC = () => {
 
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
 
-
-    useEffect(() => {
-    const getEvaluationDetails = async () => {
+  const getEvaluationDetails = async () => {
       try {
         const details = await fetchEvaluationDetails(jobApplicationId,evaluationRequestId);
-        setevaluatorEmail(details.evaluatorDetails.email)
+        return details.evaluatorDetails.email
       } catch (err) {
         console.error('Error fetching evaluation details:', err);
       } 
     }
-    getEvaluationDetails()
-  }, [])
+
+  const { data: evaluatorEmail, isLoading, error } = useQuery<any>({
+    queryKey: ["evaluations", jobApplicationId, evaluationRequestId],
+    queryFn: getEvaluationDetails,
+    enabled: !!jobApplicationId && !!evaluationRequestId,
+  });
+
   // Dummy candidate list
   // const candidates: Candidate[] = [
   //   {

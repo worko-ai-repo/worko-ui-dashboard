@@ -108,6 +108,7 @@ import cloudUpload from './svgs/cloudUpload.svg';
 import email_sync from './svgs/email_sync.svg';
 import mobile_install from './svgs/mobile_install.svg';
 import cancel from './svgs/cancel.svg';
+import chat from './svgs/chat.svg'
 
 export { 
     // Backgrounds
@@ -192,6 +193,7 @@ export {
     iHaveJoined,
     viewFeedback,
     askQuestion,
+    chat,
     magnifyingQuestion,
     checkbubble,
     Not_Responding,
@@ -208,6 +210,6 @@ export {
     adminEmployee,
     cloudUpload,
     email_sync,
-    mobile_install
+    mobile_install,
     cancel,
 };

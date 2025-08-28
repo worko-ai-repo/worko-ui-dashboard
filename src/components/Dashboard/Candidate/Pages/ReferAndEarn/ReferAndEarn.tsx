@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { JobApiResponse } from "../Job/JobTypes";
 import { JobDetails } from "@Components/Dashboard/types";
 import EarningsDropdown from "./EarningsDropdown";
-import MainTable from "./ReferAndEarnTable";
+import ReferralsTable from "./ReferAndEarnTable";
 import httpServiceObj from "@Services/ApiHandler.service";
 
 const stats = [
@@ -70,7 +70,7 @@ const stats = [
         </div>
   
   
-        <MainTable searchbarText={searchBarText} />
+        <ReferralsTable searchbarText={searchBarText} />
   
       </div>
     );

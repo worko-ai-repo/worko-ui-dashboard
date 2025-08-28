@@ -27,6 +27,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
 }) => {
   
   const onActionButtonClick = useCallback(() => {
+    console.log(variant,figmaUrl)
     if (variant === 'join') {
       window.open(figmaUrl);
     } else if (variant === 'book' && onAcceptAndPay) {

@@ -8,12 +8,14 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
 import { JobApplicationDetailsDto, JobApplicationDocumentStatusType } from "@Interfaces/CorporateDashboard.dto";
+import { newDate } from "react-datepicker/dist/date_utils";
  
 interface SubmitDocumentModalProps {
   show: boolean;
   documents: JobApplicationDetailsDto;
   onClose: () => void;
   onSubmit: (submittedDocs: Record<string, File | null>) => void;
+  onSuccess: () => void;
   userID: string;
   jobId: string;
 }
@@ -33,7 +35,7 @@ interface FormData {
   [documentName: string]: File | null;
 }
  
-const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId }: SubmitDocumentModalProps) => {
+const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId,onSuccess }: SubmitDocumentModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
@@ -350,8 +352,8 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
       await Promise.all(updatePromises);
  
       toast.success("Documents uploaded successfully!", getToastOptions({}));
+      onSuccess?.();
       onClose();
- 
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(
@@ -366,7 +368,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
   // Check if any submittable files are selected
   const submittableDocuments = allDocuments.filter(doc => doc.isSubmittable);
   const hasSelectedFiles = submittableDocuments.some(doc => watchedFiles[doc.name] !== null);
- 
+  
   return (
     <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
       isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
@@ -378,8 +380,8 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
       >
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">Document Management</h3>
-          <h3 className="text-xs text-gray-400">All requested documents</h3>
+          <h3 className="text-lg font-semibold">Upload document</h3>
+          <h3 className="text-xs text-gray-400">document requested on 23-08-2025</h3>
           <button 
             onClick={onClose} 
             className="p-1 rounded-full hover:bg-gray-100"
@@ -469,12 +471,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
           </div>
  
           {/* Footer */}
-          <div className="px-8 py-6 flex justify-between items-center gap-4 flex-shrink-0 border-t">
-            <div className="text-sm text-gray-600">
-              <div>Total documents: {allDocuments.length}</div>
-              <div>Pending: {submittableDocuments.length} | Submitted: {allDocuments.filter(d => d.isSubmitted).length}</div>
-            </div>
- 
+          <div className="px-8 py-6 flex justify-between items-center gap-4 flex-shrink-0 border-t"> 
             <div className="flex items-center gap-4">
               {hasSelectedFiles && (
                 <div className="text-sm text-gray-600">
@@ -493,9 +490,13 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
               >
                 <Send size={16} />
                 <span className="text-sm font-medium">
-                  {isUploading ? 'Uploading...' : 'Submit Documents'}
+                  {isUploading ? 'Uploading...' : 'Submit'}
                 </span>
               </button>
+            </div>
+               <div className="text-sm text-gray-600">
+              <div>Total documents: {allDocuments.length}</div>
+              <div>Pending: {submittableDocuments.length} | Submitted: {allDocuments.filter(d => d.isSubmitted).length}</div>
             </div>
           </div>
         </form>

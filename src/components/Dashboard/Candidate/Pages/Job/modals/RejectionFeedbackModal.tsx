@@ -50,9 +50,28 @@ const RejectionFeedbackModal = ({ show, feedbackContent, onClose }: FeedbackModa
         </div>
 
         {/* Scrollable content */}
-        <div className="p-6 overflow-y-auto text-gray-700 text-left whitespace-pre-line flex-1">
-          <p>{feedbackContent}</p>
+
+        <div className="p-6 overflow-y-auto text-gray-700 text-left flex-1">
+          {(() => {
+            try {
+              const feedbackItems = JSON.parse(feedbackContent);
+              if (Array.isArray(feedbackItems)) {
+                return feedbackItems.map(({ heading, detail }: { heading: string; detail: string }, idx: number) => (
+                  <div key={idx} className="mb-4">
+                    <h4 className="font-semibold text-black">{heading}</h4>
+                    <p className="mt-1 text-gray-400">{detail}</p>
+                  </div>
+                ));
+              }
+              // fallback if parsed but not array
+              return <p>{feedbackContent}</p>;
+            } catch {
+              // fallback if invalid JSON
+              return <p>{feedbackContent}</p>;
+            }
+          })()}
         </div>
+
 
         {/* Footer */}
         <div className="p-6 border-t flex justify-end">

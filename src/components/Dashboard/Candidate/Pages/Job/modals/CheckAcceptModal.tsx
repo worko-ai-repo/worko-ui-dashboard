@@ -8,6 +8,7 @@ type CheckAcceptModalProps = {
   job: JobApplicationDetailsDto;
   onClose: () => void;
   onConfirm: () => Promise<void>;
+  onSuccess: () => void;
 };
 
 const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
@@ -15,6 +16,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   onClose,
   onConfirm,
   userDetails,
+  onSuccess,
 }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -81,7 +83,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
         console.log('Issue raised successfully:', response);
       }
-
+      onSuccess();
       onClose();
     } catch (err) {
       setError('Something went wrong. Please try again.');

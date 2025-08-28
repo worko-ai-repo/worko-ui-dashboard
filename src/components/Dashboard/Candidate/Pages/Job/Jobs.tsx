@@ -34,7 +34,7 @@ const Jobs = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<JobFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>(initialPaginationState);
-  
+  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
 //   const dummyJobs = [
 //   { id: "dummy1", jobTitle: "Data Analyst", companyName: "InsightsAI", createdAt: new Date().toISOString(), matchingScore: 74, status: "APPLIED", action: null },
 
@@ -104,6 +104,7 @@ const Jobs = () => {
       );
 
       if (response) {
+        console.log(response)
         setData(response);
         if (response.pagination) {
           setPaginationInfo(response.pagination);
@@ -278,7 +279,7 @@ const Jobs = () => {
         const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
         const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
         
-      const url = `https://jobs.dev.worko.work/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
+      const url = `${APP_JOBS_API_URI}/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
       try {
         const { response, error } = await httpServiceObj.get(url, true, {}, true);
           console.log("response",response,"error",error)

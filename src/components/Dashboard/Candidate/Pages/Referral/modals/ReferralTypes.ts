@@ -10,6 +10,7 @@ export interface ReferralDetailsDto {
   candidateEmail: string;
   createdAt: string;
   status: ReferralStatus;
+  matchingScore:number;
 }
 
 export type ReferralStatus = 
@@ -32,6 +33,7 @@ export interface ReferralApiResponse {
   totalReferrals?: number;
   currentPage?: number;
   totalPages?: number;
+  matchingScore?: number;
 }
 
 export interface ReferralFilters {
