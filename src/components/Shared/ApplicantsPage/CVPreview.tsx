@@ -1,21 +1,31 @@
 import React, { useEffect } from "react";
 import { X, Check, Send, ClipboardCheck } from "lucide-react";
-import { JobApplicationUpdatePayloadDto, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import {
+  JobApplicationUpdatePayloadDto,
+  handleJobApplicationStatusUpdate,
+} from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { useQueryClient } from "@tanstack/react-query";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
-import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
-import { JobApplicationActionType, shouldShowAction, TabType } from "@Utils/ApplicationButtonVisibility.utils";
+import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import {
+  JobApplicationActionType,
+  shouldShowAction,
+  TabType,
+} from "@Utils/ApplicationButtonVisibility.utils";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import { useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
-const sampleCV = "https://www.africau.edu/images/default/sample.pdf";
+
 interface CVPreviewProps {
   onClose: () => void;
   setIsAddEvaluatorModal?: React.Dispatch<React.SetStateAction<boolean>>;
-  setIsRejectModalOpen?: React.Dispatch<React.SetStateAction<{ payload: { [key: string]: any }; jobId: string } | null>>;
+  setIsRejectModalOpen?: React.Dispatch<
+    React.SetStateAction<{ payload: { [key: string]: any }; jobId: string } | null>
+  >;
   // pdfuri: string;
   /*   misData: {
     payload: JobApplicationUpdatePayloadDto;
@@ -26,12 +36,21 @@ interface CVPreviewProps {
   activeTab?: TabType;
 }
 
-const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setEvaluatorFormProps, jobApplicationData, activeTab = "All" }: CVPreviewProps) => {
+const CVPreview = ({
+  onClose,
+  setIsAddEvaluatorModal,
+  setIsRejectModalOpen,
+  setEvaluatorFormProps,
+  jobApplicationData,
+  activeTab = "All",
+}: CVPreviewProps) => {
   const queryClient = useQueryClient();
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const pdfuri = jobApplicationData?.applicantDetails.cvAwsS3SignedUrl;
   const isCorporate = window.location.href.includes("corporate");
-  const userType = isCorporate ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) : UserRole.ADMIN;
+  const userType = isCorporate
+    ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE)
+    : "ADMIN";
   if (!userType) {
     throw new Error("User type not found in secure storage");
   }
@@ -43,8 +62,12 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
       userId: userDetails ? userDetails?.id : "",
       userType: userType,
     },
-    jobId: jobApplicationData.jobId,
+    jobId: jobApplicationData.id,
   };
+  const companyDetails: CompanyDetails | null = secureStorage.getItem(
+    SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
+  );
+
   //  Map applicant data here instead of in parent
   const applicantData = jobApplicationData
     ? {
@@ -56,11 +79,15 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
         applicantUserEmail: jobApplicationData.applicantDetails.email,
         applicantUserName: jobApplicationData.applicantDetails.name,
         hrName: userDetails?.fullName || "",
-        hrCurrentCompanyName: userDetails?.companyId || "",
+        hrCurrentCompanyName: RBAC.can("play_admin") ? "WORKO" : companyDetails?.name || "",
       }
     : undefined;
 
-  const invalidateJobs = () => {
+  const invalidateJobApplication = () => {
+    RBAC.can("play_admin")
+      ? queryClient.invalidateQueries({
+          queryKey: ["AdminJobsApplicationQuery"],
+        }):
     queryClient.invalidateQueries({
       queryKey: ["CorporateJobsApplicationQuery"],
     });
@@ -80,7 +107,7 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
           applicantUserId: [applicantData.applicantUserId],
           applicantUserEmail: [applicantData.applicantUserEmail],
           hrName: applicantData.hrName,
-          hrCurrentCompanyName: applicantData.hrCurrentCompanyName,
+          hrCurrentCompanyName: RBAC.can("play_admin") ? "WORKO" : companyDetails?.name || "",
         },
       });
     }
@@ -93,30 +120,36 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
   };
 
   // Handle interview process
-  const handleProcessInterview = () => {
+  const handleProcessInterview = async() => {
     onClose();
     misData.payload.status = "PROCESSING_INTERVIEW";
-    handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobs);
+    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    invalidateJobApplication();
   };
 
   // Handle on hold
-  const handleOnHold = () => {
+  const handleOnHold = async() => {
     onClose();
     misData.payload.status = "ON_HOLD";
-    handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobs);
+    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    invalidateJobApplication();
   };
 
   // Handle hire action
-  const handleHire = () => {
+  const handleHire = async() => {
     onClose();
     misData.payload.status = "HIRING_IN_PROCESS";
-    handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobs);
+    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    invalidateJobApplication();
   };
 
   useEffect(() => {
-    const btns: JobApplicationActionType[] = ["HIRE", "HIRE_NOW", "REJECT"];
+    const btns: JobApplicationActionType[] = ["ACCEPT", "HIRE_NOW", "REJECT"];
     btns.forEach((btn) => {
-      console.log(`shouldShowAction(${btn}, jobApplicationData, activeTab):`, shouldShowAction(btn, jobApplicationData, activeTab));
+      console.log(
+        `shouldShowAction(${btn}, ${jobApplicationData.status}, ${activeTab}):`,
+        shouldShowAction(btn, jobApplicationData, activeTab)
+      );
     });
   }, [jobApplicationData, activeTab]);
   return (
@@ -144,14 +177,16 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
 
             {/* Hire Button */}
             {shouldShowAction("HIRE", jobApplicationData, activeTab) && (
-              <button onClick={handleHire} className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition">
+              <button
+                onClick={handleHire}
+                className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition">
                 <Check className="w-4 h-4" />
                 Hire
               </button>
             )}
 
             {/* Hire Now Button (for different contexts) */}
-         {/*    {shouldShowAction("HIRE_NOW", jobApplicationData, activeTab) && (
+            {/*    {shouldShowAction("HIRE_NOW", jobApplicationData, activeTab) && (
               <button
                 onClick={() => {
                   onClose();
@@ -165,7 +200,9 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
 
             {/* Send to Evaluator Button */}
             {shouldShowAction("SEND_TO_EVALUATOR", jobApplicationData, activeTab) && (
-              <button onClick={handleSendToEvaluator} className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              <button
+                onClick={handleSendToEvaluator}
+                className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                 <Send className="w-4 h-4" />
                 Send for evaluation
               </button>
@@ -173,7 +210,9 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
 
             {/* Process Interview Button */}
             {shouldShowAction("PROCESS_INTERVIEW", jobApplicationData, activeTab) && (
-              <button onClick={handleProcessInterview} className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+              <button
+                onClick={handleProcessInterview}
+                className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
                 <ClipboardCheck className="w-4 h-4" />
                 Process interview
               </button>
@@ -181,7 +220,9 @@ const CVPreview = ({ onClose, setIsAddEvaluatorModal, setIsRejectModalOpen, setE
 
             {/* On Hold Button */}
             {shouldShowAction("ONHOLD", jobApplicationData, activeTab) && (
-              <button className="text-blue-700 font-medium transition border p-2 rounded-lg" onClick={handleOnHold}>
+              <button
+                className="text-blue-700 font-medium transition border p-2 rounded-lg"
+                onClick={handleOnHold}>
                 On Hold
               </button>
             )}

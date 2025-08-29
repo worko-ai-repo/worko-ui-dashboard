@@ -1,4 +1,4 @@
-import { joining_success } from '@Assets';
+
 import bg_plexus from './backgrounds/plexus.webp';
 import employee_hero from './backgrounds/employee_hero.webp';
 import employee_hero_mobile from './backgrounds/employee_hero_mobile.webp';
@@ -108,6 +108,7 @@ import cloudUpload from './svgs/cloudUpload.svg';
 import email_sync from './svgs/email_sync.svg';
 import mobile_install from './svgs/mobile_install.svg';
 import cancel from './svgs/cancel.svg';
+import clap from './svgs/clap.svg';
 
 export { 
     // Backgrounds
@@ -208,6 +209,7 @@ export {
     adminEmployee,
     cloudUpload,
     email_sync,
-    mobile_install
+    mobile_install,
     cancel,
+    clap
 };

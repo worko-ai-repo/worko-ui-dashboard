@@ -1,5 +1,7 @@
-import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { JobApplicationDetailsDto, StatusTracker } from "@Interfaces/CorporateDashboard.dto";
 import { parseScorePoints, ScorePoint } from "./DetailedAnalysis.utils";
+import { TimelineStep } from "@Components/Shared/Timeline";
+import { JobApplicationStatusEnum } from "@Enums/JobAndApplication.enum";
 
 class JobApplicationService {
   private readonly THRESHOLD_SCORE = 50;
@@ -7,6 +9,51 @@ class JobApplicationService {
   private readonly HIGH_SCORE = 90;
   private readonly STATUS_REJECTED = "REJECTED";
   private readonly STATUS_APPLIED = "APPLIED";
+  private readonly STATUS_LABELS: Record<JobApplicationStatusEnum, string> = {
+    [JobApplicationStatusEnum.APPLIED]: "Applied",
+    [JobApplicationStatusEnum.ACCEPTED]: "Accepted",
+    [JobApplicationStatusEnum.CV_DOWNLOADED]: "CV Downloaded",
+    [JobApplicationStatusEnum.UNDER_EVALUATION]: "Under Evaluation",
+    [JobApplicationStatusEnum.PROCESSING_INTERVIEW]: "Processing Interview",
+    [JobApplicationStatusEnum.INTERVIEW_DONE]: "Interview Completed",
+    [JobApplicationStatusEnum.DOCUMENT_REQUESTED]: "Documents Requested",
+    [JobApplicationStatusEnum.HIRING_IN_PROCESS]: "Hiring in Process",
+    [JobApplicationStatusEnum.OFFER_SENT]: "Offer Sent",
+    [JobApplicationStatusEnum.OFFER_ISSUE_RAISED]: "Offer Issue Raised",
+    [JobApplicationStatusEnum.REVISED_OFFER_SENT]: "Revised Offer Sent",
+    [JobApplicationStatusEnum.HIRED]: "Hired",
+    [JobApplicationStatusEnum.JOINED]: "Joined",
+    [JobApplicationStatusEnum.REJECTED]: "Rejected",
+
+    // Not part of timeline → keep as empty label
+    [JobApplicationStatusEnum.ON_HOLD]: "",
+    [JobApplicationStatusEnum.ALL]: "",
+    [JobApplicationStatusEnum.DOCUMENT_ADDITIONAL_REQUESTED]: "",
+    [JobApplicationStatusEnum.DOCUMENT_SUBMITTED]: "",
+    [JobApplicationStatusEnum.DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED]: "",
+    [JobApplicationStatusEnum.DOCUMENT_REVISION_REQUESTED]: "",
+    [JobApplicationStatusEnum.DOCUMENT_REVISION_REQUEST_SUBMITTED]: "",
+    [JobApplicationStatusEnum.DOCUMENT_VERIFIED]: "",
+  };
+  private readonly STATUS_TYPE_MAP: Partial<
+    Record<JobApplicationStatusEnum, TimelineStep["status"]>
+  > = {
+    [JobApplicationStatusEnum.APPLIED]: "success",
+    [JobApplicationStatusEnum.ACCEPTED]: "success",
+    [JobApplicationStatusEnum.CV_DOWNLOADED]: "success",
+    [JobApplicationStatusEnum.UNDER_EVALUATION]: "success",
+    [JobApplicationStatusEnum.PROCESSING_INTERVIEW]: "success",
+    [JobApplicationStatusEnum.INTERVIEW_DONE]: "success",
+    [JobApplicationStatusEnum.DOCUMENT_REQUESTED]: "success",
+    [JobApplicationStatusEnum.HIRING_IN_PROCESS]: "success",
+    [JobApplicationStatusEnum.OFFER_SENT]: "success",
+    [JobApplicationStatusEnum.REVISED_OFFER_SENT]: "success",
+    [JobApplicationStatusEnum.HIRED]: "success",
+    [JobApplicationStatusEnum.JOINED]: "success",
+
+    [JobApplicationStatusEnum.OFFER_ISSUE_RAISED]: "warning",
+    [JobApplicationStatusEnum.REJECTED]: "error",
+  };
 
   constructor() {}
 
@@ -38,8 +85,8 @@ class JobApplicationService {
 
     return (
       isWithin24Hours &&
+      jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
       jobApplication.status !== this.STATUS_REJECTED &&
-      !jobApplication.displayToCorporate &&
       scoreIsValid
     );
   }
@@ -92,24 +139,46 @@ class JobApplicationService {
 
   public getRejectionReason(data: JobApplicationDetailsDto | string | null): string[] {
     if (!data) return [];
-  
+
     let feedback: string | undefined;
-  
+
     if (typeof data === "string") {
       feedback = data;
     } else {
       feedback = data.rejectionFeedbackBySystem;
     }
-  
+
     if (!feedback) return [];
-  
+
     try {
       const scorePoints: ScorePoint[] = JSON.parse(feedback);
-      return scorePoints.map(point => point.detail || "");
+      return scorePoints.map((point) => point.detail || "");
     } catch (e) {
       console.error("Invalid rejection feedback format:", e);
       return [];
     }
+  }
+
+  public getTimelineDetails(row: JobApplicationDetailsDto): TimelineStep[] {
+    const seen = new Set<JobApplicationStatusEnum>();
+  
+    return row.statusTracker
+      .filter(
+        (s: StatusTracker) =>
+          this.STATUS_LABELS[s.newStatus as JobApplicationStatusEnum] // only major ones
+      )
+      .map((s: StatusTracker) => {
+        const status = s.newStatus as JobApplicationStatusEnum;
+        if (seen.has(status)) return null; // avoid duplicates
+        seen.add(status);
+  
+        return {
+          label: this.STATUS_LABELS[status],
+          date: s.actionDate ? new Date(s.actionDate).toLocaleDateString() : "",
+          status: this.STATUS_TYPE_MAP[status] ?? "pending",
+        } as TimelineStep;
+      })
+      .filter(Boolean) as TimelineStep[];
   }
   
 }

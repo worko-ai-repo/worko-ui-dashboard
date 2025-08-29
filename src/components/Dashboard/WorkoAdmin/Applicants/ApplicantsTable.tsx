@@ -30,11 +30,15 @@ import {
   statusColors,
 } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 import { JobApplicationActions } from "@Components/Shared/ApplicantsPage/ApplicationActions";
-import ResendOfferLetter from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
+import ResendOfferLetter, { getLatestOfferLetterIssueRaisedDetails, handleViewDocumentClick } from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import Duplicacy from "@Components/Shared/ApplicantsPage/Duplicacy";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
+import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
+import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -120,6 +124,10 @@ export default function ApplicationTable({
     isOpen: false,
     applicant: {} as JobApplicationDetailsDto,
     action: "EDIT" as "EDIT" | "VIEW",
+  });
+  const [joinedModalOpen, setJoinedModalOpen] = useState({
+    isOpen: false,
+    jobApplication: {} as JobApplicationDetailsDto,
   });
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
   // Add dropdown state for status updates (improved functionality)
@@ -325,80 +333,25 @@ export default function ApplicationTable({
       ),
     },
 
-    status: {
+ status: {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => {
+        // Status color mapping
+
         const colorClass =
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex flex-col items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span
-                className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass} ${
-                  row.status === "REJECTED" ? "cursor-pointer" : ""
-                }`}
-                onClick={() =>
-                  row.status === "REJECTED" && showRejectReason && showRejectReason(row)
-                }>
-                {newDisplayStatus[row.status as JobApplicationStatusType]}
-              </span>
-              {shouldShowUpdateIcon(row) && (
-                <button
-                  className="text-blue-600 hover:text-blue-800"
-                  title="Update status"
-                  onClick={() => toggleDropdown(row.id)}>
-                  ✏️
-                </button>
-              )}
-            </div>
-
-            {isDropdownVisible(row.id) && (
-              <div className="flex flex-col gap-2 p-2 border rounded bg-white shadow-lg">
-                <select
-                  className="form-select text-sm border rounded p-1"
-                  value={selectedStatusDropdown}
-                  onChange={(e) => setSelectedStatusDropdown(e.target.value)}
-                  onClick={(e) => e.stopPropagation()}>
-                  <option value="" disabled>
-                    Select Next Status
-                  </option>
-                  {statusArray.map((option) => (
-                    <option
-                      key={option}
-                      value={option}
-                      disabled={isOptionDisabled(option, row.status)}>
-                      {transformStatus(option)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  className="bg-blue-600 text-white px-2 py-1 rounded text-xs disabled:opacity-50"
-                  disabled={!selectedStatusDropdown}
-                  onClick={() => {
-                    if (selectedStatusDropdown) {
-                      const payload: JobApplicationUpdatePayloadDto = {
-                        applicantName: row.applicantDetails.name,
-                        emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
-                        status: selectedStatusDropdown as JobApplicationStatusType,
-                        userId: userDetails ? userDetails?.id : "",
-                        userType: userType,
-                      };
-                      handleUpdate(payload, row.id, true);
-                      setDropdownVisibleRows((prev) => prev.filter((id) => id !== row.id));
-                      setSelectedStatusDropdown("");
-                    }
-                  }}>
-                  Update
-                </button>
-              </div>
-            )}
+          <div className="flex justify-center relative">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
+              {newDisplayStatus[row.status as JobApplicationStatusType]}
+            </span>
           </div>
         );
       },
     },
-
     applicationDate: {
       key: "applicationDate",
       label: "Application Date",
@@ -469,9 +422,8 @@ export default function ApplicationTable({
           setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
           setEvaluatorFormProps={setEvaluatorFormProps}
           setIsRequestDocModalOpen={setIsRequestDocModalOpen}
-          secureStorage={secureStorage}
           sendApplicationToRecruiter={sendApplicationToRecruiter}
-          SecureStorageKeyEnum={SecureStorageKeyEnum}
+          setJoinedModalOpen={setJoinedModalOpen}
           handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
             setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
           }}
@@ -522,7 +474,6 @@ export default function ApplicationTable({
           commonColumns.experience, // Enhanced from yoe
           commonColumns.location,
           commonColumns.matchingScore,
-
           commonColumns.status,
           commonColumns.applicationDate, // New column
           commonColumns.cvViewedDate, // New column
@@ -544,17 +495,32 @@ export default function ApplicationTable({
         ];
       case "Joined":
         return [
-          { key: "name", label: "Candidate name" },
-          { key: "ctc", label: "CTC" },
-          { key: "designation", label: "Designation" },
+          commonColumns.name,
+          { key: "applicantDetails_CTC", label: "CTC" },
+          { key: "applicantDetails_candidateExperience_designation", label: "Designation" },
           { key: "hiredBy", label: "Hired By" },
-          { key: "joiningDate", label: "Joining Date" },
+          { key: "status_actionDate", label: "Joining Date",
+            render: (row: JobApplicationDetailsDto) => (
+              <div className="flex items-center justify-center gap-2">
+                <span>
+                    {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    })}
+                </span>
+              </div>
+            )
+           },
           {
             key: "actions",
             label: "Documents",
-            render: () => (
+            render: (jobData:JobApplicationDetailsDto) => (
               <div className="flex gap-2 justify-center">
-                <button className="flex gap-2 items-center btn-sky">
+                <button className="flex gap-2 items-center btn-sky"
+                  onClick={() => {
+                    jobData ? handleViewDocumentClick(jobData) : toast.error("Failed to view document", getToastOptions({}));
+                  }}>
                   <Eye size={16} />
                   View Document
                 </button>
@@ -592,8 +558,14 @@ export default function ApplicationTable({
    * Render expanded row details
    */
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
+    let timeLineProps:TimelineStep[] = [];
+        if(row.status === "JOINED"){
+          timeLineProps  = jobApplicationServiceObj.getTimelineDetails(row);
+        }
     return (
       <div className="flex justify-evenly flex-nowrap items-start gap-4">
+        {row.status === "JOINED" ? <Timeline steps={timeLineProps}  />:
+        <>
         <div className="basis-2/3">
           <span className="font-semibold text-gray-500 ">About</span>
           <p>{row.applicantDetails.about ?? "--------"}</p>
@@ -664,6 +636,7 @@ export default function ApplicationTable({
             </div>
           </>
         )}
+        </>}
       </div>
     );
   };
@@ -829,6 +802,7 @@ export default function ApplicationTable({
             const applicantData = sortedData.find((row) => row.id === JobApplicationId);
             /* console.log("Applicant Data:", applicantData); */
             if (applicantData) {
+              debugger;
               setEvaluatorFormProps({
                 Defaultvalues: {
                   jobApplicationId: [applicantData.id],
@@ -839,7 +813,7 @@ export default function ApplicationTable({
                   applicantUserId: [applicantData.applicantDetails.userId],
                   applicantUserEmail: [applicantData.applicantDetails.email],
                   hrName: userDetails?.fullName || "",
-                  hrCurrentCompanyName: userDetails?.companyId || "",
+                  hrCurrentCompanyName: "WORKO",
                 },
                 isBulk: false,
                 onClose: () => setIsAddEvaluatorModalOpen(false),
@@ -861,6 +835,17 @@ export default function ApplicationTable({
         }
         className="w-fit p-5 sm:max-w-2xl h-auto">
         <Duplicacy action={duplicateModalOpen.action} applicant={duplicateModalOpen.applicant} />
+      </Modal>
+      <Modal
+        isOpen={joinedModalOpen.isOpen}
+        onClose={() =>
+          setJoinedModalOpen({
+            isOpen: false,
+            jobApplication: {} as JobApplicationDetailsDto,
+          })
+        }
+        className="w-[90vw] sm:w-[455px] h-auto py-4">
+        <JoinedModal jobApplication={joinedModalOpen.jobApplication} />
       </Modal>
     </>
   );

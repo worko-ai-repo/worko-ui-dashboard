@@ -13,6 +13,8 @@ import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import NoDataPresent from "../NoDataPresent";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
+import { useQueryClient } from "@tanstack/react-query";
 
 export interface RequestDocModalProps {
   isOpen: boolean;
@@ -71,6 +73,7 @@ const RequestDocumentModal: React.FC<
   const [reRequestingDoc, setReRequestingDoc] = useState<string | null>(null);
   const [currentRequestedCount, setCurrentRequestedCount] = useState(0);
   const [currentMode, setCurrentMode] = useState<"REQUEST" | "VIEW">(mode);
+  const queryClient = useQueryClient();
   const userType = window.location.href.includes("corporate")
     ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE)
     : "ADMIN";
@@ -103,6 +106,16 @@ const RequestDocumentModal: React.FC<
       }
     }
   }, [isOpen, reset, mode]);
+
+  const invalidateJobApplication = () => {
+    RBAC.can("play_admin")
+      ? queryClient.invalidateQueries({
+          queryKey: ["AdminJobsApplicationQuery"],
+        }):
+    queryClient.invalidateQueries({
+      queryKey: ["CorporateJobsApplicationQuery"],
+    });
+  };
 
   const getDocumentStatus = (docName: string): { color: string; tooltip: string } => {
     const status = jobApplication.documentCurrentStatusMap?.[docName];
@@ -251,12 +264,14 @@ const RequestDocumentModal: React.FC<
 
       toast.success("Documents verified and approved successfully!", getToastOptions({}));
       // handleStatusUpdate("DOCUMENT_VERIFIED", jobApplication);
-      onClose();
+
     } catch (error) {
       console.error("Error verifying documents:", error);
       toast.error("Failed to verify documents", getToastOptions({}));
     } finally {
       setIsVerifying(false);
+      invalidateJobApplication();
+      onClose();
     }
   };
 

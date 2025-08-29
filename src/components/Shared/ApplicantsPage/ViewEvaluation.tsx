@@ -33,7 +33,7 @@ interface Props {
 const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate, setIsRejectModalOpen, onClose,setOpenAddEvaluatorModal }) => {
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const corporateUserType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
-  const userType = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE)?.includes(UserRole.ADMIN) ? UserRole.ADMIN : corporateUserType || UserRole.CORPORATE_ADMIN;
+  const userType = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE)?.includes(UserRole.ADMIN) ? "ADMIN" : corporateUserType || UserRole.CORPORATE_ADMIN;
   const [activeTab, setActiveTab] = useState(0);
 
   const { data:response, isLoading, error } = useQuery<ApiResponseDto<EvaluationResponseItemDto>>({
