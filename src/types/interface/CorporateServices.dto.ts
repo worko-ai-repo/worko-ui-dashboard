@@ -254,7 +254,7 @@ interface StatusTrackerItem {
   detailedFeedback: string;
   score: number;
   htmlDetailedFeedback: string;
-  newStatus: 'INTERVIEW_SCHEDULED' | 'ON_HOLD' | 'REJECTED' ;
+  newStatus: "INTERVIEW_SCHEDULED" | "ON_HOLD" | "REJECTED";
   actionDate: string;
   comment?: string;
   htmlComment?: string;
@@ -286,7 +286,6 @@ export interface EvaluationResponseItemDto {
   statusTracker: StatusTrackerItem[];
   scheduledInterviewDetails: ScheduledInterviewDetailsItem[];
 }
-
 
 /**
  * CommonCursorPaginationProp
@@ -326,7 +325,7 @@ export interface CursorPaginationApplicationDataParams {
   sortOrder: "ascending" | "descending";
   status?: JobApplicationStatusType;
   searchText?: string;
-  // jobId: string | undefined;
+  jobId: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
 }

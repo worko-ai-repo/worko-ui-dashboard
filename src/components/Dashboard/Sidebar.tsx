@@ -103,7 +103,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         return;
       } else if (currentPath.includes("candidate")) {
         //If the current path is corporate, switch to admin dashboard
-        onNavigate("ADMIN", "jobs");
+        onNavigate("ADMIN", "ajobs");
         return;
       }
     } else {

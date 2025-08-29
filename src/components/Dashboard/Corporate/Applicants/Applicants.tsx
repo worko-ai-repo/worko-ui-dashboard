@@ -116,7 +116,7 @@ const Applicants = () => {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: userType,
-    // jobId: jobId,
+    jobId: jobId,
     pageSize: pageSize,
     sortOrder: "descending",
   };
