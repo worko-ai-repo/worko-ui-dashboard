@@ -1,9 +1,12 @@
-import { memo, useState, useCallback, useMemo } from 'react';
+import { memo, useState, useCallback, useMemo, useRef } from 'react';
 import { GuidanceApiResponse, GuidanceRequest, GuidancePaginationInfo } from './Guidance';
 import { useDashboardContext } from '@Context/Dashboard.context';
 import { checkbubble, eyeIcon } from '@Assets';
-import MentorDetails from '../../SharedComponents/GuidanceMentorModal';
+import GuidanceMentorModal from '../../SharedComponents/GuidanceMentorModal';
 import { DynamicTable } from "@Components/Shared/DynamicTable";
+import MentorDetails from './modals/MentorDetails';
+import AcceptAndPay from './modals/AcceptAndPay';
+import httpServiceObj from '@Services/ApiHandler.service';
 
 interface GuidanceTableProps {
   data: GuidanceApiResponse | null;
@@ -14,15 +17,20 @@ interface GuidanceTableProps {
   onRefresh: () => void;
 }
 
+interface MentorMergedData {
+  socialProfile: any | null;
+  mentorDetails: any | null;
+}
+
 const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh}: GuidanceTableProps) => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    variant: 'join' | 'book';
+    variant: 'acceptAndPay' | 'mentorDetails';
     selectedRequest: GuidanceRequest | null;
   }>({
     isOpen: false,
-    variant: 'book',
+    variant: 'mentorDetails',
     selectedRequest: null
   });
   const { user } = useDashboardContext();
@@ -31,6 +39,11 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+
+  // Cache for mentor merged data keyed by request ID
+  const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
+  // Loading state for modal fetch
+  const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
 
   const formatGuidanceType = (type: string) => {
     const typeMap: {[key: string]: string} = {
@@ -44,33 +57,76 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
     return typeMap[type] || type;
   };
 
-  const openModal = useCallback((request: GuidanceRequest, variant: 'join' | 'book') => {
+  const fetchMentorData = async (email: string): Promise<MentorMergedData> => {
+    try {
+      const socialProfileUrl = `https://api.dev.worko.work/user/${encodeURIComponent(email)}/socialprofile`;
+      const mentorDetailsUrl = `https://api.dev.worko.work/user/${encodeURIComponent(email)}/details`;
+
+      const [{ response: socialProfileResponse, error: socialProfileError }, { response: mentorDetailsResponse, error: mentorDetailsError }] = await Promise.all([
+        httpServiceObj.get(socialProfileUrl, true, {}, true),
+        httpServiceObj.get(mentorDetailsUrl, true, {}, true),
+      ]);
+
+      if (socialProfileError || mentorDetailsError) {
+        console.error('Error fetching mentor data:', socialProfileError || mentorDetailsError);
+        return { socialProfile: null, mentorDetails: null };
+      }
+      console.log(socialProfileResponse)
+      return {
+        socialProfile: Array.isArray(socialProfileResponse) && socialProfileResponse.length > 0 ? socialProfileResponse[0] : null,
+        mentorDetails: Array.isArray(mentorDetailsResponse) && mentorDetailsResponse.length > 0 ? mentorDetailsResponse[0] : null,
+      };
+    } catch (error) {
+      console.error('Exception in fetchMentorData:', error);
+      return { socialProfile: null, mentorDetails: null };
+    }
+  };
+
+
+  // Open modal and fetch mentor data if not cached
+  const openModal = useCallback(async (request: GuidanceRequest, variant: 'acceptAndPay' | 'mentorDetails') => {
     setModalState({
       isOpen: true,
       variant,
       selectedRequest: request
     });
     setLocalVisible(true);
-  }, []);
+
+    if (!request.id) return;
+
+    // If data already cached, do nothing
+    if (mentorDataCache.current.has(request.id)) return;
+
+    setMentorDataLoading(true);
+    const mentorEmail = request.mentorDetails?.userEmail || user?.email || '';
+    if (!mentorEmail) {
+      setMentorDataLoading(false);
+      return;
+    }
+
+    const data = await fetchMentorData(mentorEmail);
+    mentorDataCache.current.set(request.id, data);
+    setMentorDataLoading(false);
+  }, [user?.email]);
 
   const closeModal = useCallback(() => {
     setLocalVisible(false);
     setTimeout(() => {
       setModalState({
         isOpen: false,
-        variant: 'book',
+        variant: 'mentorDetails',
         selectedRequest: null
       });
     }, 300);
   }, []);
 
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
-    openModal(request, 'join');
+    openModal(request, 'acceptAndPay');
   }, [openModal]);
 
   const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     if (!user?.email) return;
-    openModal(request, 'book');
+    openModal(request, 'mentorDetails');
   }, [openModal, user?.email]);
 
   const handleModalAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
@@ -132,60 +188,86 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
         </div>
       )
     },
-    {
-      key: "status",
-      label: 'Status',
-      sortable: true,
-      render: (row: GuidanceRequest) => (
-        <div className={`px-4 py-2 rounded-3xl ${row.statusColor?.bg || 'bg-gray-200'} ${row.statusColor?.text || 'text-gray-900'} flex items-center justify-center`}>
-          {row.status}
-        </div>
-      )
-    },
+{
+  key: "status",
+  label: 'Status',
+  sortable: true,
+  render: (row: GuidanceRequest) => (
+    <div
+      className={`
+        inline-flex
+        px-2 py-1
+        rounded-3xl
+        truncate
+        ${row.statusColor?.bg || 'bg-gray-200'}
+        ${row.statusColor?.text || 'text-gray-900'}
+        items-start
+        justify-start
+        max-w-[200px]
+        text-xs
+      `}
+      title={row.status}
+    >
+      {row.status}
+    </div>
+  )
+},
+
     {
       key: "mentorDetails",
-      label: 'Mentor Details',
+      label: "Mentor Details",
       render: (row: GuidanceRequest) => {
+        if (row.status === "PENDING" || row.status === "CANCELLED") return null;
+
         const isProcessing = processingRequestId === row.id;
+
         return (
-          <div 
-            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? 'opacity-75' : ''}`}
+          <div
+            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
             onClick={() => !isProcessing && handleViewDetails(row)}
           >
             {isProcessing ? (
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
             ) : (
-              <img src={eyeIcon} className='h-6 w-6' alt="View feedback" />
+              <img src={eyeIcon} className="h-6 w-6" alt="View feedback" />
             )}
             <div className="ml-2 tracking-wide leading-6 font-semibold">
-              {isProcessing ? 'Loading...' : 'See details'}
+              {isProcessing ? "Loading..." : "See details"}
             </div>
           </div>
         );
-      }
+      },
     },
     {
       key: "acceptPay",
-      label: 'Accept & pay',
+      label: "Accept & pay",
       render: (row: GuidanceRequest) => {
+        if (row.status !== "MENTOR_ASSIGNED") return null;
+
         const isProcessing = processingRequestId === row.id;
+
         return (
-        <div className="flex justify-center">
-          <button 
-            className={`rounded-lg w-14 h-11 ${isProcessing ? 'bg-blue-300' : 'bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]'} flex items-center justify-center text-white ${isProcessing ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}`}
-            onClick={() => !isProcessing && handleAcceptAndPay(row)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <img src={checkbubble} alt="Ask question" />
-            )}
-          </button>
+          <div className="flex justify-center">
+            <button 
+              className={`rounded-lg w-14 h-11 ${
+                isProcessing ? 'bg-blue-300' : 'bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]'
+              } flex items-center justify-center text-white ${
+                isProcessing ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+              }`}
+              onClick={() => !isProcessing && handleAcceptAndPay(row)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <img src={checkbubble} alt="Ask question" />
+              )}
+            </button>
           </div>
         );
       }
     }
+
   ];
 
   const guidanceRequests = data?.data || [];
@@ -226,6 +308,11 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
 
   const keyExtractor = (item: GuidanceRequest) => item.id;
 
+  // Get merged mentor data from cache for modal
+  const currentMentorData: MentorMergedData | undefined = modalState.selectedRequest
+    ? mentorDataCache.current.get(modalState.selectedRequest.id)
+    : undefined;
+
   return (
     <div className="w-full font-poppins">
       <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
@@ -260,17 +347,27 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <MentorDetails
-              className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
-              variant={modalState.variant}
-              mentorName={modalState.selectedRequest?.mentorName || 'Sam Das'}
-              mentorDetails={modalState.selectedRequest?.guidanceRequestDescription || ''}
-              date={modalState.selectedRequest?.dateNeeded || ''}
-              time="7:00 pm"
-              duration="2 hrs 30 mins"
-              charge="₹4,999"
-              onAcceptAndPay={() => modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)}
-            />
+
+            {modalState.variant === 'acceptAndPay' ? (
+              <MentorDetails
+                className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+                request={modalState.selectedRequest}
+                mentorDetails={mentorDataLoading ? null : currentMentorData?.mentorDetails || null}
+                closeModal={closeModal}
+                // You can also pass socialProfile if needed here
+              />
+            ) : (
+              <AcceptAndPay
+                className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+                request={modalState.selectedRequest}
+                acceptAndPayDetails={mentorDataLoading ? null : currentMentorData || null} // pass merged data
+                closeModal={closeModal}
+                onAcceptAndPay={() =>
+                  modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)
+                }
+              />
+            )}
+
           </div>
         </div>
       )}

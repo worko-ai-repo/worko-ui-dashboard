@@ -1,11 +1,8 @@
 import React, { memo, useMemo, useState } from "react";
-import {
-  ReferralApiResponse,
-  ReferralDetailsDto,
-  PaginationInfo,
-} from "./ReferralTypes";
+import {ReferralApiResponse,ReferralDetailsDto,PaginationInfo,} from "./ReferralTypes";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import { chat } from "@AssetsFolder/assets";
+import WithdrawRefferralModal from "./WithdrawRefferralModal";
 
 interface ReferralsTableProps {
   data: ReferralApiResponse | null;
@@ -21,11 +18,28 @@ const ReferralsTable = memo(
     const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
     const [sortField, setSortField] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+    const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+    const [withdrawReason, setWithdrawReason] = useState('');
+    const [withdrawComments, setWithdrawComments] = useState('');
 
     const referrals = data?.data || [];
 
     const keyExtractor = (item: ReferralDetailsDto) =>
       item.id?.toString() ?? Math.random().toString();
+    
+    const handleWithdrawReferral = (row: ReferralDetailsDto) => {
+        if (!withdrawReason) {
+        alert("Please select a reason.");
+        return;
+      }
+
+      console.log("Reason:", withdrawReason);
+      console.log("Comments:", withdrawComments);
+
+      // TODO: Make API call or handle form submission
+
+      setShowWithdrawModal(false); // Close modal
+    };
 
     const columns = [
       {
@@ -82,13 +96,20 @@ const ReferralsTable = memo(
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
         row.status === "ACCEPTED" ? (
-          <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline">
-            <img src={chat} alt="" />
-          </a>
+          <div className="flex justify-center">
+            <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline">
+              <img src={chat} alt="" />
+            </a>
+          </div>
         ) : row.status === "AWAITING" ? (
-          <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline">
-            Withdraw referral
-          </a>
+            <div className="flex justify-center">
+              <button
+                onClick={()=>handleWithdrawReferral(row)}
+                className="bg-yellow-100 text-yellow-800 hover:bg-yellow-200 transition-colors rounded-full px-3 py-1 text-sm font-medium"
+              >
+                Withdraw referral
+              </button>
+            </div>
         ) : null,
       },
       {
@@ -189,6 +210,16 @@ const ReferralsTable = memo(
             enableSelect={false}
             keyExtractor={keyExtractor}
           />
+            {showWithdrawModal && (
+            <WithdrawRefferralModal
+              reason={withdrawReason}
+              comments={withdrawComments}
+              setReason={setWithdrawReason}
+              setComments={setWithdrawComments}
+              onSubmit={handleWithdrawReferral}
+              onClose={() => setShowWithdrawModal(false)}
+            />
+          )}
         </div>
       </div>
     );

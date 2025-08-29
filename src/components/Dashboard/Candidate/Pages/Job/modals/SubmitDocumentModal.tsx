@@ -373,11 +373,10 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
     <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
       isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
     } ${isVisible ? "visible" : "invisible"}`}>
-      <div
-        className={`bg-white min-h-screen w-full max-w-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
+        <div className={`bg-white h-full max-h-screen w-full max-w-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
+        }`}>
+
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h3 className="text-lg font-semibold">Upload document</h3>
@@ -392,7 +391,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
         </div>
  
         {/* Document upload form */}
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 ">
           <div className="p-6 overflow-y-auto flex-1">
             {allDocuments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">

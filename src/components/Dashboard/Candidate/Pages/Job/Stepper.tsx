@@ -47,8 +47,13 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
 
   if (latestStatus === "ACCEPTED") {
   latestStatus = "UNDER_EVALUATION";
-}
-
+  }
+  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUESTED" || latestStatus === "DOCUMENT_REVISION_REQUESTED"){
+    latestStatus = "DOCUMENT_REQUESTED";
+  }
+  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" || latestStatus === "DOCUMENT_REVISION_REQUEST_SUBMITTED"){
+    latestStatus = "DOCUMENT_SUBMITTED";
+  }
   // Find the index of the latest status in our steps array
   const latestStatusIndex = allSteps.findIndex(step => step.key === latestStatus);
   if (latestStatusIndex === -1) return []; // If status not found, return empty array

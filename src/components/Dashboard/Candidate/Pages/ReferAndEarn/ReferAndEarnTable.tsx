@@ -427,7 +427,7 @@ const ReferralsTable = ({searchbarText}: any) => {
       className: "text-sm",
       header: "Referral bonus",
       render: (value:any, item:any) => (
-        <div className={`flex items-center gap-1 ${getBonusColor(item.status)}`}>
+        <div className={`flex justify-center items-center gap-1 ${getBonusColor(item.status)}`}>
           <span className="font-semibold">Rs. {value || 0}</span>
         </div>
       )

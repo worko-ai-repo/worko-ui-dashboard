@@ -22,7 +22,36 @@ export interface GuidanceRequest {
   };
   dateNeeded?: string;
   mentorName?: string;
+
+  mentorDetails?: {
+    name?: string;
+    userId?: string;
+    userEmail?: string;
+  };
+
+  scheduleMeetingDetails?: {
+    date?: string;
+    time?: string;
+    duration?: string;
+  };
+
+  paymentRequestDetails?: {
+    totalAmount?: number;
+    platformFee?: number;
+    guidanceFee?: number;
+    currency?: string;
+    linkForPayment?: string;
+  };
+  statusTracker: [
+    {
+        actionByUserId?: string;
+        newStatus?: string;
+        actionDate?: string;
+        actionByUserType?: string;
+    },
+  ],
 }
+
 
 export interface GuidancePaginationInfo {
   count: number;
@@ -284,151 +313,151 @@ const Guidance = () => {
   const { user } = useDashboardContext();
 
   // Memoize the fetch function to prevent unnecessary re-renders
-  const fetchGuidanceRequests = useCallback(
-    async (page = currentPage, pageSize: number, lastKey = "", searchFilters = filters, isSearch = false) => {
-      if (!user?.email) return;
+  // const fetchGuidanceRequests = useCallback(
+  //   async (page = currentPage, pageSize: number, lastKey = "", searchFilters = filters, isSearch = false) => {
+  //     if (!user?.email) return;
 
-      setIsLoading(true);
-      try {
-        const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND`
-        const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
-        console.log(response)
-        if (response) {
-          // Process the data to include status formatting
-          if (Array.isArray(response.data)) {
-            const processedData = response.data.map((item: GuidanceRequest) => {
-              // Determine status colors based on status
-              const statusColors = {
-                "Mentor to be assigned": { bg: "bg-gray-200", text: "text-gray-900" },
-                "Mentor assigned": { bg: "bg-blue-100", text: "text-blue-600" },
-                "In progress": { bg: "bg-yellow-100", text: "text-yellow-600" },
-                Completed: { bg: "bg-green-100", text: "text-green-600" },
-              };
+  //     setIsLoading(true);
+  //     try {
+  //       const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND`
+  //       const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
+  //       console.log(response)
+  //       if (response) {
+  //         // Process the data to include status formatting
+  //         if (Array.isArray(response.data)) {
+  //           const processedData = response.data.map((item: GuidanceRequest) => {
+  //             // Determine status colors based on status
+  //             const statusColors = {
+  //               "Mentor to be assigned": { bg: "bg-gray-200", text: "text-gray-900" },
+  //               "Mentor assigned": { bg: "bg-blue-100", text: "text-blue-600" },
+  //               "In progress": { bg: "bg-yellow-100", text: "text-yellow-600" },
+  //               Completed: { bg: "bg-green-100", text: "text-green-600" },
+  //             };
 
-              // Format date from ISO to DD-MM-YYYY
-              const date = new Date(item.guidanceRequestDeadline);
-              const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
+  //             // Format date from ISO to DD-MM-YYYY
+  //             const date = new Date(item.guidanceRequestDeadline);
+  //             const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
 
-              return {
-                ...item,
-                dateNeeded: formattedDate,
-                statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
-              };
-            });
+  //             return {
+  //               ...item,
+  //               dateNeeded: formattedDate,
+  //               statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
+  //             };
+  //           });
 
-            setData({
-              data: processedData,
-              pagination: response.pagination || initialPaginationState,
-            });
-          } else {
-            setData(response as GuidanceApiResponse);
-          }
+  //           setData({
+  //             data: processedData,
+  //             pagination: response.pagination || initialPaginationState,
+  //           });
+  //         } else {
+  //           setData(response as GuidanceApiResponse);
+  //         }
 
-          if (response.pagination) {
-            setPaginationInfo(response.pagination);
+  //         if (response.pagination) {
+  //           setPaginationInfo(response.pagination);
 
-            // For searches or first page load, reset pagination keys
-            if (isSearch || page === 1) {
-              paginationKeysRef.current = { 1: "" };
-              if (response.pagination.lastKey) {
-                paginationKeysRef.current[2] = response.pagination.lastKey;
-              }
-            }
-            // For normal pagination, store the next page's key
-            else if (response.pagination.lastKey) {
-              paginationKeysRef.current[page + 1] = response.pagination.lastKey;
-            }
-          }
-        } else if (error) {
-          console.error("Error fetching guidance requests:", error);
-        }
-      } catch (err) {
-        console.error("Exception in fetchGuidanceRequests:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [user, pageSize, filters]
-  );
+  //           // For searches or first page load, reset pagination keys
+  //           if (isSearch || page === 1) {
+  //             paginationKeysRef.current = { 1: "" };
+  //             if (response.pagination.lastKey) {
+  //               paginationKeysRef.current[2] = response.pagination.lastKey;
+  //             }
+  //           }
+  //           // For normal pagination, store the next page's key
+  //           else if (response.pagination.lastKey) {
+  //             paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+  //           }
+  //         }
+  //       } else if (error) {
+  //         console.error("Error fetching guidance requests:", error);
+  //       }
+  //     } catch (err) {
+  //       console.error("Exception in fetchGuidanceRequests:", err);
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   },
+  //   [user, pageSize, filters]
+  // );
 
   //below is to fetch dummy data
-//   const fetchGuidanceRequests = useCallback(
-//   async (
-//     page = currentPage,
-//     pageSize: number,
-//     lastKey = "",
-//     searchFilters = filters,
-//     isSearch = false
-//   ) => {
-//     if (!user?.email) return;
+  const fetchGuidanceRequests = useCallback(
+  async (
+    page = currentPage,
+    pageSize: number,
+    lastKey = "",
+    searchFilters = filters,
+    isSearch = false
+  ) => {
+    if (!user?.email) return;
 
-//     setIsLoading(true);
+    setIsLoading(true);
 
-//     try {
-//       // Simulate API delay
-//       await new Promise((resolve) => setTimeout(resolve, 500));
+    try {
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 500));
 
-//       const statusColors = {
-//         "PENDING": { bg: "bg-gray-200", text: "text-gray-900" },
-//         "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600" },
-//         "CANCELLED": { bg: "bg-red-100", text: "text-red-600" },
-//         "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600" },
-//         "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600" },
-//         "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600" },
-//         "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600" },
-//       };
+      const statusColors = {
+        "PENDING": { bg: "bg-gray-200", text: "text-gray-900" },
+        "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600" },
+        "CANCELLED": { bg: "bg-red-100", text: "text-red-600" },
+        "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600" },
+        "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600" },
+        "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600" },
+        "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600" },
+      };
 
-//       // Pagination logic for mock data
-//       const startIndex = (page - 1) * pageSize;
-//       const paginatedData = dummyData.slice(startIndex, startIndex + pageSize);
+      // Pagination logic for mock data
+      const startIndex = (page - 1) * pageSize;
+      const paginatedData = dummyData.slice(startIndex, startIndex + pageSize);
 
-//       const processedData = paginatedData.map((item) => {
-//         const date = new Date(item.guidanceRequestDeadline);
-//         const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1)
-//           .toString()
-//           .padStart(2, "0")}-${date.getFullYear()}`;
+      const processedData = paginatedData.map((item) => {
+        const date = new Date(item.guidanceRequestDeadline);
+        const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1)
+          .toString()
+          .padStart(2, "0")}-${date.getFullYear()}`;
 
-//         return {
-//           ...item,
-//           dateNeeded: formattedDate,
-//           statusColor: statusColors[item.status as keyof typeof statusColors] || { bg: "bg-gray-200", text: "text-gray-900" },
-//         };
-//       });
+        return {
+          ...item,
+          dateNeeded: formattedDate,
+          statusColor: statusColors[item.status as keyof typeof statusColors] || { bg: "bg-gray-200", text: "text-gray-900" },
+        };
+      });
 
-//       setData({
-//         data: processedData,
-//         pagination: {
-//           currentPage: page,
-//           pageSize,
-//           totalCount: dummyData.length,
-//           lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
-//         },
-//       });
+      setData({
+        data: processedData,
+        pagination: {
+          currentPage: page,
+          pageSize,
+          totalCount: dummyData.length,
+          lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
+        },
+      });
 
-//       setPaginationInfo({
-//         currentPage: page,
-//         pageSize,
-//         totalCount: dummyData.length,
-//         lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
-//       });
+      setPaginationInfo({
+        currentPage: page,
+        pageSize,
+        totalCount: dummyData.length,
+        lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
+      });
 
-//       if (isSearch || page === 1) {
-//         paginationKeysRef.current = { 1: "" };
-//         if (dummyData.length > pageSize) {
-//           paginationKeysRef.current[2] = `page-2`;
-//         }
-//       } else if (dummyData.length > startIndex + pageSize) {
-//         paginationKeysRef.current[page + 1] = `page-${page + 1}`;
-//       }
+      if (isSearch || page === 1) {
+        paginationKeysRef.current = { 1: "" };
+        if (dummyData.length > pageSize) {
+          paginationKeysRef.current[2] = `page-2`;
+        }
+      } else if (dummyData.length > startIndex + pageSize) {
+        paginationKeysRef.current[page + 1] = `page-${page + 1}`;
+      }
 
-//     } catch (err) {
-//       console.error("Exception in fetchdummyData:", err);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   },
-//   [user, currentPage, pageSize, filters]
-// );
+    } catch (err) {
+      console.error("Exception in fetchdummyData:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [user, currentPage, pageSize, filters]
+);
 
   // Handle page change from table
   const handlePageChange = useCallback(
