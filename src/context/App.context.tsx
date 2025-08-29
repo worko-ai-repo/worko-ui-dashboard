@@ -8,6 +8,7 @@ import { AuthLoginForGeneralUserDto } from "@Interfaces/Auth.dto";
 import { AppContextType, ContextProviderProps } from "@Interfaces/ContextProvider.dto";
 import { createContext, useState, useContext, useCallback, useLayoutEffect, useMemo } from "react";
 import { NormalizedUser, normalizeUserData } from "@Utils/NormalizeUser";
+import { CompanyDetails } from "@Interfaces/CorporateDashboard.dto";
 
 // Corporate User Interface
 export interface CorporateUserDetail extends AuthLoginForGeneralUserDto {
@@ -49,7 +50,7 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
   // State variables
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
   const [tokenData, setTokenData] = useState<any | null>(null);
-	const [userDetails, setUserDetails] = useState<NormalizedUser | null>(null);
+  const [userDetails, setUserDetails] = useState<NormalizedUser | null>(null);
   const [updateCheck, setUpdateCheck] = useState<boolean>(false);
   const [PendingApply, setPendingApply] = useState<any | null>(null);
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -57,30 +58,46 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
 
   // console.info('Initializing AppProvider...');
   // Fetch user details based on user type
-  const fetchUserDetails = async (userType: string[] | undefined, userId: string | undefined, userEmail: string | undefined) => {
+  const fetchUserDetails = async (
+    userType: string[] | undefined,
+    userId: string | undefined,
+    userEmail: string | undefined
+  ) => {
     try {
       setIsLoadingUserDetails(true);
       let userResponse;
-
-      if (userType?.includes("corporate-admin") || userType?.includes("corporate-recruiter")) {
-        const { response, error } = await httpServiceObj.get<[CorporateUserDetail]>(`/corporate-user/${userId}/cognito`, true, {});
+      const isCorporateUser =
+        userType?.includes("corporate-admin") || userType?.includes("corporate-recruiter");
+      if (isCorporateUser) {
+        const { response, error } = await httpServiceObj.get<[CorporateUserDetail]>(
+          `/corporate-user/${userId}/cognito`,
+          true,
+          {}
+        );
         if (error) {
           throw new Error(error.message);
         }
         userResponse = response?.[0] || {};
       } else {
-        const { response, error } = await httpServiceObj.get<[Partial<CorporateUserDetail>]>(`/user/${userEmail}/details`, true, {});
+        const { response, error } = await httpServiceObj.get<[Partial<CorporateUserDetail>]>(
+          `/user/${userEmail}/details`,
+          true,
+          {}
+        );
         if (error) {
           throw new Error(error.message);
         }
         userResponse = response?.[0] || {};
       }
 
-      const userDetails: NormalizedUser = normalizeUserData(userResponse);;
+      const userDetails: NormalizedUser = normalizeUserData(userResponse);
 
-			setUserDetails(userDetails);
+      setUserDetails(userDetails);
       secureStorage.setItem<NormalizedUser>(SecureStorageKeyEnum.LOGINDETAILS, userDetails);
-      secureStorage.setItem<object>(SecureStorageKeyEnum.CORPORATECOMPANYID, { companyId: userDetails?.companyId || "" });
+      secureStorage.setItem<object>(SecureStorageKeyEnum.CORPORATECOMPANYID, {
+        companyId: userDetails?.companyId || "",
+      });
+      isCorporateUser ? await fetchCorporateCompanyDetails() : null;
     } catch (error) {
       console.error("Error fetching user details:", error);
       // If we can't fetch user details but user is logged in, sign them out
@@ -90,6 +107,28 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
     } finally {
       setIsLoadingUserDetails(false);
     }
+  };
+
+  const fetchCorporateCompanyDetails = async ():Promise<CompanyDetails | null> => {
+    try {
+      if (!userDetails?.companyId) {
+        console.error("Company ID is missing in user details");
+        return null;
+      }
+      const { response: userCompanyResponse, error: userCompanyError } =
+        await httpServiceObj.get<any>(`/company/${userDetails?.companyId}`, true, {});
+      if (userCompanyError) {
+        console.error("Error fetching company details: ", userCompanyError);
+        return null;
+      }
+      if (userCompanyResponse) {
+        secureStorage.setItem<CompanyDetails>(SecureStorageKeyEnum.CORPORATECOMPANYDERAILS, userCompanyResponse[0]);
+        return userCompanyResponse[0];
+      }
+    } catch (error) {
+      console.error("Error in fetchCorporateCompanyDetails: ", error);
+    }
+    return null;
   };
 
   // Check if user is logged in
@@ -120,7 +159,9 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
         setTokenData(token);
 
         // Check if user details are already stored and valid
-        const storedUserDetails = secureStorage.getItem<NormalizedUser>(SecureStorageKeyEnum.LOGINDETAILS);
+        const storedUserDetails = secureStorage.getItem<NormalizedUser>(
+          SecureStorageKeyEnum.LOGINDETAILS
+        );
 
         if (storedUserDetails && Object.keys(storedUserDetails).length > 0) {
           setUserDetails(storedUserDetails);
@@ -169,9 +210,23 @@ export const AppProvider = ({ children }: ContextProviderProps) => {
       isModalOpen,
       setIsModalOpen,
       isLoadingUserDetails,
-      setUserDetails
+      setUserDetails,
+      fetchCorporateCompanyDetails,
     }),
-    [isLoggedIn, tokenData, setAuthState, userDetails, setUpdateCheck, PendingApply, setPendingApply, isModalOpen, setIsModalOpen, isLoadingUserDetails,setUserDetails]
+    [
+      isLoggedIn,
+      tokenData,
+      setAuthState,
+      userDetails,
+      setUpdateCheck,
+      PendingApply,
+      setPendingApply,
+      isModalOpen,
+      setIsModalOpen,
+      isLoadingUserDetails,
+      setUserDetails,
+      fetchCorporateCompanyDetails,
+    ]
   );
 
   return <AppContext.Provider value={memoizedValue}>{children}</AppContext.Provider>;

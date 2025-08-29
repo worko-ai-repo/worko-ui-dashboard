@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import { CorporateUserDetail } from "@Context/App.context";
 import { NormalizedUser } from "@Utils/NormalizeUser";
+import { CompanyDetails } from "./CorporateDashboard.dto";
 
 /**
  * Interface for the ContextProvider
@@ -17,8 +18,9 @@ export interface AppContextType {
   setUpdateCheck: React.Dispatch<React.SetStateAction<boolean>>;
   userDetails: NormalizedUser | null;
   setUserDetails: React.Dispatch<React.SetStateAction<NormalizedUser | null>>;
-  PendingApply: any | null ;
-  setPendingApply: React.Dispatch<React.SetStateAction<any | null >>;
+  PendingApply: any | null;
+  setPendingApply: React.Dispatch<React.SetStateAction<any | null>>;
   isModalOpen: boolean;
   setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  fetchCorporateCompanyDetails: () => Promise<CompanyDetails | null>;
 }

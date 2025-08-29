@@ -21,6 +21,7 @@ import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDrop
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -32,55 +33,6 @@ export interface JobApplicationUpdatePayloadDto {
 
 const tabs = ["All", "Hired", "Joined"] as const;
 
-/**
- * handleJobApplicationStatusUpdate - Function to handle status updates for applications
- *
- * @param {any} payload - Additional data needed for the status update (if any)
- *
- * @return void
- */
-export async function handleJobApplicationStatusUpdate(
-  payload: JobApplicationUpdatePayloadDto,
-  jobId: string,
-  refetch: () => void
-): Promise<void> {
-  try {
-    // Here you would typically make an API call to update the status
-    const response = await AdminServiceObj.updateApplicationStatus(payload, jobId);
-    if (!response) {
-      throw new Error("Failed to update application status");
-    }
-    toast.success(
-      `Application status updated to ${payload.status.toLocaleLowerCase()}`,
-      getToastOptions({})
-    );
-    console.log(`Status updated to ${payload.status}`);
-    // Optionally, you can refresh the data or perform other actions after updating
-  } catch (error) {
-    console.error("Error updating status:", error);
-    toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
-  } finally {
-    refetch(); // Refetch the data to reflect the changes
-  }
-}
-/**
- * getJobStatus
- */
-/* const getJobStatus = (data: JobApplicationDetailsDto[] | undefined) => {
-  if (data && data.length > 0) {
-    switch (data[0].status) {
-      case "PUBLISHED":
-        return "Hiring";
-      case "CLOSED":
-        return "Closed";
-      case "ARCHIVED":
-        return "On Hold";
-      default:
-        return "N/A";
-    }
-    return "N/A"; // Default case if no status matches
-  }
-}; */
 export interface ApplicationListSelectionDto {
   selectedRows: BulkJobApplicationUpdateItem[];
   toggleRow: (item: JobApplicationDetailsDto) => void;
@@ -141,7 +93,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     refetch,
     reset,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataAdminParams>({
-    queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params,isAllApplicants],
+    queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params, isAllApplicants],
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
     enabled: isAllApplicants ? true : !!jobId,
@@ -151,6 +103,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
    * UseEffect to reset selected rows when the active tab changes
    */
   useEffect(() => {
+    refetch();
     reset(); // Reset pagination when active tab changes
     ListSelection.reset(); // Reset selected rows when active tab changes
   }, [activeTab, searchBarText, pageSize, apiStatus]);
@@ -192,12 +145,13 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
   const StatusFilterDropdown = [
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Applied", onClick: () => setApiStatus("APPLIED") },
+    { label: "Accepted", onClick: () => setApiStatus("ACCEPTED") },
     { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
     { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
     { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
+    { label: "Hiring In Process", onClick: () => setApiStatus("HIRING_IN_PROCESS") },
     { label: "Hired", onClick: () => setApiStatus("HIRED") },
     { label: "Joined", onClick: () => setApiStatus("JOINED") },
-    { label: "On Hold", onClick: () => setApiStatus("ON_HOLD") },
     { label: "Rejected", onClick: () => setApiStatus("REJECTED") },
   ];
 
@@ -220,7 +174,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
         hrName: userDetails?.fullName ?? "",
-        hrCurrentCompanyName: data[0]?.companyName ?? "",
+        hrCurrentCompanyName: "WORKO",
       },
       isBulk: true,
       onClose: () => {
@@ -261,11 +215,11 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails />
-            <div className="bg-white max-w-[150px] mt-4 h-min  shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
-              <div className="flex border rounded-lg items-center">
+              <div className="flex border rounded-lg justify-between w-32 relative">
                 <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">
-                  {data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
+                  {!queryIsJobsLoading ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
                 </div>
                 <button
                   onClick={() => {
@@ -276,7 +230,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                       });
                     }
                   }}
-                  className="bg-blue-500  p-1 w-auto h-full rounded-lg active:scale-95 ">
+                  className="bg-blue-500   p-1 w-auto h-full rounded-lg active:scale-95 ">
                   <img src={clipboard} alt="Clipboard icon" className=" min-w-4 min-h-4  " />
                 </button>
               </div>
@@ -314,10 +268,11 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                     label: "Initiate Interview",
                     onClick: () => onBulkUpdate("PROCESSING_INTERVIEW"),
                   },
-                  { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
+                  { label: "Initiate Hiring", onClick: () => onBulkUpdate("HIRING_IN_PROCESS") },
+                  { label: "Interview Done", onClick: () => onBulkUpdate("INTERVIEW_DONE") },
                   { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
                   { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
+                  /*  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
                 ]}
                 apiStatus={apiStatus} // Change this to test
                 disabled={
@@ -355,8 +310,8 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             activeTab={activeTab}
             setActiveTab={setActiveTab}
             data={data}
-            handleUpdate={(payload, jobId) =>
-              handleJobApplicationStatusUpdate(payload, jobId, refetch)
+            handleUpdate={(payload, jobId, hasRefetch) =>
+              handleJobApplicationStatusUpdate(payload, jobId, hasRefetch ? refetch : undefined)
             }
             userType={"ADMIN"}
             Pagination={{

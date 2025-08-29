@@ -4,13 +4,14 @@ import { Upload, Send, ChevronDown } from "lucide-react";
 import ReusableInput from "../../Dashboard/Corporate/ReusableInput";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import httpServiceObj from "@Services/ApiHandler.service";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 export type HireFormInputs = {
   jobTitle: string;
@@ -41,7 +42,13 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
     queryKey: ["jobData", jobData?.jobId],
     queryFn: async () => {
       if (!jobData?.jobId) throw new Error("Job ID is required");
-      const { response } = await httpServiceObj.get<JobDto>(`/job/${jobData.jobId}`, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.get<JobDto>(
+        `/job/${jobData.jobId}`,
+        true,
+        {},
+        false,
+        "JOB"
+      );
       if (!response) {
         throw new Error("Failed to fetch job data");
       }
@@ -51,7 +58,7 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
   });
 
   const { data: jobResponse, isLoading, isError } = jobQuery;
-
+  const queryClient = useQueryClient();
   const {
     register,
     handleSubmit,
@@ -59,10 +66,10 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
     formState: { errors },
   } = useForm<HireFormInputs>({
     defaultValues: {
-      jobTitle: jobResponse?.jobTitle ,
-      workMode: jobResponse?.workMode ,
+      jobTitle: jobResponse?.jobTitle,
+      workMode: jobResponse?.workMode,
       location: jobResponse?.location?.city?.[0],
-      department: jobResponse?.department ,
+      department: jobResponse?.department,
       ctc: jobResponse?.salaryRange?.max ? jobResponse.salaryRange.max.toString() : "",
       offerLetter: null,
       remarks: "",
@@ -88,13 +95,13 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
   const onSubmit = async (data: HireFormInputs) => {
     try {
       if (!data.offerLetter || data.offerLetter.length === 0) {
-        toast.error("Please upload an offer letter.",getToastOptions({}));
+        toast.error("Please upload an offer letter.", getToastOptions({}));
         return;
       }
 
       const file = data.offerLetter[0];
       if (file.type !== "application/pdf") {
-        toast.error("Only PDF files are allowed.",getToastOptions({}));
+        toast.error("Only PDF files are allowed.", getToastOptions({}));
         return;
       }
 
@@ -102,22 +109,30 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       if (!jobData?.id) {
         throw new Error("Job application ID is required");
       }
-      const userType = window.location.href.includes("corporate") 
-      ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) 
-      : UserRole.ADMIN;
-      
-    if (!userType) {
-      throw new Error("User type not found in secure storage");
-    }
+      const userType = window.location.href.includes("corporate")
+        ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE)
+        : "ADMIN";
+
+      if (!userType) {
+        throw new Error("User type not found in secure storage");
+      }
 
       const payload: JobOfferLetterDynamoRequestDto = {
         jobApplicationId: jobData?.id,
-        userId: jobData.applicantDetails.id, 
+        userId: jobData.applicantDetails.id,
         fileName: file.name,
         fileMimeType: file.type,
       };
 
-      const { response: presignedUrlResponse } = await httpServiceObj.post<JobOfferLetterDynamoResponseDto>("/file/gsu2u/HR_OFFER_LETTER_SENT", payload, true, {}, false, "JOB");
+      const { response: presignedUrlResponse } =
+        await httpServiceObj.post<JobOfferLetterDynamoResponseDto>(
+          "/file/gsu2u/HR_OFFER_LETTER_SENT",
+          payload,
+          true,
+          {},
+          false,
+          "JOB"
+        );
       if (!presignedUrlResponse) {
         throw new Error("Failed to get pre-signed URL");
       }
@@ -134,23 +149,38 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
 
       // Step 3: Update job application status
       const updatePayload = {
-        userId: jobData?.applicantDetails.name, 
+        userId: jobData?.applicantDetails.name,
         status: "OFFER_SENT",
         offerLetterCloudFileName: cloudFileName,
         offerLetterRemarks: data.remarks,
-        emailId: jobData?.applicantDetails.email, 
-        userType: userType, 
+        emailId: jobData?.applicantDetails.email,
+        userType: userType,
         applicantName: jobData?.applicantDetails.name || "Applicant",
       };
 
-      const {response} = await httpServiceObj.patch(`/job-application/${jobData?.id}/corp-action`, updatePayload, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.patch(
+        `/job-application/${jobData?.id}/corp-action`,
+        updatePayload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
       if (!response) {
         throw new Error("Failed to update job application status");
       }
-      toast.success("Offer letter uploaded and status updated successfully.",getToastOptions({}));
+      toast.success("Offer letter uploaded and status updated successfully.", getToastOptions({}));
     } catch (error) {
       console.error("Error:", error);
-      toast.error("An error occurred. Please try again.",getToastOptions({}));
+      toast.error("An error occurred. Please try again.", getToastOptions({}));
+    } finally {
+      RBAC.can("play_admin")
+        ? queryClient.invalidateQueries({
+            queryKey: ["AdminJobsApplicationQuery"],
+          })
+        : queryClient.invalidateQueries({
+            queryKey: ["CorporateJobsApplicationQuery"],
+          });
     }
   };
 
@@ -163,7 +193,14 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Job title
         </label>
-        <ReusableInput className="capitalize" type="text" placeholder="Marketing manager" register={register("jobTitle")} error={errors?.jobTitle?.message} disabled={!!jobResponse?.jobTitle} />
+        <ReusableInput
+          className="capitalize"
+          type="text"
+          placeholder="Marketing manager"
+          register={register("jobTitle")}
+          error={errors?.jobTitle?.message}
+          disabled={!!jobResponse?.jobTitle}
+        />
       </div>
 
       {/* Work Mode */}
@@ -171,7 +208,14 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Work mode
         </label>
-        <ReusableInput className="capitalize" type="text" placeholder="Remote" register={register("workMode")} error={errors?.workMode?.message} disabled={!!jobResponse?.workMode} />
+        <ReusableInput
+          className="capitalize"
+          type="text"
+          placeholder="Remote"
+          register={register("workMode")}
+          error={errors?.workMode?.message}
+          disabled={!!jobResponse?.workMode}
+        />
       </div>
 
       {/* Location */}
@@ -179,7 +223,14 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Location
         </label>
-        <ReusableInput className="capitalize" register={register("location")} type="text" placeholder="Bangalore" error={errors?.location?.message} disabled={!!jobResponse?.location?.city?.[0]} />
+        <ReusableInput
+          className="capitalize"
+          register={register("location")}
+          type="text"
+          placeholder="Bangalore"
+          error={errors?.location?.message}
+          disabled={!!jobResponse?.location?.city?.[0]}
+        />
       </div>
 
       {/* Department */}
@@ -188,7 +239,8 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
           <span className="text-red-500 mr-1">*</span>Department
         </label>
         <div className="relative">
-          <ReusableInput className="capitalize"
+          <ReusableInput
+            className="capitalize"
             register={register("department")}
             type="text"
             placeholder="Marketing"
@@ -202,16 +254,29 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       {/* CTC */}
       <div>
         <label className="block text-sm font-medium text-gray-700">
-          <span className="text-red-500 mr-1">*</span>CTC <span className="text-xs text-gray-400">(fix + variable)</span>
+          <span className="text-red-500 mr-1">*</span>CTC{" "}
+          <span className="text-xs text-gray-400">(fix + variable)</span>
         </label>
-        <ReusableInput className="capitalize" register={register("ctc")} type="text" placeholder="50,00,000.00" error={errors?.ctc?.message} disabled={!!jobResponse?.salaryRange?.max} />
+        <ReusableInput
+          className="capitalize"
+          register={register("ctc")}
+          type="text"
+          placeholder="50,00,000.00"
+          error={errors?.ctc?.message}
+          disabled={!!jobResponse?.salaryRange?.max}
+        />
       </div>
 
       {/* Offer Letter Upload */}
       <div>
         <label className="block text-sm font-medium text-gray-700">Attach offer letter</label>
         <div className="relative">
-          <ReusableInput className="capitalize" register={register("offerLetter")} type="file" accept=".pdf" />
+          <ReusableInput
+            className="capitalize"
+            register={register("offerLetter")}
+            type="file"
+            accept=".pdf"
+          />
           <Upload className="absolute right-3 top-4 text-gray-400" size={18} />
         </div>
       </div>
@@ -221,7 +286,8 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Joining Date
         </label>
-        <ReusableInput className="capitalize"
+        <ReusableInput
+          className="capitalize"
           register={register("joiningDate", {
             required: "Joining date is required",
           })}
@@ -235,11 +301,17 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       <div className="flex flex-col gap-12">
         <div>
           <label className="block text-sm font-medium text-gray-700">Remarks</label>
-          <textarea placeholder="write here" {...register("remarks")} className="mt-1 h-[95px] w-full px-4 py-2 pl-[26px] border rounded-lg bg-[#EBEFF3] focus:outline-none" />
+          <textarea
+            placeholder="write here"
+            {...register("remarks")}
+            className="mt-1 h-[95px] w-full px-4 py-2 pl-[26px] border rounded-lg bg-[#EBEFF3] focus:outline-none"
+          />
         </div>
 
         {/* Submit Button */}
-        <button type="submit" className="flex justify-center items-center w-fit gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+        <button
+          type="submit"
+          className="flex justify-center items-center w-fit gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
           <Send size={16} />
           Send
         </button>

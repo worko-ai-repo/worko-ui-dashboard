@@ -174,7 +174,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({ Defaultvalues, isBulk,onB
         const corporateUserType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
         const applicationUpdatePayload:JobApplicationUpdatePayloadDto = {
           status: "UNDER_EVALUATION",
-          userType: isAdmin ? UserRole.ADMIN : corporateUserType || UserRole.CORPORATE_ADMIN,
+          userType: isAdmin ? "ADMIN" : corporateUserType || UserRole.CORPORATE_ADMIN,
           applicantName: Defaultvalues.applicantUserName[0] || "", 
           userId: Defaultvalues.applicantUserId[0] || "",
           emailId: Defaultvalues.applicantUserEmail[0] || "",

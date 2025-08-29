@@ -2,7 +2,11 @@ import { useEffect, useState } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
-import { JobApplicationDetailsDto, JobData } from "@Interfaces/CorporateDashboard.dto";
+import {
+  CompanyDetails,
+  JobApplicationDetailsDto,
+  JobData,
+} from "@Interfaces/CorporateDashboard.dto";
 import { useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
@@ -29,6 +33,7 @@ export interface JobApplicationUpdatePayloadDto {
   status: JobApplicationStatusType;
   userId: string;
   userType?: string;
+  joiningDate?: string;
 }
 
 const tabs = ["All", "Hired", "Joined"] as const;
@@ -44,22 +49,23 @@ export async function handleJobApplicationStatusUpdate(
   payload: JobApplicationUpdatePayloadDto,
   jobId: string,
   refetch?: () => void
-): Promise<void> {
+): Promise<boolean> {
   try {
     // Here you would typically make an API call to update the status
     const response = await CorporateServiceObj.updateApplicationStatus(payload, jobId);
     if (!response) {
       throw new Error("Failed to update application status");
     }
-    toast.success(
+    if (refetch) toast.success(
       `Application status updated to ${payload.status.toLocaleLowerCase()}`,
       getToastOptions({})
     );
-    console.log(`Status updated to ${payload.status}`);
+    return true;
     // Optionally, you can refresh the data or perform other actions after updating
   } catch (error) {
     console.error("Error updating status:", error);
-    toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
+    if (refetch) toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
+    return false;
   } finally {
     if (refetch) refetch(); // Refetch the data to reflect the changes
   }
@@ -73,7 +79,8 @@ export interface ApplicationListSelectionDto {
   reset: () => void;
 }
 const Applicants = () => {
-  const { userDetails } = useAppContext();
+  const { userDetails, fetchCorporateCompanyDetails } = useAppContext();
+
   const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
   const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
@@ -109,7 +116,7 @@ const Applicants = () => {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: userType,
-    // jobId: jobId,
+    jobId: jobId,
     pageSize: pageSize,
     sortOrder: "descending",
   };
@@ -138,9 +145,17 @@ const Applicants = () => {
   });
 
   /**
+   * UseEffect to fetch corporate company details on component mount
+   */
+  useEffect(() => {
+    fetchCorporateCompanyDetails();
+  }, []);
+
+  /**
    * UseEffect to reset selected rows when the active tab changes
    */
   useEffect(() => {
+    refetch();
     reset(); // Reset pagination when active tab changes
     ListSelection.reset();
   }, [activeTab, searchBarText, pageSize, apiStatus]);
@@ -202,6 +217,9 @@ const Applicants = () => {
       return;
     }
     setIsAddEvaluatorModalOpen(true);
+    const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
+      SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
+    );
     setEvaluatorFormProps({
       Defaultvalues: {
         jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
@@ -212,7 +230,7 @@ const Applicants = () => {
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
         hrName: userDetails?.fullName ?? "",
-        hrCurrentCompanyName: data[0]?.companyName ?? "",
+        hrCurrentCompanyName: companyDetails?.name || "",
       },
       isBulk: true,
       onClose: () => {
@@ -229,11 +247,11 @@ const Applicants = () => {
         <div className="flex  flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails />
-            <div className="bg-white max-w-[150px] mt-4 h-min  shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <div className="flex border rounded-lg items-center">
                 <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">
-                  {data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
+                  {!queryIsJobsLoading ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
                 </div>
                 <button
                   onClick={() => {
@@ -271,15 +289,22 @@ const Applicants = () => {
               />
               <BulkStatusDropDown
                 options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("ACCEPTED") },
-                  { label: "Send to evaluator", onClick: () => onBulkUpdate("UNDER_EVALUATION") },
+                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
+                  {
+                    label: "Send to evaluator",
+                    onClick: () => {
+                      handleBulkEvaluatorUpdate();
+                    },
+                  },
                   {
                     label: "Initiate Interview",
                     onClick: () => onBulkUpdate("PROCESSING_INTERVIEW"),
                   },
-                  { label: "Interview Done", onClick: () => onBulkUpdate("INTERVIEW_DONE") },
                   { label: "Initiate Hiring", onClick: () => onBulkUpdate("HIRING_IN_PROCESS") },
-                  { label: "Hold", onClick: () => onBulkUpdate("ON_HOLD") },
+                  { label: "Interview Done", onClick: () => onBulkUpdate("INTERVIEW_DONE") },
+                  { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
+                  { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
+                /*   { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
                 ]}
                 apiStatus={apiStatus}
                 disabled={

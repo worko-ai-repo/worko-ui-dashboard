@@ -52,7 +52,7 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
       {/* Trigger Button */}
       <div
         onClick={toggleDropdown}
-        className={`flex justify-center text-left  min-w-48 h-10 bg-white px-4 py-2 items-center font-semibold  transition-all ${
+        className={`flex justify-center text-left  min-w-48 h-10 bg-white px-2 py-2 items-center font-semibold  transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
@@ -77,7 +77,7 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
                   className={`text-left  border-b px-4 py-1  text-sm font-medium transition ${
                     isSelected
                       ? "text-blue-600 font-semibold"
-                      : "text-gray-700 hover:text-blue-600"
+                      : "text-gray-600 hover:text-blue-600"
                   }`}
                 >
                   {option.label}

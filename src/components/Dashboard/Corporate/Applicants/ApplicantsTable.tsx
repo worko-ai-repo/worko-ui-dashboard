@@ -15,7 +15,7 @@ import { DynamicTable } from "../../../Shared/DynamicTable";
 
 // Assets and interfaces
 import { email, hireNow, Not_Responding, onHold } from "@Assets";
-import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { ApplicationListSelectionDto, JobApplicationUpdatePayloadDto } from "./Applicants";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -30,8 +30,12 @@ import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation
 import { JobApplicationActions } from "@Components/Shared/ApplicantsPage/ApplicationActions";
 import Duplicacy from "@Components/Shared/ApplicantsPage/Duplicacy";
 import { Job } from "aws-sdk/clients/codepipeline";
-import ResendOfferLetter from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
+import ResendOfferLetter, { getLatestOfferLetterIssueRaisedDetails, handleViewDocumentClick } from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
+import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
+import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 // Component props interface
 
@@ -76,7 +80,7 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   DOCUMENT_REVISION_REQUEST_SUBMITTED: "Document Requested",
   DOCUMENT_REVISION_REQUESTED: "Document Requested",
   DOCUMENT_SUBMITTED: "Document Requested",
-  DOCUMENT_VERIFIED: "Document Requested",
+  DOCUMENT_VERIFIED: "Document Verified",
   HIRED: "Hired",
   OFFER_SENT: "Offer Sent",
 
@@ -149,6 +153,10 @@ export default function ApplicationTable({
   }>({
     isOpen: false,
     jobData: {} as JobApplicationDetailsDto,
+  });
+  const [joinedModalOpen, setJoinedModalOpen] = useState({
+    isOpen: false,
+    jobApplication: {} as JobApplicationDetailsDto,
   });
   const [isRequestDocModalOpen, setIsRequestDocModalOpen] = useState<RequestDocModalProps>({
     isOpen: false,
@@ -301,8 +309,7 @@ export default function ApplicationTable({
           setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
           setEvaluatorFormProps={setEvaluatorFormProps}
           setIsRequestDocModalOpen={setIsRequestDocModalOpen}
-          secureStorage={secureStorage}
-          SecureStorageKeyEnum={SecureStorageKeyEnum}
+          setJoinedModalOpen={setJoinedModalOpen}
           handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
             setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
           }}
@@ -371,17 +378,40 @@ export default function ApplicationTable({
         ];
       case "Joined":
         return [
-          { key: "name", label: "Candidate name" },
-          { key: "ctc", label: "CTC (In Lakhs)" },
-          { key: "designation", label: "Designation" },
+          commonColumns.name,
+          { key: "applicantDetails_CTC", label: "CTC" },
+          { key: "applicantDetails_candidateExperience_designation", label: "Designation" },
           { key: "hiredBy", label: "Hired By" },
-          { key: "joiningDate", label: "Joining Date" },
+          {
+            key: "status_actionDate",
+            label: "Joining Date",
+            render: (row: JobApplicationDetailsDto) => (
+              <div className="flex items-center justify-center gap-2">
+                <span>
+                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
+                    "en-GB",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )}
+                </span>
+              </div>
+            ),
+          },
           {
             key: "actions",
             label: "Documents",
-            render: () => (
+            render: (jobData: JobApplicationDetailsDto) => (
               <div className="flex gap-2 justify-center">
-                <button className="flex gap-2 items-center btn-sky">
+                <button
+                  className="flex gap-2 items-center btn-sky"
+                  onClick={() => {
+                    jobData
+                      ? handleViewDocumentClick(jobData)
+                      : toast.error("Failed to view document", getToastOptions({}));
+                  }}>
                   <Eye size={16} />
                   View Document
                 </button>
@@ -419,64 +449,73 @@ export default function ApplicationTable({
    * Render expanded row details
    */
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
+    let timeLineProps: TimelineStep[] = [];
+    if (row.status === "JOINED") {
+      timeLineProps = jobApplicationServiceObj.getTimelineDetails(row);
+    }
     return (
       <div className="flex justify-evenly flex-nowrap items-start gap-4">
-        <div className="basis-2/3">
-          <span className="font-semibold text-gray-500 ">About</span>
-          <p>{row.applicantDetails.about ?? "--------"}</p>
-        </div>
-
-        {row.status === "REJECTED" ? (
-          // Show rejection details
-          <>
-          <div>
-            <span className="font-semibold text-gray-500">Rejected by</span>
-            <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
+        <>
+          <div className="basis-2/3">
+            <span className="font-semibold text-gray-500 ">About</span>
+            <p>{row.applicantDetails.about ?? "--------"}</p>
           </div>
 
-          <div className="text-center">
-            <div className="font-semibold text-gray-500 text-center">Reason</div>
+          {row.status === "REJECTED" ? (
+            // Show rejection details
+            <>
+              <div>
+                <span className="font-semibold text-gray-500">Rejected by</span>
+                <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
+              </div>
 
-            {row.rejectedByUserId ? (
-              <>
-                <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                {row.rejectedByUserId.userComment && (
-                  <div>
-                    <ul>
-                      <span className="font-semibold text-gray-500">Comment</span>
-                    </ul>
-                    <li className="list-disc list-inside ">{row.rejectedByUserId.userComment}</li>
-                  </div>
-                )}
-              </>
-            ) : (
-              <>
-                {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                  <p>--------</p>
+              <div className="text-center">
+                <div className="font-semibold text-gray-500 text-center">Reason</div>
+
+                {row.rejectedByUserId ? (
+                  <>
+                    <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+                    {row.rejectedByUserId.userComment && (
+                      <div>
+                        <ul>
+                          <span className="font-semibold text-gray-500">Comment</span>
+                        </ul>
+                        <li className="list-disc list-inside ">
+                          {row.rejectedByUserId.userComment}
+                        </li>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                    <li key={index} className="list-disc list-inside">
-                      {reason}
-                    </li>
-                  ))
+                  <>
+                    {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+                      <p>--------</p>
+                    ) : (
+                      jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+                        <li key={index} className="list-disc list-inside">
+                          {reason}
+                        </li>
+                      ))
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          ) : (
+            // Show application details
+            <>
+              <div>
+                <span className="font-semibold text-gray-500">CTC</span>
+                <p>{row.applicantDetails.CTC}</p>
+              </div>
+              <div>
+                <span className="font-semibold text-gray-500">Notice</span>
+                <p>{row.applicantDetails.noticePeriod}</p>
+              </div>
+            </>
+          )}
         </>
-        ) : (
-          // Show application details
-          <>
-            <div>
-              <span className="font-semibold text-gray-500">CTC</span>
-              <p>{row.applicantDetails.CTC}</p>
-            </div>
-            <div>
-              <span className="font-semibold text-gray-500">Notice</span>
-              <p>{row.applicantDetails.noticePeriod}</p>
-            </div>
-          </>
-        )}
+        {row.status === "JOINED" && <Timeline steps={timeLineProps} />}
       </div>
     );
   };
@@ -639,9 +678,12 @@ export default function ApplicationTable({
           }}
           setOpenAddEvaluatorModal={(count, JobApplicationId: string) => {
             setEvaluatorFormCount(count);
+            const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
+              SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
+            );
             const applicantData = sortedData.find((row) => row.id === JobApplicationId);
             /* console.log("Applicant Data:", applicantData); */
-            if (applicantData) {
+            if (applicantData && companyDetails) {
               setEvaluatorFormProps({
                 Defaultvalues: {
                   jobApplicationId: [applicantData.id],
@@ -652,7 +694,7 @@ export default function ApplicationTable({
                   applicantUserId: [applicantData.applicantDetails.userId],
                   applicantUserEmail: [applicantData.applicantDetails.email],
                   hrName: userDetails?.fullName || "",
-                  hrCurrentCompanyName: userDetails?.companyId || "",
+                  hrCurrentCompanyName: companyDetails?.name || "",
                 },
                 isBulk: false,
                 onClose: () => setIsAddEvaluatorModalOpen(false),
@@ -674,6 +716,18 @@ export default function ApplicationTable({
         }
         className="w-fit p-5 sm:max-w-2xl h-auto">
         <Duplicacy action={duplicateModalOpen.action} applicant={duplicateModalOpen.applicant} />
+      </Modal>
+
+      <Modal
+        isOpen={joinedModalOpen.isOpen}
+        onClose={() =>
+          setJoinedModalOpen({
+            isOpen: false,
+            jobApplication: {} as JobApplicationDetailsDto,
+          })
+        }
+        className="w-[90vw] sm:w-[455px] h-auto py-4">
+        <JoinedModal jobApplication={joinedModalOpen.jobApplication} />
       </Modal>
     </>
   );

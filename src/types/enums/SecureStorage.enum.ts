@@ -26,4 +26,5 @@ export enum SecureStorageKeyEnum {
 	AUTHACTIVEFORMDATA = 'AuthActiveFormData',
 	AUTHEMPSELECTEDCOMPANY = 'AuthEmpSelectedCompany',
 	CORPORATECOMPANYID = 'corporateCompanyId',
+	CORPORATECOMPANYDERAILS = 'corporateCompanyDetails'
 }

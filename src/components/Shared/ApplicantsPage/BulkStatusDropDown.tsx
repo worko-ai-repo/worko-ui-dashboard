@@ -14,15 +14,14 @@ type BulkStatusDropDownProps = {
 
 // Explicit allowed actions per status
 const statusActionMap: Partial<Record<JobApplicationStatusType, string[]>> = {
-  APPLIED: ["Accept", "Reject", "Hold"],
-  ACCEPTED: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Reject", "Hold"],
-  UNDER_EVALUATION: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Reject", "Hold"], // just in case
-  PROCESSING_INTERVIEW: ["Interview Done", "Initiate Hiring", "Reject", "Hold"],
-  INTERVIEW_DONE: ["Initiate Hiring", "Reject", "Hold"],
-  HIRING_IN_PROCESS: ["Initiate Hiring", "Reject", "Hold"],
-  HIRED: ["Joined", "Reject", "Hold"],
+  APPLIED: ["Accept", "Hold"],
+  ACCEPTED: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Hold"],
+  UNDER_EVALUATION: ["Initiate Interview", "Initiate Hiring", "Hold"], // just in case
+  PROCESSING_INTERVIEW: ["Interview Done", "Initiate Hiring", "Hold"],
+  HIRING_IN_PROCESS: [ "Hold"],
+  INTERVIEW_DONE: ["Initiate Hiring","Hold"],
+  HIRED: ["Joined", "Hold"],
   JOINED: [], // nothing
-  REJECTED: [], // no further actions
   ALL: [], // for safety
 };
 
@@ -73,15 +72,13 @@ const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
       }`}
       ref={wrapperRef}
       data-tooltip-id="my-tooltip"
-      data-tooltip-content={tooltipMessage}
-    >
+      data-tooltip-content={tooltipMessage}>
       {/* Trigger Button */}
       <div
         onClick={toggleBulk}
         className={`flex justify-center min-w-40 bg-white px-8 py-2 items-center font-semibold focus:outline-none transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
-        } ${disabled ? "cursor-not-allowed" : ""}`}
-      >
+        } ${disabled ? "cursor-not-allowed" : ""}`}>
         <span>{selectTitle}</span>
         <span className="ml-1">▾</span>
       </div>
@@ -106,8 +103,7 @@ const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
                     optionDisabled
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-700 hover:text-blue-600"
-                  }`}
-                >
+                  }`}>
                   {option.label}
                 </button>
               );
