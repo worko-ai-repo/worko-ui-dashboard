@@ -11,6 +11,7 @@ export interface ReferralDetailsDto {
   createdAt: string;
   status: ReferralStatus;
   matchingScore:number;
+  refereeName:String;
 }
 
 export type ReferralStatus = 

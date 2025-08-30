@@ -232,11 +232,11 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
     
     if (Array.isArray(currentData)) {
       // If it's an array, update the first item
-      if(!currentData[0]?.isCandidateFresher && !currentData[0]?.CandidateExperience){
+      if(!currentData[0]?.isCandidateFresher){
         updatedDetailsData = {
           ...currentData[0],
           ...sanitizedNewData,
-          isCandidateFresher:true
+          isCandidateFresher:false
         };
       }else{
         updatedDetailsData = {
@@ -263,6 +263,29 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
     // return
     return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
   }
+
+  async updateDetailsData2(email: string, currentData: any, newData: Partial<any>): Promise<boolean> {
+  if (!currentData) {
+    console.error("Details data is null or undefined");
+    return false;
+  }
+
+  let updatedDetailsData;
+
+  if (Array.isArray(currentData)) {
+    updatedDetailsData = {
+      ...currentData[0],
+      ...newData,
+    };
+  } else {
+    updatedDetailsData = {
+      ...currentData,
+      ...newData,
+    };
+  }
+
+  return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
+}
 
   // Update education data
   async updateEducationData(email: string, data: any, currentData: any[] | null, index?: number): Promise<boolean> {

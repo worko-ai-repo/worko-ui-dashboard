@@ -218,7 +218,7 @@ const Profile = () => {
   const handleSaveName = async () => {
     if (!user) return;
 
-    const success = await profileService.updateDetailsData(
+    const success = await profileService.updateDetailsData2(
       user.email,
       detailsData,
       {
@@ -808,15 +808,25 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
       }
     });
 
-    const updatedData = {
-      ...socialLinks[0],
-      ...mainPlatforms,
-      otherSocialPlatForms: {
-        ...(socialLinks[0].otherSocialPlatForms || {}),
-        ...otherPlatforms,
-      },
-    };
-    console.log(updatedData)
+    // const updatedData = {
+    //   ...socialLinks[0],
+    //   ...mainPlatforms,
+    //   otherSocialPlatForms: {
+    //     ...(socialLinks[0].otherSocialPlatForms || {}),
+    //     ...otherPlatforms,
+    //   },
+    // };
+const updatedData = {
+  ...mainPlatforms,
+  otherSocialPlatForms: otherPlatforms,
+  PK: socialLinks[0]?.PK,
+  SK: socialLinks[0]?.SK,
+  createdAt: socialLinks[0]?.createdAt || new Date().toLocaleString(),
+  updatedAt: new Date().toLocaleString(),
+};
+
+
+    console.log(updatedData,updatedData)
     const success = await profileService.updateSocialData(user.email, updatedData);
 
     if (success) {

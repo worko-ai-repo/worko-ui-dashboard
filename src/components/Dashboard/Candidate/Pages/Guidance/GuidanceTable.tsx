@@ -194,22 +194,38 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
   sortable: true,
   render: (row: GuidanceRequest) => (
     <div
-      className={`
-        inline-flex
-        px-2 py-1
-        rounded-3xl
+      className={`w-32 rounded-full px-1 py-3 text-sm font-medium
+        inline-flex items-center justify-center
         truncate
         ${row.statusColor?.bg || 'bg-gray-200'}
         ${row.statusColor?.text || 'text-gray-900'}
-        items-start
-        justify-start
         max-w-[200px]
         text-xs
       `}
-      title={row.status}
+      title={row.statusColor?.label}
     >
-      {row.status}
+        <span className="truncate block max-w-full text-center">
+          {row.statusColor?.label || row.status}
+        </span>
     </div>
+
+          //     <div className="flex justify-center ">
+          // <div
+          //     className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${              
+          //       row.status === "ACCEPTED"
+          //       ? "bg-green-100 text-green-500"
+          //       : row.status === "PENDING"
+          //       ? "bg-yellow-100 text-yellow-600"
+          //       : row.status === "AWAITING"
+          //       ? "bg-blue-100 text-blue-500"
+          //       : row.status === "DONE"
+          //       ? "bg-gray-100 text-gray-600"
+          //       : "bg-red-400 text-white"
+          //   }`}
+          // >
+          //   {row.status}
+          // </div>
+          // </div>
   )
 },
 

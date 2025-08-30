@@ -397,15 +397,16 @@ const Guidance = () => {
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      const statusColors = {
-        "PENDING": { bg: "bg-gray-200", text: "text-gray-900" },
-        "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600" },
-        "CANCELLED": { bg: "bg-red-100", text: "text-red-600" },
-        "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600" },
-        "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600" },
-        "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600" },
-        "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600" },
-      };
+    const statusColors = {
+      "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
+      "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
+      "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
+      "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Pending" },
+      "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
+      "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested" },
+      "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
+    };
+
 
       // Pagination logic for mock data
       const startIndex = (page - 1) * pageSize;
