@@ -643,6 +643,7 @@ console.log({
       />
 
       <SubmitDocumentModal
+        userDetails={user}
         show={showDocumentUploadModal}
         documents={requestedDocumentsList}
         onClose={() => setShowDocumentUploadModal(false)}

@@ -75,6 +75,7 @@ export default function JoinedModal({
 
     try {
       const payload = {
+        applicantName:userDetails.name,
         userId: userDetails?.sub,
         emailId: userDetails?.email,
         userType: "CAND",

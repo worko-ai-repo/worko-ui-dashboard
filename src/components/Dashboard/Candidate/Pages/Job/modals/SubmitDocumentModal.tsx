@@ -11,6 +11,7 @@ import { JobApplicationDetailsDto, JobApplicationDocumentStatusType } from "@Int
 import { newDate } from "react-datepicker/dist/date_utils";
  
 interface SubmitDocumentModalProps {
+  userDetails: any;
   show: boolean;
   documents: JobApplicationDetailsDto;
   onClose: () => void;
@@ -35,7 +36,7 @@ interface FormData {
   [documentName: string]: File | null;
 }
  
-const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId,onSuccess }: SubmitDocumentModalProps) => {
+const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId,onSuccess,userDetails }: SubmitDocumentModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
@@ -327,6 +328,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
         }));
  
         const updatePayload = {
+          applicantName:userDetails.name,
           userId: userId,
           emailId: email,
           userType: "CAND",

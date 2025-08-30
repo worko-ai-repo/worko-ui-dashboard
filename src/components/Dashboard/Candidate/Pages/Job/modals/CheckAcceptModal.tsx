@@ -31,7 +31,6 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
     try {
       if (nextAction === 'accept') {
         console.log("Attempting to accept...");
-
         const payload = {
           userId: userDetails?.sub,
           emailId: userDetails?.email,
@@ -58,8 +57,9 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Please provide a valid issue before submitting.');
           return;
         }
-
+        
         const payload = {
+          applicantName:userDetails.name,
           userId: userDetails?.sub,
           emailId: userDetails?.email,
           userType: "CAND",
