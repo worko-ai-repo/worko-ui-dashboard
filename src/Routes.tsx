@@ -23,10 +23,10 @@ const AppRoutes = createBrowserRouter(
           index: true,
           element: <Navigate to="/candidate" replace />,
         },
-        {
+/*         {
           path: "test/*",
           element: <JobCardGrid />,
-        },
+        }, */
         {
           path: "corporate/*",
           element: (

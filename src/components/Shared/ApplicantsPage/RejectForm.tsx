@@ -1,4 +1,4 @@
-import { ChevronDownIcon, Mic, MicOff } from "lucide-react";
+import { ChevronDownIcon, Mic, MicOff, RotateCcw, AlertCircle } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { SubmitButton } from "../../Dashboard/Corporate/SubmitButton";
@@ -7,7 +7,7 @@ import CorporateServiceObj from "../../Dashboard/Corporate/Services/Corporate.se
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useQueryClient } from "@tanstack/react-query";
-import SpeechRecognition, { useSpeechRecognition } from "react-speech-recognition";
+import { useSpeechRecognition } from '@Hooks/useSpeechSynthesis.hook';
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 type RejectionFormData = JobApplicationUpdatePayloadDto & {
@@ -21,11 +21,13 @@ const onSubmit = async (data: RejectionFormData, onSuccessCallback: () => void) 
   try {
     const { jobId, ...dataWithoutJobId } = data;
     dataWithoutJobId.status = "REJECTED";
+    console.log("[Submit] Payload being sent:", dataWithoutJobId);
+
     const response = await CorporateServiceObj.updateApplicationStatus(dataWithoutJobId, jobId);
     if (!response) throw new Error("Failed to update application status");
     toast.success(`Application Rejected Successfully`, getToastOptions({}));
   } catch (error) {
-    console.error("Error updating status:", error);
+    console.error("[Submit] Error updating status:", error);
     toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
   } finally {
     return onSuccessCallback();
@@ -58,44 +60,40 @@ const RejectionForm: React.FC<{
 
   const invalidateJobs = () => {
     RBAC.can("play_admin")
-      ? queryClient.invalidateQueries({
-          queryKey: ["AdminJobsApplicationQuery"],
-        })
-      : queryClient.invalidateQueries({
-          queryKey: ["CorporateJobsApplicationQuery"],
-        });
+      ? queryClient.invalidateQueries({ queryKey: ["AdminJobsApplicationQuery"] })
+      : queryClient.invalidateQueries({ queryKey: ["CorporateJobsApplicationQuery"] });
   };
 
-  // Use package hook
+  // Use the correct hook from the first file
   const {
     transcript,
-    finalTranscript,
-    listening,
-    browserSupportsSpeechRecognition,
+    interimTranscript,
+    isListening,
+    isSupported,
+    error,
+    startListening,
+    stopListening,
     resetTranscript,
   } = useSpeechRecognition();
 
+  // Update form when speech recognition provides new text (same as first file)
   useEffect(() => {
-    if (finalTranscript) {
-      const currentComment = watch("userComment");
-      const newComment = currentComment ? `${currentComment} ${finalTranscript}` : finalTranscript;
-      setValue("userComment", newComment);
-      resetTranscript(); // clear buffer so it won’t re-append
+    if (transcript && transcript.trim()) {
+      setValue('userComment', transcript);
     }
-  }, [finalTranscript, watch, setValue, resetTranscript]);
+  }, [transcript, setValue]);
 
-  const handleMicClick = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
+  const handleMicToggle = () => {
+    if (isListening) {
+      stopListening();
     } else {
-      SpeechRecognition.startListening({ continuous: true, language: "en-IN" });
+      startListening();
     }
   };
 
-  const handleTextareaFocus = () => {
-    if (listening) {
-      SpeechRecognition.stopListening();
-    }
+  const handleClearTranscript = () => {
+    resetTranscript();
+    setValue('userComment', '');
   };
 
   return (
@@ -138,41 +136,109 @@ const RejectionForm: React.FC<{
 
         {/* Comment + Mic */}
         <div className="flex flex-col gap-2">
-          <div className="relative">
-            <textarea
-              {...register("userComment", {
-                validate: (value) =>
-                  selectedReason === "other" && !value.trim()
-                    ? "Please provide a comment when selecting 'Other'"
-                    : true,
-              })}
-              placeholder="Please provide detailed feedback. Click the mic to dictate or type manually."
-              className="w-full h-[231px] rounded-xl bg-gray-100 p-3 text-sm focus:outline-none"
-              rows={4}
-              onFocus={handleTextareaFocus}
-            />
-            {errors.userComment && (
-              <p className="text-red-500 text-xs">{errors.userComment.message}</p>
-            )}
-            {/* Mic controls */}
-            {browserSupportsSpeechRecognition && (
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-semibold text-gray-800">
+              Comments & Feedback
+            </label>
+            {isSupported && transcript && (
               <button
                 type="button"
-                onClick={handleMicClick}
-                className={`
-                 absolute bottom-3 right-3 w-8 h-8 flex items-center justify-center rounded-full
-                  transition-all duration-300 text-white
-                  ${listening ? "bg-red-600 animate-pulse" : "bg-gray-600 hover:bg-gray-700"}
-                `}>
-                {listening ? <MicOff size={16} /> : <Mic size={16} />}
+                onClick={handleClearTranscript}
+                className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
+              >
+                <RotateCcw size={12} />
+                Clear
               </button>
             )}
           </div>
 
-          {!browserSupportsSpeechRecognition && (
-            <p className="text-gray-500 text-xs">
-              Speech recognition is not supported in your browser
-            </p>
+          <div className="relative">
+            <textarea
+              {...register("userComment", {
+                validate: (value) =>
+                  selectedReason === "other" && !value?.trim()
+                    ? "Please provide a comment when selecting 'Other'"
+                    : true,
+              })}
+              placeholder={
+                isSupported
+                  ? "Click the microphone to start dictating, or type your feedback manually..."
+                  : "Please type your feedback manually..."
+              }
+              className={`w-full h-[231px] rounded-xl p-3 text-sm focus:outline-none transition-all duration-200 ${
+                isListening
+                  ? 'border-2 border-blue-400 bg-blue-50'
+                  : 'border border-gray-300 bg-gray-100'
+              }`}
+              rows={4}
+              onFocus={() => {
+                if (isListening) {
+                  stopListening();
+                }
+              }}
+            />
+            {errors.userComment && (
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle size={14} />
+                {errors.userComment.message}
+              </p>
+            )}
+            
+            {/* Mic controls */}
+            {isSupported && (
+              <button
+                type="button"
+                onClick={handleMicToggle}
+                disabled={!!error}
+                className={`
+                  absolute bottom-3 right-3 w-8 h-8 flex items-center justify-center rounded-full
+                  transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105
+                  ${isListening 
+                    ? "bg-red-500 hover:bg-red-600 animate-pulse" 
+                    : "bg-blue-500 hover:bg-blue-600"
+                  }
+                  ${error ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
+                `}>
+                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+              </button>
+            )}
+          </div>
+
+          {/* Speech Recognition Status */}
+          {isSupported && (
+            <div className="space-y-2">
+              {isListening && (
+                <div className="flex items-center gap-2 text-sm text-blue-600">
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+                  Listening... Speak now
+                  {/* {interimTranscript && (
+                    <span className="text-gray-500 italic">
+                      "{interimTranscript}"
+                    </span>
+                  )} */}
+                </div>
+              )}
+              
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-lg">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+            </div>
+          )}
+
+          {!isSupported && (
+            <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <div className="flex items-center gap-2 text-sm text-yellow-800">
+                <AlertCircle size={16} />
+                <span className="font-medium">Speech recognition not available</span>
+              </div>
+              <p className="text-xs text-yellow-700 mt-1">
+                This feature requires a modern browser and HTTPS connection. 
+                Please type your feedback manually.
+              </p>
+            </div>
           )}
 
           <SubmitButton type="submit" label="Submit" />
