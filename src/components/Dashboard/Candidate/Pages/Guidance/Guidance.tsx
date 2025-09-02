@@ -253,7 +253,13 @@ const Guidance = () => {
         actionDate: "2025-08-24T10:15:00.000+00:00",
         newStatus: "PAYMENT_CONFIRMATION_DONE"
       }
-    ]
+    ],
+    scheduleMeetingDetails: {
+         "date": "2025-09-11T09:02:14.763Z",
+         "duration": "2 hrs 30 mins",
+         "meetingLink": "https://google.com",
+         "time": "7:00 pm"
+    },
   },
   {
     GSI1PK: "GUIDANCE#RQST#",

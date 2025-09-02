@@ -370,7 +370,9 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
   // Check if any submittable files are selected
   const submittableDocuments = allDocuments.filter(doc => doc.isSubmittable);
   const hasSelectedFiles = submittableDocuments.some(doc => watchedFiles[doc.name] !== null);
-  
+  const uploadedFilesCount = Object.values(watchedFiles).filter(file => file !== null).length;
+  const isFileCountMatching = uploadedFilesCount === submittableDocuments.length;
+
   return (
     <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
       isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
@@ -482,9 +484,9 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
  
               <button
                 type="submit"
-                disabled={!hasSelectedFiles || isUploading || submittableDocuments.length === 0}
+                disabled={!hasSelectedFiles || isUploading || submittableDocuments.length === 0 || !isFileCountMatching}
                 className={`flex items-center gap-2 px-6 py-3 text-white rounded-lg transition-colors ${
-                  hasSelectedFiles && !isUploading && submittableDocuments.length > 0
+                  hasSelectedFiles && !isUploading && submittableDocuments.length > 0 && isFileCountMatching
                     ? 'bg-blue-500 hover:bg-blue-600' 
                     : 'bg-gray-400 cursor-not-allowed'
                 }`}

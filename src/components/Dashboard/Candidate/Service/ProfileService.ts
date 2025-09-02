@@ -259,9 +259,30 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
         };
       }
     }
-    // console.log(typeof(updatedDetailsData.multipleCandidateExperience[0].YOE))
-    // return
-    return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
+let payload = { ...updatedDetailsData };
+
+const hasCandidateExperience =
+  'candidateExperience' in payload &&
+  payload.candidateExperience &&
+  Object.keys(payload.candidateExperience).length > 0;
+
+  const hasMultipleCandidateExperience =
+    'multipleCandidateExperience' in payload &&
+    Array.isArray(payload.multipleCandidateExperience) &&
+    payload.multipleCandidateExperience.length > 0;
+
+  if (!hasCandidateExperience && !hasMultipleCandidateExperience) {
+    payload.isCandidateFresher = true;
+  } else if (hasCandidateExperience && hasMultipleCandidateExperience) {
+    payload.isCandidateFresher = false;
+  } else if (hasMultipleCandidateExperience && !hasCandidateExperience) {
+    payload.isCandidateFresher = false;
+    payload.candidateExperience = payload.multipleCandidateExperience[0];
+  } else if (!hasMultipleCandidateExperience && hasCandidateExperience) {
+    payload.isCandidateFresher = false;
+  }
+    console.log(payload,"payload 297")
+    return await this.updateUserData(email, 'details', payload, 'PUT');
   }
 
   async updateDetailsData2(email: string, currentData: any, newData: Partial<any>): Promise<boolean> {
@@ -284,7 +305,31 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
     };
   }
 
-  return await this.updateUserData(email, 'details', updatedDetailsData, 'PUT');
+  let payload = { ...updatedDetailsData };
+
+  const hasCandidateExperience =
+    'candidateExperience' in payload &&
+    payload.candidateExperience &&
+    Object.keys(payload.candidateExperience).length > 0;
+
+    const hasMultipleCandidateExperience =
+      'multipleCandidateExperience' in payload &&
+      Array.isArray(payload.multipleCandidateExperience) &&
+      payload.multipleCandidateExperience.length > 0;
+
+    if (!hasCandidateExperience && !hasMultipleCandidateExperience) {
+      payload.isCandidateFresher = true;
+    } else if (hasCandidateExperience && hasMultipleCandidateExperience) {
+      payload.isCandidateFresher = false;
+    } else if (hasMultipleCandidateExperience && !hasCandidateExperience) {
+      payload.isCandidateFresher = false;
+      payload.candidateExperience = payload.multipleCandidateExperience[0];
+    } else if (!hasMultipleCandidateExperience && hasCandidateExperience) {
+      payload.isCandidateFresher = false;
+    }
+
+  console.log(payload,"payload 356")
+  return await this.updateUserData(email, 'details', payload, 'PUT');
 }
 
   // Update education data

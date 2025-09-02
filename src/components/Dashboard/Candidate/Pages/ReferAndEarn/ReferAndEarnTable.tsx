@@ -268,12 +268,12 @@ const columns = [
           keyExtractor={(row) => row.id}
         />
       </div>
-      <WithdrawDialog
+      {/* <WithdrawDialog
         isOpen={showDialog}
         onClose={() => setShowDialog(false)}
         referral={selectedReferral}
         statusData={statusData}
-      />
+      /> */}
     </div>
   );
 };

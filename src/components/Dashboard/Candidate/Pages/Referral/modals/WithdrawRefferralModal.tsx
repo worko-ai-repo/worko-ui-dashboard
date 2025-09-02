@@ -1,4 +1,7 @@
-import { FC } from "react";
+import { SendIcon } from "lucide-react";
+import { FC, useEffect, useState } from "react"; 
+
+
 
 interface WithdrawRefferralModalProps {
   reason: string;
@@ -7,6 +10,7 @@ interface WithdrawRefferralModalProps {
   setComments: (comments: string) => void;
   onSubmit: () => void;
   onClose: () => void;
+  isOpen: boolean;
 }
 
 const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
@@ -16,6 +20,7 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
   setComments,
   onSubmit,
   onClose,
+  isOpen,
 }) => {
   const options = [
     "Got referral from somewhere else",
@@ -24,12 +29,32 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
     "Raised by mistake",
     "Others"
   ];
+  const [visible, setVisible] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+
+ useEffect(() => {
+    if (isOpen) {
+      setVisible(true);
+      const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimatingIn(false);
+      const timer = setTimeout(() => setVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-40 flex justify-center items-center z-50">
-      <div className="bg-white w-full max-w-md rounded-lg shadow-lg p-6 relative">
-
-        {/* Cancel button (top right) */}
+        <div
+          className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+          } ${visible ? "visible" : "invisible"}`}
+        >
+        <div
+          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[50vh] ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
@@ -65,8 +90,9 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
         {/* Submit Button */}
         <button
           onClick={onSubmit}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded transition-colors"
+          className="w-30 flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-3  rounded-xl hover:bg-blue-300"
         >
+          <SendIcon className="w-4 h-4" />
           Submit
         </button>
       </div>

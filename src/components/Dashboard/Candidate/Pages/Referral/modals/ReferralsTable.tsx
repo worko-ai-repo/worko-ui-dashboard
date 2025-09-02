@@ -80,6 +80,14 @@ const ReferralsTable = memo(
         key: "referredJobURL",
         label: "Job URL",
         sortable: true,
+        render: (row: ReferralDetailsDto) => (
+          row.jobUrl ?
+          (<div className="flex justify-center">
+              <a className="text-blue-500 visited:text-blue-500" href={row.jobUrl}>Link</a>
+            </div>): (
+              <p>-</p>
+            )     
+          )
       },
       {
         key: "createdAt",
@@ -281,6 +289,7 @@ const ReferralsTable = memo(
               setComments={setWithdrawComments}
               onSubmit={handleWithdrawReferral}
               onClose={() => setShowWithdrawModal(false)}
+              isOpen={showWithdrawModal}
             />
           )}
         </div>

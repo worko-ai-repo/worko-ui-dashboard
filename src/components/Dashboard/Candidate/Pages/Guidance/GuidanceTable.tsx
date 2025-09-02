@@ -368,7 +368,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
               <MentorDetails
                 className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
                 request={modalState.selectedRequest}
-                mentorDetails={mentorDataLoading ? null : currentMentorData?.mentorDetails || null}
+                mentorDetails={mentorDataLoading ? null : currentMentorData || null}
                 closeModal={closeModal}
                 // You can also pass socialProfile if needed here
               />

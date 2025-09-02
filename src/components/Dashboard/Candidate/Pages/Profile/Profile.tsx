@@ -816,33 +816,21 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
     //     ...otherPlatforms,
     //   },
     // };
-const updatedData = {
-  ...mainPlatforms,
-  otherSocialPlatForms: otherPlatforms,
-  PK: socialLinks[0]?.PK,
-  SK: socialLinks[0]?.SK,
-  createdAt: socialLinks[0]?.createdAt || new Date().toLocaleString(),
-  updatedAt: new Date().toLocaleString(),
-};
+  const updatedData = {
+    ...mainPlatforms,
+    otherSocialPlatForms: otherPlatforms,
+    PK: socialLinks[0]?.PK,
+    SK: socialLinks[0]?.SK,
+    createdAt: socialLinks[0]?.createdAt || new Date().toLocaleString(),
+    updatedAt: new Date().toLocaleString(),
+  };
 
-
-    console.log(updatedData,updatedData)
+    console.log(updatedData,"updatedData")
     const success = await profileService.updateSocialData(user.email, updatedData);
 
     if (success) {
-      setSocialLinks((prevData: any) => {
-        const updatedDataCopy = [...prevData];
-        updatedDataCopy[0] = {
-          ...updatedDataCopy[0],
-          ...mainPlatforms,
-          otherSocialPlatForms: {
-            ...(updatedDataCopy[0].otherSocialPlatForms || {}),
-            ...otherPlatforms,
-          },
-        };
-        return updatedDataCopy;
-      });
-      setEditMode('socials', false);
+      setSocialLinks([updatedData]);
+        setEditMode('socials', false);
     }
 
     return success;
@@ -1573,108 +1561,124 @@ const handleSaveSalary = async (data:any) => {
             </div>
 
           {/* Social Links */}
-          <div id="social-links">
-            {editMode.socials ? (
-              <ListEditor
-                title="Social Links"
-                items={
-                  socialLinks && socialLinks[0]
-                    ? Object.entries(socialLinks[0])
-                        .filter(([key]) => !["SK", "PK", "createdAt", "updatedAt"].includes(key))
-                        .flatMap(([key, value]) => {
-                          if (key === "otherSocialPlatForms") {
-                            return Object.entries(value || {}).map(
+        <div id="social-links">
+          {editMode.socials ? (
+            <ListEditor
+              title="Social Links"
+              items={
+                socialLinks && socialLinks[0]
+                  ? Object.entries(socialLinks[0])
+                      .filter(
+                        ([key, value]) =>
+                          !["SK", "PK", "createdAt", "updatedAt"].includes(key) &&
+                          value &&
+                          Array.isArray(value) &&
+                          value.length > 0 &&
+                          value[0] &&
+                          value[0].trim() !== "" &&
+                          value[0] !== "undefined"
+                      )
+                      .flatMap(([key, value]) => {
+                        if (key === "otherSocialPlatForms") {
+                          return Object.entries(value || {})
+                            .filter(
+                              ([innerKey, innerValue]) =>
+                                innerValue &&
+                                Array.isArray(innerValue) &&
+                                innerValue.length > 0 &&
+                                innerValue[0] &&
+                                innerValue[0].trim() !== "" &&
+                                innerValue[0] !== "undefined"
+                            )
+                            .map(
                               ([innerKey, innerValue]) => `${innerKey} - ${innerValue[0]}`
                             );
-                          }
-                          return [`${key} - ${value[0]}`];
-                        })
-                    : []
-                }
-                onSave={handleSaveSocials}
-                onCancel={handleCancelSocials}
-              />
-            ) : (
-              renderListSection({
-                title: "Social Links",
-                variant: "socials",
-                items: [
-                  <div
-                    key="social-links"
-                    style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', alignItems: 'center' }}
-                  >
-                    <Link strokeWidth={1.5} />
-                    {(() => {
-                      const validLinks = (socialLinks || []).flatMap((item, index) => {
-                        const links = Object.entries(item)
-                          .filter(
-                            ([key, value]) =>
-                              !["SK", "PK", "createdAt", "updatedAt", "otherSocialPlatForms"].includes(key) &&
-                              value &&
-                              value.length > 0 &&
-                              value[0] &&
-                              value[0] !== "undefined" &&
-                              value[0].trim() !== ""
-                          )
-                          .map(([key, value]) => (
-                            <a
-                              key={`${index}-${key}`}
-                              href={value[0]}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{
-                                color: 'blue',
-                                textDecoration: 'underline',
-                                textTransform: 'capitalize'
-                              }}
-                            >
-                              {key}
-                            </a>
-                          ));
-
-                        // 🔥 Minimal addition: render otherSocialPlatForms
-                        if (item.otherSocialPlatForms) {
-                          links.push(
-                            ...Object.entries(item.otherSocialPlatForms)
-                              .filter(
-                                ([_, value]) =>
-                                  value &&
-                                  value.length > 0 &&
-                                  value[0] &&
-                                  value[0] !== "undefined" &&
-                                  value[0].trim() !== ""
-                              )
-                              .map(([key, value]) => (
-                                <a
-                                  key={`${index}-other-${key}`}
-                                  href={value[0]}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  style={{
-                                    color: 'blue',
-                                    textDecoration: 'underline',
-                                    textTransform: 'capitalize'
-                                  }}
-                                >
-                                  {key}
-                                </a>
-                              ))
-                          );
                         }
+                        return [`${key} - ${value[0]}`];
+                      })
+                  : []
+              }
+              onSave={handleSaveSocials}
+              onCancel={handleCancelSocials}
+            />
+          ) : (
+            renderListSection({
+              title: "Social Links",
+              variant: "socials",
+              items: [
+                <div
+                  key="social-links"
+                  style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center" }}
+                >
+                  <Link strokeWidth={1.5} />
+                  {(() => {
+                    const validLinks = (socialLinks || []).flatMap((item, index) => {
+                      const links = Object.entries(item)
+                        .filter(
+                          ([key, value]) =>
+                            !["SK", "PK", "createdAt", "updatedAt", "otherSocialPlatForms"].includes(key) &&
+                            value &&
+                            value.length > 0 &&
+                            value[0] &&
+                            value[0] !== "undefined" &&
+                            value[0].trim() !== ""
+                        )
+                        .map(([key, value]) => (
+                          <a
+                            key={`${index}-${key}`}
+                            href={value[0]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: "blue",
+                              textDecoration: "underline",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {key}
+                          </a>
+                        ));
 
-                        return links;
-                      });
+                      if (item.otherSocialPlatForms) {
+                        links.push(
+                          ...Object.entries(item.otherSocialPlatForms)
+                            .filter(
+                              ([_, value]) =>
+                                value &&
+                                value.length > 0 &&
+                                value[0] &&
+                                value[0] !== "undefined" &&
+                                value[0].trim() !== ""
+                            )
+                            .map(([key, value]) => (
+                              <a
+                                key={`${index}-other-${key}`}
+                                href={value[0]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: "blue",
+                                  textDecoration: "underline",
+                                  textTransform: "capitalize",
+                                }}
+                              >
+                                {key}
+                              </a>
+                            ))
+                        );
+                      }
 
-                      return validLinks.length > 0 ? validLinks : <span className="text-gray-400">N/A</span>;
-                    })()}
-                  </div>
-                ],
-                onEdit: handleEditSocials
-              })
-            )}
-          </div>
+                      return links;
+                    });
 
-
+                    return validLinks.length > 0 ? validLinks : <span className="text-gray-400">N/A</span>;
+                  })()}
+                </div>,
+              ],
+              onEdit: handleEditSocials,
+            })
+          )}
+        </div>
           {/* Salary */}
             {detailsData && (
               <div id="salary-availability" className="scroll-mt-16">

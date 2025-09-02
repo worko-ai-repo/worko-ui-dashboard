@@ -168,42 +168,7 @@ const jobs = processedJobs || [];
   console.log("Submitted files:", submittedFiles);
     // TODO: handle file upload
   };
-  // Function to handle action button clicks (old function)
-  // const handleActionClick = useCallback(async (type: string, job: JobApplicationDetailsDto) => {
-  //   if (!user?.email) return;
-    
-  //   setProcessingJobId(job.id);
-    
-  //   try {
-  //     let result;
-      
-  //     switch (type) {
-  //       case 'VIEW_FEEDBACK':
-  //         handleViewFeedback(job);
-  //         break;
-          
-  //       case 'CHECK_ACCEPT':
-  //         result = await JobService.acceptOffer(job.id, user.email);
-  //         if (result.response) {
-  //           onRefresh();
-  //         }
-  //         break;
-          
-  //       case 'JOINED':
-  //         result = await JobService.markAsJoined(job.id, user.email);
-  //         if (result.response) {
-  //           onRefresh();
-  //         }
-  //         break;
-          
-  //       // Add other action handlers as needed
-  //     }
-  //   } catch (error) {
-  //     console.error(`Error processing action ${type}:`, error);
-  //   } finally {
-  //     setProcessingJobId(null);
-  //   }
-  // }, [handleViewFeedback, onRefresh, user?.email]);
+
 
   const handleActionClick = useCallback(async (type: string, job: JobApplicationDetailsDto) => {
   if (!user?.email) return;
@@ -246,7 +211,6 @@ const jobs = processedJobs || [];
             setRequestedDocumentsList(job)
             setParsingJobId(job.id)
           }
-        // TODO: Add actual document submission logic here
         break;
 
       case 'APPLIED':

@@ -23,6 +23,8 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   const [action, setAction] = useState<'accept' | 'raise' | null>(null);
   const [issueDetail, setIssueDetail] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
+  const [visible, setVisible] = useState(false);
+
 
   const handleConfirm = async (nextAction: 'accept' | 'raise') => {
     setLoading(true);
@@ -32,6 +34,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
       if (nextAction === 'accept') {
         console.log("Attempting to accept...");
         const payload = {
+          applicantName:userDetails.name,
           userId: userDetails?.sub,
           emailId: userDetails?.email,
           "userType": "CAND",
@@ -137,9 +140,19 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
     postData();
   }, [job]);
 
+  useEffect(() => {
+  const timer = setTimeout(() => setVisible(true), 10);
+  return () => clearTimeout(timer);
+}, []);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-3xl w-full shadow-lg flex flex-col h-[90vh] relative">
+        <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
+      visible ? "bg-black bg-opacity-50" : "bg-black bg-opacity-0"
+    }`}>
+
+    <div className={`bg-white rounded-l-xl p-6 max-w-3xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
+      visible ? "translate-x-0" : "translate-x-full"
+    }`}>
 
         {/* Cancel Button */}
         <button

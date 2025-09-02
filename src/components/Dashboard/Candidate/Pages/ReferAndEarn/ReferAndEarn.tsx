@@ -25,7 +25,8 @@ const stats = [
     const [searchBarText, setSearchBarText] = useState<string>('');
     const [data, setData] = useState<JobApiResponse | null>(null);
     const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
-  
+    const [searchBarTextTemp, setSearchBarTextTemp] = useState<string>('');
+
     return (
       <div className="w-full space-y-[35px] px-0">
         <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
@@ -46,12 +47,12 @@ const stats = [
               <input
                 type="text"
                 placeholder="Search"
-                value={searchBarText}
-                onChange={(e) => setSearchBarText(e.target.value)}
+                value={searchBarTextTemp}
+                onChange={(e) => setSearchBarTextTemp(e.target.value)}
                 className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"
               />
               <button
-                
+                onClick={()=>setSearchBarText(searchBarTextTemp)}
                 className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none">
                 Search
               </button>

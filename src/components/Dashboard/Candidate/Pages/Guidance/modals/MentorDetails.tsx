@@ -24,7 +24,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleError, setRescheduleError] = useState('');
   const social = mentorDetails?.socialProfile || {};
-  const about = mentorDetails?.mentorDetails?.about || '';
+  const about = mentorDetails?.about || '';
 
   const handleJoinClick = () => {
     window.open(figmaUrl, '_blank');
@@ -34,9 +34,30 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
     setShowRescheduleForm(true);
   };
 
+  const isMeetingSoon = (() => {
+    const meetingDateStr = request?.scheduleMeetingDetails?.date;
+    if (!meetingDateStr) return false;
+
+    const now = new Date();
+    const meetingDate = new Date(meetingDateStr);
+
+    const diffMs = meetingDate.getTime() - now.getTime();
+    const diffMins = diffMs / (1000 * 60);
+    console.log(diffMins)
+    return diffMins <= 15 && diffMins >= -5; 
+  })();
+
+
   const handleSubmitReschedule = async () => {
     if (!rescheduleDate || !rescheduleTime) {
       setRescheduleError('Both date and time are required.');
+      return;
+    }
+
+    const rescheduleDateTime = new Date(`${rescheduleDate}T${rescheduleTime}`);
+
+    if (rescheduleDateTime <= new Date()) {
+      setRescheduleError('Reschedule date and time cannot be in the past.');
       return;
     }
 
@@ -103,13 +124,52 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
       </div>
 
       <div className="px-6 pb-4 space-y-4 font-['Inter']">
+        {/* Mentor Name */}
         <div className="flex items-start gap-3 text-xs">
           <span className="text-[#94a3b8] font-medium whitespace-nowrap">Mentor name</span>
           <span className="text-[#0f172a] font-medium font-['Poppins']">{request?.mentorDetails?.name || 'N/A'}</span>
         </div>
+
+        {/* Mentor Email */}
         <div className="flex gap-3 text-xs">
-          <span className="text-[#94a3b8] font-medium whitespace-nowrap">Mentor email</span>
-          <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">{request?.mentorDetails?.userEmail || 'N/A'}</p>
+            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Mentor email</span>
+            <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">{request?.mentorDetails?.userEmail || 'N/A'}</p>
+        </div>
+
+        {/* About */}
+        <div className="flex items-start gap-3 text-xs">
+          <span className="text-[#94a3b8] font-medium whitespace-nowrap">About Mentor</span>
+          <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">
+            {mentorDetails?.about || 'NA'}
+          </p>
+        </div>
+
+        {/* Move here */}
+        <div className="space-y-1 text-xs">
+          {social && Object.entries(social).map(([platform, links]) => {
+            if (!Array.isArray(links) || links.length === 0) return null;
+
+            return (
+              <div key={platform} className="flex items-start gap-2">
+                <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
+                  {/* {platform} */} Mentor Socials
+                </span>
+                <div className="flex flex-wrap gap-2 text-[#0f172a]">
+                  {links.map((link, idx) => (
+                    <a
+                      key={idx}
+                      href={link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline text-blue-600"
+                    >
+                      {platform}
+                    </a>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -137,7 +197,11 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
             <div className="flex flex-row gap-3">
               <button
                 onClick={handleJoinClick}
-                className="flex-1 bg-[#316bff] text-white rounded-lg h-11 flex items-center justify-center gap-2 hover:bg-[#2556e6] transition-colors cursor-pointer"
+                disabled={!isMeetingSoon}
+                className={`flex-1 rounded-lg h-11 flex items-center justify-center gap-2 transition-colors 
+                  ${isMeetingSoon 
+                    ? 'bg-[#316bff] text-white hover:bg-[#2556e6] cursor-pointer' 
+                    : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
               >
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
@@ -159,6 +223,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
                   <input
                     type="date"
                     value={rescheduleDate}
+                    min={new Date().toISOString().split('T')[0]}
                     onChange={(e) => setRescheduleDate(e.target.value)}
                     className="flex-1 p-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-[#316bff]"
                   />
