@@ -1,6 +1,6 @@
 import { SelectedRow } from "@Components/Dashboard/Corporate/Job/Jobs";
 import { JobFormSchema } from "@Components/Dashboard/types";
-import { AdminBulkJobApplicationUpdateItem, ApiResponseDto } from "@Interfaces/AdminServices.dto";
+import { AdminBulkJobApplicationUpdateItem, ApiResponseDto, GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
 import {
   ApplicantDetails,
   JobApiResponse,
@@ -437,6 +437,61 @@ class AdminService {
           pageSize: 0,
         },
       };
+    }
+  }
+
+  /**
+   * fetchGuidace 
+   * 
+   * @description - This api is used to get guidance based on the tab .
+   */
+  async fetchGuidance(params: object): Promise<ApiResponseDto<GuidanceRequestDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<GuidanceRequestDto>>(
+        "/user/guidance-request",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Guidance.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
+
+  /**
+   * patchGuidanceStatus
+   * 
+   * @description - This api is used to patch guidance status.
+   */
+  async patchGuidanceStatus(guidanceId: string, payload:any): Promise<GuidanceRequestDto | null> {
+    try {
+      const { response } = await httpServiceObj.patch<GuidanceRequestDto>(
+        `/user/guidance-request/${guidanceId}/WORKO_ADMIN_ACTION`,
+        payload,
+        true,
+        {},
+        false,
+        "BASE"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to patch Guidance Status.", error);
+      return null;
     }
   }
 }

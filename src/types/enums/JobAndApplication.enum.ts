@@ -32,8 +32,6 @@ export enum JobApplicationStatusEnum {
   JOINED = "JOINED", // send email to both cand and job poster
 }
 
-
-
 /**
  * JobStatusTypeEnum
  *
@@ -49,7 +47,7 @@ export enum JobStatusTypeEnum {
 
 /**
  * ReferralStatusEnum
- * 
+ *
  * @description - Enum representing the various statuses of a referral.
  */
 export enum ReferralStatusEnum {
@@ -60,4 +58,37 @@ export enum ReferralStatusEnum {
   CANCELLED = "CANCELLED",
   WITHDRAWN = "WITHDRAWN",
   DONE = "DONE",
+}
+
+/**
+ * GuidanceStatusEnum
+ *
+ * @description - Enum representing the various statuses of a guidance request.
+ */
+export enum UserGuidanceRequestTypeEnum {
+  INTERVIEW_HAND_HOLDING = "INTERVIEW_HAND_HOLDING", // if this is selected the company name and jobUrl is mandatory
+  MOCK_INTERVIEW_PREPARATION = "MOCK_INTERVIEW_PREPARATION",
+  HELP_WITH_ASSIGNMENT = "HELP_WITH_ASSIGNMENT", // if this is selected the company name and jobUrl is mandatory
+  CAREER_GUIDANCE = "CAREER_GUIDANCE",
+  RESUME_REVIEW = "RESUME_REVIEW",
+  OTHER = "OTHER",
+}
+
+/**
+ * UserGuidanceRequestStatusEnum
+ *
+ * @description - Enum representing the various statuses of a user guidance request.
+ */
+export enum UserGuidanceRequestStatusEnum {
+  PENDING = "PENDING",
+  REJECTED = "REJECTED",
+  MENTOR_ASSIGNED = "MENTOR_ASSIGNED",
+  CANCELLED = "CANCELLED",
+  PAYMENT_CONFIRMATION_PENDING = "PAYMENT_CONFIRMATION_PENDING",
+  PAYMENT_CONFIRMATION_DONE = "PAYMENT_CONFIRMATION_DONE",
+  MEETING_CONFIRMED = "MEETING_CONFIRMED",
+  MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE = "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
+  MEETING_RESCHEDULE_REQUESTED_BY_MENTOR = "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR",
+  MEETING_RESCHEDULE_CONFIRMED = "MEETING_RESCHEDULE_CONFIRMED",
+  PROJECT_COMPLETED = "PROJECT_COMPLETED",
 }

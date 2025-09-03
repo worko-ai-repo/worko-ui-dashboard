@@ -5,11 +5,11 @@ import PageNotFound from "../errors/404/PageNotFound";
 import DashboardLayout from "@Layouts/Dashboard.layout";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
-import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
-import Employee from "@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee";
+import AdminGuidance from "@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance";
 
 // Lazy load components
-
+const Employee = lazy(() => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee"));
+const AdminReferrals = lazy(() => import("@Components/Dashboard/WorkoAdmin/Referrals/AdminReferrals"));
 const AdminJobs = lazy(() => import("@Components/Dashboard/WorkoAdmin/Job/AdminJobs"));
 const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants"));
 const AdminCandidate = lazy(
@@ -118,7 +118,7 @@ const AdminDashboard = () => {
           path: "aReferrals",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
+              <AdminReferrals />
             </Suspense>
           ),
         },
@@ -147,10 +147,10 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aCandidate",
+          path: "aGuidance",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
+              <AdminGuidance />
             </Suspense>
           ),
         },

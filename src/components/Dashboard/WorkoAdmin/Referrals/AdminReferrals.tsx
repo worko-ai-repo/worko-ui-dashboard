@@ -1,25 +1,25 @@
 import SearchBar from "@Components/Shared/SearchBar";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import HeaderDetails from "@Components/Shared/Stats";
-import { useAppContext } from "@Context/App.context";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationReferralsDataAdminParams, CursorPaginationUsersDataAdminParams } from "@Interfaces/AdminServices.dto";
-import { ApplicantDetails, ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
-import EmployeeTable from "../Employee/EmployeeTable";
-import ReferralsTable from "@Components/Dashboard/Candidate/Pages/ReferAndEarn/ReferAndEarnTable";
+import { ReferralStatusType } from "src/types/JobsAndApplication.type";
+import ReferralTable from "./ReferralTable";
 
 
 const AdminReferrals = () => {
   const [pageSize, setPageSize] = useState(25);
-
+  const [status, setStatus] = useState<ReferralStatusType | "">("");
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
 
   const params: Omit<CursorPaginationReferralsDataAdminParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
+    ...(status ? {status: status} : {})
   };
 
   const {
@@ -32,7 +32,7 @@ const AdminReferrals = () => {
     refetch,
     reset,
   } = useCursorPagination<ReferralDetailsDto, CursorPaginationReferralsDataAdminParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!searchBarText, params],
+    queryKey: ["AdminReferralQuery", !!searchBarText, params],
     queryFn: AdminServiceObj.fetchReferrals,
     baseParams: params,
     enabled: !!params,
@@ -105,7 +105,7 @@ const AdminReferrals = () => {
             rowCount={5}
           />
         ) : (
-          <ReferralsTable
+          <ReferralTable
             data={data}
             fetchReferrals={refetch}
             pagination={{

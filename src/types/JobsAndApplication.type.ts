@@ -1,4 +1,4 @@
-import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferralStatusEnum } from "@Enums/JobAndApplication.enum";
+import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferralStatusEnum, UserGuidanceRequestStatusEnum, UserGuidanceRequestTypeEnum } from "@Enums/JobAndApplication.enum";
 
 /**
  * JobStatus
@@ -27,3 +27,18 @@ export type JobTypeofEmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "
  * @description - Represents the type of status a referral can have
  */
 export type ReferralStatusType = `${ReferralStatusEnum}`;
+
+/**
+ * UserGuidanceRequestType
+ * 
+ * @description - Represents the type of user guidance request
+ */
+export type UserGuidanceRequestType = `${UserGuidanceRequestTypeEnum}`;
+
+/**
+ * UserGuidanceRequestStatusType
+ * 
+ * @description - Represents the type of status a user guidance request can have
+ */
+export type UserGuidanceRequestStatusType = `${UserGuidanceRequestStatusEnum}`; 
+  
