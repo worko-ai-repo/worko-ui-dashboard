@@ -6,6 +6,7 @@ import DashboardLayout from "@Layouts/Dashboard.layout";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import AdminGuidance from "@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance";
+import AdminCompany from "@Components/Dashboard/WorkoAdmin/Company/AdminCompany";
 
 // Lazy load components
 const Employee = lazy(() => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee"));
@@ -122,6 +123,8 @@ const AdminDashboard = () => {
             </Suspense>
           ),
         },
+
+
         {
           path: "aCandidate",
           element: (
@@ -139,13 +142,16 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aCandidate",
+          path: "aCompanies",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
+              <AdminCompany />
             </Suspense>
           ),
         },
+
+
+
         {
           path: "aGuidance",
           element: (

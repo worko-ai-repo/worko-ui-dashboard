@@ -2,13 +2,15 @@ import SearchBar from "@Components/Shared/SearchBar";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import HeaderDetails from "@Components/Shared/Stats";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CursorPaginationReferralsDataAdminParams, CursorPaginationUsersDataAdminParams } from "@Interfaces/AdminServices.dto";
+import {
+  CursorPaginationReferralsDataAdminParams,
+  CursorPaginationUsersDataAdminParams,
+} from "@Interfaces/AdminServices.dto";
 import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import ReferralTable from "./ReferralTable";
-
 
 const AdminReferrals = () => {
   const [pageSize, setPageSize] = useState(25);
@@ -19,7 +21,7 @@ const AdminReferrals = () => {
     pageSize: pageSize,
     sortOrder: "descending",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
-    ...(status ? {status: status} : {})
+    ...(status ? { status: status } : {}),
   };
 
   const {
@@ -71,7 +73,7 @@ const AdminReferrals = () => {
             <SearchBar
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("Search clicked")}
+              handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
               {/*  <BulkStatusDropDown

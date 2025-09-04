@@ -2,12 +2,16 @@ import SearchBar from "@Components/Shared/SearchBar";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import HeaderDetails from "@Components/Shared/Stats";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CursorPaginationGuidanceDataAdminParams, CursorPaginationReferralsDataAdminParams, CursorPaginationUsersDataAdminParams, GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
+import {
+  CursorPaginationGuidanceDataAdminParams,
+  CursorPaginationReferralsDataAdminParams,
+  CursorPaginationUsersDataAdminParams,
+  GuidanceRequestDto,
+} from "@Interfaces/AdminServices.dto";
 import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import GuidancePageTable from "./GuidanceTable";
-
 
 const AdminGuidance = () => {
   const [pageSize, setPageSize] = useState(25);
@@ -66,7 +70,7 @@ const AdminGuidance = () => {
             <SearchBar
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("Search clicked")}
+              handleClick={() => refetch()}
             />
           </div>
         </div>

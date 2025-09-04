@@ -22,6 +22,7 @@ import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import { handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -217,23 +218,13 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             <HeaderDetails />
             <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
-              <div className="flex border rounded-lg justify-between w-32 relative">
-                <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">
-                  {!queryIsJobsLoading ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
-                </div>
-                <button
-                  onClick={() => {
-                    const jobUrl = data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "";
-                    if (jobUrl) {
-                      navigator.clipboard.writeText(jobUrl).then(() => {
-                        toast.success("Copied to clipboard!", getToastOptions({}));
-                      });
-                    }
-                  }}
-                  className="bg-blue-500   p-1 w-auto h-full rounded-lg active:scale-95 ">
-                  <img src={clipboard} alt="Clipboard icon" className=" min-w-4 min-h-4  " />
-                </button>
-              </div>
+              <InteractiveInput
+                data={data && data.length > 0 ? data[0].jobUrl : ""}
+                isLoading={queryIsJobsLoading}
+                variant="copy"
+                placeholder="No job URL available"
+                width="w-auto"
+              />
             </div>
             {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
@@ -246,7 +237,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             <SearchBar
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("Search clicked")}
+              handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
               <GenericDropdown

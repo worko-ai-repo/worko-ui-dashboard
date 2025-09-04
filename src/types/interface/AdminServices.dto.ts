@@ -89,6 +89,18 @@ export interface CursorPaginationGuidanceDataAdminParams {
 }
 
 /**
+ * CursorPagiantionCompanyDataAdminParams
+ *
+ * @description - Parameters for paginating company data in admin services.
+ */
+export interface CursorPaginationCompanyDataAdminParams {
+  pageSize: number;
+  sortOrder: "ascending" | "descending";
+  searchText?: string;
+  lastKey?: string | undefined;
+  industryType?: string;
+}
+/**
  * AdminBulkJobApplicationUpdateItem
  */
 export interface AdminBulkJobApplicationUpdateItem {
@@ -174,7 +186,7 @@ export interface RescheduleMeetingDetails {
   date: string; // ISO date string
   time: string;
   actionByUserId: string;
-  actionByUserType:  string;
+  actionByUserType: string;
   actionDate: string;
 }
 
@@ -185,19 +197,33 @@ export interface PaymentRequestDetails {
   currency: string;
   linkForPayment: string;
   actionByUserId: string;
-  actionByUserType:  string;
+  actionByUserType: string;
   actionDate: string;
 }
 
 export interface PaymentConfirmationPendingDetails {
   actionByUserId: string;
-  actionByUserType:  string;
+  actionByUserType: string;
   actionDate: string;
 }
 
 export interface PaymentConfirmationDoneDetails {
   actionByUserId: string;
-  actionByUserType:  string;
+  actionByUserType: string;
   actionDate: string;
   uniqueTransactionReference: string; // this is your UTR number
+}
+
+// post company request type
+export interface CreateCompanyRequestDto {
+  name: string;
+  industry: string;
+  linkedIn: string;
+  carrierPage: string;
+  aboutCompany: string;
+  logoUrl: string;
+  logo: string;
+  teamSize: number;
+  website: string;
+  isCompanyRequestPageFlag?: boolean;
 }
