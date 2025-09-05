@@ -47,19 +47,6 @@ const AdminReferrals = () => {
     reset(); // Reset pagination when active tab changes
   }, [searchBarText, pageSize]);
 
-  if (queryIsJobsLoading) {
-    return (
-      <SkeletonLoader
-        showButtons={true}
-        buttonCount={1}
-        showTableHeader={true}
-        showTableRows={true}
-        tableColumns={5}
-        rowCount={5}
-      />
-    );
-  }
-
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">

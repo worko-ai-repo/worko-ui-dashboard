@@ -3,7 +3,10 @@ import { JobFormSchema } from "@Components/Dashboard/types";
 import {
   AdminBulkJobApplicationUpdateItem,
   ApiResponseDto,
+  CursorPaginationReferAndEarnAdminParams,
   GuidanceRequestDto,
+  ReferAndEarnDto,
+  ReferAndEarnUpdateApiDto,
 } from "@Interfaces/AdminServices.dto";
 import {
   ApplicantDetails,
@@ -671,6 +674,64 @@ class AdminService {
           pageSize: 0,
         },
       };
+    }
+  }
+
+  /**
+   * ReferandEarn
+   *
+   * @type {GET}
+   * @description - This api is used to get refer and earn details.
+   */
+  async fetchReferAndEarnDetails(
+    params: CursorPaginationReferAndEarnAdminParams
+  ): Promise<ApiResponseDto<ReferAndEarnDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<ReferAndEarnDto>>(
+        "/refer-and-earn",
+        true,
+        params,
+        false,
+        "JOB"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Refer and Earn details.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
+
+  /**
+   * patchReferAndEarnStatus
+   * 
+   * @description - This api is used to patch refer and earn status.
+   */
+  async patchReferAndEarnStatus(referralId: string, payload: ReferAndEarnUpdateApiDto): Promise<ReferAndEarnDto | null> {
+    try {
+      const { response } = await httpServiceObj.patch<ReferAndEarnDto>(
+        `/refer-and-earn/${referralId}`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to patch Refer and Earn Status.", error);
+      return null;
     }
   }
 }

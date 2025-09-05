@@ -1,7 +1,6 @@
 import SearchBar from "@Components/Shared/SearchBar";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import HeaderDetails from "@Components/Shared/Stats";
-import { useAppContext } from "@Context/App.context";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationUsersDataAdminParams } from "@Interfaces/AdminServices.dto";
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
@@ -44,18 +43,6 @@ const AdminCandidate = () => {
     reset(); // Reset pagination when active tab changes
   }, [searchBarText, pageSize]);
 
-  if (queryIsJobsLoading) {
-    return (
-      <SkeletonLoader
-        showButtons={true}
-        buttonCount={1}
-        showTableHeader={true}
-        showTableRows={true}
-        tableColumns={5}
-        rowCount={5}
-      />
-    );
-  }
 
   return (
     <div>
@@ -72,28 +59,6 @@ const AdminCandidate = () => {
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
             />
-            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              {/*  <BulkStatusDropDown
-                options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
-                  {
-                    label: "Send to evaluator",
-                    onClick: () => {
-                      handleBulkEvaluatorUpdate();
-                    },
-                  },
-                  { label: "Initiate Interview", onClick: () => onBulkUpdate("PROCESSING_INTERVIEW") },
-                  { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
-                  { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
-                  { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
-                ]}
-                apiStatus={apiStatus} // Change this to test
-                disabled={apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"}
-                tooltipMessage="Select a bulk status update"
-                selectTitle="Bulk"
-              /> */}
-            </div>
           </div>
         </div>
         {queryIsJobsLoading ? (

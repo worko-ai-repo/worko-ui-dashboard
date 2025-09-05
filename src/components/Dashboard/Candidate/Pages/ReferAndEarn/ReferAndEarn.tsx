@@ -3,7 +3,7 @@ import { JobApiResponse } from "../Job/JobTypes";
 import { JobDetails } from "@Components/Dashboard/types";
 import EarningsDropdown from "./EarningsDropdown";
 import MainTable from "./ReferAndEarnTable";
-import httpServiceObj from "@Services/ApiHandler.service";
+
 
 const stats = [
     { label: 'Total Applicants', value: 106 },

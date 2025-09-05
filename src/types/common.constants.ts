@@ -1,5 +1,11 @@
 import { ReferralStatusEnum, UserGuidanceRequestTypeEnum } from "@Enums/JobAndApplication.enum";
-import { ReferralStatusType, UserGuidanceRequestStatusType } from "./JobsAndApplication.type";
+import {
+  ReferAndEarnFullStatusType,
+  ReferAndEarnJobApplicationStatusType,
+  ReferAndEarnStatusType,
+  ReferralStatusType,
+  UserGuidanceRequestStatusType,
+} from "./JobsAndApplication.type";
 import { TimelineStep } from "@Components/Shared/Timeline";
 
 /**
@@ -33,7 +39,7 @@ export const STATUS_LABELS: Record<ReferralStatusEnum, string> = {
 /**
  * STATUS_TYPE_MAP
  *
- * @description Maps each referral status to a timeline step type 
+ * @description Maps each referral status to a timeline step type
  * (success, error, or warning) for UI representation.
  */
 export const STATUS_TYPE_MAP: Partial<Record<ReferralStatusType, TimelineStep["status"]>> = {
@@ -75,7 +81,7 @@ export const REFERRAL_STATUS_LABELS: Record<ReferralStatusType, string> = {
 
 /**
  * GUIDANCE_STATUS_COLORS
- * 
+ *
  * @description - Provides background and text color classes for each guidance request status.
  */
 export const GUIDANCE_STATUS_COLORS: Record<UserGuidanceRequestStatusType, string> = {
@@ -94,7 +100,7 @@ export const GUIDANCE_STATUS_COLORS: Record<UserGuidanceRequestStatusType, strin
 
 /**
  * GUIDANCE_STATUS_LABELS
- * 
+ *
  * @description - Maps each guidance request status type to its simplified label for display.
  */
 export const GUIDANCE_STATUS_LABELS: Record<UserGuidanceRequestStatusType, string> = {
@@ -113,7 +119,7 @@ export const GUIDANCE_STATUS_LABELS: Record<UserGuidanceRequestStatusType, strin
 
 /**
  * GUIDANCE_REQUEST_TYPE_LABELS
- * 
+ *
  * @description - Maps each guidance request type to its human-readable label.
  */
 export const GUIDANCE_REQUEST_TYPE_LABELS: Record<UserGuidanceRequestTypeEnum, string> = {
@@ -129,7 +135,6 @@ export const GUIDANCE_REQUEST_TYPE_LABELS: Record<UserGuidanceRequestTypeEnum, s
  * CompanyIndustryOptions
  */
 export const industryTypeOptions: Array<{ name: string; value: string }> = [
-
   { name: "Accounting / Auditing", value: "Accounting / Auditing" },
   { name: "Advertising & Marketing", value: "Advertising & Marketing" },
   { name: "Agriculture / Forestry / Fishing", value: "Agriculture / Forestry / Fishing" },
@@ -156,14 +161,20 @@ export const industryTypeOptions: Array<{ name: string; value: string }> = [
   { name: "E-Learning / EdTech", value: "e-Learning / EdTech" },
   { name: "Education / Training", value: "Education / Training" },
   { name: "Electrical Equipment", value: "Electrical Equipment" },
-  { name: "Electronic Components / Semiconductors", value: "Electronic Components / Semiconductors" },
+  {
+    name: "Electronic Components / Semiconductors",
+    value: "Electronic Components / Semiconductors",
+  },
   { name: "Electronics Manufacturing", value: "Electronics Manufacturing" },
   { name: "Emerging Technologies", value: "Emerging Technologies" },
   { name: "Engineering & Construction", value: "Engineering & Construction" },
   { name: "Events / Live Entertainment", value: "Events / Live Entertainment" },
   { name: "D2C", value: "D2C" },
   { name: "Facility Management Services", value: "Facility Management Services" },
-  { name: "Fertilizers / Pesticides / Agro chemicals", value: "Fertilizers / Pesticides / Agro chemicals" },
+  {
+    name: "Fertilizers / Pesticides / Agro chemicals",
+    value: "Fertilizers / Pesticides / Agro chemicals",
+  },
   { name: "Film / Music / Entertainment", value: "Film / Music / Entertainment" },
   { name: "Financial Services", value: "Financial Services" },
   { name: "FinTech / Payments", value: "FinTech / Payments" },
@@ -181,7 +192,10 @@ export const industryTypeOptions: Array<{ name: string; value: string }> = [
   { name: "Industrial Equipment / Machinery", value: "Industrial Equipment / Machinery" },
   { name: "Insurance", value: "Insurance" },
   { name: "Internet", value: "Internet" },
-  { name: "Investment Banking / Venture Capital / Private Equity", value: "Investment Banking / Venture Capital / Private Equity" },
+  {
+    name: "Investment Banking / Venture Capital / Private Equity",
+    value: "Investment Banking / Venture Capital / Private Equity",
+  },
   { name: "Manufacturing", value: "Manufacturing" },
   { name: "Iron & Steel", value: "Iron & Steel" },
   { name: "IT Services & Consulting", value: "IT Services & Consulting" },
@@ -195,14 +209,20 @@ export const industryTypeOptions: Array<{ name: string; value: string }> = [
   { name: "Metals & Mining", value: "Metals & Mining" },
   { name: "Miscellaneous", value: "Miscellaneous" },
   { name: "NBFC", value: "NBFC" },
-  { name: "NGO / Social Services / Industry Associations", value: "NGO / Social Services / Industry Associations" },
+  {
+    name: "NGO / Social Services / Industry Associations",
+    value: "NGO / Social Services / Industry Associations",
+  },
   { name: "Oil & Gas", value: "Oil & Gas" },
   { name: "Packaging & Containers", value: "Packaging & Containers" },
   { name: "Petrochemical / Plastics / Rubber", value: "Petrochemical / Plastics / Rubber" },
   { name: "Pharmaceutical & Life Sciences", value: "Pharmaceutical & Life Sciences" },
   { name: "Ports & Shipping", value: "Ports & Shipping" },
   { name: "Power", value: "Power" },
-  { name: "Professional Services / Project Management", value: "Professional Services / Project Management" },
+  {
+    name: "Professional Services / Project Management",
+    value: "Professional Services / Project Management",
+  },
   { name: "Printing & Publishing", value: "Printing & Publishing" },
   { name: "Pulp & Paper", value: "Pulp & Paper" },
   { name: "Railways", value: "Railways" },
@@ -221,4 +241,36 @@ export const industryTypeOptions: Array<{ name: string; value: string }> = [
   { name: "Transport / Logistics", value: "Transport / Logistics" },
   { name: "Warehousing", value: "Warehousing" },
   { name: "Water Treatment / Waste Management", value: "Water Treatment / Waste Management" },
-]
+];
+
+/**
+ * ReferAndEarnStatusOptionsLabel
+ */
+export const ReferAndEarnStatusOptionsLabel: Record<
+  ReferAndEarnStatusType,
+  { label: string; style: string }
+> = {
+  NOT_ACHIEVED_YET: { label: "Not Achieved Yet", style: "bg-[#E0E0E0] text-[#6B6B6B]" }, // Grey and dark grey text
+  ACHIEVED: { label: "Achieved", style: "bg-[#A0FFA5] text-[#00B542]" }, // Green and dark green text
+  WITHDRAWAL_REQUESTED: { label: "Withdrawal Requested", style: "bg-[#FFF3A0] text-[#FFB800]" }, // Yellow and dark yellow text
+  WITHDRAWAL_ACCEPTED: { label: "Withdrawal Accepted", style: "bg-[#A0CEFF] text-[#316BFF]" }, // Blue and dark blue text
+  WITHDRAWAL_REJECTED: { label: "Withdrawal Rejected", style: "bg-[#FFA0A0] text-[#FF3B3B]" }, // Red and dark red text
+  PAYMENT_COMPLETED: { label: "Payment Completed", style: "bg-[#D1FFD1] text-[#008000]" }, // Light green and dark green text
+};
+
+/**
+ * ReferAndEarnJobStatusOptionsArray
+ *
+ * @description - Array of job application status options for refer and earn feature
+ */
+export const ReferAndEarnJobStatusOptionsArray: Record<
+  ReferAndEarnJobApplicationStatusType,
+  { label: string; style: string }
+> = {
+  PENDING: { label: "Pending", style: "bg-[#FFF3A0] text-[#FFB800]" },
+  REJECTED: { label: "Rejected", style: "bg-[#FFA0A0] text-[#FF3B3B]" },
+  APPLIED: { label: "Applied", style: "bg-[#A0CEFF] text-[#316BFF]" },
+  PROCESSING_INTERVIEW: { label: "Interviewing", style: "bg-[#A0FFA5] text-[#00B542]" },
+  HIRED: { label: "Hired", style: "bg-[#A0FFA5] text-[#00B542]" },
+  JOINED: { label: "Joined", style: " bg-[#A0FFA5] text-[#00B542]" },
+};

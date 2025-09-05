@@ -1,12 +1,18 @@
 import {
   JobApplicationStatusType,
   JobStatusType,
+  ReferAndEarnJobApplicationStatusType,
+  ReferAndEarnStatusType,
   ReferralStatusType,
   UserGuidanceRequestStatusType,
   UserGuidanceRequestType,
 } from "../JobsAndApplication.type";
 import { StatusTracker } from "@Components/Dashboard/Candidate/Pages/Job/JobTypes";
 import { ApplicantDetails } from "./CorporateDashboard.dto";
+import {
+  ReferAndEarnJobApplicationStatusEnum,
+  ReferAndEarnStatusEnum,
+} from "@Enums/JobAndApplication.enum";
 
 /**
  * APIResponseDto
@@ -55,6 +61,16 @@ export interface CursorPaginationApplicationDataAdminParams {
 export interface CursorPaginationUsersDataAdminParams {
   pageSize: number;
   userType: "CAND" | "EMP";
+  sortOrder: "ascending" | "descending";
+  searchText?: string;
+  lastKey?: string | undefined;
+}
+
+/**
+ * CursorPaginationReferAndEarnAdminParams
+ */
+export interface CursorPaginationReferAndEarnAdminParams {
+  pageSize: number;
   sortOrder: "ascending" | "descending";
   searchText?: string;
   lastKey?: string | undefined;
@@ -226,4 +242,130 @@ export interface CreateCompanyRequestDto {
   teamSize: number;
   website: string;
   isCompanyRequestPageFlag?: boolean;
+}
+
+// Refer-n-Earn DTO aligned with schema
+export interface ReferAndEarnDto {
+  /**
+   * ids & keys
+   */
+  id: string;
+  GSI1PK: string;
+  GSI1SK: string;
+  GSI2PK: string;
+  GSI2SK: string;
+  PK: string;
+  SK: string;
+
+  /**
+   * metadata
+   */
+  createdByUserId: string;
+  updatedByUserId?: string;
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+
+  /**
+   * details
+   */
+  referrerDetails: {
+    id: string;
+    name: string;
+    email: string;
+    phoneCountryCode: number;
+    phoneNumber: number;
+  };
+
+  recipientDetails: {
+    id?: string;
+    name: string;
+    email: string;
+    phoneCountryCode: number;
+    phoneNumber: number;
+  };
+
+  companyDetails: {
+    id: string;
+    name: string;
+  };
+
+  jobDetails: {
+    id: string;
+    title: string;
+    url: string;
+  };
+
+  /**
+   * status & tracking
+   */
+  status: ReferAndEarnStatusType; // ReferAndEarnStatusEnum
+  statusTracker: {
+    oldStatus?: string;
+    newStatus: string;
+    actionDate: string; // ISO date string
+    actionByUserId?: string;
+    description?: string;
+  }[];
+
+  jobApplicationStatus: ReferAndEarnJobApplicationStatusType; // ReferAndEarnJobApplicationStatusEnum
+  userJobApplicationId?: string;
+  jobAppliedDate?: string; // ISO date string
+
+  /**
+   * payment details
+   */
+  commissionAmount: number;
+  referredDate: string; // ISO date string
+
+  referrerBankDetails?: {
+    accountHolderName: string;
+    accountNumber: number;
+    branchName: string;
+    ifscCode: string;
+  };
+
+  paymentDoneDetails?: {
+    userId: string;
+    userType: string;
+    actionDate: string; // ISO date string
+    amountPaid: number;
+    uniqueTransactionReference: string;
+  };
+}
+
+/**
+ * ReferAndEarnUpdateApiDto
+ */
+export interface ReferAndEarnUpdateApiDto {
+  status?: ReferAndEarnStatusType;
+  withDrawalRequestRejectedReason?: string;
+  jobApplicationStatus?: ReferAndEarnJobApplicationStatusType;
+  paymentDoneDetails?: ReferAndEarnPaymentDoneDetailsDto;
+  referrerBankDetails?: ReferAndEarnReferrerBankDetails;
+  commissionAmount?: number;
+}
+
+/**
+ * ReferAndEarnPaymentDoneDetailsType
+ * 
+ * @reference `paymentDoneDetails` attribute of `ReferAndEarn.model.ts`
+ */
+export interface ReferAndEarnPaymentDoneDetailsDto {
+  userId: string;
+  userType: 'ADMIN';
+  actionDate: string;
+  amountPaid: number;
+  uniqueTransactionReference: string;
+};
+
+/**
+ * ReferAndEarnReferrerBankDetails
+ * 
+ * @reference `referrerBankDetails` attribute of `ReferAndEarn.model.ts`
+ */
+export interface ReferAndEarnReferrerBankDetails {
+  accountHolderName: string;
+  accountNumber: number;
+  ifscCode: string;
+  branchName: string;
 }

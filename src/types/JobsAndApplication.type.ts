@@ -1,4 +1,4 @@
-import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferralStatusEnum, UserGuidanceRequestStatusEnum, UserGuidanceRequestTypeEnum } from "@Enums/JobAndApplication.enum";
+import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferAndEarnJobApplicationStatusEnum, ReferAndEarnStatusEnum, ReferralStatusEnum, UserGuidanceRequestStatusEnum, UserGuidanceRequestTypeEnum } from "@Enums/JobAndApplication.enum";
 
 /**
  * JobStatus
@@ -42,3 +42,24 @@ export type UserGuidanceRequestType = `${UserGuidanceRequestTypeEnum}`;
  */
 export type UserGuidanceRequestStatusType = `${UserGuidanceRequestStatusEnum}`; 
   
+
+/**
+ * ReferAndEarnStatusType
+ * 
+ * @description - Represents the type of status a refer and earn can have
+ */
+export type ReferAndEarnStatusType = `${ReferAndEarnStatusEnum}`;
+
+/**
+ * ReferAndEarnJobApplicationStatusType
+ * 
+ * @description - Represents the type of status a refer and earn job application can have
+ */
+export type ReferAndEarnJobApplicationStatusType = `${ReferAndEarnJobApplicationStatusEnum}`;
+
+/**
+ * ReferAndEarnFullStatusType
+ * 
+ * @description - Represents the type of status a refer and earn or its job application can have
+ */
+export type ReferAndEarnFullStatusType = ReferAndEarnStatusType | ReferAndEarnJobApplicationStatusType;

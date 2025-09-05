@@ -22,6 +22,7 @@ export default defineConfig({
       "@Layouts": path.resolve(__dirname, "src/layouts"),
       "@Pages": path.resolve(__dirname, "src/pages"),
       "@Styles": path.resolve(__dirname, "src/styles"),
+      "@TypesAndConstants": path.resolve(__dirname, "src/types"),
       "@Services": path.resolve(__dirname, "src/services"),
       "@Utils": path.resolve(__dirname, "src/utils"),
       "@Views": path.resolve(__dirname, "src/views"),

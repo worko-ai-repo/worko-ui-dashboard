@@ -7,6 +7,7 @@ import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import AdminGuidance from "@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance";
 import AdminCompany from "@Components/Dashboard/WorkoAdmin/Company/AdminCompany";
+import AdminReferAndEarn from "@Components/Dashboard/WorkoAdmin/ReferAndEarn/ReferAndEarn";
 
 // Lazy load components
 const Employee = lazy(() => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee"));
@@ -134,10 +135,10 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aCandidate",
+          path: "Refer-n-Earn",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
+              <AdminReferAndEarn />
             </Suspense>
           ),
         },
