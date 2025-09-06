@@ -2,16 +2,26 @@ import { Suspense, lazy } from "react";
 import MainLoader from "@Components/Loader/Loader";
 import { Navigate, useRoutes } from "react-router-dom";
 import PageNotFound from "../errors/404/PageNotFound";
-import DashboardLayout from "@Layouts/Dashboard.layout";
-import SkeletonLoader from "@Components/Shared/SkeletonLoader";
-import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
-import AdminGuidance from "@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance";
-import AdminCompany from "@Components/Dashboard/WorkoAdmin/Company/AdminCompany";
-import AdminReferAndEarn from "@Components/Dashboard/WorkoAdmin/ReferAndEarn/ReferAndEarn";
+import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
+import AdminCorporateInvites from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUsers";
+
+
+const DashboardLayout = lazy(() => import("@Layouts/Dashboard.layout"));
+const SkeletonLoader = lazy(() => import("@Components/Shared/SkeletonLoader"));
+const JobSelectorModal = lazy(() => import("@Components/Shared/FindJobByDropdown"));
+const AdminGuidance = lazy(() => import("@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance"));
+const AdminCompany = lazy(() => import("@Components/Dashboard/WorkoAdmin/Company/AdminCompany"));
+const AdminReferAndEarn = lazy(
+  () => import("@Components/Dashboard/WorkoAdmin/ReferAndEarn/ReferAndEarn")
+);
+const BulkCVCheck = lazy(() => import("@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck"));
+const ScreeningListView = lazy(() => import("@Components/Shared/BulkCvPage/BulkScreeningListView"));
 
 // Lazy load components
 const Employee = lazy(() => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee"));
-const AdminReferrals = lazy(() => import("@Components/Dashboard/WorkoAdmin/Referrals/AdminReferrals"));
+const AdminReferrals = lazy(
+  () => import("@Components/Dashboard/WorkoAdmin/Referrals/AdminReferrals")
+);
 const AdminJobs = lazy(() => import("@Components/Dashboard/WorkoAdmin/Job/AdminJobs"));
 const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants"));
 const AdminCandidate = lazy(
@@ -125,12 +135,27 @@ const AdminDashboard = () => {
           ),
         },
 
-
         {
-          path: "aCandidate",
+          path: "aInvites",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
+              <AdminCorporateInvites />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aBulkCVCheck",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <BulkCVCheck />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aBulkCVCheck/listing/:id",  
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <ApplicantScreeningTable />
             </Suspense>
           ),
         },
@@ -151,21 +176,11 @@ const AdminDashboard = () => {
           ),
         },
 
-
-
         {
           path: "aGuidance",
           element: (
             <Suspense fallback={<MainLoader />}>
               <AdminGuidance />
-            </Suspense>
-          ),
-        },
-        {
-          path: "aCandidate",
-          element: (
-            <Suspense fallback={<MainLoader />}>
-              <AdminCandidate />
             </Suspense>
           ),
         },

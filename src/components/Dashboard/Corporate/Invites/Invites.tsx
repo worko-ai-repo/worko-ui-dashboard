@@ -2,7 +2,7 @@ import { Send } from "lucide-react";
 import InviteTable from "./InvitesTable";
 import { useEffect, useState } from "react";
 import Modal from "../../../Shared/Modal";
-import InviteForm from "./SendInviteForm";
+import InviteForm from "../../../Shared/CorporateInvite/SendInviteForm";
 import { CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { useAppContext } from "@Context/App.context";
@@ -50,19 +50,44 @@ const Invites = () => {
   }, [searchBarText, pageSize]);
 
   if (queryIsJobsLoading) {
-    return <SkeletonLoader showButtons={true} buttonCount={1} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />;
+    return (
+      <SkeletonLoader
+        showButtons={true}
+        buttonCount={1}
+        showTableHeader={true}
+        showTableRows={true}
+        tableColumns={5}
+        rowCount={5}
+      />
+    );
   }
 
   return (
     <div className="space-y-4">
       <div className="flex justify-end">
-        <button onClick={() => setIsSendInviteModalOpen(true)} className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-xl text-white text-sm">
+        <button
+          onClick={() => setIsSendInviteModalOpen(true)}
+          className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-xl text-white text-sm">
           <Send size={16} />
           <span>Invite Team</span>
         </button>
       </div>
-      <InviteTable data={data} fetchInvites={refetch} pagination={{ goToNextPage, goToPreviousPage, hasNextPage, hasPreviousPage, pageSize, setPageSize }} />
-      <Modal isOpen={isSendInviteModalOpen} onClose={() => setIsSendInviteModalOpen(false)} className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]">
+      <InviteTable
+        data={data}
+        fetchInvites={refetch}
+        pagination={{
+          goToNextPage,
+          goToPreviousPage,
+          hasNextPage,
+          hasPreviousPage,
+          pageSize,
+          setPageSize,
+        }}
+      />
+      <Modal
+        isOpen={isSendInviteModalOpen}
+        onClose={() => setIsSendInviteModalOpen(false)}
+        className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]">
         <InviteForm />
       </Modal>
     </div>

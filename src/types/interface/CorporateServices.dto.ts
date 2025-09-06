@@ -343,6 +343,29 @@ export interface CursorPaginationInviteDataParams {
   userType?: string;
   lastKey?: string | undefined;
 }
+/**
+ * CursorPaginationCorporateUserAdminDataParams
+ */
+export interface CursorPaginationCorporateUserAdminDataParams {
+  pageSize: number;
+  sortOrder: "ascending" | "descending";
+  searchText?: string;
+  corporateUserType: 'corporate-admin' | 'corporate-recruiter';
+  lastKey?: string | undefined;
+}
+
+/**
+ * CursorPaginationCorporateUserRecDataParams
+ */
+export interface CursorPaginationCorporateUserRecDataParams {
+  pageSize: number;
+  sortOrder: "ascending" | "descending";
+  searchText?: string;
+  companyId: string;
+  includeCompanyDetails: boolean;
+  includeRegisteredCorporateDetails: boolean;
+  lastKey?: string | undefined;
+}
 
 /**
  * CursorPaginationBulkScreenedJobsParams

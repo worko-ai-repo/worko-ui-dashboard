@@ -1,4 +1,4 @@
-import RevokeForm from "@Components/Dashboard/Corporate/Invites/RevokeForm";
+import RevokeForm from "@Components/Shared/CorporateInvite/RevokeForm";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
@@ -64,7 +64,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   let { sortedData, onSortChange } = useSortableData(data, {});
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
- 
+
   const columns = [
     { key: "userName", label: "Requested By", sortable: true, className: "w-40" },
     { key: "companyDetail_name", label: "Company Name", sortable: true },
@@ -103,14 +103,21 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       sortable: true,
     },
     {
-      key:"status",
-      label:"Status",
-      sortable:true,
-      render:(row:CompanyRequestDto)=>(
-        <span className={`px-3 py-1 rounded-full text-white font-semibold ${row.status==="approved"?"bg-green-500":row.status==="denied"?"bg-red-500":"bg-blue-500"}`}>
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row: CompanyRequestDto) => (
+        <span
+          className={`px-3 py-1 rounded-full text-white font-semibold ${
+            row.status === "approved"
+              ? "bg-green-500"
+              : row.status === "denied"
+              ? "bg-red-500"
+              : "bg-blue-500"
+          }`}>
           {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
         </span>
-      )
+      ),
     },
 
     {
@@ -119,7 +126,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       render: (row: CompanyRequestDto) => (
         <div className="flex flex-col sm:flex-row gap-2">
           <button
-          disabled={row.status==="denied" || row.status==="approved"}
+            disabled={row.status === "denied" || row.status === "approved"}
             onClick={() => {
               //form the companyrequest data to company data type
               const rowAsCompany: CompanyDto = {
@@ -152,7 +159,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
             <CheckCircle2Icon className=" text-white p-1" />
           </button>
           <button
-          disabled={row.status==="denied" || row.status==="approved"}
+            disabled={row.status === "denied" || row.status === "approved"}
             onClick={() =>
               dispatch({
                 type: "OPEN",
@@ -171,7 +178,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   const renderExpandedDetails = (row: CompanyRequestDto) => {
     return (
       <div className="flex items-center gap-4 p-4">
-         <span className="flex flex-col items-center mt-0 p-0">
+        <span className="flex flex-col items-center mt-0 p-0">
           <label className="font-semibold text-gray-500 ">User Email</label>
           <div
             className="whitespace-pre-wrap text-center"
@@ -179,7 +186,9 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
         </span>
         <span className="flex flex-col items-center mt-0 p-0">
           <label className="font-semibold text-gray-500 ">User Type</label>
-          <p className="whitespace-pre-wrap text-center">{row.userType === "EMP" ? "Employee" : "Candidate"}</p>
+          <p className="whitespace-pre-wrap text-center">
+            {row.userType === "EMP" ? "Employee" : "Candidate"}
+          </p>
         </span>
       </div>
     );

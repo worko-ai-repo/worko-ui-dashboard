@@ -470,7 +470,6 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           commonColumns.company,
-          // commonColumns.profile,
           commonColumns.experience, // Enhanced from yoe
           commonColumns.location,
           commonColumns.matchingScore,

@@ -1,4 +1,4 @@
-import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
+
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";

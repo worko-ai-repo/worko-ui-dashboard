@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { X, Check, Send, ClipboardCheck } from "lucide-react";
+import { X, Check, Send, ClipboardCheck, Maximize, Download } from "lucide-react";
 import {
   JobApplicationUpdatePayloadDto,
   handleJobApplicationStatusUpdate,
@@ -18,7 +18,6 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
-
 
 interface CVPreviewProps {
   onClose: () => void;
@@ -87,10 +86,10 @@ const CVPreview = ({
     RBAC.can("play_admin")
       ? queryClient.invalidateQueries({
           queryKey: ["AdminJobsApplicationQuery"],
-        }):
-    queryClient.invalidateQueries({
-      queryKey: ["CorporateJobsApplicationQuery"],
-    });
+        })
+      : queryClient.invalidateQueries({
+          queryKey: ["CorporateJobsApplicationQuery"],
+        });
   };
 
   // Handle send to evaluator with proper state management
@@ -120,26 +119,38 @@ const CVPreview = ({
   };
 
   // Handle interview process
-  const handleProcessInterview = async() => {
+  const handleProcessInterview = async () => {
     onClose();
     misData.payload.status = "PROCESSING_INTERVIEW";
-    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    await handleJobApplicationStatusUpdate?.(
+      misData.payload,
+      misData.jobId,
+      invalidateJobApplication
+    );
     invalidateJobApplication();
   };
 
   // Handle on hold
-  const handleOnHold = async() => {
+  const handleOnHold = async () => {
     onClose();
     misData.payload.status = "ON_HOLD";
-    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    await handleJobApplicationStatusUpdate?.(
+      misData.payload,
+      misData.jobId,
+      invalidateJobApplication
+    );
     invalidateJobApplication();
   };
 
   // Handle hire action
-  const handleHire = async() => {
+  const handleHire = async () => {
     onClose();
     misData.payload.status = "HIRING_IN_PROCESS";
-    await handleJobApplicationStatusUpdate?.(misData.payload, misData.jobId, invalidateJobApplication);
+    await handleJobApplicationStatusUpdate?.(
+      misData.payload,
+      misData.jobId,
+      invalidateJobApplication
+    );
     invalidateJobApplication();
   };
 
@@ -157,8 +168,35 @@ const CVPreview = ({
       <div className="flex gap-4 justify-between">
         <h2 className="text-lg font-semibold">CV</h2>
         <div className="flex flex-col gap-4 w-full">
-          <div className="flex-1 border-2 border-gray-400 w-full min-h-[82vh] object-fit rounded-xl overflow-hidden">
+          <div className="relative flex-1 border-2 border-gray-400 w-full min-h-[82vh] object-fit rounded-xl overflow-hidden">
             <iframe src={pdfuri} title="CV Preview" className="w-full h-full object-fit" />
+            <button
+              onClick={() => {
+              fetch(pdfuri)
+                .then((response) => response.blob())
+                .then((blob) => {
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                const candidateName = jobApplicationData.applicantDetails.name.replace(/\s+/g, "_");
+                const companyName = (companyDetails?.name || "Company").replace(/\s+/g, "_");
+                const date = new Date().toISOString().split("T")[0];
+                link.download = `Worko_${candidateName}_${jobApplicationData?.applicantDetails?.YOE}_${companyName}_${date}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+                })
+                .catch((error) => console.error("Error downloading the file:", error));
+              }}
+              className="absolute bottom-4 right-16 border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600">
+              <Download className="w-4 h-4" />
+            </button>
+            <button
+              onClick={() => window.open(pdfuri, "_blank")}
+              className="absolute bottom-4 right-3  px-3 py-2 bg-blue-200 rounded-md shadow text-blue-600">
+              <Maximize className="w-4 h-4" />
+            </button>
           </div>
 
           <div className="flex flex-wrap gap-4">

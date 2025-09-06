@@ -1,10 +1,12 @@
 import JobListDropdown, { DropDownSelectedJobData } from "@Components/Shared/DropDown/JobListDropdown";
-import BulkCvForm from "./BulkCvForm";
+
 import { useState , useEffect} from "react";
 
 import CorporateServiceObj from "../Services/Corporate.service";
-import ScreeningListView from "./BulkScreeningListView";
+
 import { useLocation, useNavigate } from "react-router-dom";
+import ScreeningListView from "@Components/Shared/BulkCvPage/BulkScreeningListView";
+import BulkCvForm from "@Components/Shared/BulkCvPage/BulkCvForm";
 
 const BulkCVCheck: React.FC = () => {
   const [isScreeningNew, setisScreeningNew] = useState(true);

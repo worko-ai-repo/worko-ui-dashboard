@@ -3,6 +3,8 @@ import { JobFormSchema } from "@Components/Dashboard/types";
 import {
   AdminBulkJobApplicationUpdateItem,
   ApiResponseDto,
+  CorporateUserPageAdminDataDto,
+  CorporateUserPageRecDataDto,
   CursorPaginationReferAndEarnAdminParams,
   GuidanceRequestDto,
   ReferAndEarnDto,
@@ -14,7 +16,11 @@ import {
   JobApplicationDetailsDto,
   ReferralDetailsDto,
 } from "@Interfaces/CorporateDashboard.dto";
-import { JobEvaluationRequestDto } from "@Interfaces/CorporateServices.dto";
+import {
+  CursorPaginationCorporateUserAdminDataParams,
+  CursorPaginationCorporateUserRecDataParams,
+  JobEvaluationRequestDto,
+} from "@Interfaces/CorporateServices.dto";
 import { CompanyDto, CompanyRequestDto, JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 
@@ -711,10 +717,13 @@ class AdminService {
 
   /**
    * patchReferAndEarnStatus
-   * 
+   *
    * @description - This api is used to patch refer and earn status.
    */
-  async patchReferAndEarnStatus(referralId: string, payload: ReferAndEarnUpdateApiDto): Promise<ReferAndEarnDto | null> {
+  async patchReferAndEarnStatus(
+    referralId: string,
+    payload: ReferAndEarnUpdateApiDto
+  ): Promise<ReferAndEarnDto | null> {
     try {
       const { response } = await httpServiceObj.patch<ReferAndEarnDto>(
         `/refer-and-earn/${referralId}`,
@@ -732,6 +741,120 @@ class AdminService {
     } catch (error: any) {
       console.error("[ADMIN SERVICE]: Failed to patch Refer and Earn Status.", error);
       return null;
+    }
+  }
+
+  /**
+   * fetchCorporateUsersAdmin
+   *
+   * @description - This api is used to get corporate users list.
+   */
+  async fetchCorporateUsersAdmin(
+    params: CursorPaginationCorporateUserAdminDataParams
+  ): Promise<ApiResponseDto<CorporateUserPageAdminDataDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<CorporateUserPageAdminDataDto>>(
+        "/corporate-user",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Corporate Users.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
+  /**
+   * fetchCorporateUsersRec
+   *
+   * @description - This api is used to get corporate users list.
+   */
+  async fetchCorporateUsersRec(
+    params: CursorPaginationCorporateUserRecDataParams
+  ): Promise<ApiResponseDto<CorporateUserPageRecDataDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<CorporateUserPageRecDataDto>>(
+        "/corporate-invite",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Corporate Users.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
+
+  /**
+   * updateCorporateUserInviteStatus
+   * 
+   * @method PATCH
+   * @description - This api is used to update corporate user invite status.
+   */
+  async updateCorporateUserInviteStatus(corporateInviteId: string, payload:object): Promise<CorporateUserPageRecDataDto | null> {
+    try {
+      const { response } = await httpServiceObj.patch<CorporateUserPageRecDataDto>(
+        `/corporate-invite/${corporateInviteId}`,
+        payload,
+        true,
+        {},
+        false,
+        "BASE"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to update Corporate User Invite Status.", error);
+      return null;
+    }
+  }
+
+  /**
+   * deleteCorporateUser
+   * 
+   * @method DELETE
+   * @description - This api is used to delete a corporate user.
+   */
+  async deleteCorporateUser(corporateUserId: string): Promise<boolean> {
+    try {
+      const { response, status } = await httpServiceObj.patch(
+        `/corporate-user/${corporateUserId}/delete`,
+        {},
+        true,
+        {},
+        false,
+        "BASE"
+      );
+      if (status !==  204) {
+        throw new Error("No response received");
+      }
+      return true;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to delete Corporate User.", error);
+      return false;
     }
   }
 }

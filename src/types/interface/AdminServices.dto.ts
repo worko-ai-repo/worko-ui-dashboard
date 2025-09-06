@@ -8,7 +8,7 @@ import {
   UserGuidanceRequestType,
 } from "../JobsAndApplication.type";
 import { StatusTracker } from "@Components/Dashboard/Candidate/Pages/Job/JobTypes";
-import { ApplicantDetails } from "./CorporateDashboard.dto";
+import { ApplicantDetails, CompanyDetails } from "./CorporateDashboard.dto";
 import {
   ReferAndEarnJobApplicationStatusEnum,
   ReferAndEarnStatusEnum,
@@ -368,4 +368,82 @@ export interface ReferAndEarnReferrerBankDetails {
   accountNumber: number;
   ifscCode: string;
   branchName: string;
+}
+
+/**
+ * CursorPaginationAdminBulkScreenedJobsParams
+ *
+ * @description - This interface defines the parameters for cursor-based pagination of bulk screened jobs in corporate services.
+ */
+export interface CursorPaginationAdminBulkScreenedJobsParams {
+  searchText?: string;
+  lastKey?: string | undefined;
+  pageSize: number;
+  sortOrder: string;
+  companyId?: string;
+  corporateBulkJdId?:string;
+  corporateRecruiterUserId?: string;
+}
+
+/**
+ * CorporateUserPageAdminDataDto
+ * 
+ * @description - Data Transfer Object representing a corporate user in the admin dashboard.
+ */
+export interface CorporateUserPageAdminDataDto {
+  inviteId: string;
+  companyId: string;
+  lastName: string;
+  createdAt: string; // ISO date
+  isDeleted: boolean;
+  email: string;
+  firstName: string;
+  GSI1PK: string;
+  cognitoUserId: string;
+  updatedAt: string; // ISO date
+  SK: string;
+  corporateUserType: "corporate-admin" | "corporate-recruiter" ; // extend if more types exist
+  id: string;
+  PK: string;
+  GSI1SK: string;
+  companyDetails: CompanyDetails;
+}
+
+
+export interface CorporateUserPageRecDataDto {
+  GSI1PK: string;
+  GSI1SK: string;
+  PK: string;
+  companyId: string;
+  corporateUserType: "corporate-admin" | "corporate-user" | string;
+  createdAt: string; // ISO date string
+  createdByUserId: string;
+  email: string;
+  expiresAt: string; // ISO date string
+  firstName: string;
+  id: string;
+  inviteStatus: "PENDING" | "ACCEPTED" | "REJECTED" | string;
+  isDeleted: boolean;
+  lastName: string;
+  updatedAt: string; // ISO date string
+  SK: string;
+  corporateUserDetails?: CorporateUserDetails; // only present when inviteStatus = "ACCEPTED"
+}
+
+interface CorporateUserDetails {
+  inviteId: string;
+  companyId: string;
+  lastName: string;
+  createdAt: string; // ISO date string
+  isDeleted: boolean;
+  email: string;
+  firstName: string;
+  GSI1PK: string;
+  cognitoUserId: string;
+  updatedAt: string; // ISO date string
+  SK: string;
+  corporateUserType: "corporate-admin" | "corporate-user" | string;
+  id: string;
+  PK: string;
+  GSI1SK: string;
 }

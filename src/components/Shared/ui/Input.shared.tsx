@@ -67,7 +67,7 @@ export const InteractiveInput: React.FC<InteractiveInputProps> = ({
 
   const getButtonContent = () => {
     if (variant === "copy") {
-      return <img src={clipboard} alt="Copy" className="min-w-4 min-h-4" />;
+      return <img src={clipboard} alt="Copy" className="min-w-6 p-1 min-h-6 text-white" />;
     }
     return <Link className="min-w-4 p-1 min-h-4 text-white" />;
   };

@@ -1,4 +1,4 @@
-import RevokeForm from "@Components/Dashboard/Corporate/Invites/RevokeForm";
+import RevokeForm from "@Components/Shared/CorporateInvite/RevokeForm";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";

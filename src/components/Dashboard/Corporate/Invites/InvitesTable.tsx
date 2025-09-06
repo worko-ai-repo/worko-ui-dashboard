@@ -1,12 +1,11 @@
 import { useState } from "react";
 import { Minus, Send } from "lucide-react";
 import Modal from "../../../Shared/Modal";
-import InviteForm from "./SendInviteForm";
-import RevokeForm from "./RevokeForm";
+import InviteForm from "../../../Shared/CorporateInvite/SendInviteForm";
+import RevokeForm from "../../../Shared/CorporateInvite/RevokeForm";
 import { CorporateInviteResponse, CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
 import { DynamicTable } from "../../../Shared/DynamicTable";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
-
 
 interface InviteTableProps {
   data: CorporateInvite[];
@@ -72,7 +71,11 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
           default:
             color = "bg-gray-100 text-gray-600";
         }
-        return <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>{status[row.inviteStatus]}</span>;
+        return (
+          <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>
+            {status[row.inviteStatus]}
+          </span>
+        );
       },
     },
     {
@@ -81,7 +84,14 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
       render: (row: (typeof data)[0]) => (
         <>
           {row.inviteStatus !== "DELETED" && (
-            <button onClick={() => setIsSendInviteModalOpen(true)} className={`px-3 py-2 rounded-lg text-white bg-blue-500 ${row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED" ? "cursor-not-allowed opacity-50" : "hover:bg-blue-600"}`} disabled={row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED"}>
+            <button
+              onClick={() => setIsSendInviteModalOpen(true)}
+              className={`px-3 py-2 rounded-lg text-white bg-blue-500 ${
+                row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED"
+                  ? "cursor-not-allowed opacity-50"
+                  : "hover:bg-blue-600"
+              }`}
+              disabled={row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED"}>
               <Send size={16} />
             </button>
           )}
@@ -110,9 +120,26 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
 
   return (
     <>
-      <DynamicTable<CorporateInvite> columns={columns} rows={data ?? []} enableSelect={false} pageSize={pagination.pageSize} setPageSize={pagination.setPageSize} handlePreviousPage={pagination.goToPreviousPage} handleNextPage={pagination.goToNextPage} hasNextPage={pagination.hasNextPage} hasPrevPage={pagination.hasPreviousPage} />
-      <Modal isOpen={isSendInviteModalOpen} onClose={() => setIsSendInviteModalOpen(false)} className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]">
-        <InviteForm />
+      <DynamicTable<CorporateInvite>
+        columns={columns}
+        rows={data ?? []}
+        enableSelect={false}
+        pageSize={pagination.pageSize}
+        setPageSize={pagination.setPageSize}
+        handlePreviousPage={pagination.goToPreviousPage}
+        handleNextPage={pagination.goToNextPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPreviousPage}
+      />
+      <Modal
+        isOpen={isSendInviteModalOpen}
+        onClose={() => setIsSendInviteModalOpen(false)}
+        className="w-min">
+        <InviteForm 
+        onClose={() => {
+          fetchInvites();
+          setIsSendInviteModalOpen(false);
+        }}/>
       </Modal>
       <Modal
         isOpen={isRevokedModalOpen}
@@ -120,7 +147,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
           setIsRevokedModalOpen(false);
           setSelectedInviteId(null);
         }}
-        className="w-[90vw] sm:w-[455px] sm:h-[277px] h-[90vh]">
+         className="h-52">
         <RevokeForm
           inviteId={selectedInviteId as string}
           onClose={() => {
