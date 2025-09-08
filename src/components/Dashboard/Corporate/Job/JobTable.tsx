@@ -90,7 +90,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes", onClick: () => nav(`/corporate/bulk-cv-check/${row.companyDetails.id}`) },
             { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) },
             { icon: <img src={Edit} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Update Job", onClick: () => handleJobCreation("UPDATE", row) },
-            { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job", onClick: () => window.open(`/v0/jobs/${row.companyDetails.name}/${row.id}`, "_blank") },
+            { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job", onClick: () => window.open(`${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`, "_blank") },
             { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Close Job", onClick: () => setIsCloseJobModalOpen({ id: row.id, companyId: row.companyDetails.id }) },
             { icon: <img src={Archive} className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Archive Job", onClick: () => updateJobStatus("ARCHIVED", { id: row.id, companyId: row.companyDetails.id }) },
           ],

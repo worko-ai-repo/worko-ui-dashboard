@@ -194,7 +194,7 @@ const fetchReferrals = useCallback(
   );
 
   const handleGetNewReferral = () => {
-    window.location.href = `${window.location.origin}/v0/referrals`;
+    window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}referrals`;
   };
 
   useEffect(() => {

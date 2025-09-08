@@ -1,7 +1,9 @@
 import { AwsS3FileUploadResponse } from '@Interfaces/Auth.dto';
 import { JobApplicationDetailsDto } from '@Interfaces/CorporateDashboard.dto';
 import httpServiceObj from '@Services/ApiHandler.service';
+import { getToastOptions } from 'lib-worko-ui';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 type CheckAcceptModalProps = {
   userDetails: any;
@@ -18,7 +20,8 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   userDetails,
   onSuccess,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const [loadingAccept, setLoadingAccept] = useState(false);
+  const [loadingRaise, setLoadingRaise] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [action, setAction] = useState<'accept' | 'raise' | null>(null);
   const [issueDetail, setIssueDetail] = useState('');
@@ -27,11 +30,11 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
 
   const handleConfirm = async (nextAction: 'accept' | 'raise') => {
-    setLoading(true);
     setError(null);
 
     try {
       if (nextAction === 'accept') {
+        setLoadingAccept(true);
         console.log("Attempting to accept...");
         const payload = {
           applicantName:userDetails.name,
@@ -53,14 +56,14 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to accept the offer. Please try again.');
           return;
         }
-
+        toast.success("Offer Accepted Successfully",getToastOptions({}))
         console.log('Accepted successfully:', response);
       } else if (nextAction === 'raise') {
         if (!issueDetail.trim()) {
           setError('Please provide a valid issue before submitting.');
           return;
         }
-        
+        setLoadingRaise(true);
         const payload = {
           applicantName:userDetails.name,
           userId: userDetails?.sub,
@@ -83,15 +86,16 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to raise the issue. Please try again.');
           return;
         }
-
+        toast.success("Issue Raised Successfully",getToastOptions({}))
         console.log('Issue raised successfully:', response);
       }
       onSuccess();
       onClose();
     } catch (err) {
       setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    }finally{
+      setLoadingAccept(false);
+      setLoadingRaise(false);
     }
   };
 
@@ -181,14 +185,14 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
               setAction('accept');
               handleConfirm('accept');
             }}
-            disabled={loading}
+            disabled={loadingAccept}
             className={`px-6 py-3 rounded-xl border 
               ${action === 'accept'
                 ? 'bg-white text-blue-600 border-blue-600'
                 : 'bg-blue-600 text-white'} 
               disabled:opacity-50`}
           >
-            {loading ? 'Accepting...' : 'Accept'}
+            {loadingAccept  ? 'Accepting...' : 'Accept'}
           </button>
 
           <button
@@ -217,9 +221,9 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
               <button
                 onClick={() => handleConfirm('raise')}
                 className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-                disabled={!issueDetail.trim()}
+                disabled={!issueDetail.trim() || loadingRaise}
               >
-                Submit
+                {loadingRaise ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </div>

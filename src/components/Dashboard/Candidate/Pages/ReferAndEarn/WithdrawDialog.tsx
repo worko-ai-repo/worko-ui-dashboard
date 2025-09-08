@@ -34,12 +34,11 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
       const payload = {
         accountHolderName,
         accountNumber,
-        reEnterAccountNumber,
         ifscCode,
         branchName,
       };
 
-      await httpServiceObj.patch(`${APP_JOBS_API_URI}/refer-and-earn/${statusData.id}/request-withdrawal
+      await httpServiceObj.patch(`/refer-and-earn/${statusData.id}/request-withdrawal
     `, payload, true);
 
           toast.success("Withdrawal request submitted successfully!",getToastOptions({}));
@@ -68,9 +67,9 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
 
   // if (!isOpen) return null;
 
-//   useEffect(() => {
-//     console.log(isOpen, onClose, referral, statusData)
-//   }, [])
+  useEffect(() => {
+    console.log("statusData",statusData)
+  }, [])
   
 
 return (
@@ -80,7 +79,7 @@ return (
           } ${visible ? "visible" : "invisible"}`}
         >
         <div
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[65vh] ${
+          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[100vh] ${
             isAnimatingIn ? "translate-x-0" : "translate-x-full"
           }`}
         >

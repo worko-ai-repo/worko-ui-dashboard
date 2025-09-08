@@ -16,6 +16,7 @@ import httpServiceObj from '@Services/ApiHandler.service';
 import RequestFolloupModal from './modals/RequestFolloupModal';
 import { toast } from 'react-toastify';
 import { getToastOptions } from '@Utils/Toast.utils';
+import ViewDetailsModal from './modals/ViewDetailsModal';
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -41,6 +42,8 @@ const JobsTable = memo(({
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
   const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
   const [showJoinedModal, setShowJoinedModal] = useState<boolean>(false);
+  const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
+  const [viewDetailsContent, setViewDetailsContent] = useState<string>('');
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -274,8 +277,10 @@ const jobs = processedJobs || [];
 }, [handleViewFeedback, onRefresh, user?.email]);
 
 
-  const MatchingScoreCircle = memo(({ score }: { score: number }) => (
-    <div className="w-20 flex mb-2 flex-col items-center justify-center gap-px text-base text-green-500">
+  const MatchingScoreCircle = memo((
+      { score, scoreDetails }: { score: number; scoreDetails?: any }
+    ) => (
+    <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
       <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
         <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
           <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
@@ -291,8 +296,13 @@ const jobs = processedJobs || [];
           />
         </svg>
         <div className="absolute font-semibold text-xs">{score}%</div>
+        <button 
+          onClick={()=>{        
+            setShowViewDetails(true)
+            setViewDetailsContent(scoreDetails)}}
+          className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details
+        </button>
       </div>
-      <span className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details</span>
     </div>
   ));
 
@@ -422,7 +432,11 @@ const jobs = processedJobs || [];
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex justify-center">
-          <MatchingScoreCircle score={row.matchingScore} />
+          <div>
+            <MatchingScoreCircle 
+              score={row.matchingScore ?? 0}
+              scoreDetails={row}  />
+          </div>
        </div>
       )
     },
@@ -604,6 +618,12 @@ console.log({
         show={showFeedbackModal} 
         feedbackContent={feedbackContent} 
         onClose={() => setShowFeedbackModal(false)} 
+      />
+
+      <ViewDetailsModal 
+        show={showViewDetails} 
+        viewDetailsContent={viewDetailsContent} 
+        onClose={() => setShowViewDetails(false)} 
       />
 
       <SubmitDocumentModal

@@ -15,7 +15,7 @@ const stats = [
   
   const handleRedirect = () => {
     const baseUrl = window.location.origin;
-    window.location.href = `${baseUrl}/v0/jobs?dashboard=USER`;
+    window.location.href = `${baseUrl}${import.meta.env.APP_PROXY_BASE}jobs?dashboard=USER`;
   };
 
   const ReferAndEarn = () => {

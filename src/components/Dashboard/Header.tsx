@@ -1,15 +1,23 @@
 import { logo_text } from '@Assets';
 import { useDashboardContext } from '@Context/Dashboard.context';
 import { Bell, Menu } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import CustomButtonWithButton from './Employee/CustomButtonWithButton';
+
+export type SignupMode = "EMP" | "CAND";
+interface ToggleOptionsDto {
+  label: string;
+  value: SignupMode;
+}
 
 interface HeaderProps {
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 }
 
+
 const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
-  const { breadcrumb } = useDashboardContext();
+  const { breadcrumb,dashboardType } = useDashboardContext();
 
   const getDate = () => {
     const today = new Date();
@@ -21,6 +29,20 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
     };
     return today.toLocaleDateString('en-US', options);
   };
+
+const getInitialFrame = () => {
+  const path = window.location.pathname;
+  if (path.includes('/employee')) return "EMP";
+  if (path.includes('/candidate')) return "CAND";
+  return "CAND";  
+};
+;
+
+  const [activeFrame, setActiveFrame] = useState<SignupMode>(getInitialFrame());
+  const options: ToggleOptionsDto[] = [
+  { label: "Candidate", value: "CAND" },
+  { label: "Employee", value: "EMP" },
+];
 
   return (
     <header className="px-4 w-full sm:px-8 py-4 relative">
@@ -52,12 +74,18 @@ const Header: React.FC<HeaderProps> = ({ sidebarOpen, setSidebarOpen }) => {
           <div className="hidden sm:block">{breadcrumb}</div>
           
           {breadcrumb && <div className="sm:hidden">{breadcrumb}</div>}
-          
           <span className="text-blue-600 text-left font-semibold sm:hidden text-sm">
             {getDate()}
           </span>
         </div>
+        <div className="w-full sm:w-auto">
+          {dashboardType === "CANDIDATE" || dashboardType === "EMPLOYEE"
+          ? <CustomButtonWithButton options={options} activeFrame={activeFrame}
+            setActiveFrame={(mode: SignupMode) => setActiveFrame(mode)}
+          /> 
+          : null}
 
+          </div>
         <div className="hidden sm:flex items-center gap-4 text-blue-600">
           <span className="whitespace-nowrap text-sm font-semibold">
             {getDate()}

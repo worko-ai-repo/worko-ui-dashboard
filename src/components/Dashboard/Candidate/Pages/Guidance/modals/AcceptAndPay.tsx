@@ -10,6 +10,8 @@ interface AcceptAndPayProps {
   className?: string;
   acceptAndPayDetails: any | null;
   closeModal:()=>void;
+  onRefresh:()=>void;
+  userID:string;
 }
 
 const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
@@ -18,6 +20,8 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
   className,
   acceptAndPayDetails,
   closeModal,
+  onRefresh,
+  userID
 }) => {
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -26,20 +30,19 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
   const about = acceptAndPayDetails?.mentorDetails?.about || '';
 
   const handleAcceptAndPay = async () => {
-    if (!request?.id || !request?.statusTracker?.[0]?.actionByUserId) {
+    if (!request?.id || !userID) {
       console.error('Missing request ID or actionByUserId');
       return;
     }
 
     try {
-      const url = `https://api.dev.worko.work/user/guidance-request/${request.id}/CANDIDATE_ACTION`;
       const payload = {
         newStatus: "PAYMENT_CONFIRMATION_PENDING",
-        actionByUserId: request.statusTracker[0].actionByUserId,
+        actionByUserId: userID,
         actionByUserType: "CAND",     
       };
 
-      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+      const { response, error } = await httpServiceObj.patch(`/user/guidance-request/${request.id}/CANDIDATE_ACTION`, payload, true, {});
 
       if (error) {
         console.error('Error accepting request:', error);
@@ -49,6 +52,7 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
 
       toast.success("Payment completed", getToastOptions({}));
       closeModal()
+      onRefresh()
       return response;
     } catch (err) {
       console.error('Exception in acceptAndPay:', err);
@@ -71,21 +75,20 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
     return;
   }
 
-  if (!request?.id || !request?.statusTracker?.[0]?.actionByUserId) {
+  if (!request?.id || !userID) {
     console.error('Missing request ID or actionByUserId');
     return;
   }
 
   try {
-    const url = `https://api.dev.worko.work/user/guidance-request/${request.id}/CANDIDATE_ACTION`;
     const payload = {
       newStatus: "CANCELLED",
-      actionByUserId: request.statusTracker[0].actionByUserId,
+      actionByUserId: userID,
       actionByUserType: "CAND",
       cancelReason: cancelReason
     };
 
-    const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+    const { response, error } = await httpServiceObj.patch(`/user/guidance-request/${request.id}/CANDIDATE_ACTION`, payload, true, {});
 
     if (error) {
       console.error('Error patching candidate action:', error);
@@ -97,6 +100,7 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
     console.log("Submitted cancel reason:", cancelReason);
     toast.success("Guidance Cancelled", getToastOptions({}));
     closeModal()
+    onRefresh()
     return response;
   } catch (err) {
     console.error('Exception in patchCandidateAction:', err);
@@ -135,37 +139,37 @@ return (
 
       <div className="flex items-start gap-3 text-xs">
         <span className="text-[#94a3b8] font-medium whitespace-nowrap">About Mentor</span>
-        <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">
+        <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs text-left">
           {acceptAndPayDetails?.mentorDetails?.about || 'NA'}
         </p>
       </div>
 
-<div className="space-y-1 text-xs">
-  {social && Object.entries(social).map(([platform, links]) => {
-    if (!Array.isArray(links) || links.length === 0) return null;
+        <div className="space-y-1 text-xs">
+          {social && (
+            <div className="flex items-start gap-2">
+              <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
+                Mentor Socials
+              </span>
+              <div className="flex flex-wrap gap-2 text-[#0f172a]">
+                {Object.entries(social).flatMap(([platform, links]) => {
+                  if (!Array.isArray(links) || links.length === 0) return [];
 
-    return (
-      <div key={platform} className="flex items-start gap-2">
-        <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
-          {/* {platform} */} Mentor Socials
-        </span>
-        <div className="flex flex-wrap gap-2 text-[#0f172a]">
-          {links.map((link, idx) => (
-            <a
-              key={idx}
-              href={link}
-              target="_blank"
-              rel="noreferrer"
-              className="underline text-blue-600"
-            >
-              {platform}
-            </a>
-          ))}
+                  return links.map((link, idx) => (
+                    <a
+                      key={`${platform}-${idx}`}
+                      href={link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline text-blue-600"
+                    >
+                      {platform}
+                    </a>
+                  ));
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </div>
-    );
-  })}
-</div>
 
 
     </div>
@@ -176,7 +180,13 @@ return (
         <div className="flex flex-col items-center gap-1 flex-1">
           <span className="text-[#94a3b8] font-medium text-xs">Date</span>
           <div className="w-full bg-[#cdffff] rounded-lg px-2 py-1 text-black text-xs font-medium text-center">
-            {new Date(request?.scheduleMeetingDetails?.date || '').toLocaleDateString() || 'NA'}
+            {request?.scheduleMeetingDetails?.date
+              ? new Date(request.scheduleMeetingDetails.date).toLocaleDateString('en-GB', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: '2-digit',
+                })
+              : 'NA'}
           </div>
         </div>
         <div className="flex flex-col items-center gap-1 flex-1">

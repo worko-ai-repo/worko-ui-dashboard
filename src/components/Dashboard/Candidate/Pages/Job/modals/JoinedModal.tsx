@@ -136,17 +136,11 @@ export default function JoinedModal({
     <>
       {/* Main Modal */}
       {isOpen && (
-                <div
-          className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
-            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-          } ${visible ? "visible" : "invisible"}`}
-        >
-        <div
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[65vh] ${
-            isAnimatingIn ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-                  <button
+      <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+           isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"} ${visible ? "visible" : "invisible"}`}>
+      <div className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[75vh] ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"}`}>
+        <button
           className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
           onClick={onClose}
           disabled={loading}
@@ -180,7 +174,7 @@ export default function JoinedModal({
                 type="email"
                 value={hrName}
                 onChange={(e) => setHrName(e.target.value)}
-                placeholder="Write email address"
+                placeholder="Write HR name"
                 className="w-full bg-gray-100 rounded-lg p-3 focus:outline-none"
               />
             </div>

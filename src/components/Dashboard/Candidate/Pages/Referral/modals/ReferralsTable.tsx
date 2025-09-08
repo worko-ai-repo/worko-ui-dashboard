@@ -232,7 +232,7 @@ const ReferralsTable = memo(
             </svg>
             <div className="absolute font-semibold text-xs">{score}%</div>
           </div>
-          <span className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details</span>
+          {/* <span className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details</span> */}
         </div>
       ));
 

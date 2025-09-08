@@ -61,7 +61,7 @@ const MainContent: React.FC<MainContentProps> = ({
       // const paramEmail = window.location.search.split("=")[1]
       //@TODO remove v0
       // window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?evaluatorEmail=${paramEmail}`;
-      window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+      window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
       return;
     }
 
@@ -98,7 +98,7 @@ const MainContent: React.FC<MainContentProps> = ({
 //       console.log("no email found")
 //       await CognitoServiceObj.handleSignOut();
 //           sessionStorage.clear();
-//           // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+//           // window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
 //           //while deploying use the below
 //           window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
 //     }
@@ -129,7 +129,7 @@ const MainContent: React.FC<MainContentProps> = ({
           );
           await CognitoServiceObj.handleSignOut();
           sessionStorage.clear();
-          // window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          // window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
           //while deploying use the below
           window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
         }

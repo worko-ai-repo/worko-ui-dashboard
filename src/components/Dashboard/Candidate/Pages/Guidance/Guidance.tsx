@@ -5,9 +5,14 @@ import { magnifyingQuestion } from "@Assets";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { Button } from "lib-worko-ui";
 import { DynamicTable, Column } from "@Components/Shared/DynamicTable";
+import profileService from "../../Service/ProfileService";
 
 
 // Define types
+interface UserDetails {
+  id: string;
+  // add any other fields you expect
+}
 export interface GuidanceRequest {
   id: string;
   guidanceRequestType: string;
@@ -22,7 +27,9 @@ export interface GuidanceRequest {
   };
   dateNeeded?: string;
   mentorName?: string;
-
+  rejectedByDetails?:{
+    reason:string;
+  }
   mentorDetails?: {
     name?: string;
     userId?: string;
@@ -97,221 +104,34 @@ const Guidance = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<GuidanceFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<GuidancePaginationInfo>(initialPaginationState);
-  
+  const [userID,setUserID] = useState("")
+  const currentUser = profileService.getCurrentUser();
+
   const APP_API_URI= import.meta.env.APP_API_URI
 
-  const dummyData = [
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#01A1A1A1A1A1A1A1A1A1A1A1",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#01A1A1A1A1A1A1A1A1A1A1A1",
-    companyName: "CareerLift",
-    createdAt: "2025-08-28T09:00:00.000Z",
-    updatedAt: "2025-08-28T09:00:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-08-31T00:00:00.000Z",
-    guidanceRequestDescription: "Need help deciding between two job offers",
-    guidanceRequestType: "CAREER_GUIDANCE",
-    id: "01A1A1A1A1A1A1A1A1A1A1A1",
-    jobUrl: "https://example.com/job/offer1",
-    status: "PENDING",
-    statusTracker: [
-      {
-        actionByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-        actionByUserType: "CAND",
-        actionDate: "2025-08-28T09:00:00.000+00:00",
-        newStatus: "PENDING"
-      }
-    ]
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#01K3QFTBJARDW1YKT2K2NN91YN",
-    PK: "USR#EML#divy.raushan26@gmail.com",
-    SK: "GUIDANCE#RQST#ID#01K3QFTBJARDW1YKT2K2NN91YN",
-    companyName: "NELLSYS",
-    createdAt: "2025-08-28T04:43:46.638Z",
-    updatedAt: "2025-08-28T05:04:10.174Z",
-    createdByUserId: "e1134dca-6071-70ff-2941-54fcce656f38",
-    updatedByUserId: "51d34dda-b0e1-70ae-c852-c195d340db5c",
-    guidanceRequestDeadline: "2025-08-30T00:00:00.000Z",
-    guidanceRequestDescription: "I want interview preparation",
-    guidanceRequestType: "MOCK_INTERVIEW_PREPARATION",
-    id: "01K3QFTBJARDW1YKT2K2NN91YN",
-    jobUrl: "https://dev-ui.worko.work/jobs/ASTROTALK/01K33GGM46JG0GEY1PPGVFV57F",
-    status: "MENTOR_ASSIGNED",
 
-    mentorAssignedRemarks: "string",
-
-    mentorDetails: {
-      name: "rohith appala emp",
-      userId: "8103fd8a-10b1-701c-7675-d5f8e748cb3d",
-      userEmail: "rohithappala777+employee33@gmail.com"
-    },
-
-    scheduleMeetingDetails: {
-      date: "2025-09-11T09:02:14.763Z",
-      duration: "2 hrs 30 mins",
-      time: "7:00 pm"
-    },
-
-    paymentRequestDetails: {
-      totalAmount: 5000,
-      guidanceFee: 4000,
-      linkForPayment: "string",
-      currency: "INR",
-      platformFee: 1000,
-      actionByUserId: "51d34dda-b0e1-70ae-c852-c195d340db5c",
-      actionByUserType: "ADMIN",
-      actionDate: "2025-08-28T05:04:10.098+00:00"
-    },
-
-    statusTracker: [
-      {
-        actionByUserId: "e1134dca-6071-70ff-2941-54fcce656f38",
-        newStatus: "PENDING",
-        actionDate: "2025-08-28T04:43:46.637+00:00",
-        actionByUserType: "CAND"
-      },
-      {
-        actionByUserId: "51d34dda-b0e1-70ae-c852-c195d340db5c",
-        newStatus: "MENTOR_ASSIGNED",
-        oldStatus: "PENDING",
-        actionDate: "2025-08-28T05:04:10.098+00:00",
-        actionByUserType: "ADMIN"
-      }
-    ]
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#03C3C3C3C3C3C3C3C3C3C3C3",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#03C3C3C3C3C3C3C3C3C3C3C3",
-    companyName: "FuturePath",
-    createdAt: "2025-08-20T14:00:00.000Z",
-    updatedAt: "2025-08-22T16:00:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-08-27T00:00:00.000Z",
-    guidanceRequestDescription: "Requesting cancellation due to time constraints",
-    guidanceRequestType: "RESUME_REVIEW",
-    id: "03C3C3C3C3C3C3C3C3C3C3C3",
-    jobUrl: "https://example.com/job/resume1",
-    status: "CANCELLED",
-    statusTracker: [
-      {
-        actionByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-        actionByUserType: "CAND",
-        actionDate: "2025-08-22T16:00:00.000+00:00",
-        newStatus: "CANCELLED"
-      }
-    ]
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#04D4D4D4D4D4D4D4D4D4D4D4",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#04D4D4D4D4D4D4D4D4D4D4D4",
-    companyName: "LevelUp",
-    createdAt: "2025-08-23T11:00:00.000Z",
-    updatedAt: "2025-08-24T09:30:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-08-30T00:00:00.000Z",
-    guidanceRequestDescription: "I want to confirm payment for my mentorship session",
-    guidanceRequestType: "INTERVIEW_PREP",
-    id: "04D4D4D4D4D4D4D4D4D4D4D4",
-    jobUrl: "https://example.com/job/interview1",
-    status: "PAYMENT_CONFIRMATION_PENDING",
-    statusTracker: [
-      {
-        actionByUserId: "system",
-        actionByUserType: "SYS",
-        actionDate: "2025-08-24T09:30:00.000+00:00",
-        newStatus: "PAYMENT_CONFIRMATION_PENDING"
-      }
-    ]
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#05E5E5E5E5E5E5E5E5E5E5E5",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#05E5E5E5E5E5E5E5E5E5E5E5",
-    companyName: "GrowthPath",
-    createdAt: "2025-08-22T08:00:00.000Z",
-    updatedAt: "2025-08-24T10:15:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-09-01T00:00:00.000Z",
-    guidanceRequestDescription: "Payment done, waiting for confirmation",
-    guidanceRequestType: "CAREER_TRANSITION",
-    id: "05E5E5E5E5E5E5E5E5E5E5E5",
-    jobUrl: "https://example.com/job/paymentdone",
-    status: "PAYMENT_CONFIRMATION_DONE",
-    statusTracker: [
-      {
-        actionByUserId: "system",
-        actionByUserType: "SYS",
-        actionDate: "2025-08-24T10:15:00.000+00:00",
-        newStatus: "PAYMENT_CONFIRMATION_DONE"
-      }
-    ],
-    scheduleMeetingDetails: {
-         "date": "2025-09-11T09:02:14.763Z",
-         "duration": "2 hrs 30 mins",
-         "meetingLink": "https://google.com",
-         "time": "7:00 pm"
-    },
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#06F6F6F6F6F6F6F6F6F6F6F6",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#06F6F6F6F6F6F6F6F6F6F6F6",
-    companyName: "MentorBridge",
-    createdAt: "2025-08-21T07:45:00.000Z",
-    updatedAt: "2025-08-25T12:00:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-08-29T00:00:00.000Z",
-    guidanceRequestDescription: "I need to reschedule the mentorship session",
-    guidanceRequestType: "SOFT_SKILLS",
-    id: "06F6F6F6F6F6F6F6F6F6F6F6",
-    jobUrl: "https://example.com/job/reschedule1",
-    status: "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
-    statusTracker: [
-      {
-        actionByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-        actionByUserType: "CAND",
-        actionDate: "2025-08-25T12:00:00.000+00:00",
-        newStatus: "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE"
-      }
-    ]
-  },
-  {
-    GSI1PK: "GUIDANCE#RQST#",
-    GSI1SK: "ID#07G7G7G7G7G7G7G7G7G7G7G7",
-    PK: "USR#EML#raj.ghosh+002@worko.ai",
-    SK: "GUIDANCE#RQST#ID#07G7G7G7G7G7G7G7G7G7G7G7",
-    companyName: "SkillForge",
-    createdAt: "2025-08-26T09:30:00.000Z",
-    updatedAt: "2025-08-27T14:45:00.000Z",
-    createdByUserId: "3133adda-2031-70b4-cd18-32e652371cd0",
-    guidanceRequestDeadline: "2025-09-02T00:00:00.000Z",
-    guidanceRequestDescription: "Meeting confirmed with mentor",
-    guidanceRequestType: "INTERVIEW_PREP",
-    id: "07G7G7G7G7G7G7G7G7G7G7G7",
-    jobUrl: "https://example.com/job/meetingconfirmed",
-    status: "MEETING_CONFIRMED",
-    statusTracker: [
-      {
-        actionByUserId: "mentor-007",
-        actionByUserType: "MENTOR",
-        actionDate: "2025-08-27T14:45:00.000+00:00",
-        newStatus: "MEETING_CONFIRMED"
-      }
-    ]
-  }
-];
-
-  // Store pagination keys for each page
+  useEffect(() => {
+    const fetchUserData = async () =>{
+        const url = `${APP_API_URI}/user/${currentUser.email}/details`;
+        let localUserId = "";
+        try {
+          const { response } = await httpServiceObj.get(url, true, {}, true);
+          const data = response as UserDetails[]; 
+          console.log(data[0].id)
+          // if (Array.isArray(data) && data[0]?.id) {
+          //   localUserId = data[0].id;
+            setUserID(data[0].id);
+          // } else {
+          //   console.warn("User details array is empty or invalid.");
+          //   return; 
+          // }
+        } catch (error) {
+          console.error("Cannot fetch user details:", error);
+        }
+    }
+    fetchUserData()
+  }, [])
+  
   const paginationKeysRef = useRef<Record<number, string>>({
     1: "", // First page always has empty lastKey
   });
@@ -319,154 +139,88 @@ const Guidance = () => {
   const { user } = useDashboardContext();
 
   // Memoize the fetch function to prevent unnecessary re-renders
-  // const fetchGuidanceRequests = useCallback(
-  //   async (page = currentPage, pageSize: number, lastKey = "", searchFilters = filters, isSearch = false) => {
-  //     if (!user?.email) return;
-
-  //     setIsLoading(true);
-  //     try {
-  //       const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND`
-  //       const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
-  //       console.log(response)
-  //       if (response) {
-  //         // Process the data to include status formatting
-  //         if (Array.isArray(response.data)) {
-  //           const processedData = response.data.map((item: GuidanceRequest) => {
-  //             // Determine status colors based on status
-  //             const statusColors = {
-  //               "Mentor to be assigned": { bg: "bg-gray-200", text: "text-gray-900" },
-  //               "Mentor assigned": { bg: "bg-blue-100", text: "text-blue-600" },
-  //               "In progress": { bg: "bg-yellow-100", text: "text-yellow-600" },
-  //               Completed: { bg: "bg-green-100", text: "text-green-600" },
-  //             };
-
-  //             // Format date from ISO to DD-MM-YYYY
-  //             const date = new Date(item.guidanceRequestDeadline);
-  //             const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
-
-  //             return {
-  //               ...item,
-  //               dateNeeded: formattedDate,
-  //               statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
-  //             };
-  //           });
-
-  //           setData({
-  //             data: processedData,
-  //             pagination: response.pagination || initialPaginationState,
-  //           });
-  //         } else {
-  //           setData(response as GuidanceApiResponse);
-  //         }
-
-  //         if (response.pagination) {
-  //           setPaginationInfo(response.pagination);
-
-  //           // For searches or first page load, reset pagination keys
-  //           if (isSearch || page === 1) {
-  //             paginationKeysRef.current = { 1: "" };
-  //             if (response.pagination.lastKey) {
-  //               paginationKeysRef.current[2] = response.pagination.lastKey;
-  //             }
-  //           }
-  //           // For normal pagination, store the next page's key
-  //           else if (response.pagination.lastKey) {
-  //             paginationKeysRef.current[page + 1] = response.pagination.lastKey;
-  //           }
-  //         }
-  //       } else if (error) {
-  //         console.error("Error fetching guidance requests:", error);
-  //       }
-  //     } catch (err) {
-  //       console.error("Exception in fetchGuidanceRequests:", err);
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   },
-  //   [user, pageSize, filters]
-  // );
-
-  //below is to fetch dummy data
-  const fetchGuidanceRequests = useCallback(
+  const fetchGuidanceRequests = useCallback( 
   async (
-    page = currentPage,
-    pageSize: number,
+    page = 1,
+    pageSize = 25,
     lastKey = "",
     searchFilters = filters,
     isSearch = false
   ) => {
-    if (!user?.email) return;
+      if (!user?.email) return;
 
-    setIsLoading(true);
+      setIsLoading(true);
+      try {
+        const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND&pageSize=${pageSize}&lastKey=${lastKey}`;
+        const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
+        console.log(response)
+        if (response) {
+          // Process the data to include status formatting
+          if (Array.isArray(response.data)) {
+            const processedData = response.data.map((item: GuidanceRequest) => {
+              // Determine status colors based on status
+            const statusColors = {
+              "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
+              "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
+              "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
+              "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Confirmation Pending" },
+              "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
+              "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
+              "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
+              "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
+              "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
+              "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Completed" }, 
+              "REJECTED": { bg: "bg-red-100", text: "text-red-600", label: "Rejected" }, 
+            };
 
-    try {
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 500));
+              // Format date from ISO to DD-MM-YYYY
+              const date = new Date(item.guidanceRequestDeadline);
+              const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getFullYear()}`;
 
-    const statusColors = {
-      "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
-      "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
-      "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
-      "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Pending" },
-      "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
-      "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested" },
-      "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
-    };
+              return {
+                ...item,
+                dateNeeded: formattedDate,
+                statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
+              };
+            });
 
+            setData({
+              data: processedData,
+              pagination: response.pagination || initialPaginationState,
+            });
+          } else {
+            setData(response as GuidanceApiResponse);
+          }
 
-      // Pagination logic for mock data
-      const startIndex = (page - 1) * pageSize;
-      const paginatedData = dummyData.slice(startIndex, startIndex + pageSize);
+          if (response.pagination) {
+            setPaginationInfo(response.pagination);
 
-      const processedData = paginatedData.map((item) => {
-        const date = new Date(item.guidanceRequestDeadline);
-        const formattedDate = `${date.getDate().toString().padStart(2, "0")}-${(date.getMonth() + 1)
-          .toString()
-          .padStart(2, "0")}-${date.getFullYear()}`;
-
-        return {
-          ...item,
-          dateNeeded: formattedDate,
-          statusColor: statusColors[item.status as keyof typeof statusColors] || { bg: "bg-gray-200", text: "text-gray-900" },
-        };
-      });
-
-      setData({
-        data: processedData,
-        pagination: {
-          currentPage: page,
-          pageSize,
-          totalCount: dummyData.length,
-          lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
-        },
-      });
-
-      setPaginationInfo({
-        currentPage: page,
-        pageSize,
-        totalCount: dummyData.length,
-        lastKey: dummyData.length > startIndex + pageSize ? `page-${page + 1}` : null,
-      });
-
-      if (isSearch || page === 1) {
-        paginationKeysRef.current = { 1: "" };
-        if (dummyData.length > pageSize) {
-          paginationKeysRef.current[2] = `page-2`;
+            // For searches or first page load, reset pagination keys
+            if (isSearch || page === 1) {
+              paginationKeysRef.current = { 1: "" };
+              if (response.pagination.lastKey) {
+                paginationKeysRef.current[2] = response.pagination.lastKey;
+              }
+            }
+            // For normal pagination, store the next page's key
+            else if (response.pagination.lastKey) {
+              paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+            }
+          }
+        } else if (error) {
+          console.error("Error fetching guidance requests:", error);
         }
-      } else if (dummyData.length > startIndex + pageSize) {
-        paginationKeysRef.current[page + 1] = `page-${page + 1}`;
+      } catch (err) {
+        console.error("Exception in fetchGuidanceRequests:", err);
+      } finally {
+        setIsLoading(false);
       }
-
-    } catch (err) {
-      console.error("Exception in fetchdummyData:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  },
-  [user, currentPage, pageSize, filters]
-);
+    },
+    [user, pageSize, filters]
+  );
 
   // Handle page change from table
+  
   const handlePageChange = useCallback(
     (page: number) => {
       // Don't do anything if trying to go to same page
@@ -495,7 +249,7 @@ const Guidance = () => {
 
   // navigating to guidance page
   const handleRedirect = ()=>{
-    window.location.href = '/v0/guidance';
+    window.location.href = `${import.meta.env.APP_PROXY_BASE}guidance`;
   }
   // Initial data load
   useEffect(() => {
@@ -542,6 +296,7 @@ const Guidance = () => {
             </div>
           ) : (
             <GuidanceTable
+              userID={userID}
               data={data}
               pagination={paginationInfo}
               currentPage={currentPage}

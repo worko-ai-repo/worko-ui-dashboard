@@ -15,6 +15,7 @@ interface GuidanceTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
+  userID:string;
 }
 
 interface MentorMergedData {
@@ -22,7 +23,7 @@ interface MentorMergedData {
   mentorDetails: any | null;
 }
 
-const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh}: GuidanceTableProps) => {
+const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh, userID}: GuidanceTableProps) => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -35,15 +36,13 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
   });
   const { user } = useDashboardContext();
   const [localVisible, setLocalVisible] = useState(false);
-
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-
-  // Cache for mentor merged data keyed by request ID
   const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
-  // Loading state for modal fetch
   const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
+
+  const APP_API_URI= import.meta.env.APP_API_URI
 
   const formatGuidanceType = (type: string) => {
     const typeMap: {[key: string]: string} = {
@@ -59,19 +58,19 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
 
   const fetchMentorData = async (email: string): Promise<MentorMergedData> => {
     try {
-      const socialProfileUrl = `https://api.dev.worko.work/user/${encodeURIComponent(email)}/socialprofile`;
-      const mentorDetailsUrl = `https://api.dev.worko.work/user/${encodeURIComponent(email)}/details`;
+      const socialProfileUrl = `/user/${encodeURIComponent(email)}/socialprofile`;
+      const mentorDetailsUrl = `/user/${encodeURIComponent(email)}/details`;
 
       const [{ response: socialProfileResponse, error: socialProfileError }, { response: mentorDetailsResponse, error: mentorDetailsError }] = await Promise.all([
-        httpServiceObj.get(socialProfileUrl, true, {}, true),
-        httpServiceObj.get(mentorDetailsUrl, true, {}, true),
+        httpServiceObj.get(socialProfileUrl, true, {}),
+        httpServiceObj.get(mentorDetailsUrl, true, {}),
       ]);
 
       if (socialProfileError || mentorDetailsError) {
         console.error('Error fetching mentor data:', socialProfileError || mentorDetailsError);
         return { socialProfile: null, mentorDetails: null };
       }
-      console.log(socialProfileResponse)
+      // console.log(socialProfileResponse)
       return {
         socialProfile: Array.isArray(socialProfileResponse) && socialProfileResponse.length > 0 ? socialProfileResponse[0] : null,
         mentorDetails: Array.isArray(mentorDetailsResponse) && mentorDetailsResponse.length > 0 ? mentorDetailsResponse[0] : null,
@@ -122,6 +121,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
 
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
     openModal(request, 'acceptAndPay');
+    console.log(request)
   }, [openModal]);
 
   const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
@@ -370,14 +370,17 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
                 request={modalState.selectedRequest}
                 mentorDetails={mentorDataLoading ? null : currentMentorData || null}
                 closeModal={closeModal}
-                // You can also pass socialProfile if needed here
+                onRefresh={onRefresh}
+                userID={userID}
               />
             ) : (
               <AcceptAndPay
                 className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
                 request={modalState.selectedRequest}
-                acceptAndPayDetails={mentorDataLoading ? null : currentMentorData || null} // pass merged data
+                acceptAndPayDetails={mentorDataLoading ? null : currentMentorData || null}
                 closeModal={closeModal}
+                onRefresh={onRefresh}
+                userID={userID}
                 onAcceptAndPay={() =>
                   modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)
                 }

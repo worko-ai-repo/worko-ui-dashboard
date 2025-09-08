@@ -19,13 +19,13 @@ const navigationItems: NavItem[] = [
     id: "switch-dashboard",
     label: "Switch Dashboard",
     icon: <i className="fa-solid fa-left-right"></i>,
-    dashboardTypes: ["CANDIDATE", "ADMIN"],
+    dashboardTypes: ["CANDIDATE", "ADMIN","EMPLOYEE"],
   },
   {
     id: "profile",
     label: "Profile",
     icon: InterviewIcon,
-    dashboardTypes: ["CANDIDATE"],
+    dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
   {
     id: "home",
@@ -37,7 +37,7 @@ const navigationItems: NavItem[] = [
     id: "jobs",
     label: "Jobs",
     icon: JobIcon,
-    dashboardTypes: ["CORPORATE", "EMPLOYEE", "CANDIDATE"],
+    dashboardTypes: ["CORPORATE", "CANDIDATE"],
   },
   {
     id: "referral",
@@ -49,13 +49,13 @@ const navigationItems: NavItem[] = [
     id: "guidance",
     label: "Guidance",
     icon: HomeIcon,
-    dashboardTypes: ["CANDIDATE"],
+    dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
   {
     id: "refer-and-earn",
     label: "Refer & Earn",
     icon: HomeIcon,
-    dashboardTypes: ["CANDIDATE"],
+    dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
 
   {

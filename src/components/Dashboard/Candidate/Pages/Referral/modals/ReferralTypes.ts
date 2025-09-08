@@ -18,7 +18,8 @@ export interface ReferralDetailsDto {
 export type ReferralStatus = 
   | "PENDING"
   | "ACCEPTED"
-  | "REJECTED";
+  | "REJECTED"
+  | "AWAITING";
 
 export interface PaginationInfo {
   count: number;

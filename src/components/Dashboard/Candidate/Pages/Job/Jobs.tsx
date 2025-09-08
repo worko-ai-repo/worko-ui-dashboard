@@ -274,22 +274,22 @@ const Jobs = () => {
     };
   }, [debouncedSearch]);
 
-  useEffect(() => {
-    const fetchJobs = async () => {
-        const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
-        const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
+  // useEffect(() => {
+  //   const fetchJobs = async () => {
+  //       const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
+  //       const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
         
-      const url = `${APP_JOBS_API_URI}/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
-      try {
-        const { response, error } = await httpServiceObj.get(url, true, {}, true);
-          console.log("response",response,"error",error)
-      } catch (err) {
-        console.log(err)
-      }
-    };
+  //     const url = `${APP_JOBS_API_URI}/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
+  //     try {
+  //       const { response, error } = await httpServiceObj.get(url, true, {}, true);
+  //         console.log("response",response,"error",error)
+  //     } catch (err) {
+  //       console.log(err)
+  //     }
+  //   };
 
-    fetchJobs();
-  }, []);
+  //   fetchJobs();
+  // }, []);
   // Loading state when user is not available yet
   if (isLoadingUser || !user) {
     return (
@@ -321,7 +321,7 @@ const Jobs = () => {
           <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
               type="text"
-              placeholder="Search"
+              placeholder="Search by company name"
               value={searchBarText}
               onChange={handleSearchChange}
               className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"

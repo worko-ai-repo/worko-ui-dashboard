@@ -12,6 +12,13 @@ export type TabId =
 | 'refer-and-earn'
 | 'subscription'
 | 'support'
+//Employee Dashboard Tabs
+| 'switch-dashboard'
+| 'profile'
+| 'referral'
+| 'guidance'
+| 'refer-and-earn'
+| 'support'
 // Corporate Dashboard Tabs
 | 'home'
 | 'invites'

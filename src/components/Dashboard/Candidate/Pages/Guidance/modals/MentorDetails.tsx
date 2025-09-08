@@ -3,13 +3,16 @@ import { GuidanceRequest } from "../Guidance";
 import httpServiceObj from '@Services/ApiHandler.service';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
+import { Send } from 'lucide-react';
 
 interface MentorDetailsProps {
   className?: string;
   figmaUrl?: string;
   request: GuidanceRequest | null;
   mentorDetails: any | null;
-  closeModal:()=>void
+  closeModal:()=>void;
+  onRefresh:()=>void;
+  userID:string;
 }
 
 const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
@@ -18,6 +21,8 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   request,
   mentorDetails,
   closeModal,
+  onRefresh,
+  userID,
 }) => {
   const [showRescheduleForm, setShowRescheduleForm] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState('');
@@ -43,9 +48,25 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
 
     const diffMs = meetingDate.getTime() - now.getTime();
     const diffMins = diffMs / (1000 * 60);
-    console.log(diffMins)
+    // console.log(diffMins)
     return diffMins <= 15 && diffMins >= -5; 
   })();
+
+  const isRescheduleSoon = (() => {
+    const meetingDateStr = request?.scheduleMeetingDetails?.date;
+    if (!meetingDateStr) return false;
+
+    const now = new Date();
+    const meetingDate = new Date(meetingDateStr);
+
+    const diffMs = meetingDate.getTime() - now.getTime();
+    const diffMins = diffMs / (1000 * 60);
+
+    // console.log(diffMins);
+
+    return diffMins > 30;
+  })();
+
 
 
   const handleSubmitReschedule = async () => {
@@ -61,32 +82,21 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
       return;
     }
 
-    if (!request?.id || !request?.statusTracker?.[0]?.actionByUserId) {
+    if (!request?.id || !userID) {
       console.error('Missing request ID or actionByUserId');
       return;
     }
 
     try {
-      // const url = `https://api.dev.worko.work/user/guidance-request/${request.id}/CANDIDATE_ACTION`;
-
-      // const payload = {
-      //   newStatus: "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
-      //   actionByUserId: request.statusTracker[0].actionByUserId,
-      //   actionByUserType: "CAND",
-      //   reScheduleRequestDate: new Date(rescheduleDate).toISOString(),
-      //   reScheduleRequestTime: rescheduleTime,
-      // };
-
-      const url = `https://api.dev.worko.work/user/guidance-request/01K3QFTBJARDW1YKT2K2NN91YN/CANDIDATE_ACTION`;
-
       const payload = {
         newStatus: "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
-        actionByUserId: "e1134dca-6071-70ff-2941-54fcce656f38",
+        actionByUserId: userID,
         actionByUserType: "CAND",
         reScheduleRequestDate: new Date(rescheduleDate).toISOString(),
         reScheduleRequestTime: rescheduleTime,
       };
-      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+
+      const { response, error } = await httpServiceObj.patch(`/user/guidance-request/${request.id}/CANDIDATE_ACTION`, payload, true, {});
 
       if (error) {
         console.error('Error submitting reschedule request:', error);
@@ -98,6 +108,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
       setShowRescheduleForm(false);
       setRescheduleError('');
       closeModal()
+      onRefresh()
       return response;
     } catch (err) {
       console.error('Exception in reschedule request:', err);
@@ -106,11 +117,26 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
     }
   };
 
+  if (request?.status === 'REJECTED') {
+    return (
+      <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
+        <div className="flex justify-between items-center p-6 pb-4">
+          <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Rejection Feedback</h2>
+        </div>
+        <div className="px-6 pb-4 space-y-4 font-['Inter']">
+          <div className="flex items-start gap-3 text-xs">
+            <span className="text-[#0f172a] font-medium font-['Poppins']">{request.rejectedByDetails?.reason}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
       <div className="flex justify-between items-center p-6 pb-4">
         <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Mentor details</h2>
-        <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
+        {/* <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
           <div className="w-5 h-5 bg-[#316bff] rounded-sm flex items-center justify-center">
             <span className="text-white text-xs">in</span>
           </div>
@@ -120,9 +146,8 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
               <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
             </svg>
           </div>
-        </div>
+        </div> */}
       </div>
-
       <div className="px-6 pb-4 space-y-4 font-['Inter']">
         {/* Mentor Name */}
         <div className="flex items-start gap-3 text-xs">
@@ -139,25 +164,25 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
         {/* About */}
         <div className="flex items-start gap-3 text-xs">
           <span className="text-[#94a3b8] font-medium whitespace-nowrap">About Mentor</span>
-          <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">
-            {mentorDetails?.about || 'NA'}
+          <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs text-left">
+            {mentorDetails?.mentorDetails?.about || 'NA'}
           </p>
         </div>
 
         {/* Move here */}
         <div className="space-y-1 text-xs">
-          {social && Object.entries(social).map(([platform, links]) => {
-            if (!Array.isArray(links) || links.length === 0) return null;
+          {social && (
+            <div className="flex items-start gap-2">
+              <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
+                Mentor Socials
+              </span>
+              <div className="flex flex-wrap gap-2 text-[#0f172a]">
+                {Object.entries(social).flatMap(([platform, links]) => {
+                  if (!Array.isArray(links) || links.length === 0) return [];
 
-            return (
-              <div key={platform} className="flex items-start gap-2">
-                <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
-                  {/* {platform} */} Mentor Socials
-                </span>
-                <div className="flex flex-wrap gap-2 text-[#0f172a]">
-                  {links.map((link, idx) => (
+                  return links.map((link, idx) => (
                     <a
-                      key={idx}
+                      key={`${platform}-${idx}`}
                       href={link}
                       target="_blank"
                       rel="noreferrer"
@@ -165,12 +190,13 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
                     >
                       {platform}
                     </a>
-                  ))}
-                </div>
+                  ));
+                })}
               </div>
-            );
-          })}
+            </div>
+          )}
         </div>
+
       </div>
 
       <div className="px-6 pb-4">
@@ -178,9 +204,16 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
         <div className="flex gap-6">
           <div className="flex flex-col items-center gap-1">
             <span className="text-[#94a3b8] font-medium text-xs">Date</span>
-            <div className="bg-[#cdffff] rounded-lg px-3 py-1 text-black text-xs font-medium">
-              {request?.scheduleMeetingDetails?.date || 'N/A'}
-            </div>
+              <div className="w-full bg-[#cdffff] rounded-lg px-2 py-1 text-black text-xs font-medium text-center">
+                {request?.scheduleMeetingDetails?.date
+                  ? new Date(request.scheduleMeetingDetails.date).toLocaleDateString('en-GB', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: '2-digit',
+                    })
+                  : 'NA'}
+              </div>
+
           </div>
           <div className="flex flex-col items-center gap-1">
             <span className="text-[#94a3b8] font-medium text-xs">Time</span>
@@ -192,7 +225,9 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
       </div>
 
       <div className="px-6 pb-6 flex flex-col gap-3">
-        {request?.status === 'PAYMENT_CONFIRMATION_DONE' && (
+        {(request?.status === 'MEETING_CONFIRMED' || 
+        request?.status === 'MEETING_RESCHEDULE_REQUESTED_BY_MENTOR' ||
+        request?.status === "MEETING_RESCHEDULE_CONFIRMED")  && (
           <>
             <div className="flex flex-row gap-3">
               <button
@@ -211,7 +246,11 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
 
               <button
                 onClick={handleRequestReschedule}
-                className="flex-1 border border-[#316bff] text-[#316bff] font-semibold text-xs rounded-lg h-11 hover:text-[#2556e6] hover:border-[#2556e6] transition-colors"
+                disabled={!isRescheduleSoon}
+                className={`flex-1 rounded-lg h-11 font-semibold text-xs flex items-center justify-center transition-colors
+              ${isRescheduleSoon 
+                ? 'border border-[#316bff] text-[#316bff] hover:text-[#2556e6] hover:border-[#2556e6] cursor-pointer' 
+                : 'border border-gray-300 text-gray-400 cursor-not-allowed'}`}
               >
                 Request reschedule
               </button>
@@ -239,8 +278,9 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
                 )}
                 <button
                   onClick={handleSubmitReschedule}
-                  className="self-start bg-[#316bff] text-white px-4 py-2 rounded-md text-xs font-semibold hover:bg-[#2556e6] transition-colors"
+                  className="self-start bg-[#316bff] text-white px-4 py-3 rounded-md text-xs font-semibold hover:bg-[#2556e6] transition-colors flex items-center gap-2"
                 >
+                <Send size={16} />
                   Submit
                 </button>
               </div>

@@ -95,13 +95,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (NavItem: NavItem) => {
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
-
+      
       const currentPath = location.pathname;
       //If the current path is admin, switch to corporate dashboard
       if (currentPath.includes("admin")) {
         onNavigate("CANDIDATE", "jobs");
         return;
-      } else if (currentPath.includes("candidate")) {
+      } else if (currentPath.includes("candidate") || currentPath.includes("employee")) {
         //If the current path is corporate, switch to admin dashboard
         onNavigate("ADMIN", "ajobs");
         return;
