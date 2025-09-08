@@ -1,203 +1,142 @@
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
-import { useState, useEffect } from "react";
-import Table from "../../SharedComponents/Table";
+import { useState, useEffect, useMemo } from "react";
+import { DynamicTable } from "@Components/Shared/DynamicTable";
 import WithdrawDialog from "./WithdrawDialog";
 
-const ReferralsTable = ({searchbarText}: any) => {
+const ReferralsTable = ({ searchbarText }: any) => {
   const { user } = useDashboardContext();
-  
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
-  const APP_API_URI = import.meta.env.APP_API_URI
 
   const [referrals, setReferrals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [Isloading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pagination, setPagination] = useState({
     count: 0,
-    pageSize: 10,
+    pageSize: 25,
     sortOrder: "descending",
     timesQueried: 0,
     queriedCount: 0,
-    lastKey: undefined
+    lastKey: undefined,
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
   const [showDialog, setShowDialog] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState(null);
-  const [statusData, setStatusData] = useState<any>(null); // Placeholder for now
+  const [statusData, setStatusData] = useState<any>(null);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-
-
-  const fetchReferrals = async (page = 1, pageSize = 10) => {
+  const fetchReferrals = async (page = 1, pageSize = 25) => {
     if (!user?.email) {
       setError("User email is not available");
-      setLoading(false);
+      setIsLoading(false);
       return;
     }
-    
-    setLoading(true);
-    setError(null); // Clear previous errors
-    
+
+    setIsLoading(true);
+    setError(null);
+
     try {
-      // Include lastKey in the request if it exists for the requested page
       const lastKey = page > 1 ? lastKeyMap[page - 1] : undefined;
-      const lastKeyParam = lastKey ? `&lastKey=${encodeURIComponent(lastKey)}` : '';
-      const encodedEmail  = encodeURIComponent(user.email)
-      const { response }: {response:any} = await httpServiceObj.get(
-        `${APP_JOBS_API_URI}/refer-and-earn?pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ''}`,
+      const lastKeyParam = lastKey ? `&lastKey=${encodeURIComponent(lastKey)}` : "";
+      const encodedEmail = encodeURIComponent(user.email);
+
+      const { response }: { response: any } = await httpServiceObj.get(
+        `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${
+          searchbarText || ""
+        }`,
         true,
         {},
         true
       );
-
-      // Check if response exists and has the expected structure
-      if (!response) {
-        throw new Error("No response received from server");
-      }
-
-      // Check if response.data exists and is an array
-      if (!response.data || !Array.isArray(response.data)) {
-        console.warn("Invalid or missing data in API response:", response);
+      console.log(response);
+      if (!response?.data || !Array.isArray(response.data)) {
         setReferrals([]);
-        setPagination(prev => ({
+        setPagination((prev) => ({
           ...prev,
           count: 0,
-          timesQueried: (response?.pagination?.timesQueried || 0) + 1,
-          queriedCount: 0,
-          lastKey: undefined
+          lastKey: undefined,
         }));
         return;
       }
 
-      const formatted = response.data.map((item:any) => {
-        // Add null checks for nested objects
-        if (!item) {
-          console.warn("Null or undefined item in response data");
-          return null;
-        }
-        console.log(item)
-        return {
-          id: item.id || `temp-${Math.random()}`, // Fallback ID if missing
+      const formatted = response.data
+        .map((item: any) => ({
+          id: item.id || `temp-${Math.random()}`,
           name: item.recipientDetails?.name || "N/A",
           jobTitle: item.jobDetails?.title || "N/A",
           email: item.recipientDetails?.email || "N/A",
           phone: item.recipientDetails?.phoneNumber || "N/A",
-          jobApplicationStatus:item.jobApplicationStatus,
-          dateReferred: item.referredDate        
+          jobApplicationStatus: item.jobApplicationStatus,
+          dateReferred: item.referredDate
             ? new Date(item.referredDate).toLocaleDateString("en-GB")
             : "N/A",
-          dateApplied: item.jobApplicationStatus && item.updatedAt
-            ? new Date(item.updatedAt).toLocaleDateString("en-GB")
-            : "----",
+          dateApplied:
+            item.jobApplicationStatus && item.updatedAt
+              ? new Date(item.updatedAt).toLocaleDateString("en-GB")
+              : "----",
           status: item.status || "PENDING",
           referralBonus: item.commissionAmount || 0,
-        };
-      }).filter(Boolean); // Remove any null items
+        }))
+        .filter(Boolean);
 
       setReferrals(formatted);
-      
-      // Store the lastKey for the current page if it exists
+
       if (response?.pagination?.lastKey) {
-        setLastKeyMap(prev => ({
-          ...prev,
-          [page]: response.pagination.lastKey
-        }));
+        setLastKeyMap((prev) => ({ ...prev, [page]: response.pagination.lastKey }));
       }
-      
+
       setPagination({
         count: response?.pagination?.count || formatted.length,
-        pageSize: pageSize,
+        pageSize,
         sortOrder: "descending",
         timesQueried: response?.pagination?.timesQueried || 1,
         queriedCount: response?.pagination?.queriedCount || 0,
-        lastKey: response?.pagination?.lastKey // Store lastKey in pagination state
+        lastKey: response?.pagination?.lastKey,
       });
-
     } catch (error: any) {
       console.error("Error fetching referrals:", error);
-      
-      // Set user-friendly error message
-      let errorMessage = "Failed to load referrals. Please try again.";
-      
-      if (error?.message) {
-        if (error.message.includes("Network")) {
-          errorMessage = "Network error. Please check your connection and try again.";
-        } else if (error.message.includes("401") || error.message.includes("Unauthorized")) {
-          errorMessage = "Session expired. Please log in again.";
-        } else if (error.message.includes("403") || error.message.includes("Forbidden")) {
-          errorMessage = "You don't have permission to view this data.";
-        } else if (error.message.includes("404")) {
-          errorMessage = "Referrals service not found. Please contact support.";
-        } else if (error.message.includes("500")) {
-          errorMessage = "Server error. Please try again later.";
-        }
-      }
-      
-      setError(errorMessage);
+      setError("Failed to load referrals. Please try again.");
       setReferrals([]);
-      setPagination(prev => ({
-        ...prev,
-        count: 0,
-        lastKey: undefined
-      }));
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    // uncomment the below to check with real data
     fetchReferrals(currentPage, pagination.pageSize);
-
-    // uncomment the below to check with dummy data
-    // setReferrals(dummyReferrals);
-    setLoading(false);
   }, [user?.email, currentPage, pagination.pageSize, searchbarText]);
 
-  const handlePageChange = (page:number) => {
-    setCurrentPage(page);
+  const handlePageChange = (page: number) => setCurrentPage(page);
+  const handlePageSizeChange = (pageSize: number) => {
+    setPagination((prev) => ({ ...prev, pageSize }));
+    setCurrentPage(1);
+    setLastKeyMap({});
   };
 
-  const handlePageSizeChange = (pageSize:number) => {
-    setPagination(prev => ({
-      ...prev,
-      pageSize: pageSize
-    }));
-    setCurrentPage(1); // Reset to page 1 when changing page size
-    setLastKeyMap({}); // Clear lastKey map when changing page size
-  };
-
-  const handleRetry = () => {
-    setError(null);
-    fetchReferrals(currentPage, pagination.pageSize);
-  };
-
-  const getStatusLabelAndStyle = (status: any) => {
-    if (status === undefined || status === null) {
-      return { label: "Pending", style: "text-[#0f172a]" };
-    }
-  
-    const map: Record<string, {label: string, style: string}> = {
+  const getStatusLabelAndStyle = (status: string) => {
+    const map: Record<string, { label: string; style: string }> = {
       NOT_ACHIEVED_YET: { label: "Not Achieved Yet", style: "text-[#0f172a]" },
       ACHIEVED: { label: "Hired", style: "text-[#0f172a]" },
-      WITHDRAWAL_REQUESTED: { label: "WITHDRAWAL REQUESTED", style: "text-[#0f172a]" },
+      WITHDRAWAL_REQUESTED: { label: "Withdrawal Requested", style: "text-[#0f172a]" },
       WITHDRAWAL_ACCEPTED: { label: "Withdrawal Accepted", style: "bg-[#d6e2ff] text-[#0f172a]" },
       WITHDRAWAL_REJECTED: { label: "Withdrawal Rejected", style: "text-[#0f172a]" },
       PAYMENT_COMPLETED: { label: "Payment Completed", style: "text-[#0f172a]" },
       PENDING: { label: "Pending", style: "text-[#0f172a]" },
-      IN_PROCESS: { label: "In process", style: "text-[#0f172a]" },
+      IN_PROCESS: { label: "In Process", style: "text-[#0f172a]" },
       BONUS_ACHIEVED: { label: "Bonus Achieved", style: "text-[#0f172a]" },
       CLOSED: { label: "Cancelled/Closed", style: "text-[#0f172a]" },
       APPLIED: { label: "Applied", style: "text-blue-600" },
       PROCESSING_INTERVIEW: { label: "Interviewing", style: "text-indigo-600" },
       HIRED: { label: "Hired", style: "text-green-600" },
       JOINED: { label: "Joined", style: "text-emerald-700 font-medium" },
+      REJECTED: { label: "Rejected", style: "text-red-700 font-medium" },
     };
     return map[status] || { label: "Unknown", style: "text-[#0f172a]" };
   };
 
-  const getBonusColor = (status:any) =>
+  const getBonusColor = (status: string) =>
     status === "PAYMENT_COMPLETED"
       ? "text-green-600"
       : ["WITHDRAWAL_REJECTED", "CANCELLED", "CLOSED"].includes(status)
@@ -206,158 +145,153 @@ const ReferralsTable = ({searchbarText}: any) => {
       ? "text-blue-600"
       : "text-yellow-600";
 
-  // Define columns for the table
   const columns = [
-    {
-      key: "name",
-      header: "Name",
-      sortable: true,
-      className: "capitalize font-semibold text-sm text-nowrap"
-    },
-    {
-      key: "jobTitle",
-      header: "Job title",
-      sortable: true,
-      className: "capitalize text-sm"
-    },
-    {
-      key: "email",
-      header: "Email",
-      sortable: true,
-      className: "text-sm",
-    },
-    {
-      key: "phone",
-      className: "text-sm",
-      header: "Phone"
-    },
-    {
-      key: "dateReferred",
-      className: "text-sm",
-      header: "Date referred",
-      sortable: true
-    },
-    {
-      key: "dateApplied",
-      className: "text-sm",
-      header: "Date applied",
-      sortable: true
-    },
+    { key: "name", label: "Name", sortable: true },
+    { key: "jobTitle", label: "Job Title", sortable: true },
+    { key: "email", label: "Email", sortable: true },
+    { key: "phone", label: "Phone" },
+    { key: "dateReferred", label: "Date Referred", sortable: true },
+    { key: "dateApplied", label: "Date Applied", sortable: true },
     {
       key: "status",
-      className: "text-xs",
-      header: "Status",
+      label: "Status",
       sortable: true,
-      render: (_value: any, item: any) => {
-        if (item.jobApplicationStatus === "JOINED") {
+      render: (row: any) => {
+        if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
           return (
             <button
-              className="px-4 py-1 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
+              className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
               onClick={() => {
-                setSelectedReferral(item);
+                setSelectedReferral(row);
                 setStatusData({
-                  transactionId: "mock-tx-123",
-                  eligibleAmount: item.referralBonus,
-                  status: "Eligible",
-                  lastUpdated: new Date().toISOString(),
-                  reason: "Joined successfully"
+                  id: row.id,
+                  dateApplied: row.dateApplied,
+                  dateReferred: row.dateReferred,
+                  email: row.email,
+                  jobApplicationStatus: row.jobApplicationStatus,
+                  jobTitle: row.jobTitle,
+                  name: row.name,
+                  phone: row.phone,
+                  referralBonus: row.referralBonus,
+                  status: row.status,
                 });
-
+                console.log(row);
                 setShowDialog(true);
-              }}
-            >
+              }}>
               Withdraw
             </button>
           );
         }
-
-        const statusInfo = getStatusLabelAndStyle(item.status);
-        const { label, style } = statusInfo;
+        if (row.jobApplicationStatus === "REJECTED") {
+          return (
+            <div className="flex justify-center items-center">
+              <div className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
+                Rejected
+              </div>
+            </div>
+          );
+        }
+        if (
+          row.jobApplicationStatus === "PENDING" ||
+          row.jobApplicationStatus === "PROCESSING_INTERVIEW"
+        ) {
+          return (
+            <div className="flex justify-center items-center">
+              <div className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
+                Not Achieved Yet
+              </div>
+            </div>
+          );
+        }
+        const statusInfo = getStatusLabelAndStyle(row.status);
         return (
-          <div
-            className={`px-8 py-2 rounded-full border truncate border-gray-300 ${style}`}
-            onClick={() => {
-              console.log(item); 
-            }}
-          >
-            <span className="text-xs">{label}</span>
+          <div className={`px-4 py-3 rounded-full border ${statusInfo.style}`}>
+            <span className="text-xs">{statusInfo.label}</span>
           </div>
         );
       },
     },
     {
       key: "jobApplicationStatus",
-      className: "text-xs",
-      header: "Job Status",
+      label: "Job Status",
       sortable: true,
-      render: (value:any) => {
-        const statusInfo = getStatusLabelAndStyle(value);
-        const { label, style } = statusInfo;
+      render: (row: any) => {
+        const { label, style } = getStatusLabelAndStyle(row.jobApplicationStatus);
         return (
-          <div className={`px-8 py-2 rounded-full border truncate border-gray-300 ${style}`}>
+          <div className={`px-4 py-3 rounded-full border ${style}`}>
             <span className="text-xs">{label}</span>
           </div>
         );
-      }
+      },
     },
     {
       key: "referralBonus",
-      className: "text-sm",
-      header: "Referral bonus",
-      render: (value:any, item:any) => (
-        <div className={`flex items-center gap-1 ${getBonusColor(item.status)}`}>
-          <span className="font-semibold">Rs. {value || 0}</span>
+      label: "Referral Bonus",
+      render: (row: any) => (
+        <div className={`flex justify-center items-center ${getBonusColor(row.status)}`}>
+          <span className="font-semibold">Rs. {row.referralBonus || 0}</span>
         </div>
-      )
-    }
+      ),
+    },
   ];
 
-  // Error state component
-  const ErrorComponent = () => (
-    <div className="w-full p-8 text-center">
-      <div className="flex flex-col items-center gap-4">
-        <div className="text-red-500 text-lg">⚠️</div>
-        <p className="text-red-600 font-medium">{error}</p>
-        <button
-          onClick={handleRetry}
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-        >
-          Try Again
-        </button>
-      </div>
-    </div>
-  );
+  const sortedData = useMemo(() => {
+    if (!sortField) return referrals;
+    return [...referrals].sort((a, b) => {
+      let aVal = a[sortField] ?? "";
+      let bVal = b[sortField] ?? "";
+      if (sortField.includes("date")) {
+        aVal = new Date(aVal).getTime();
+        bVal = new Date(bVal).getTime();
+      }
+      if (typeof aVal === "string") aVal = aVal.toLowerCase();
+      if (typeof bVal === "string") bVal = bVal.toLowerCase();
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [referrals, sortField, sortOrder]);
+
+  const handleSortChange = (columnKey: string) => {
+    if (sortField === columnKey) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(columnKey);
+      setSortOrder("asc");
+    }
+  };
 
   return (
     <div className="w-full">
-      <div className="w-full bg-white rounded-2xl shadow p-4">
-        <Table
-          data={referrals}
-          columns={columns}
-          keyExtractor={(item) => item.id}
-          isLoading={loading}
-          headerClassName="bg-cyan-50 text-sm rounded-xl text-nowrap py-3 px-4 mb-2"
-          rowClassName={() => "w-full rounded-xl hover:bg-gray-50 border-b mb-4"}
-          pagination={pagination}
-          onPageChange={handlePageChange}
-          onPageSizeChange={handlePageSizeChange}
-          currentPage={currentPage}
-          emptyStateComponent={
-            error ? (
-              <ErrorComponent />
-            ) : (
-              <div className="w-full p-8 text-center">
-                <p className="text-gray-500">No referrals found</p>
-              </div>
-            )
-          }
-          loadingComponent={
-            <div className="w-full p-8 text-center">
-              <p className="text-gray-500">Loading referrals...</p>
-            </div>
-          }
-        />
-      </div>
+      {Isloading ? (
+        <div className="w-full py-12 flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+            <p className="mt-3 text-gray-500">Loading referrals...</p>
+          </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl shadow p-4">
+          <DynamicTable
+            columns={columns}
+            rows={sortedData}
+            pageSize={pagination.pageSize}
+            setPageSize={handlePageSizeChange}
+            handlePreviousPage={() => handlePageChange(currentPage - 1)}
+            handleNextPage={() => handlePageChange(currentPage + 1)}
+            hasPrevPage={currentPage > 1}
+            hasNextPage={!!pagination.lastKey}
+            emptyStateMessage={error || "No referrals found"}
+            emptyStateSubMessage={error ? "Please try again." : "Try adjusting your filters"}
+            isLoading={Isloading}
+            onSortChange={handleSortChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            enableSelect={false}
+            keyExtractor={(row: any) => row.id}
+          />
+        </div>
+      )}
       <WithdrawDialog
         isOpen={showDialog}
         onClose={() => setShowDialog(false)}

@@ -8,12 +8,15 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
 import { JobApplicationDetailsDto, JobApplicationDocumentStatusType } from "@Interfaces/CorporateDashboard.dto";
+import { newDate } from "react-datepicker/dist/date_utils";
  
 interface SubmitDocumentModalProps {
+  userDetails: any;
   show: boolean;
   documents: JobApplicationDetailsDto;
   onClose: () => void;
   onSubmit: (submittedDocs: Record<string, File | null>) => void;
+  onSuccess: () => void;
   userID: string;
   jobId: string;
 }
@@ -33,7 +36,7 @@ interface FormData {
   [documentName: string]: File | null;
 }
  
-const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId }: SubmitDocumentModalProps) => {
+const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId,onSuccess,userDetails }: SubmitDocumentModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
@@ -325,6 +328,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
         }));
  
         const updatePayload = {
+          applicantName:userDetails.name,
           userId: userId,
           emailId: email,
           userType: "CAND",
@@ -350,8 +354,8 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
       await Promise.all(updatePromises);
  
       toast.success("Documents uploaded successfully!", getToastOptions({}));
+      onSuccess?.();
       onClose();
- 
     } catch (error) {
       console.error("Upload error:", error);
       toast.error(
@@ -366,20 +370,21 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
   // Check if any submittable files are selected
   const submittableDocuments = allDocuments.filter(doc => doc.isSubmittable);
   const hasSelectedFiles = submittableDocuments.some(doc => watchedFiles[doc.name] !== null);
- 
+  const uploadedFilesCount = Object.values(watchedFiles).filter(file => file !== null).length;
+  const isFileCountMatching = uploadedFilesCount === submittableDocuments.length;
+
   return (
     <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
       isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
     } ${isVisible ? "visible" : "invisible"}`}>
-      <div
-        className={`bg-white min-h-screen w-full max-w-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
+        <div className={`bg-white h-full max-h-screen w-full max-w-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
+        }`}>
+
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">Document Management</h3>
-          <h3 className="text-xs text-gray-400">All requested documents</h3>
+          <h3 className="text-lg font-semibold">Upload document</h3>
+          <h3 className="text-xs text-gray-400">document requested on 23-08-2025</h3>
           <button 
             onClick={onClose} 
             className="p-1 rounded-full hover:bg-gray-100"
@@ -390,7 +395,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
         </div>
  
         {/* Document upload form */}
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 ">
           <div className="p-6 overflow-y-auto flex-1">
             {allDocuments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
@@ -469,12 +474,7 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
           </div>
  
           {/* Footer */}
-          <div className="px-8 py-6 flex justify-between items-center gap-4 flex-shrink-0 border-t">
-            <div className="text-sm text-gray-600">
-              <div>Total documents: {allDocuments.length}</div>
-              <div>Pending: {submittableDocuments.length} | Submitted: {allDocuments.filter(d => d.isSubmitted).length}</div>
-            </div>
- 
+          <div className="px-8 py-6 flex justify-between items-center gap-4 flex-shrink-0 border-t"> 
             <div className="flex items-center gap-4">
               {hasSelectedFiles && (
                 <div className="text-sm text-gray-600">
@@ -484,18 +484,22 @@ const SubmitDocumentModal = ({ show, documents, onClose, onSubmit, userID, jobId
  
               <button
                 type="submit"
-                disabled={!hasSelectedFiles || isUploading || submittableDocuments.length === 0}
+                disabled={!hasSelectedFiles || isUploading || submittableDocuments.length === 0 || !isFileCountMatching}
                 className={`flex items-center gap-2 px-6 py-3 text-white rounded-lg transition-colors ${
-                  hasSelectedFiles && !isUploading && submittableDocuments.length > 0
+                  hasSelectedFiles && !isUploading && submittableDocuments.length > 0 && isFileCountMatching
                     ? 'bg-blue-500 hover:bg-blue-600' 
                     : 'bg-gray-400 cursor-not-allowed'
                 }`}
               >
                 <Send size={16} />
                 <span className="text-sm font-medium">
-                  {isUploading ? 'Uploading...' : 'Submit Documents'}
+                  {isUploading ? 'Uploading...' : 'Submit'}
                 </span>
               </button>
+            </div>
+               <div className="text-sm text-gray-600">
+              <div>Total documents: {allDocuments.length}</div>
+              <div>Pending: {submittableDocuments.length} | Submitted: {allDocuments.filter(d => d.isSubmitted).length}</div>
             </div>
           </div>
         </form>

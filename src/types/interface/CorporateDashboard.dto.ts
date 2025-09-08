@@ -232,6 +232,9 @@ export interface JobApplicationDetailsDto {
   }>;
   documentCurrentStatusMap?: Record<string, JobApplicationDocumentStatusType>;
   documentCurrentMapping?: Record<string, string>;
+  followUpRequest?: Array<{
+    actionDate: string;
+  }>;
 }
 
 export type JobApplicationDocumentStatusType =

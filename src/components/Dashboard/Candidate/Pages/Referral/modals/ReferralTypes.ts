@@ -10,12 +10,16 @@ export interface ReferralDetailsDto {
   candidateEmail: string;
   createdAt: string;
   status: ReferralStatus;
+  matchingScore:number;
+  refereeName:String;
+  jobUrl:string;
 }
 
 export type ReferralStatus = 
   | "PENDING"
   | "ACCEPTED"
-  | "REJECTED";
+  | "REJECTED"
+  | "AWAITING";
 
 export interface PaginationInfo {
   count: number;
@@ -32,6 +36,7 @@ export interface ReferralApiResponse {
   totalReferrals?: number;
   currentPage?: number;
   totalPages?: number;
+  matchingScore?: number;
 }
 
 export interface ReferralFilters {

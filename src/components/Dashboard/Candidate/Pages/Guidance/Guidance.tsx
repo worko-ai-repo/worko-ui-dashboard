@@ -5,9 +5,14 @@ import { magnifyingQuestion } from "@Assets";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { Button } from "lib-worko-ui";
 import { DynamicTable, Column } from "@Components/Shared/DynamicTable";
+import profileService from "../../Service/ProfileService";
 
 
 // Define types
+interface UserDetails {
+  id: string;
+  // add any other fields you expect
+}
 export interface GuidanceRequest {
   id: string;
   guidanceRequestType: string;
@@ -22,7 +27,38 @@ export interface GuidanceRequest {
   };
   dateNeeded?: string;
   mentorName?: string;
+  rejectedByDetails?:{
+    reason:string;
+  }
+  mentorDetails?: {
+    name?: string;
+    userId?: string;
+    userEmail?: string;
+  };
+
+  scheduleMeetingDetails?: {
+    date?: string;
+    time?: string;
+    duration?: string;
+  };
+
+  paymentRequestDetails?: {
+    totalAmount?: number;
+    platformFee?: number;
+    guidanceFee?: number;
+    currency?: string;
+    linkForPayment?: string;
+  };
+  statusTracker: [
+    {
+        actionByUserId?: string;
+        newStatus?: string;
+        actionDate?: string;
+        actionByUserType?: string;
+    },
+  ],
 }
+
 
 export interface GuidancePaginationInfo {
   count: number;
@@ -68,9 +104,34 @@ const Guidance = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<GuidanceFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<GuidancePaginationInfo>(initialPaginationState);
-  
+  const [userID,setUserID] = useState("")
+  const currentUser = profileService.getCurrentUser();
 
-  // Store pagination keys for each page
+  const APP_API_URI= import.meta.env.APP_API_URI
+
+
+  useEffect(() => {
+    const fetchUserData = async () =>{
+        const url = `${APP_API_URI}/user/${currentUser.email}/details`;
+        let localUserId = "";
+        try {
+          const { response } = await httpServiceObj.get(url, true, {}, true);
+          const data = response as UserDetails[]; 
+          console.log(data[0].id)
+          // if (Array.isArray(data) && data[0]?.id) {
+          //   localUserId = data[0].id;
+            setUserID(data[0].id);
+          // } else {
+          //   console.warn("User details array is empty or invalid.");
+          //   return; 
+          // }
+        } catch (error) {
+          console.error("Cannot fetch user details:", error);
+        }
+    }
+    fetchUserData()
+  }, [])
+  
   const paginationKeysRef = useRef<Record<number, string>>({
     1: "", // First page always has empty lastKey
   });
@@ -78,36 +139,39 @@ const Guidance = () => {
   const { user } = useDashboardContext();
 
   // Memoize the fetch function to prevent unnecessary re-renders
-  const fetchGuidanceRequests = useCallback(
-    async (page = currentPage, pageSize: number, lastKey = "", searchFilters = filters, isSearch = false) => {
+  const fetchGuidanceRequests = useCallback( 
+  async (
+    page = 1,
+    pageSize = 25,
+    lastKey = "",
+    searchFilters = filters,
+    isSearch = false
+  ) => {
       if (!user?.email) return;
 
       setIsLoading(true);
-
       try {
-        const uri = "https://api.dev.worko.work/user/guidance-request";
-        const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(
-          uri,
-          true,
-          {
-            lastKey,
-            pageSize,
-            ...searchFilters,
-          },
-          true
-        );
+        const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND&pageSize=${pageSize}&lastKey=${lastKey}`;
+        const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
         console.log(response)
         if (response) {
           // Process the data to include status formatting
           if (Array.isArray(response.data)) {
             const processedData = response.data.map((item: GuidanceRequest) => {
               // Determine status colors based on status
-              const statusColors = {
-                "Mentor to be assigned": { bg: "bg-gray-200", text: "text-gray-900" },
-                "Mentor assigned": { bg: "bg-blue-100", text: "text-blue-600" },
-                "In progress": { bg: "bg-yellow-100", text: "text-yellow-600" },
-                Completed: { bg: "bg-green-100", text: "text-green-600" },
-              };
+            const statusColors = {
+              "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
+              "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
+              "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
+              "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Confirmation Pending" },
+              "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
+              "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
+              "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
+              "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
+              "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
+              "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Completed" }, 
+              "REJECTED": { bg: "bg-red-100", text: "text-red-600", label: "Rejected" }, 
+            };
 
               // Format date from ISO to DD-MM-YYYY
               const date = new Date(item.guidanceRequestDeadline);
@@ -156,6 +220,7 @@ const Guidance = () => {
   );
 
   // Handle page change from table
+  
   const handlePageChange = useCallback(
     (page: number) => {
       // Don't do anything if trying to go to same page
@@ -184,7 +249,7 @@ const Guidance = () => {
 
   // navigating to guidance page
   const handleRedirect = ()=>{
-    window.location.href = '/v0/guidance';
+    window.location.href = `${import.meta.env.APP_PROXY_BASE}guidance`;
   }
   // Initial data load
   useEffect(() => {
@@ -221,7 +286,7 @@ const Guidance = () => {
       </div>
 
       <div className="w-full space-y-[35px] px-0">
-        <div className="bg-white p-4 rounded-xl shadow-md">
+        {/* <div className="bg-white p-4 rounded-xl shadow-md"> */}
           {isLoading ? (
             <div className="w-full py-12 flex items-center justify-center">
               <div className="flex flex-col items-center">
@@ -231,6 +296,7 @@ const Guidance = () => {
             </div>
           ) : (
             <GuidanceTable
+              userID={userID}
               data={data}
               pagination={paginationInfo}
               currentPage={currentPage}
@@ -242,7 +308,7 @@ const Guidance = () => {
               }}
             />
           )}
-        </div>
+        {/* </div> */}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ interface JoinedModalProps {
   onClose: () => void;
   userDetails: any;
   job: JobApplicationDetailsDto | null;
+  onSuccess: () => void;
 }
 
 export default function JoinedModal({
@@ -18,6 +19,7 @@ export default function JoinedModal({
   onClose,
   userDetails,
   job,
+  onSuccess,
 }: JoinedModalProps) {
   const [joiningDate, setJoiningDate] = useState<string>("");
   const [hrName, setHrName] = useState<string>("");
@@ -25,6 +27,20 @@ export default function JoinedModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  
+    useEffect(() => {
+    if (isOpen) {
+      setVisible(true);
+      const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimatingIn(false);
+      const timer = setTimeout(() => setVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
@@ -34,6 +50,7 @@ export default function JoinedModal({
     // auto-close after 5s
     setTimeout(() => {
       setShowSuccessModal(false);
+      onSuccess()
       onClose();
     }, 5000);
 
@@ -46,12 +63,23 @@ export default function JoinedModal({
   /** Close success modal manually */
   function closeSuccess() {
     setShowSuccessModal(false);
+    onSuccess()
     onClose();
   }
 
   const handleSubmit = async () => {
     setLoading(true);
     setError(null);
+    
+    const selectedDate = new Date(joiningDate);      
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+    selectedDate.setHours(0, 0, 0, 0);
+    if (selectedDate > today) {
+      toast.error('Date cannot be in the future.',getToastOptions({}));
+      return;
+    }
+
     if (!message || !joiningDate || !hrName) {
       toast.error("HR Name, Message, and Date are required", getToastOptions());
       setLoading(false);
@@ -71,6 +99,7 @@ export default function JoinedModal({
 
     try {
       const payload = {
+        applicantName:userDetails.name,
         userId: userDetails?.sub,
         emailId: userDetails?.email,
         userType: "CAND",
@@ -107,8 +136,17 @@ export default function JoinedModal({
     <>
       {/* Main Modal */}
       {isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-6 w-full max-w-lg">
+      <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+           isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"} ${visible ? "visible" : "invisible"}`}>
+      <div className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[75vh] ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"}`}>
+        <button
+          className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
+          onClick={onClose}
+          disabled={loading}
+        >
+          ×
+        </button>
             {/* Joining Date */}
             <div className="mb-4">
               <label className="block text-gray-700 mb-2">
@@ -118,6 +156,7 @@ export default function JoinedModal({
                 <input
                   type={joiningDate ? "date" : "text"}
                   value={joiningDate}
+                  max={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setJoiningDate(e.target.value)}
                   onFocus={(e) => (e.target.type = "date")}
                   placeholder="Select date"
@@ -135,7 +174,7 @@ export default function JoinedModal({
                 type="email"
                 value={hrName}
                 onChange={(e) => setHrName(e.target.value)}
-                placeholder="Write email address"
+                placeholder="Write HR name"
                 className="w-full bg-gray-100 rounded-lg p-3 focus:outline-none"
               />
             </div>

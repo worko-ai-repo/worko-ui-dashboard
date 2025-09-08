@@ -39,47 +39,119 @@ const Referrals = () => {
   const { user, isLoadingUser } = useDashboardContext();
 
     const APP_API_URI = import.meta.env.APP_API_URI
-    const APP_JOBS_API_URI= import.meta.env.APP_JOBS_API_URI
 
-  const fetchReferrals = useCallback(
-    async (
-      page = currentPage,
-      size = pageSize,
-      lastKey = "",
-      searchFilters = filters,
-      isSearch = false
-    ) => {
-      if (!user?.email) return;
+//below is calling api by using map
+//     const fetchReferrals = useCallback(
+//   async (
+//     page = currentPage,
+//     size = pageSize,
+//     lastKey = "",
+//     searchFilters = filters,
+//     isSearch = false
+//   ) => {
+//     if (!user?.email) return;
 
-      setIsLoading(true);
-      try {
-        const url = `${APP_API_URI}/user/${user.email}/referral?status=REJECTED`;
-        const { response, error } = await httpServiceObj.get(url, true, {}, true);
+//     setIsLoading(true);
+//     const statuses = ["AWAITING", "ACCEPTED", "REJECTED", "CANCELLED", "WITHDRAWN", "DONE"];
 
-        if (response) {
-          setData(response);
-          if (response.pagination) {
-            setPaginationInfo(response.pagination);
-            if (isSearch || page === 1) {
-              paginationKeysRef.current = { 1: "" };
-              if (response.pagination.lastKey) {
-                paginationKeysRef.current[2] = response.pagination.lastKey;
-              }
-            } else if (response.pagination.lastKey) {
-              paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+//     try {
+//       console.log("Fetching referrals for statuses:", statuses);
+
+//       const allResponses = await Promise.all(
+//         statuses.map(async (status) => {
+//           const url = `${APP_API_URI}/user/${user.email}/referral?status=${status}`;
+//           console.log(`[REQUEST] GET ${url}`);
+
+//           const { response, error } = await httpServiceObj.get(url, true, {}, true);
+
+//           if (error) {
+//             console.error(`[ERROR] Status: ${status}`, error);
+//             return null;
+//           }
+
+//           console.log(`[RESPONSE] Status: ${status}`, response);
+
+//           return {
+//             status,
+//             data: response,
+//           };
+//         })
+//       );
+
+//       const validResponses = allResponses.filter(Boolean);
+//       console.log("Valid responses received:", validResponses.map((r) => r.status));
+
+//       const combinedData = validResponses.flatMap((res) => res.data?.data || []);
+//       console.log("Combined referral data:", combinedData);
+
+//       setData(combinedData);
+
+//       // Use pagination only from "AWAITING" status (as per original logic)
+//       const firstResponse = validResponses.find((res) => res.status === "AWAITING");
+//       if (firstResponse?.data?.pagination) {
+//         console.log("Pagination info (from AWAITING):", firstResponse.data.pagination);
+
+//         setPaginationInfo(firstResponse.data.pagination);
+//         if (isSearch || page === 1) {
+//           paginationKeysRef.current = { 1: "" };
+//           if (firstResponse.data.pagination.lastKey) {
+//             paginationKeysRef.current[2] = firstResponse.data.pagination.lastKey;
+//           }
+//         } else if (firstResponse.data.pagination.lastKey) {
+//           paginationKeysRef.current[page + 1] = firstResponse.data.pagination.lastKey;
+//         }
+//       }
+//     } catch (err) {
+//       console.error("Exception in fetchReferrals:", err);
+//     } finally {
+//       setIsLoading(false);
+//     }
+//   },
+//   [user, pageSize, searchBarText, filters, currentPage]
+// );
+
+const fetchReferrals = useCallback(
+  async (
+    page: number = 1,
+    size: number = pageSize,
+    lastKey: string = "",
+    searchFilters = filters,
+    isSearch = false
+  ) => {
+    if (!user?.email) return;
+
+    setIsLoading(true);
+    try {
+      const url = `${APP_API_URI}/user/${user.email}/referral?lastKey=${lastKey}&pageSize=${size}`;
+      const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true, {}, true);
+
+      if (response) {
+        setData(response);
+        console.log(response)
+        if (response.pagination) {
+          setPaginationInfo(response.pagination);
+
+          if (isSearch || page === 1) {
+            paginationKeysRef.current = { 1: "" };
+            if (response.pagination.lastKey) {
+              paginationKeysRef.current[2] = response.pagination.lastKey;
             }
+          } else if (response.pagination.lastKey) {
+            paginationKeysRef.current[page + 1] = response.pagination.lastKey;
           }
-        } else if (error) {
-          console.error("Error fetching referrals:", error);
         }
-      } catch (err) {
-        console.error("Exception in fetchReferrals:", err);
-      } finally {
-        setIsLoading(false);
+      } else if (error) {
+        console.error("Error fetching referrals:", error);
       }
-    },
-    [user, pageSize, searchBarText, filters, currentPage]
-  );
+    } catch (err) {
+      console.error("Exception in fetchReferrals:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [user, pageSize, filters, APP_API_URI]
+);
+
 
   // search handlers
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
@@ -100,15 +172,15 @@ const Referrals = () => {
 
   const debouncedSearch = useMemo(() => debounce(handleSearch, 500), [handleSearch]);
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      if (page === currentPage) return;
-      setCurrentPage(page);
+  const handlePageChange = useCallback((page: number) => {
       const lastKey = paginationKeysRef.current[page] || "";
+      
+      setCurrentPage(page);
       fetchReferrals(page, pageSize, lastKey);
     },
-    [currentPage, fetchReferrals, pageSize]
+    [fetchReferrals, pageSize]
   );
+
 
   const handlePageSizeChange = useCallback(
     (size: number) => {
@@ -122,7 +194,7 @@ const Referrals = () => {
   );
 
   const handleGetNewReferral = () => {
-    window.location.href = `${window.location.origin}/v0/referrals`;
+    window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}referrals`;
   };
 
   useEffect(() => {

@@ -95,13 +95,13 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (NavItem: NavItem) => {
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
-
+      
       const currentPath = location.pathname;
       //If the current path is admin, switch to corporate dashboard
       if (currentPath.includes("admin")) {
         onNavigate("CANDIDATE", "jobs");
         return;
-      } else if (currentPath.includes("candidate")) {
+      } else if (currentPath.includes("candidate") || currentPath.includes("employee")) {
         //If the current path is corporate, switch to admin dashboard
         onNavigate("ADMIN", "ajobs");
         return;
@@ -200,7 +200,8 @@ const Sidebar: React.FC<SidebarProps> = ({
               CognitoServiceObj.handleSignOut();
               secureStorage.clear();
               setUpdateCheck((prev: boolean) => !prev);
-              navigate("/login");
+              // navigate("/auth/login");
+              window.location.href = "/";
             }}
             className="hover:text-red-500 text-[13px] text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-1 rounded"
             aria-label="Logout">

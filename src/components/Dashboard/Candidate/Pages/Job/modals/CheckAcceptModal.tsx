@@ -1,13 +1,16 @@
 import { AwsS3FileUploadResponse } from '@Interfaces/Auth.dto';
 import { JobApplicationDetailsDto } from '@Interfaces/CorporateDashboard.dto';
 import httpServiceObj from '@Services/ApiHandler.service';
+import { getToastOptions } from 'lib-worko-ui';
 import React, { useEffect, useState } from 'react';
+import { toast } from 'react-toastify';
 
 type CheckAcceptModalProps = {
   userDetails: any;
   job: JobApplicationDetailsDto;
   onClose: () => void;
   onConfirm: () => Promise<void>;
+  onSuccess: () => void;
 };
 
 const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
@@ -15,22 +18,26 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   onClose,
   onConfirm,
   userDetails,
+  onSuccess,
 }) => {
-  const [loading, setLoading] = useState(false);
+  const [loadingAccept, setLoadingAccept] = useState(false);
+  const [loadingRaise, setLoadingRaise] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [action, setAction] = useState<'accept' | 'raise' | null>(null);
   const [issueDetail, setIssueDetail] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
+  const [visible, setVisible] = useState(false);
+
 
   const handleConfirm = async (nextAction: 'accept' | 'raise') => {
-    setLoading(true);
     setError(null);
 
     try {
       if (nextAction === 'accept') {
+        setLoadingAccept(true);
         console.log("Attempting to accept...");
-
         const payload = {
+          applicantName:userDetails.name,
           userId: userDetails?.sub,
           emailId: userDetails?.email,
           "userType": "CAND",
@@ -49,15 +56,16 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to accept the offer. Please try again.');
           return;
         }
-
+        toast.success("Offer Accepted Successfully",getToastOptions({}))
         console.log('Accepted successfully:', response);
       } else if (nextAction === 'raise') {
         if (!issueDetail.trim()) {
           setError('Please provide a valid issue before submitting.');
           return;
         }
-
+        setLoadingRaise(true);
         const payload = {
+          applicantName:userDetails.name,
           userId: userDetails?.sub,
           emailId: userDetails?.email,
           userType: "CAND",
@@ -78,15 +86,16 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to raise the issue. Please try again.');
           return;
         }
-
+        toast.success("Issue Raised Successfully",getToastOptions({}))
         console.log('Issue raised successfully:', response);
       }
-
+      onSuccess();
       onClose();
     } catch (err) {
       setError('Something went wrong. Please try again.');
-    } finally {
-      setLoading(false);
+    }finally{
+      setLoadingAccept(false);
+      setLoadingRaise(false);
     }
   };
 
@@ -135,9 +144,19 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
     postData();
   }, [job]);
 
+  useEffect(() => {
+  const timer = setTimeout(() => setVisible(true), 10);
+  return () => clearTimeout(timer);
+}, []);
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-      <div className="bg-white rounded-xl p-6 max-w-3xl w-full shadow-lg flex flex-col h-[90vh] relative">
+        <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
+      visible ? "bg-black bg-opacity-50" : "bg-black bg-opacity-0"
+    }`}>
+
+    <div className={`bg-white rounded-l-xl p-6 max-w-3xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
+      visible ? "translate-x-0" : "translate-x-full"
+    }`}>
 
         {/* Cancel Button */}
         <button
@@ -166,14 +185,14 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
               setAction('accept');
               handleConfirm('accept');
             }}
-            disabled={loading}
+            disabled={loadingAccept}
             className={`px-6 py-3 rounded-xl border 
               ${action === 'accept'
                 ? 'bg-white text-blue-600 border-blue-600'
                 : 'bg-blue-600 text-white'} 
               disabled:opacity-50`}
           >
-            {loading ? 'Accepting...' : 'Accept'}
+            {loadingAccept  ? 'Accepting...' : 'Accept'}
           </button>
 
           <button
@@ -202,9 +221,9 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
               <button
                 onClick={() => handleConfirm('raise')}
                 className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-                disabled={!issueDetail.trim()}
+                disabled={!issueDetail.trim() || loadingRaise}
               >
-                Submit
+                {loadingRaise ? 'Submitting...' : 'Submit'}
               </button>
             </div>
           </div>

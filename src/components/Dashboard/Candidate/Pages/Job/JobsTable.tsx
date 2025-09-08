@@ -12,6 +12,11 @@ import { JobApplicationStatusType } from 'src/types/JobsAndApplication.type';
 import { JobApplicationDetailsDto } from '@Interfaces/CorporateDashboard.dto';
 import CheckAcceptModal from './modals/CheckAcceptModal';
 import JoinedModal from './modals/JoinedModal';
+import httpServiceObj from '@Services/ApiHandler.service';
+import RequestFolloupModal from './modals/RequestFolloupModal';
+import { toast } from 'react-toastify';
+import { getToastOptions } from '@Utils/Toast.utils';
+import ViewDetailsModal from './modals/ViewDetailsModal';
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -37,6 +42,8 @@ const JobsTable = memo(({
   const [processingJobId, setProcessingJobId] = useState<string | null>(null);
   const [showDocumentUploadModal, setShowDocumentUploadModal] = useState(false);
   const [showJoinedModal, setShowJoinedModal] = useState<boolean>(false);
+  const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
+  const [viewDetailsContent, setViewDetailsContent] = useState<string>('');
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -45,7 +52,17 @@ const JobsTable = memo(({
   const [requestedDocumentsList, setRequestedDocumentsList] = useState<JobApplicationDetailsDto>();
   const [showCheckAcceptModal, setShowCheckAcceptModal] = useState(false);
   const [currentJobForCheckAccept, setCurrentJobForCheckAccept] = useState<JobApplicationDetailsDto | null>(null);
+  const [modalMessage, setModalMessage] = React.useState<{
+  message: string;
+  isError: boolean;
+  open: boolean;
+}>({ message: "", isError: false, open: false });
+  const [parsingJobId, setParsingJobId] = useState<string>("")
 
+  const [isError, setIsError] = useState(false);
+
+  const APP_API_URI= import.meta.env.APP_API_URI
+  const APP_JOBS_API_URI= import.meta.env.APP_JOBS_API_URI
   // Map the status to action for the specific cases
   const getActionFromStatus = (status: string): string | null => {
     switch (status) {
@@ -108,49 +125,53 @@ const jobs = processedJobs || [];
     if (job.rejectionFeedbackBySystem) {
       setFeedbackContent(job.rejectionFeedbackBySystem);
       setShowFeedbackModal(true);
+    }else{
+      toast.error("No feedback Found",getToastOptions({}))
     }
   }, []);
   
+  //handling requestfollowup and modal
+  const requestFollowup = async (id: string) => {
+    const payload = { applicationDate: new Date().toISOString() };
+    const url = `${APP_JOBS_API_URI}/job-application/${id}/request-feedback`;
+
+    try {
+      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+
+      if (!error) {
+        setModalMessage({
+          message: "Your request has been successfully sent to the HR team. Please check your email for feedback or a reply.",
+          isError: false,
+          open: true,
+        });
+      } else {
+        setModalMessage({
+          message: `Error: ${error.message}`,
+          isError: true,
+          open: true,
+        });
+      }
+    } catch (err) {
+      setModalMessage({
+        message: `Error: ${err.message}`,
+        isError: true,
+        open: true,
+      });
+    }
+  };
+  const closeModal = () => {
+    setModalMessage(prev => ({ ...prev, open: false }));
+    if (!modalMessage.isError && onRefresh) {
+      onRefresh(); // Call parent's refresh function
+    }
+  };
+
+
   const handleSubmitDocs = (submittedFiles: Record<string, File | null>) => {
   console.log("Submitted files:", submittedFiles);
     // TODO: handle file upload
   };
-  // Function to handle action button clicks (old function)
-  // const handleActionClick = useCallback(async (type: string, job: JobApplicationDetailsDto) => {
-  //   if (!user?.email) return;
-    
-  //   setProcessingJobId(job.id);
-    
-  //   try {
-  //     let result;
-      
-  //     switch (type) {
-  //       case 'VIEW_FEEDBACK':
-  //         handleViewFeedback(job);
-  //         break;
-          
-  //       case 'CHECK_ACCEPT':
-  //         result = await JobService.acceptOffer(job.id, user.email);
-  //         if (result.response) {
-  //           onRefresh();
-  //         }
-  //         break;
-          
-  //       case 'JOINED':
-  //         result = await JobService.markAsJoined(job.id, user.email);
-  //         if (result.response) {
-  //           onRefresh();
-  //         }
-  //         break;
-          
-  //       // Add other action handlers as needed
-  //     }
-  //   } catch (error) {
-  //     console.error(`Error processing action ${type}:`, error);
-  //   } finally {
-  //     setProcessingJobId(null);
-  //   }
-  // }, [handleViewFeedback, onRefresh, user?.email]);
+
 
   const handleActionClick = useCallback(async (type: string, job: JobApplicationDetailsDto) => {
   if (!user?.email) return;
@@ -191,8 +212,8 @@ const jobs = processedJobs || [];
         if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
             console.log(job)
             setRequestedDocumentsList(job)
+            setParsingJobId(job.id)
           }
-        // TODO: Add actual document submission logic here
         break;
 
       case 'APPLIED':
@@ -229,6 +250,7 @@ const jobs = processedJobs || [];
           if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
               console.log(job)
               setRequestedDocumentsList(job)
+              setParsingJobId(job.id)
           }
         break;
 
@@ -238,6 +260,7 @@ const jobs = processedJobs || [];
             if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
                 console.log(job)
                 setRequestedDocumentsList(job)
+                setParsingJobId(job.id)
             }
         break;
         
@@ -254,8 +277,10 @@ const jobs = processedJobs || [];
 }, [handleViewFeedback, onRefresh, user?.email]);
 
 
-  const MatchingScoreCircle = memo(({ score }: { score: number }) => (
-    <div className="w-20 flex mb-2 flex-col items-center justify-center gap-px text-base text-green-500">
+  const MatchingScoreCircle = memo((
+      { score, scoreDetails }: { score: number; scoreDetails?: any }
+    ) => (
+    <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
       <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
         <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
           <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
@@ -271,8 +296,13 @@ const jobs = processedJobs || [];
           />
         </svg>
         <div className="absolute font-semibold text-xs">{score}%</div>
+        <button 
+          onClick={()=>{        
+            setShowViewDetails(true)
+            setViewDetailsContent(scoreDetails)}}
+          className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details
+        </button>
       </div>
-      <span className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details</span>
     </div>
   ));
 
@@ -306,9 +336,13 @@ const jobs = processedJobs || [];
     
   return (
     <div
-      className={`rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center whitespace-normal break-words max-w-[160px]`}
+      className={`rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center max-w-[160px]`}
     >
-      <div className="tracking-wide leading-snug text-sm">{config.label}</div>
+      <div 
+      className="tracking-wide leading-snug text-xs truncate whitespace-nowrap overflow-hidden"
+      title={config.label}>
+        {config.label}
+      </div>
     </div>
   );
 });
@@ -396,36 +430,77 @@ const jobs = processedJobs || [];
       key: "matchingScore",
       label: "Matching Score",
       sortable: true,
-      render: (row: JobApplicationDetailsDto) => <MatchingScoreCircle score={row.matchingScore} />
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex justify-center">
+          <div>
+            <MatchingScoreCircle 
+              score={row.matchingScore ?? 0}
+              scoreDetails={row}  />
+          </div>
+       </div>
+      )
     },
     {
       key: "status",
       label: "Status",
       sortable: true,
-      render: (row: JobApplicationDetailsDto) => <StatusBadge status={row.status} />
+      render: (row: JobApplicationDetailsDto) =>( 
+        <div className="flex justify-center">
+          <StatusBadge status={row.status} />
+        </div>
+    )
     },
     {
       key: "action",
       label: "Action",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => row.action ? 
-        <ActionButton type={row.action} job={row} /> : null
+        <div className="flex justify-center">
+        <ActionButton type={row.action} job={row} />
+        </div> :null
     },
     {
-      key: "followUp",
-      label: "Follow up",
-      render: () => (
-        <button className="w-14 h-11 rounded-xl bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6] flex items-center justify-center">
-          <img src={askQuestion} alt="Ask question" />
+  key: "followUp",
+  label: "Follow up",
+  render: (row: JobApplicationDetailsDto) => {
+    const isDisabled = !!row.followUpRequest?.[0];
+
+    return (
+      <div className="flex justify-center">
+      <div className="relative group">
+        <button
+          onClick={() => !isDisabled && requestFollowup(row.id)}
+          disabled={isDisabled}
+          className={`w-14 h-11 rounded-xl flex items-center justify-center transition-all
+            ${isDisabled
+              ? "bg-gray-300 cursor-not-allowed grayscale"
+              : "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6] hover:brightness-105"}`}
+        >
+          <img
+            src={askQuestion}
+            alt="Ask question"
+            className={`transition-all ${isDisabled ? "opacity-60" : ""}`}
+          />
         </button>
-      )
-    },
-    {
-      key: "jobType",
-      label: "Job Type",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => <StatusBadge status={row.jobType} />
-    }
+
+        {/* Hover Cross Icon for Disabled Button */}
+        {isDisabled && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity">
+          </div>
+        )}
+      </div>
+      </div>
+    );
+  }
+},
+    // dont need job type for now maybe required in future
+    // {
+    //   key: "jobType",
+    //   label: "Job Type",
+    //   sortable: true,
+    //   render:() => <p>Internal</p>
+    //   // render: (row: JobApplicationDetailsDto) => <StatusBadge status={row.jobType} />
+    // }
   ];
 
   const handlePageSizeChange = (newPageSize: number) => {
@@ -476,17 +551,37 @@ const jobs = processedJobs || [];
   }, [jobs, sortField, sortOrder]);
 
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
+      if (row.statusTracker[0].newStatus === "REJECTED") {
+    return null;
+      }
     if (row.statusTracker && row.statusTracker.length > 0) {
       return <Stepper statusTracker={row.statusTracker[row.statusTracker.length-1]} />;
     }
     return row.applicationSteps ? <Stepper steps={row.applicationSteps} /> : null;
   };
 
+  //old toogle
+  //     const toggleExpand = (id: string) => {
+  //   setExpandedRows(prev => 
+  //     prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+  //   );
+  // };
+
   const toggleExpand = (id: string) => {
-  setExpandedRows(prev => 
-    prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-  );
-};
+    const row = sortedData.find(item => item.id === id);
+    const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
+
+    if (latestStatus === "REJECTED") {
+      return; // Don't allow expansion for rejected rows
+    }
+
+    setExpandedRows(prev =>
+      prev.includes(id)
+        ? prev.filter(rowId => rowId !== id)
+        : [...prev, id]
+    );
+  };
+
 
 console.log({ 
   paginationCount: pagination?.count, 
@@ -525,13 +620,24 @@ console.log({
         onClose={() => setShowFeedbackModal(false)} 
       />
 
+      <ViewDetailsModal 
+        show={showViewDetails} 
+        viewDetailsContent={viewDetailsContent} 
+        onClose={() => setShowViewDetails(false)} 
+      />
+
       <SubmitDocumentModal
+        userDetails={user}
         show={showDocumentUploadModal}
         documents={requestedDocumentsList}
         onClose={() => setShowDocumentUploadModal(false)}
         onSubmit={handleSubmitDocs}
+        onSuccess={() => {
+          setShowDocumentUploadModal(false);
+          onRefresh();
+        }}
         userID={user?.sub ?? ""}
-        jobId={processingJobId ?? ""}
+        jobId={parsingJobId ?? ""}
       />
 
       {showCheckAcceptModal && currentJobForCheckAccept && (
@@ -539,6 +645,10 @@ console.log({
         userDetails={user}
         job={currentJobForCheckAccept}
         onClose={() => setShowCheckAcceptModal(false)}
+        onSuccess={() => {
+        onRefresh();
+        setShowCheckAcceptModal(false);
+      }}
         onConfirm={async () => {
           if (!user?.email || !currentJobForCheckAccept) return;
           const result = await JobService.acceptOffer(currentJobForCheckAccept.id, user.email);
@@ -555,11 +665,24 @@ console.log({
       job={currentJobForCheckAccept}
       isOpen={showJoinedModal}
       onClose={() => setShowJoinedModal(false)}
+      onSuccess={() => {
+        onRefresh();
+        setShowJoinedModal(false);
+      }}
       // onSubmit={(data) => {
       //   console.log("Form data:", data);
       //   // call JobService.markAsJoined(job.id, user.email, data)
       // }}
     />
+    {modalMessage.open && (
+      <RequestFolloupModal
+        message={modalMessage.message}
+        isError={modalMessage.isError}
+        onClose={closeModal}
+      />
+    )}
+
+
     </div>
   );
 });

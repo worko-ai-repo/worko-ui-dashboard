@@ -109,6 +109,7 @@ import email_sync from './svgs/email_sync.svg';
 import mobile_install from './svgs/mobile_install.svg';
 import cancel from './svgs/cancel.svg';
 import clap from './svgs/clap.svg';
+import chat from './svgs/chat.svg'
 
 export { 
     // Backgrounds
@@ -193,6 +194,7 @@ export {
     iHaveJoined,
     viewFeedback,
     askQuestion,
+    chat,
     magnifyingQuestion,
     checkbubble,
     Not_Responding,

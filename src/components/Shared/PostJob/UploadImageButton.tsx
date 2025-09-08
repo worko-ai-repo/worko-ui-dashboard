@@ -69,10 +69,30 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
                 throw new Error("Upload failed");
             }
 
-            const payload = {
-            ...detailsData,
-            profileImage: cloudFileName,
-            };
+            let payload = { ...detailsData };
+
+            const hasCandidateExperience =
+            'candidateExperience' in payload &&
+            payload.candidateExperience &&
+            Object.keys(payload.candidateExperience).length > 0;
+
+            const hasMultipleCandidateExperience =
+                'multipleCandidateExperience' in payload &&
+                Array.isArray(payload.multipleCandidateExperience) &&
+                payload.multipleCandidateExperience.length > 0;
+
+            if (!hasCandidateExperience && !hasMultipleCandidateExperience) {
+                payload.isCandidateFresher = true;
+            } else if (hasCandidateExperience && hasMultipleCandidateExperience) {
+                payload.isCandidateFresher = false;
+            } else if (hasMultipleCandidateExperience && !hasCandidateExperience) {
+                payload.isCandidateFresher = false;
+                payload.candidateExperience = payload.multipleCandidateExperience[0];
+            } else if (!hasMultipleCandidateExperience && hasCandidateExperience) {
+                payload.isCandidateFresher = false;
+            }
+
+            payload.profileImage = cloudFileName;
 
             // Update user profile image record on backend (adjust endpoint accordingly)
             const patchResult = await httpServiceObj.put(`/user/${email}/details`, payload, true);

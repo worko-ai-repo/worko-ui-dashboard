@@ -1,6 +1,6 @@
 import { FunctionComponent, useCallback } from 'react';
 
-interface MentorDetailsProps {
+interface GuidanceMentorModalProps {
   variant?: 'join' | 'book';
   mentorName?: string;
   mentorDetails?: string;
@@ -13,7 +13,7 @@ interface MentorDetailsProps {
   className?: string;
 }
 
-const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
+const GuidanceMentorModal: FunctionComponent<GuidanceMentorModalProps> = ({
   variant = 'join',
   mentorName = 'Sam Das',
   mentorDetails = 'Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.',
@@ -27,6 +27,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
 }) => {
   
   const onActionButtonClick = useCallback(() => {
+    console.log(variant,figmaUrl)
     if (variant === 'join') {
       window.open(figmaUrl);
     } else if (variant === 'book' && onAcceptAndPay) {
@@ -161,4 +162,4 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   );
 };
 
-export default MentorDetails;
+export default GuidanceMentorModal;

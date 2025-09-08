@@ -18,10 +18,12 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
     { key: "UNDER_EVALUATION", label: "Under evaluation" },
     { key: "PROCESSING_INTERVIEW", label: "Interview processing" },
     { key: "INTERVIEW_DONE", label: "Interviewed" },
-    { key: "HIRING_IN_PROCESS", label: "Hiring in Process" },
+    { key: "HIRING_IN_PROCESS", label: "Hiring-in Process" },
     { key: "DOCUMENT_REQUESTED", label: "Document requested" },
     { key: "DOCUMENT_SUBMITTED", label: "Document submitted" },
-    { key: "HIRED", label: "Hired" }
+    { key: "OFFER_SENT", label: "Offer received" },
+    { key: "HIRED", label: "Hired" },
+    { key: "JOINED", label: "Joined" },
   ];
 
   console.log(statusTracker)
@@ -43,16 +45,37 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
     latestDate = statusTracker.actionDate ? new Date(statusTracker.actionDate).toLocaleDateString() : "";
   }
 
+  if (latestStatus === "ACCEPTED") {
+  latestStatus = "UNDER_EVALUATION";
+  }
+  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUESTED" || latestStatus === "DOCUMENT_REVISION_REQUESTED"){
+    latestStatus = "DOCUMENT_REQUESTED";
+  }
+  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" || latestStatus === "DOCUMENT_REVISION_REQUEST_SUBMITTED"){
+    latestStatus = "DOCUMENT_SUBMITTED";
+  }
+  if(latestStatus === "REVISED_OFFER_SENT"){
+    latestStatus = "OFFER_SENT";
+  }
   // Find the index of the latest status in our steps array
   const latestStatusIndex = allSteps.findIndex(step => step.key === latestStatus);
   if (latestStatusIndex === -1) return []; // If status not found, return empty array
   
+  // use below if we want to show all remaining steps as well
+  // return allSteps.map((step, index) => ({
+  // step: step.label,
+  // date: index === latestStatusIndex ? latestDate : "",
+  // completed: index <= latestStatusIndex
+  // }));
+
   // Create the steps array with completed flags
-  return allSteps.map((step, index) => ({
-    step: step.label,
-    date: index === latestStatusIndex ? latestDate : "",
-    completed: index <= latestStatusIndex
-  }));
+  return allSteps
+    .slice(0, latestStatusIndex + 1)
+    .map((step, index) => ({
+      step: step.label,
+      date: index === latestStatusIndex ? latestDate : "",
+      completed: true
+    }));
 }
 
 const Stepper: FunctionComponent<StepperProps> = ({ steps, statusTracker }) => {

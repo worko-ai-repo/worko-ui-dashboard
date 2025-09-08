@@ -1,18 +1,30 @@
 import { useEffect, useState } from "react";
 import httpServiceObj from "@Services/ApiHandler.service";
+import { SendIcon } from "lucide-react";
+import { toast } from "react-toastify";
+import { getToastOptions } from "lib-worko-ui";
 
 const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [accountHolderName, setAccountHolderName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
+  const [reEnterAccountNumber, setReEnterAccountNumber] = useState("");
   const [ifscCode, setIfscCode] = useState("");
   const [branchName, setBranchName] = useState("");
+  const [panNumber, setPanNumber] = useState("");
+  const [amount,setAmount] = useState("")
   const [loading, setLoading] = useState(false);
+  const [visible, setVisible] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
 
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const handleSubmit = async () => {
-    if (!accountHolderName || !accountNumber || !ifscCode || !branchName) {
-      alert("Please fill all the fields");
+    if (!accountHolderName || !accountNumber || !ifscCode || !branchName || !reEnterAccountNumber || !panNumber || !amount) {
+      toast.error("Please fill all the fields",getToastOptions({}));
+      return;
+    }
+    if (accountNumber !== reEnterAccountNumber) {
+      toast.error("Account number not matching",getToastOptions({}));
       return;
     }
 
@@ -26,28 +38,51 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
         branchName,
       };
 
-      await httpServiceObj.patch(`${APP_JOBS_API_URI}/refer-and-earn/${statusData.id}/request-withdrawal
+      await httpServiceObj.patch(`/refer-and-earn/${statusData.id}/request-withdrawal
     `, payload, true);
 
-          alert("Withdrawal request submitted successfully!");
+          toast.success("Withdrawal request submitted successfully!",getToastOptions({}));
           onClose();
         } catch (error) {
           console.error("Withdrawal failed:", error);
-          alert("Something went wrong. Please try again.");
+          toast.error("Something went wrong. Please try again.",getToastOptions({}));
         } finally {
           setLoading(false);
         }
       };
+    
+    useEffect(() => {
+    if (isOpen) {
+      setVisible(true);
+      const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+      return () => clearTimeout(timer);
+    } else {
+      setIsAnimatingIn(false);
+      const timer = setTimeout(() => setVisible(false), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
-  if (!isOpen) return null;
 
-//   useEffect(() => {
-//     console.log(isOpen, onClose, referral, statusData)
-//   }, [])
+
+  // if (!isOpen) return null;
+
+  useEffect(() => {
+    console.log("statusData",statusData)
+  }, [])
   
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg p-6 w-full max-w-md relative">
+
+return (
+        <div
+          className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+          } ${visible ? "visible" : "invisible"}`}
+        >
+        <div
+          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[100vh] ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          }`}
+        >
         <button
           className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
           onClick={onClose}
@@ -56,7 +91,7 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
           ×
         </button>
 
-        <h2 className="text-lg font-bold mb-4">Withdraw Referral Bonus</h2>
+        <h2 className="text-lg font-bold mb-4 text-black">Withdraw Referral Bonus</h2>
 
         {/* {statusData && (
           <div className="mb-4 text-sm text-gray-600">
@@ -85,6 +120,14 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
           />
           <input
             type="text"
+            placeholder="Re-enter Account Number"
+            value={reEnterAccountNumber}
+            onChange={(e) => setReEnterAccountNumber(e.target.value)}
+            disabled={loading}
+            className="border p-2 rounded"
+          />
+          <input
+            type="text"
             placeholder="IFSC Code"
             value={ifscCode}
             onChange={(e) => setIfscCode(e.target.value)}
@@ -99,23 +142,40 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
             disabled={loading}
             className="border p-2 rounded"
           />
+          <input
+            type="text"
+            placeholder="Pan No"
+            value={panNumber}
+            onChange={(e) => setPanNumber(e.target.value)}
+            disabled={loading}
+            className="border p-2 rounded"
+          />
+            <input
+            type="text"
+            placeholder="Withdraw amount"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            disabled={loading}
+            className="border p-2 rounded"
+          />
         </div>
 
-        <div className="mt-6 flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            disabled={loading}
-            className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-          >
-            Cancel
-          </button>
+        <div className="mt-6 flex justify-start gap-3">
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            className="flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-3  rounded-xl hover:bg-blue-300"
           >
-            {loading ? "Submitting..." : "Submit"}
+            <SendIcon className="w-4 h-4" />
+            {loading ? "Sending OTP..." : "Send OTP"}
           </button>
+          {/* <button
+            onClick={onClose}
+            disabled={loading}
+            className="px-4 py-3 bg-gray-300 rounded-xl hover:bg-gray-400"
+          >
+            Cancel
+          </button> */}
         </div>
       </div>
     </div>

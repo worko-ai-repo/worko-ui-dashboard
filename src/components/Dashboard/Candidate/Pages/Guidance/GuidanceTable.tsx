@@ -1,9 +1,12 @@
-import { memo, useState, useCallback } from 'react';
-import Table from "../../SharedComponents/Table";
+import { memo, useState, useCallback, useMemo, useRef } from 'react';
 import { GuidanceApiResponse, GuidanceRequest, GuidancePaginationInfo } from './Guidance';
 import { useDashboardContext } from '@Context/Dashboard.context';
 import { checkbubble, eyeIcon } from '@Assets';
-import MentorDetails from '../../SharedComponents/GuidanceMentorModal';
+import GuidanceMentorModal from '../../SharedComponents/GuidanceMentorModal';
+import { DynamicTable } from "@Components/Shared/DynamicTable";
+import MentorDetails from './modals/MentorDetails';
+import AcceptAndPay from './modals/AcceptAndPay';
+import httpServiceObj from '@Services/ApiHandler.service';
 
 interface GuidanceTableProps {
   data: GuidanceApiResponse | null;
@@ -12,31 +15,35 @@ interface GuidanceTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
+  userID:string;
 }
 
-const GuidanceTable = memo(({ 
-  data, 
-  pagination,
-  currentPage,
-  onPageChange,
-  onPageSizeChange,
-  onRefresh
-}: GuidanceTableProps) => {
+interface MentorMergedData {
+  socialProfile: any | null;
+  mentorDetails: any | null;
+}
+
+const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh, userID}: GuidanceTableProps) => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
-    variant: 'join' | 'book';
+    variant: 'acceptAndPay' | 'mentorDetails';
     selectedRequest: GuidanceRequest | null;
   }>({
     isOpen: false,
-    variant: 'book',
+    variant: 'mentorDetails',
     selectedRequest: null
   });
   const { user } = useDashboardContext();
   const [localVisible, setLocalVisible] = useState(false);
+  const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
+  const [sortField, setSortField] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
+  const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
 
+  const APP_API_URI= import.meta.env.APP_API_URI
 
-  // Map guidanceRequestType to more readable format
   const formatGuidanceType = (type: string) => {
     const typeMap: {[key: string]: string} = {
       "MOCK_INTERVIEW_PREPARATION": "Mock interview/preparation",
@@ -46,54 +53,86 @@ const GuidanceTable = memo(({
       "RESUME_REVIEW": "Resume review",
       "OTHER": "Other"
     };
-    
     return typeMap[type] || type;
   };
 
-  // Function to open modal
-  const openModal = useCallback((request: GuidanceRequest, variant: 'join' | 'book') => {
+  const fetchMentorData = async (email: string): Promise<MentorMergedData> => {
+    try {
+      const socialProfileUrl = `/user/${encodeURIComponent(email)}/socialprofile`;
+      const mentorDetailsUrl = `/user/${encodeURIComponent(email)}/details`;
+
+      const [{ response: socialProfileResponse, error: socialProfileError }, { response: mentorDetailsResponse, error: mentorDetailsError }] = await Promise.all([
+        httpServiceObj.get(socialProfileUrl, true, {}),
+        httpServiceObj.get(mentorDetailsUrl, true, {}),
+      ]);
+
+      if (socialProfileError || mentorDetailsError) {
+        console.error('Error fetching mentor data:', socialProfileError || mentorDetailsError);
+        return { socialProfile: null, mentorDetails: null };
+      }
+      // console.log(socialProfileResponse)
+      return {
+        socialProfile: Array.isArray(socialProfileResponse) && socialProfileResponse.length > 0 ? socialProfileResponse[0] : null,
+        mentorDetails: Array.isArray(mentorDetailsResponse) && mentorDetailsResponse.length > 0 ? mentorDetailsResponse[0] : null,
+      };
+    } catch (error) {
+      console.error('Exception in fetchMentorData:', error);
+      return { socialProfile: null, mentorDetails: null };
+    }
+  };
+
+
+  // Open modal and fetch mentor data if not cached
+  const openModal = useCallback(async (request: GuidanceRequest, variant: 'acceptAndPay' | 'mentorDetails') => {
     setModalState({
       isOpen: true,
       variant,
       selectedRequest: request
     });
     setLocalVisible(true);
-  }, []);
 
-  // Function to close modal
+    if (!request.id) return;
+
+    // If data already cached, do nothing
+    if (mentorDataCache.current.has(request.id)) return;
+
+    setMentorDataLoading(true);
+    const mentorEmail = request.mentorDetails?.userEmail || user?.email || '';
+    if (!mentorEmail) {
+      setMentorDataLoading(false);
+      return;
+    }
+
+    const data = await fetchMentorData(mentorEmail);
+    mentorDataCache.current.set(request.id, data);
+    setMentorDataLoading(false);
+  }, [user?.email]);
+
   const closeModal = useCallback(() => {
     setLocalVisible(false);
-    // delay actual modal unmount
-  setTimeout(() => {
-    setModalState({
-      isOpen: false,
-      variant: 'book',
-      selectedRequest: null
-    });
-  }, 300);
+    setTimeout(() => {
+      setModalState({
+        isOpen: false,
+        variant: 'mentorDetails',
+        selectedRequest: null
+      });
+    }, 300);
   }, []);
 
-  // Function to handle viewing details
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
-    openModal(request, 'join');
+    openModal(request, 'acceptAndPay');
+    console.log(request)
   }, [openModal]);
 
-  // Function to handle accept and pay
   const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     if (!user?.email) return;
-    
-    // Open modal first
-    openModal(request, 'book');
+    openModal(request, 'mentorDetails');
   }, [openModal, user?.email]);
 
-  // Function to handle actual acceptance and payment from modal
   const handleModalAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     setProcessingRequestId(request.id);
-    
     try {
-      // Implement API call for accepting and paying
       console.log("Accept and pay for request:", request.id);
-      // After successful API call, refresh the data
       onRefresh();
       closeModal();
     } catch (error) {
@@ -103,128 +142,219 @@ const GuidanceTable = memo(({
     }
   }, [onRefresh, closeModal]);
 
-  // Define table columns
   const columns = [
     {
       key: "guidanceRequestType",
-      header: 'Guidance Type',
+      label: 'Guidance Type',
       sortable: true,
-      className: "tracking-wide leading-6",
-      render: (value: string) => <div>{formatGuidanceType(value)}</div>
+      render: (row: GuidanceRequest) => <div>{formatGuidanceType(row.guidanceRequestType)}</div>
     },
     {
       key: "companyName",
-      header: 'Company',
+      label: 'Company',
       sortable: true,
-      className: "tracking-wide leading-6 text-center"
+      render: (row: GuidanceRequest) => <div className="text-center">{row.companyName}</div>
     },
     {
       key: "dateNeeded",
-      header: 'Date needed by',
+      label: 'Date needed by',
       sortable: true,
-      className: "tracking-wide leading-6 text-nowrap"
+      render: (row: GuidanceRequest) => row.dateNeeded
     },
     {
       key: "jobUrl",
-      header: 'Job URL',
+      label: 'Job URL',
       sortable: true,
-      render: (value: string) => (
-        <div className="tracking-wide leading-6 font-semibold text-blue-600 cursor-pointer">
-          <a href={value} target="_blank" rel="noopener noreferrer">Link</a>
-        </div>
+      render: (row: GuidanceRequest) => (
+        <a 
+          href={row.jobUrl} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="tracking-wide leading-6 font-semibold text-blue-600 cursor-pointer"
+        >
+          Link
+        </a>
       )
     },
     {
       key: "guidanceRequestDescription",
-      header: 'Requirement detail',
+      label: 'Requirement detail',
       sortable: true,
-      className: "tracking-wide truncate leading-6 max-w-xs",
-    },
-    {
-      key: "status",
-      header: 'Status',
-      sortable: true,
-      className: "",
-      render: (value: string, item: GuidanceRequest) => (
-        <div className={`px-4 py-4 rounded-3xl ${item.statusColor?.bg || 'bg-gray-200'} ${item.statusColor?.text || 'text-gray-900'} flex items-center justify-center`}>
-          <div className="tracking-wide leading-6">{value}</div>
+      render: (row: GuidanceRequest) => (
+        <div className="flex justify-center">
+          <p className="tracking-wide truncate leading-6 max-w-xs">
+            {row.guidanceRequestDescription}
+          </p>
         </div>
       )
     },
+{
+  key: "status",
+  label: 'Status',
+  sortable: true,
+  render: (row: GuidanceRequest) => (
+    <div
+      className={`w-32 rounded-full px-1 py-3 text-sm font-medium
+        inline-flex items-center justify-center
+        truncate
+        ${row.statusColor?.bg || 'bg-gray-200'}
+        ${row.statusColor?.text || 'text-gray-900'}
+        max-w-[200px]
+        text-xs
+      `}
+      title={row.statusColor?.label}
+    >
+        <span className="truncate block max-w-full text-center">
+          {row.statusColor?.label || row.status}
+        </span>
+    </div>
+
+          //     <div className="flex justify-center ">
+          // <div
+          //     className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${              
+          //       row.status === "ACCEPTED"
+          //       ? "bg-green-100 text-green-500"
+          //       : row.status === "PENDING"
+          //       ? "bg-yellow-100 text-yellow-600"
+          //       : row.status === "AWAITING"
+          //       ? "bg-blue-100 text-blue-500"
+          //       : row.status === "DONE"
+          //       ? "bg-gray-100 text-gray-600"
+          //       : "bg-red-400 text-white"
+          //   }`}
+          // >
+          //   {row.status}
+          // </div>
+          // </div>
+  )
+},
+
     {
-      key: "",
-      header: 'Mentor Details',
-      render: (value: any, item: GuidanceRequest) => {
-        const isProcessing = processingRequestId === item.id;
-        
+      key: "mentorDetails",
+      label: "Mentor Details",
+      render: (row: GuidanceRequest) => {
+        if (row.status === "PENDING" || row.status === "CANCELLED") return null;
+
+        const isProcessing = processingRequestId === row.id;
+
         return (
-          <div 
-            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? 'opacity-75' : ''}`}
-            onClick={() => !isProcessing && handleViewDetails(item)}
+          <div
+            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
+            onClick={() => !isProcessing && handleViewDetails(row)}
           >
             {isProcessing ? (
               <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
             ) : (
-              <img src={eyeIcon} className='h-6 w-6' alt="View feedback" />
+              <img src={eyeIcon} className="h-6 w-6" alt="View feedback" />
             )}
             <div className="ml-2 tracking-wide leading-6 font-semibold">
-              {isProcessing ? 'Loading...' : 'See details'}
+              {isProcessing ? "Loading..." : "See details"}
             </div>
           </div>
         );
-      }
+      },
     },
     {
-      key: "",
-      header: <div className="flex items-center justify-center"><span>Accept & pay</span></div>,
-      render: (value: any, item: GuidanceRequest) => {
-        const isProcessing = processingRequestId === item.id;
-        
+      key: "acceptPay",
+      label: "Accept & pay",
+      render: (row: GuidanceRequest) => {
+        if (row.status !== "MENTOR_ASSIGNED") return null;
+
+        const isProcessing = processingRequestId === row.id;
+
         return (
-          <button 
-            className={`rounded-lg w-14 h-11 ${isProcessing ? 'bg-blue-300' : 'bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]'} flex items-center justify-center text-white ${isProcessing ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'}`}
-            onClick={() => !isProcessing && handleAcceptAndPay(item)}
-            disabled={isProcessing}
-          >
-            {isProcessing ? (
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            ) : (
-              <img src={checkbubble} alt="Ask question" />
-            )}
-          </button>
+          <div className="flex justify-center">
+            <button 
+              className={`rounded-lg w-14 h-11 ${
+                isProcessing ? 'bg-blue-300' : 'bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]'
+              } flex items-center justify-center text-white ${
+                isProcessing ? 'opacity-75 cursor-not-allowed' : 'cursor-pointer'
+              }`}
+              onClick={() => !isProcessing && handleAcceptAndPay(row)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <img src={checkbubble} alt="Ask question" />
+              )}
+            </button>
+          </div>
         );
       }
     }
+
   ];
 
   const guidanceRequests = data?.data || [];
 
+  const sortData = (rows: GuidanceRequest[], field: string): GuidanceRequest[] => {
+    if (!field) return rows;
+    return [...rows].sort((a, b) => {
+      let aValue = (a as any)[field];
+      let bValue = (b as any)[field];
+      if (field === "dateNeeded") {
+        aValue = new Date(aValue).getTime();
+        bValue = new Date(bValue).getTime();
+      }
+      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const handleSortChange = (columnKey: string) => {
+    if (sortField === columnKey) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortField(columnKey);
+      setSortOrder("asc");
+    }
+  };
+
+  const sortedData = useMemo(
+    () => sortData(guidanceRequests, sortField),
+    [guidanceRequests, sortField, sortOrder]
+  );
+
+  const handlePageSizeChange = (newPageSize: number) => {
+    setPageSize(newPageSize);
+    onPageSizeChange(newPageSize);
+  };
+
+  const keyExtractor = (item: GuidanceRequest) => item.id;
+
+  // Get merged mentor data from cache for modal
+  const currentMentorData: MentorMergedData | undefined = modalState.selectedRequest
+    ? mentorDataCache.current.get(modalState.selectedRequest.id)
+    : undefined;
+
   return (
     <div className="w-full font-poppins">
-      <Table
-        data={guidanceRequests}
-        columns={columns}
-        keyExtractor={(item) => item.id}
-        rowClassName={() => "relative rounded-xl border-b text-sm hover:bg-gray-50"}
-        headerClassName='bg-cyan-50 text-nowrap text-sm py-3 px-4 mb-2'
-        pagination={pagination}
-        onPageChange={onPageChange}
-        onPageSizeChange={onPageSizeChange}
-        currentPage={currentPage}
-        emptyStateComponent={
-          <div className="w-full p-12 flex flex-col items-center justify-center">
-            <div className="text-gray-400 text-6xl mb-4">📋</div>
-            <h3 className="text-lg font-semibold text-gray-700">No guidance requests found</h3>
-            <p className="text-gray-500 mt-2">Try adjusting your search filters or create a new request</p>
-          </div>
-        }
-      />
+      <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+        <DynamicTable<GuidanceRequest>
+          columns={columns}
+          rows={sortedData}
+          pageSize={pageSize}
+          setPageSize={handlePageSizeChange}
+          handlePreviousPage={() => onPageChange(currentPage - 1)}
+          handleNextPage={() => onPageChange(currentPage + 1)}
+          hasPrevPage={currentPage > 1}
+          hasNextPage={!!pagination?.lastKey}
+          emptyStateMessage="No guidance requests found"
+          emptyStateSubMessage="Try adjusting your filters"
+          onSortChange={handleSortChange}
+          sortField={sortField}
+          sortOrder={sortOrder}
+          enableSelect={false}
+          keyExtractor={keyExtractor}
+        />
+      </div>
 
-      {/* Modal Overlay */}
+      {/* Modal */}
       {modalState.selectedRequest && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="relative">
-            {/* Close button */}
             <button
               onClick={closeModal}
               className="fixed top-0 right-0 bg-white rounded-full w-8 h-8 flex items-center justify-center shadow-lg hover:bg-gray-100 z-10"
@@ -233,19 +363,30 @@ const GuidanceTable = memo(({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            
-            {/* Modal Content */}
-            <MentorDetails
-              className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
-              variant={modalState.variant}
-              mentorName={modalState.selectedRequest?.mentorName || 'Sam Das'}
-              mentorDetails={modalState.selectedRequest?.guidanceRequestDescription || 'Normal feedback can be positive, constructive, or negative, and it can be formal or informal. Effective feedback is respectful, tactful, and non-threatening.'}
-              date={modalState.selectedRequest?.dateNeeded || '24-05-2025'}
-              time="7:00 pm"
-              duration="2 hrs 30 mins"
-              charge="₹4,999"
-              onAcceptAndPay={() => modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)}
-            />
+
+            {modalState.variant === 'acceptAndPay' ? (
+              <MentorDetails
+                className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+                request={modalState.selectedRequest}
+                mentorDetails={mentorDataLoading ? null : currentMentorData || null}
+                closeModal={closeModal}
+                onRefresh={onRefresh}
+                userID={userID}
+              />
+            ) : (
+              <AcceptAndPay
+                className={`${localVisible ? 'animate-slide-in' : 'animate-slide-out'}`}
+                request={modalState.selectedRequest}
+                acceptAndPayDetails={mentorDataLoading ? null : currentMentorData || null}
+                closeModal={closeModal}
+                onRefresh={onRefresh}
+                userID={userID}
+                onAcceptAndPay={() =>
+                  modalState.selectedRequest && handleModalAcceptAndPay(modalState.selectedRequest)
+                }
+              />
+            )}
+
           </div>
         </div>
       )}
@@ -254,5 +395,4 @@ const GuidanceTable = memo(({
 });
 
 GuidanceTable.displayName = 'GuidanceTable';
-
 export default GuidanceTable;

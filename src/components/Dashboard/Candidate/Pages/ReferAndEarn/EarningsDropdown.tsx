@@ -1,7 +1,10 @@
 import { useState } from 'react';
+import WithdrawDialog from './WithdrawDialog';
 
-const EarningsCard = () => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  
+  const EarningsCard = () => {
+    const [isExpanded, setIsExpanded] = useState(false);
+    const [showDialog, setShowDialog] = useState(false);
 
   const toggleExpanded = () => {
     setIsExpanded(!isExpanded);
@@ -90,7 +93,9 @@ const EarningsCard = () => {
 
         {/* Withdraw button */}
         <div className="flex justify-center pt-2">
-          <button className="text-black font-semibold px-6 py-2 rounded-lg shadow-lg hover:opacity-90 transition-opacity duration-200 border-transparent" style={{backgroundColor: '#fff', borderColor: 'rgba(0, 0, 0, 0)'}}>
+          <button 
+          onClick={()=>setShowDialog(true)}
+          className="text-black font-semibold px-6 py-2 rounded-lg shadow-lg hover:opacity-90 transition-opacity duration-200 border-transparent" style={{backgroundColor: '#fff', borderColor: 'rgba(0, 0, 0, 0)'}}>
             Withdraw
           </button>
         </div>
@@ -123,6 +128,12 @@ const EarningsCard = () => {
             <span className="font-semibold text-lg" style={{color: '#0048ff'}}>Rs. 2,000</span>
           </div>
         </div>
+        <WithdrawDialog
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        // referral={selectedReferral}
+        // statusData={statusData}
+      />
       </div>
     </div>
   );
