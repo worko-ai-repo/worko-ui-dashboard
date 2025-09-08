@@ -5,6 +5,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import { JobDetails } from "@Interfaces/CorporateDashboard.dto";
 import { extractTextFromPDF } from "@Utils/PdfFileValidator.util";
 import { validationRules } from "@Utils/FormValidator.utils";
+import { JobTypeofEmploymentType } from "@TypesAndConstants/JobsAndApplication.type";
 
 interface FormData {
   description: string;
@@ -15,9 +16,106 @@ interface JobDescriptionProps {
   onClose: () => void;
   setIsJobFormModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setJobDetails: React.Dispatch<React.SetStateAction<JobDetails | null>>;
+  setJobMode: React.Dispatch<React.SetStateAction<"CREATE" | "UPDATE" | "DUPLICATE">>;
 }
 
-export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobDetails }: JobDescriptionProps) {
+interface JdParsedResponse {
+  jobTitle: string;
+  department: string;
+  location: string;
+  typeOfEmployment: string;
+  workMode: string;
+  noticePeriod: string;
+  numberOfOpenings: string; // can change to number if you want strictly numeric
+  salaryRange: {
+    min: string | number; // depends on how you want to store
+    max: string | number;
+  };
+  experienceRange: {
+    min: string | number;
+    max: string | number;
+  };
+
+  mustHaveSkills: string[];
+  goodToHaveSkills: string[];
+  softSkills: string[];
+  technicalSkills: string[];
+  coreSkills: string[];
+
+  mandatoryRequirements: string[];
+  preferredRequirements: string[];
+
+  formattedHTML: string; // pre-rendered HTML description
+}
+
+const mapParsedToJobDetails = (parsed: JdParsedResponse): JobDetails => {
+  return {
+    id: undefined, // new job, so no ID yet
+    jobTitle: parsed.jobTitle || "",
+    company: "", // to be set separately
+    companyDetails: {
+      aboutCompany: "",
+      carrierPage: "",
+      id: "",
+      industry: "",
+      logo: "",
+      logoUrl: "",
+      name: "",
+      website: "",
+      linkedIn: "",
+      isVerified: false,
+      teamSize: 0,
+      createdAt: "",
+      updatedAt: "",
+      isDeleted: false,
+      PK: "",
+      SK: "",
+      GSI1PK: "",
+      GSI1SK: "",
+    }, // default value since not in parsed response
+    offerings: "", // default value since not in parsed response
+    gradeLevel: "", // default value since not in parsed response
+    department: parsed.department || "",
+    workMode: parsed.workMode as "WFO" | "WFH" | "HYBRID" | undefined,
+    location: {
+      city: parsed.location ? [parsed.location] : [],
+      fullLocation: parsed.location ? [parsed.location] : [],
+    },
+    experienceRange: {
+      min: parsed.experienceRange?.min ? Number(parsed.experienceRange.min) : undefined,
+      max: parsed.experienceRange?.max ? Number(parsed.experienceRange.max) : undefined,
+    },
+    salaryRange: {
+      min: parsed.salaryRange?.min ? Number(parsed.salaryRange.min) : undefined,
+      max: parsed.salaryRange?.max ? Number(parsed.salaryRange.max) : undefined,
+    },
+    creatorName: "", // default value since not in parsed response
+    coreSkills: parsed.coreSkills || [],
+    technicalSkills: parsed.technicalSkills || [],
+    softSkills: parsed.softSkills || [],
+    goodSkills: parsed.goodToHaveSkills || [],
+    otherRequirements: [
+      ...(parsed.mandatoryRequirements || []),
+      ...(parsed.preferredRequirements || []),
+    ].join(", "),
+    typeofEmployment: parsed.typeOfEmployment as JobTypeofEmploymentType,
+    status: "DRAFT", // default until set
+    noticePeriod: parsed.noticePeriod ? Number(parsed.noticePeriod) : 0,
+    displaySalaryRange: !!parsed.salaryRange?.min || !!parsed.salaryRange?.max,
+    miscellaneousSkills: null,
+    jobDescription: parsed.formattedHTML || "",
+    htmlJobDescription: parsed.formattedHTML || "",
+    fixedComponent: undefined,
+    variableComponent: undefined,
+  };
+};
+
+export default function JobDescription({
+  onClose,
+  setIsJobFormModalOpen,
+  setJobDetails,
+  setJobMode,
+}: JobDescriptionProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [fileError, setFileError] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -47,13 +145,23 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
    */
   const parseJD = async (jobDescription: string) => {
     try {
-      const { response, error } = await httpServiceObj.post(`${APP_JOBS_API_URI}/job/parsejd`, { jobDescription }, true, {}, true);
+      const { response, error } = await httpServiceObj.post<JdParsedResponse | null>(
+        `${APP_JOBS_API_URI}/job/parsejd`,
+        { jobDescription },
+        true,
+        {},
+        true
+      );
 
       if (error) {
         throw new Error(error.message || "Failed to parse job description");
       }
 
-      setJobDetails(response as JobDetails);
+      if (response) {
+        const mappedJob = mapParsedToJobDetails(response);
+        setJobDetails(mappedJob);
+      }
+
       return true;
     } catch (error) {
       console.error("Error parsing JD:", error);
@@ -199,6 +307,10 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
       // Send job description to API for parsing
       const success = await parseJD(data.description.trim());
       if (success) {
+        // fuse the jd in setJobDetails
+        setJobDetails((prev) =>
+          prev ? { ...prev, htmlJobDescription: data.description.trim() } : prev
+        );
         setIsJobFormModalOpen(true);
         onClose();
       }
@@ -219,12 +331,20 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
   }, [pdfUrl]);
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className=" mt-4  max-sm:w-[320px] sm:w-[800px] flex flex-col text-start">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className=" mt-4  max-sm:w-[320px] sm:w-[800px] flex flex-col text-start">
       <div className="flex flex-col lg:flex-row gap-6 items-start w-full justify-between">
         {/* Left Side: Text Area for manual input */}
         <div className="flex-1 w-full lg:w-[60%] min-w-0">
           <h2 className="mb-2 text-sm font-semibold text-black">Write or Paste description here</h2>
-          <textarea {...register("description", validationRules.jobDescription)} className={`w-full h-48 p-4 rounded-xl bg-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm ${errors.description ? "border-2 border-red-500" : ""}`} placeholder="Write or paste here" />
+          <textarea
+            {...register("description", validationRules.jobDescription)}
+            className={`w-full h-48 p-4 rounded-xl bg-gray-100 resize-none focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm ${
+              errors.description ? "border-2 border-red-500" : ""
+            }`}
+            placeholder="Write or paste here"
+          />
           {/* Display validation error for description field */}
           {errors.description && (
             <p className="text-red-500 text-sm mt-1 flex items-start gap-1">
@@ -238,7 +358,9 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
         <div className="self-center text-sm font-medium text-gray-600 lg:px-4 lg:py-0 py-2">
           <span className="hidden lg:block">Or</span>
           <div className="lg:hidden w-full h-px bg-gray-300 relative">
-            <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-gray-600">Or</span>
+            <span className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-3 text-gray-600">
+              Or
+            </span>
           </div>
         </div>
 
@@ -258,7 +380,13 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
                     <Upload className="w-6 h-6 text-white " />
                   </>
                 )}
-                <input type="file" accept=".pdf" className="hidden" onChange={handleFileChange} disabled={isLoading} />
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={handleFileChange}
+                  disabled={isLoading}
+                />
               </label>
             ) : (
               // Show file info when file is uploaded
@@ -268,19 +396,28 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
                   <p className="truncate max-w-[180px] sm:max-w-[220px]" title={uploadedFile.name}>
                     {uploadedFile.name}
                   </p>
-                  <button type="button" onClick={removeFile} className="text-red-500 hover:text-red-700 flex-shrink-0 p-1" title="Remove file">
+                  <button
+                    type="button"
+                    onClick={removeFile}
+                    className="text-red-500 hover:text-red-700 flex-shrink-0 p-1"
+                    title="Remove file">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
                 {/* File size info */}
-                <p className="text-xs text-gray-500">{(uploadedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+                <p className="text-xs text-gray-500">
+                  {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB
+                </p>
               </div>
             )}
           </div>
 
           {/* View PDF link - shows only when PDF is uploaded */}
           {uploadedFile && pdfUrl && (
-            <button type="button" onClick={viewPdf} className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 underline justify-center w-full lg:justify-start">
+            <button
+              type="button"
+              onClick={viewPdf}
+              className="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1 underline justify-center w-full lg:justify-start">
               <ExternalLink className="w-4 h-4" />
               View PDF
             </button>
@@ -295,17 +432,33 @@ export default function JobDescription({ onClose, setIsJobFormModalOpen, setJobD
           )}
 
           {/* File type info */}
-          <p className="text-xs text-gray-500 mt-2 text-center lg:text-left">Only PDF files are supported</p>
+          <p className="text-xs text-gray-500 mt-2 text-center lg:text-left">
+            Only PDF files are supported
+          </p>
         </div>
       </div>
       {/* Submit Button */}
       <div className="mt-2 flex justify-start gap-2">
         {/* Skip button */}
-        <button type="button" onClick={()=>{onClose(); setIsJobFormModalOpen(true);}} className="border text-gray-500 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition mr-2">
+        <button
+          type="button"
+          onClick={() => {
+            onClose();
+            setIsJobFormModalOpen(true);
+            setJobMode("CREATE");
+          }}
+          className="border text-gray-500 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition mr-2">
           Skip
         </button>
-        <button type="submit" disabled={isLoading} className="flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
-          {isLoading ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <SendIcon className="w-4 h-4" />}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50 disabled:cursor-not-allowed">
+          {isLoading ? (
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+          ) : (
+            <SendIcon className="w-4 h-4" />
+          )}
           {isLoading ? "Processing..." : "Fetch"}
         </button>
       </div>

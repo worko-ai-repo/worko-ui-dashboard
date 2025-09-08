@@ -29,8 +29,8 @@ export type JobFormSchema = {
     typeofEmployment: "FULL_TIME" | "PART_TIME" | "CONTRACT" | 'INTERNSHIP';
     workMode: "WFO" | "WFH" | "HYBRID";
     jobDescription: string;
-    variableComponent?: number;
-    fixedComponent?: number;
+    variableComponentPercentage?: number;
+    fixedComponentPercentage?: number;
     flexibleNotice: boolean;
   }
 

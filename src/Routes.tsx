@@ -64,7 +64,7 @@ const AppRoutes = createBrowserRouter(
     { path: "*", element: <PageNotFound /> },
   ],
   {
-    basename: "/v2/",
+    basename: "/v1/",
   }
 );
 

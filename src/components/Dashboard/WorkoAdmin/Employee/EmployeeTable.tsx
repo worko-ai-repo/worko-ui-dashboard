@@ -40,9 +40,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-    user: ApplicantDetails | {};
+    user: ApplicantDetails ;
     key?: number; // Add a unique key to force re-render
-  }>({ isOpen: false, type: "EMAIL", user: {} });
+  }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
 
   const handleVerifyClick = (
     type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL",
@@ -76,7 +76,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         return (
           <div className="flex gap-3 px-2  justify-between">
             <button
-              disabled={row.isNumberVerified === false}
+              disabled={row.isNumberVerified !== false}
               onClick={() => handleVerifyClick("MOBILE", row)}
               className=" cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
               <img src={mobile_install} alt="Verify Mobile" className="h-4 w-4 flex-shrink-0" />
@@ -169,14 +169,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         key={verifyModalOpen.key} // Use the unique key to force re-render
         isOpen={verifyModalOpen.isOpen}
         onClose={() => {
-          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
         }}
         className="w-72 sm:max-w-3xl h-full py-4">
         <VerifyUserContact
           type={verifyModalOpen.type}
           user={verifyModalOpen.user}
           onClose={() => {
-            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
           }}
           refetch={fetchEmployees}
         />

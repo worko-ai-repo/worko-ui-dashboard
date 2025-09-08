@@ -45,7 +45,7 @@ const Jobs = () => {
     getAllSelected,
     reset: resetSelection,
   } = useListSelection({
-    limit: 5, //@TODO change this to 30
+    limit: 30, 
     mapFn: (job: JobData) => ({
       jobId: job.id,
       companyId: job.companyDetails.id,
@@ -173,7 +173,7 @@ const Jobs = () => {
       </Modal>
 
       <Modal isOpen={isJobDescriptionModalOpen} onClose={() => setIsJobDescriptionModalOpen(false)}>
-        <JobDescription onClose={() => setIsJobDescriptionModalOpen(false)} setIsJobFormModalOpen={setIsJobFormModalOpen} setJobDetails={setJobDetails} />
+        <JobDescription onClose={() => setIsJobDescriptionModalOpen(false)} setIsJobFormModalOpen={setIsJobFormModalOpen} setJobDetails={setJobDetails} setJobMode={setJobFormMode} />
       </Modal>
     </div>
   );

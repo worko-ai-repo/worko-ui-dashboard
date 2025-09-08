@@ -1,10 +1,11 @@
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
+import httpServiceObj from "@Services/ApiHandler.service";
 import { BadgeCheck, Check } from "lucide-react";
 import React, { useState } from "react";
 
 interface VerifyUserContactProps {
   type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-  user: ApplicantDetails | {};
+  user: ApplicantDetails ;
   onClose: () => void;
   refetch: () => void;
 }
@@ -29,10 +30,10 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
       let payload = {};
       switch (type) {
         case "EMAIL":
-          payload = { email: inputValue };
+          payload = { isNumberVerified: inputValue };
           break;
         case "MOBILE":
-          payload = { phoneNumber: inputValue };
+          payload = { isNumberVerified: true };
           break;
         case "COMPANY_EMAIL":
           payload = { companyEmail: inputValue };
@@ -41,10 +42,19 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
           console.error("Invalid type");
           return;
       }
-      console.log("Payload:", payload);
-
+      const {response , error } = await httpServiceObj.patch(
+        `/user/${user.email}/details`,
+        payload,
+        true,
+        {},
+        false,
+        "BASE")
+      if(error || !response){
+        throw new Error("Failed to verify user");
+      }
       setSuccesModalOpen(true);
       refetch();
+      onClose();
     } catch (error) {
       console.error("Error verifying user:", error);
     }

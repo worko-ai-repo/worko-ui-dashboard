@@ -156,6 +156,7 @@ export interface JobDetails {
   htmlJobDescription: string;
   fixedComponent?: number;
   variableComponent?: number;
+  companyDetails: CompanyDetails;
 }
 export interface JobApplicationDetailsDto {
   id: string;

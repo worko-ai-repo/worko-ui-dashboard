@@ -33,9 +33,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
-    user: ApplicantDetails | {};
+    user: ApplicantDetails;
     key?: number; // Add a unique key to force re-render
-  }>({ isOpen: false, type: "EMAIL", user: {} });
+  }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
 
   const handleVerifyClick = (type: "EMAIL" | "MOBILE", user: ApplicantDetails) => {
     setVerifyModalOpen({
@@ -200,14 +200,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         key={verifyModalOpen.key} // Use the unique key to force re-render
         isOpen={verifyModalOpen.isOpen}
         onClose={() => {
-          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
         }}
         className="w-72 sm:max-w-3xl h-full py-4">
         <VerifyUserContact
           type={verifyModalOpen.type}
           user={verifyModalOpen.user}
           onClose={() => {
-            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails});
           }}
           refetch={fetchEmployees}
         />

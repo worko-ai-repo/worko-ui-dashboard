@@ -45,7 +45,7 @@ const AdminJobs = () => {
     getAllSelected,
     reset: resetSelection,
   } = useListSelection({
-    limit: 5, //@TODO change this to 30
+    limit: 30, 
     mapFn: (job: JobData) => ({
       jobId: job.id,
       companyId: job.companyDetails.id,
@@ -165,11 +165,11 @@ const AdminJobs = () => {
         <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} selectRows={toggleRow} selectAllRows={toggleSelectAll} handleJobCreation={handleJobCreation} reset={resetSelection} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage} hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} getAllSelected={getAllSelected} />
       )}
       <Modal isOpen={isJobFormModalOpen} onClose={() => setIsJobFormModalOpen(false)} title="Check the details" className="w-[100dvw] lg:w-[70dvw] h-full text-left no-scrl no-scrl-web ">
-        <JobForm onClose={() => setIsJobFormModalOpen(false)} jobDetails={jobDetails} userDetailsOne={userDetails} mode={jobFormMode} />
+        <JobForm onClose={() => setIsJobFormModalOpen(false)} jobDetails={jobDetails} userDetailsOne={userDetails} mode={jobFormMode} key={jobDetails?.id} />
       </Modal>
 
       <Modal isOpen={isJobDescriptionModalOpen} onClose={() => setIsJobDescriptionModalOpen(false)}>
-        <JobDescription onClose={() => setIsJobDescriptionModalOpen(false)} setIsJobFormModalOpen={setIsJobFormModalOpen} setJobDetails={setJobDetails} />
+        <JobDescription onClose={() => setIsJobDescriptionModalOpen(false)} setIsJobFormModalOpen={setIsJobFormModalOpen} setJobDetails={setJobDetails} setJobMode={setJobFormMode}/>
       </Modal>
     </div>
   );
