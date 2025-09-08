@@ -367,7 +367,7 @@ export function shouldShowAction(
     application.status as JobApplicationStatusType,
     activeTab
   );
-  console.log("Action Config:", config,action);
+  // console.log("Action Config:", config,action);
   const actionConfig = config[action];
 
   // Not configured or explicitly hidden

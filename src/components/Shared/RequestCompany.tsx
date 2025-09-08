@@ -1,4 +1,3 @@
-import { RequestCompanyFormData } from "@Components/Company/RequestCompany";
 import CustomModal from "@Components/Modals/FormModal";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useMutation } from "@tanstack/react-query";
@@ -8,6 +7,19 @@ import React, { useCallback } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 
+interface RequestCompanyFormData  {
+  companyDetail: {
+    industry: string;
+    linkedIn: string;
+    carrierPage: string;
+    name: string;
+  };
+  userName: string;
+  userEmail: string;
+  userType: string;
+  userContactNumber: string;
+  jobUrl: string;
+}
 const RequestCompany: React.FC<{ setShowModal: React.Dispatch<React.SetStateAction<boolean>> }> = ({ setShowModal }) => {
   const {
     register,
