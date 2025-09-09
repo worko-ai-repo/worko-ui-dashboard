@@ -1,11 +1,12 @@
 import { useForm, Controller } from "react-hook-form";
 import { ChevronDown, Send } from "lucide-react";
 import httpServiceObj from "@Services/ApiHandler.service";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { inviteTick } from "@AssetsFolder/assets";
 import { validationRules } from "@Utils/FormValidator.utils";
 import { toast } from "react-toastify";
 import { getToastOptions } from "lib-worko-ui";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 type FormData = {
   firstName: string;
@@ -30,11 +31,11 @@ interface InviteApiPayload {
     countryCode: number;
     phoneNumber: number;
   };
-  pricingPlan: "JOB_BOARD" | "HIRING_PARTNER" | "CO_PILOT";
-  cvDuplicacyAccess: boolean;
+  pricingPlan?: "JOB_BOARD" | "HIRING_PARTNER" | "CO_PILOT";
+  cvDuplicacyAccess?: boolean;
 }
 
-const InviteForm = ({ onClose }: { onClose: () => void }) => {
+const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:string,onRefetch:()=>void}) => {
   const {
     register,
     handleSubmit,
@@ -53,7 +54,7 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
       corporateUserType: "corporate-recruiter",
       pricingPlan: "JOB_BOARD",
       cvDuplicacyAccess: true,
-      companyId: "01K4CSE9GT8YAWGAYZTN5FNMWD",
+      companyId: "",
     },
     mode: "onChange", // This enables instant validation
   });
@@ -64,23 +65,24 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
 
   const watchCvDuplicacy = watch("cvDuplicacyAccess");
 
+  const isCorporate = RBAC.can("play_corporate");
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
-    
+
     try {
       // Extract phone number (remove any non-digit characters)
-      const phoneNumber = parseInt(data.phone.replace(/\D/g, ''));
-      
+      const phoneNumber = parseInt(data.phone.replace(/\D/g, ""));
+
       // Validate phone number
       if (isNaN(phoneNumber) || phoneNumber.toString().length !== 10) {
         toast.error("Please enter a valid 10-digit phone number", getToastOptions());
         setIsSubmitting(false);
         return;
       }
-      
       // Prepare API payload according to the API documentation
-      const apiPayload: InviteApiPayload = {
-        companyId: data.companyId,
+      const basePayload = {
+        companyId: compId,
         corporateUserType: data.corporateUserType,
         email: data.email,
         firstName: data.firstName,
@@ -89,12 +91,15 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
           countryCode: 91, // Default to India, you can make this dynamic
           phoneNumber: phoneNumber,
         },
-        pricingPlan: data.pricingPlan,
-        cvDuplicacyAccess: data.cvDuplicacyAccess,
       };
 
-      console.log("API Payload:", apiPayload);
-
+      const apiPayload: InviteApiPayload = isCorporate
+        ? basePayload
+        : {
+            ...basePayload,
+            pricingPlan: data.pricingPlan,
+            cvDuplicacyAccess: data.cvDuplicacyAccess,
+          };
       // Make API call
       const { response, error } = await httpServiceObj.post(
         `https://api.dev.worko.work/corporate-invite/`,
@@ -112,18 +117,14 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
       setName(`${data.firstName} ${data.lastName}`);
       setInviteSent(true);
       toast.success("Invite sent successfully!", getToastOptions());
-      
     } catch (error) {
       console.error("Error sending invite:", error);
       toast.error("Failed to send invite. Please try again.", getToastOptions());
     } finally {
       setIsSubmitting(false);
       // Don't close modal if there's an error - only close on success
-      if (inviteSent) {
-        setTimeout(() => {
-          onClose();
-        }, 2000);
-      }
+      onRefetch();
+      onClose();
     }
   };
 
@@ -133,8 +134,9 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center gap-4">
           <img src={inviteTick} alt="inviteTick" className="w-16 h-16" />
           <p className="text-lg font-semibold font-poppins text-green-600">Success!</p>
-          <p className="text-sm font-poppins text-gray-700">{name} has been invited successfully.</p>
-          <p className="text-xs font-poppins text-gray-500">This window will close automatically...</p>
+          <p className="text-sm font-poppins text-gray-700">
+            {name} has been invited successfully.
+          </p>
         </div>
       </div>
     );
@@ -149,7 +151,6 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
             <h2 className="text-black text-lg font-semibold font-poppins leading-tight">
               Invite others
             </h2>
-           
           </div>
 
           <div className="grid grid-cols-2 gap-6">
@@ -174,7 +175,9 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                     }}
                   />
                   {errors.firstName && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.firstName.message}</p>
+                    <p className="text-red-500 text-xs mt-1 animate-pulse">
+                      {errors.firstName.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -198,7 +201,9 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                     }}
                   />
                   {errors.lastName && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.lastName.message}</p>
+                    <p className="text-red-500 text-xs mt-1 animate-pulse">
+                      {errors.lastName.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -223,7 +228,9 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                     }}
                   />
                   {errors.phone && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.phone.message}</p>
+                    <p className="text-red-500 text-xs mt-1 animate-pulse">
+                      {errors.phone.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -241,32 +248,35 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
               </div>
 
               {/* Pricing Plan */}
-              <div>
-                <label className="block mb-2 text-sm font-medium font-poppins">
-                  <span className="text-red-600">*</span>
-                  <span className="text-black/95 ml-1">Pricing Plan</span>
-                </label>
-                <div className="relative">
-                  <select
-                    {...register("pricingPlan", { required: "Pricing plan is required" })}
-                    className={`w-full h-11 px-4 bg-gray-100 rounded-xl text-black text-sm font-normal font-poppins focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${
-                      errors.pricingPlan ? "border-2 border-red-500" : ""
-                    }`}
-                    onChange={(e) => {
-                      register("pricingPlan").onChange(e);
-                      trigger("pricingPlan");
-                    }}
-                  >
-                    <option value="JOB_BOARD">Job Board</option>
-                    <option value="HIRING_PARTNER">Hiring Partner</option>
-                    <option value="CO_PILOT">Co-pilot</option>
-                  </select>
-                  <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-                  {errors.pricingPlan && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.pricingPlan.message}</p>
-                  )}
+              {!isCorporate && (
+                <div>
+                  <label className="block mb-2 text-sm font-medium font-poppins">
+                    <span className="text-red-600">*</span>
+                    <span className="text-black/95 ml-1">Pricing Plan</span>
+                  </label>
+                  <div className="relative">
+                    <select
+                      {...register("pricingPlan", { required: "Pricing plan is required" })}
+                      className={`w-full h-11 px-4 bg-gray-100 rounded-xl text-black text-sm font-normal font-poppins focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none ${
+                        errors.pricingPlan ? "border-2 border-red-500" : ""
+                      }`}
+                      onChange={(e) => {
+                        register("pricingPlan").onChange(e);
+                        trigger("pricingPlan");
+                      }}>
+                      <option value="JOB_BOARD">Job Board</option>
+                      <option value="HIRING_PARTNER">Hiring Partner</option>
+                      <option value="CO_PILOT">Co-pilot</option>
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+                    {errors.pricingPlan && (
+                      <p className="text-red-500 text-xs mt-1 animate-pulse">
+                        {errors.pricingPlan.message}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* Right Column */}
@@ -291,7 +301,9 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                     }}
                   />
                   {errors.email && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.email.message}</p>
+                    <p className="text-red-500 text-xs mt-1 animate-pulse">
+                      {errors.email.message}
+                    </p>
                   )}
                 </div>
               </div>
@@ -311,60 +323,59 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                     onChange={(e) => {
                       register("corporateUserType").onChange(e);
                       trigger("corporateUserType");
-                    }}
-                  >
-                    <option value="corporate-admin">Admin</option>
+                    }}>
+                    {!isCorporate && <option value="corporate-admin">Admin</option>}
                     <option value="corporate-recruiter">Recruiter</option>
                   </select>
                   <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                   {errors.corporateUserType && (
-                    <p className="text-red-500 text-xs mt-1 animate-pulse">{errors.corporateUserType.message}</p>
+                    <p className="text-red-500 text-xs mt-1 animate-pulse">
+                      {errors.corporateUserType.message}
+                    </p>
                   )}
                 </div>
               </div>
 
               {/* CV Duplicacy */}
-              <div>
-                <label className="block mb-2 text-sm font-medium font-poppins">
-                  <span className="text-red-600">*</span>
-                  <span className="text-black/95 ml-1">CV Duplicacy Access</span>
-                </label>
-                <div className="flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setValue("cvDuplicacyAccess", true)}
-                    className={`flex-1 h-11 rounded-xl text-sm font-medium font-poppins transition-all duration-200 ${
-                      watchCvDuplicacy
-                        ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                        : "bg-white border-2 border-gray-300 text-gray-600 hover:border-gray-400"
-                    }`}
-                  >
-                    Yes
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setValue("cvDuplicacyAccess", false)}
-                    className={`flex-1 h-11 rounded-xl text-sm font-medium font-poppins transition-all duration-200 ${
-                      !watchCvDuplicacy
-                        ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
-                        : "bg-white border-2 border-gray-300 text-gray-600 hover:border-gray-400"
-                    }`}
-                  >
-                    No
-                  </button>
+              {!isCorporate && (
+                <div>
+                  <label className="block mb-2 text-sm font-medium font-poppins">
+                    <span className="text-red-600">*</span>
+                    <span className="text-black/95 ml-1">CV Duplicacy Access</span>
+                  </label>
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setValue("cvDuplicacyAccess", true)}
+                      className={`flex-1 h-11 rounded-xl text-sm font-medium font-poppins transition-all duration-200 ${
+                        watchCvDuplicacy
+                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                          : "bg-white border-2 border-gray-300 text-gray-600 hover:border-gray-400"
+                      }`}>
+                      Yes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setValue("cvDuplicacyAccess", false)}
+                      className={`flex-1 h-11 rounded-xl text-sm font-medium font-poppins transition-all duration-200 ${
+                        !watchCvDuplicacy
+                          ? "bg-blue-100 text-blue-700 border-2 border-blue-300"
+                          : "bg-white border-2 border-gray-300 text-gray-600 hover:border-gray-400"
+                      }`}>
+                      No
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Allow access to CV duplicacy checking features
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Allow access to CV duplicacy checking features
-                </p>
-              </div>
+              )}
             </div>
           </div>
 
           {/* Submit Button */}
           <div className="mt-10">
             <div className="flex justify-between items-center">
-             
-              
               <button
                 type="submit"
                 disabled={isSubmitting || !isValid}
@@ -372,8 +383,7 @@ const InviteForm = ({ onClose }: { onClose: () => void }) => {
                   isSubmitting || !isValid
                     ? "bg-gray-400 cursor-not-allowed text-gray-600"
                     : "bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl"
-                }`}
-              >
+                }`}>
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>

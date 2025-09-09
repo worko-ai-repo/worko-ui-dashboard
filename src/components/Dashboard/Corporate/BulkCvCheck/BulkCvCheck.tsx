@@ -1,12 +1,15 @@
-import JobListDropdown, { DropDownSelectedJobData } from "@Components/Shared/DropDown/JobListDropdown";
+import JobListDropdown, {
+  DropDownSelectedJobData,
+} from "@Components/Shared/DropDown/JobListDropdown";
 
-import { useState , useEffect} from "react";
+import { useState, useEffect, Suspense } from "react";
 
 import CorporateServiceObj from "../Services/Corporate.service";
 
 import { useLocation, useNavigate } from "react-router-dom";
 import ScreeningListView from "@Components/Shared/BulkCvPage/BulkScreeningListView";
 import BulkCvForm from "@Components/Shared/BulkCvPage/BulkCvForm";
+import Modal from "@Components/Shared/Modal";
 
 const BulkCVCheck: React.FC = () => {
   const [isScreeningNew, setisScreeningNew] = useState(true);
@@ -57,15 +60,22 @@ const BulkCVCheck: React.FC = () => {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex justify-center mb-6 border-gray-200">
-        <button className={`px-4 py-2 font-medium ${isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"}`} onClick={() => handleTabChange(true)}>
+      <div className="flex flex-wrap justify-center mb-6 border-gray-200">
+        <button
+          className={`px-4 py-2 font-medium ${
+            isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
+          }`}
+          onClick={() => handleTabChange(true)}>
           New screening
         </button>
-        <button className={`px-4 py-2 font-medium ml-6 ${!isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"}`} onClick={() => handleTabChange(false)}>
+        <button
+          className={`px-4 py-2 font-medium ml-6 ${
+            !isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
+          }`}
+          onClick={() => handleTabChange(false)}>
           Screening list
         </button>
       </div>
-
       {/* Conditional Rendering */}
       {isScreeningNew ? (
         <div className="space-y-6 bg-white rounded-xl p-6">
@@ -89,14 +99,41 @@ const BulkCVCheck: React.FC = () => {
               <span className="text-red-600">*</span> Paste job description
             </label>
             <div className="relative">
-              <textarea onChange={(e) => {handleParseJd(e.target.value); setDropDownData(null)}} className="w-full h-60 p-4 rounded-md bg-[#EBEFF3] text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Write or paste here" />
+              <textarea
+                onChange={(e) => {
+                  handleParseJd(e.target.value);
+                  setDropDownData(null);
+                }}
+                className="w-full h-60 p-4 rounded-md bg-[#EBEFF3] text-gray-700 resize-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Write or paste here"
+              />
             </div>
           </div>
         </div>
       ) : (
         <ScreeningListView />
-      )}   
-      <BulkCvForm isOpen={isbulkCvFormOpen} jobData={data} dropDownData={dropDownData} onClose={() => setIsBulkCvFormOpen(false)} />
+      )}
+      {isbulkCvFormOpen && (
+        <Modal
+          isOpen={isbulkCvFormOpen}
+          className={"max-w-[1000px] max-sm:w-[80vw]"}
+          onClose={() => setIsBulkCvFormOpen(false)}>
+          <Suspense
+            fallback={
+              <div className="flex justify-center items-center h-40">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <span className="ml-2">Loading form...</span>
+              </div>
+            }>
+            <BulkCvForm
+              isOpen={isbulkCvFormOpen}
+              jobData={data}
+              dropDownData={dropDownData}
+              onClose={() => setIsBulkCvFormOpen(false)}
+            />
+          </Suspense>
+        </Modal>
+      )}{" "}
     </div>
   );
 };

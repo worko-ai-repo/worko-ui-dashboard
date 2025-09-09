@@ -9,6 +9,7 @@ import { useAppContext } from "@Context/App.context";
 import { CursorPaginationInviteDataParams } from "@Interfaces/CorporateServices.dto";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import CorporateServiceObj from "../Services/Corporate.service";
+import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
 
 const Invites = () => {
   const { userDetails } = useAppContext();
@@ -35,7 +36,7 @@ const Invites = () => {
     goToPreviousPage,
     refetch,
     reset,
-  } = useCursorPagination<CorporateInvite, CursorPaginationInviteDataParams>({
+  } = useCursorPagination<CorporateUserPageRecDataDto, CursorPaginationInviteDataParams>({
     queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, !!searchBarText, params],
     queryFn: CorporateServiceObj.fetchInvites,
     baseParams: params,
@@ -87,8 +88,15 @@ const Invites = () => {
       <Modal
         isOpen={isSendInviteModalOpen}
         onClose={() => setIsSendInviteModalOpen(false)}
-        className="w-[90vw] sm:w-[455px] sm:h-[500px] h-[90vh]">
-        <InviteForm />
+        className="max-w-2xl w-full">
+        <InviteForm
+          compId={userDetails?.companyId ?? ""} // Now guaranteed to be string
+          onClose={() => {
+            refetch();
+            setIsSendInviteModalOpen(false);
+          }}
+          onRefetch={refetch}
+        />
       </Modal>
     </div>
   );

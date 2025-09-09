@@ -14,6 +14,7 @@ import { CorporateBulkScreenPayload, FileMetadataDto } from "@Interfaces/Corpora
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import { useNavigate } from "react-router-dom";
+import ChipInput from "../ui/InputWithChips";
 
 interface JobData {
   companyId: string;
@@ -46,8 +47,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
   const [isFormOpen, setIsFormOpen] = useState(true);
   const [BulkResumeId, setBulkResumeId] = useState<string>("");
   const { userDetails } = useAppContext();
-  const companyId =
-  RBAC.can("play_admin") ? import.meta.env.APP_WORKO_COMP_ID : userDetails?.companyId || "";
+  const companyId = RBAC.can("play_admin")
+    ? import.meta.env.APP_WORKO_COMP_ID
+    : userDetails?.companyId || "";
   const {
     control,
     handleSubmit,
@@ -244,7 +246,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
     try {
       const finalPayload = {
         //@Todo update this payload to match the CorporateBulkScreeningDto interface
-        companyId:companyId ,
+        companyId: companyId,
         jobTitle: data.jobTitle,
         experienceRange: {
           min: data.experienceRange.min,
@@ -303,7 +305,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                 <div className="m-1 sm:m-5 px-2 h-full   overflow-y-auto">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                     <div>
-                      <label className="block font-medium mb-1">Job title <span className="text-red-500 ml-1">*</span></label>
+                      <label className="block font-medium mb-1">
+                        Job title <span className="text-red-500 ml-1">*</span>
+                      </label>
                       <Controller
                         name="jobTitle"
                         control={control}
@@ -446,138 +450,23 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                    {/* Core Skills */}
+                    {/* Technical Skills - Using ChipInput */}
                     <div>
-                      <label className="block font-medium mb-1">Core skills<span className="text-red-500 ml-1">*</span></label>
-                      <Controller
-                        name="coreSkills"
-                        control={control}
-                        rules={{ required: "Core skills are required" }}
-                        render={({ field }) => (
-                          <input
-                            type="text"
-                            placeholder="Write core skills here (comma separated)"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={field.value.join(", ")}
-                            onChange={(e) => {
-                              const values = e.target.value
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean);
-                              field.onChange(values);
-                            }}
-                          />
-                        )}
-                      />
-                      {errors.coreSkills && (
-                        <p className="text-red-500 text-sm mt-1">{errors.coreSkills.message}</p>
-                      )}
-                    </div>
-
-                    {/* Soft Skills */}
-                    <div>
-                      <label className="block font-medium mb-1">Soft skills<span className="text-red-500 ml-1">*</span></label>
-                      <Controller
-                        name="softSkills"
-                        control={control}
-                        rules={{ required: "Soft skills are required" }}
-                        render={({ field }) => (
-                          <input
-                            type="text"
-                            placeholder="Write soft skills here (comma separated)"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={field.value.join(", ")}
-                            onChange={(e) => {
-                              const values = e.target.value
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean);
-                              field.onChange(values);
-                            }}
-                          />
-                        )}
-                      />
-                      {errors.softSkills && (
-                        <p className="text-red-500 text-sm mt-1">{errors.softSkills.message}</p>
-                      )}
-                    </div>
-
-                    {/* Must Have */}
-                    <div>
-                      <label className="block font-medium mb-1">Must have<span className="text-red-500 ml-1">*</span></label>
-                      <Controller
-                        name="mustHave"
-                        control={control}
-                        rules={{ required: "Must have skills are required" }}
-                        render={({ field }) => (
-                          <input
-                            type="text"
-                            placeholder="Write must have skills or degrees (comma separated)"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={field.value.join(", ")}
-                            onChange={(e) => {
-                              const values = e.target.value
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean);
-                              field.onChange(values);
-                            }}
-                          />
-                        )}
-                      />
-                      {errors.mustHave && (
-                        <p className="text-red-500 text-sm mt-1">{errors.mustHave.message}</p>
-                      )}
-                    </div>
-
-                    {/* Good To Have */}
-                    <div>
-                      <label className="block font-medium mb-1">Good to have<span className="text-red-500 ml-1">*</span></label>
-                      <Controller
-                        name="goodToHave"
-                        control={control}
-                        rules={{ required: "Good to have skills are required" }}
-                        render={({ field }) => (
-                          <input
-                            type="text"
-                            placeholder="Write good to have skills or degrees (comma separated)"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={field.value.join(", ")}
-                            onChange={(e) => {
-                              const values = e.target.value
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean);
-                              field.onChange(values);
-                            }}
-                          />
-                        )}
-                      />
-                      {errors.goodToHave && (
-                        <p className="text-red-500 text-sm mt-1">{errors.goodToHave.message}</p>
-                      )}
-                    </div>
-
-                    {/* Technical Skills */}
-                    <div>
-                      <label className="block font-medium mb-1">Technical skills<span className="text-red-500 ml-1">*</span></label>
+                      <label className="block font-medium mb-1">
+                        Technical skills<span className="text-red-500 ml-1">*</span>
+                      </label>
                       <Controller
                         name="technicalSkills"
                         control={control}
                         rules={{ required: "Technical skills are required" }}
                         render={({ field }) => (
-                          <input
-                            type="text"
-                            placeholder="Write technical skills here (comma separated)"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={field.value.join(", ")}
-                            onChange={(e) => {
-                              const values = e.target.value
-                                .split(",")
-                                .map((s) => s.trim())
-                                .filter(Boolean);
-                              field.onChange(values);
-                            }}
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type technical skills and press Enter"
+                            maxChips={20}
+                            allowDuplicates={false}
                           />
                         )}
                       />
@@ -588,9 +477,105 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                       )}
                     </div>
 
+                    {/* Core Skills - Using ChipInput */}
+                    <div>
+                      <label className="block font-medium mb-1">
+                        Core skills<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Controller
+                        name="coreSkills"
+                        control={control}
+                        rules={{ required: "Core skills are required" }}
+                        render={({ field }) => (
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type core skills and press Enter"
+                            maxChips={15}
+                          />
+                        )}
+                      />
+                      {errors.coreSkills && (
+                        <p className="text-red-500 text-sm mt-1">{errors.coreSkills.message}</p>
+                      )}
+                    </div>
+
+                    {/* Soft Skills - Using ChipInput */}
+                    <div>
+                      <label className="block font-medium mb-1">
+                        Soft skills<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Controller
+                        name="softSkills"
+                        control={control}
+                        rules={{ required: "Soft skills are required" }}
+                        render={({ field }) => (
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type soft skills and press Enter"
+                            maxChips={10}
+                          />
+                        )}
+                      />
+                      {errors.softSkills && (
+                        <p className="text-red-500 text-sm mt-1">{errors.softSkills.message}</p>
+                      )}
+                    </div>
+
+                    {/* Must Have - Using ChipInput */}
+                    <div>
+                      <label className="block font-medium mb-1">
+                        Must have<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Controller
+                        name="mustHave"
+                        control={control}
+                        rules={{ required: "Must have skills are required" }}
+                        render={({ field }) => (
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type must-have skills and press Enter"
+                          />
+                        )}
+                      />
+                      {errors.mustHave && (
+                        <p className="text-red-500 text-sm mt-1">{errors.mustHave.message}</p>
+                      )}
+                    </div>
+
+                    {/* Good To Have - Using ChipInput */}
+                    <div>
+                      <label className="block font-medium mb-1">
+                        Good to have<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Controller
+                        name="goodToHave"
+                        control={control}
+                        rules={{ required: "Good to have skills are required" }}
+                        render={({ field }) => (
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type good-to-have skills and press Enter"
+                          />
+                        )}
+                      />
+                      {errors.goodToHave && (
+                        <p className="text-red-500 text-sm mt-1">{errors.goodToHave.message}</p>
+                      )}
+                    </div>
+
                     {/* Industry Preference (not array) */}
                     <div>
-                      <label className="block font-medium mb-1">Industry preference<span className="text-red-500 ml-1">*</span></label>
+                      <label className="block font-medium mb-1">
+                        Industry preference<span className="text-red-500 ml-1">*</span>
+                      </label>
                       <Controller
                         name="industryPreference"
                         control={control}
@@ -609,7 +594,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
                     {/* Upload area */}
                     <div className="mb-6">
-                      <label className="block font-medium mb-1">Upload CVs (up to 200 PDFs) <span className="text-red-500 ml-1">*</span></label>
+                      <label className="block font-medium mb-1">
+                        Upload CVs (up to 200 PDFs) <span className="text-red-500 ml-1">*</span>
+                      </label>
                       <div
                         className={`w-full h-36 flex flex-col items-center justify-center border-2 border-dashed rounded-lg cursor-pointer transition-colors ${
                           dragActive
@@ -647,7 +634,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                     </div>
 
                     <div>
-                      <label className="block font-medium mb-1">Job Location<span className="text-red-500 ml-1">*</span></label>
+                      <label className="block font-medium mb-1">
+                        Job Location<span className="text-red-500 ml-1">*</span>
+                      </label>
                       <Controller
                         name="jobLocation"
                         control={control}

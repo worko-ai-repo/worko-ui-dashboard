@@ -333,6 +333,28 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
         <FileText size={16} />
       </button>
     ),
+    VIEW_DOCUMENT_READ: (
+      <button
+        className="btn-info-2"
+        key="view-doc-read"
+        title="Check Document"
+        onClick={() =>
+          setIsRequestDocModalOpen({
+            isOpen: true,
+            jobApplication: row,
+            mode: "READ_ONLY",
+            onClose: () =>
+              setIsRequestDocModalOpen({
+                isOpen: false,
+                jobApplication: {} as JobApplicationDetailsDto,
+                mode: "READ_ONLY",
+                onClose: () => {},
+              }),
+          })
+        }>
+        <Fingerprint size={16} />
+      </button>
+    ),
 
     VIEW_OFFER_LETTER_ISSUE: (
       <button
@@ -376,6 +398,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       "HIRE_NOW",
       "REQUEST_DOCUMENT", // Hiring actions
       "VIEW_DOCUMENT",
+      "VIEW_DOCUMENT_READ",
       "VIEW_OFFER_LETTER_ISSUE",
       "JOINED", // Other actions
       "REJECT",

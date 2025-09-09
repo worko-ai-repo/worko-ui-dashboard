@@ -64,6 +64,8 @@ export interface CursorPaginationUsersDataAdminParams {
   sortOrder: "ascending" | "descending";
   searchText?: string;
   lastKey?: string | undefined;
+  fromDate?: string; // ISO date string
+  toDate?: string; // ISO date string
 }
 
 /**

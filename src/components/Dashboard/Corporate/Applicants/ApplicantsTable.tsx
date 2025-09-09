@@ -30,7 +30,10 @@ import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation
 import { JobApplicationActions } from "@Components/Shared/ApplicantsPage/ApplicationActions";
 import Duplicacy from "@Components/Shared/ApplicantsPage/Duplicacy";
 import { Job } from "aws-sdk/clients/codepipeline";
-import ResendOfferLetter, { getLatestOfferLetterIssueRaisedDetails, handleViewDocumentClick } from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
+import ResendOfferLetter, {
+  getLatestOfferLetterIssueRaisedDetails,
+  handleViewDocumentClick,
+} from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
@@ -183,6 +186,10 @@ export default function ApplicationTable({
       "scoreDetails.matchingScore",
       "scoreDetails.matchingScorePercentage",
     ],
+    profile: ["applicantDetails.candidateExperience.designation"],
+    location: ["applicantDetails.location"],
+    applicantDetails_candidateExperience_designation: ["applicantDetails.candidateExperience.designation"],
+    applicantDetails_CTC: ["applicantDetails.CTC"],
   };
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
@@ -208,6 +215,7 @@ export default function ApplicationTable({
     name: {
       key: "name",
       label: "Applicants name",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <User size={20} />
@@ -217,6 +225,7 @@ export default function ApplicationTable({
     },
     profile: {
       key: "profile",
+      sortable: true,
       label: "Profile",
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
@@ -237,6 +246,7 @@ export default function ApplicationTable({
     location: {
       key: "location",
       label: "Location",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>{row.applicantDetails?.location ?? "Not Disclosed"}</span>
@@ -259,6 +269,7 @@ export default function ApplicationTable({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
                 data: application.feedback, // Assuming matchingScore is an object with details
                 matchingScore: row.matchingScore ?? 0,
+                candidateName: row.applicantDetails.name,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
@@ -273,6 +284,7 @@ export default function ApplicationTable({
     status: {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => {
         // Status color mapping
 
@@ -379,8 +391,8 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          { key: "applicantDetails_CTC", label: "CTC" },
-          { key: "applicantDetails_candidateExperience_designation", label: "Designation" },
+          { key: "applicantDetails_CTC", label: "CTC" ,sortable:true},
+          { key: "applicantDetails_candidateExperience_designation", label: "Designation",sortable:true },
           { key: "hiredBy", label: "Hired By" },
           {
             key: "status_actionDate",
@@ -400,7 +412,7 @@ export default function ApplicationTable({
               </div>
             ),
           },
-          {
+        /*   {
             key: "actions",
             label: "Documents",
             render: (jobData: JobApplicationDetailsDto) => (
@@ -417,7 +429,8 @@ export default function ApplicationTable({
                 </button>
               </div>
             ),
-          },
+          }, */
+          commonColumns.actions,
         ];
       default:
         return [];
@@ -455,67 +468,84 @@ export default function ApplicationTable({
     }
     return (
       <div className="flex justify-evenly flex-nowrap items-start gap-4">
-        <>
-          <div className="basis-2/3">
-            <span className="font-semibold text-gray-500 ">About</span>
-            <p>{row.applicantDetails.about ?? "--------"}</p>
-          </div>
+        {row.status === "JOINED" && activeTab === "Joined" ? (
+          <Timeline steps={timeLineProps} />
+        ) : (
+          <>
+            <div className="basis-2/3">
+              <span className="font-semibold text-gray-500 ">About</span>
+              <p>{row.applicantDetails.about ?? "--------"}</p>
+            </div>
 
-          {row.status === "REJECTED" ? (
-            // Show rejection details
-            <>
-              <div>
-                <span className="font-semibold text-gray-500">Rejected by</span>
-                <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
-              </div>
+            {row.status === "REJECTED" ? (
+              // Show rejection details
+              <>
+                <div>
+                  <span className="font-semibold text-gray-500">Rejected by</span>
+                  <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
+                </div>
 
-              <div className="text-center">
-                <div className="font-semibold text-gray-500 text-center">Reason</div>
+                <div className="text-center">
+                  <div className="font-semibold text-gray-500 text-center">Reason</div>
 
-                {row.rejectedByUserId ? (
-                  <>
-                    <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                    {row.rejectedByUserId.userComment && (
-                      <div>
-                        <ul>
-                          <span className="font-semibold text-gray-500">Comment</span>
-                        </ul>
-                        <li className="list-disc list-inside ">
-                          {row.rejectedByUserId.userComment}
-                        </li>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <>
-                    {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                      <p>--------</p>
-                    ) : (
-                      jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                        <li key={index} className="list-disc list-inside">
-                          {reason}
-                        </li>
-                      ))
-                    )}
-                  </>
-                )}
-              </div>
-            </>
-          ) : (
-            // Show application details
-            <>
-              <div>
-                <span className="font-semibold text-gray-500">CTC</span>
-                <p>{row.applicantDetails.CTC}</p>
-              </div>
-              <div>
-                <span className="font-semibold text-gray-500">Notice</span>
-                <p>{row.applicantDetails.noticePeriod}</p>
-              </div>
-            </>
-          )}
-        </>
-        {row.status === "JOINED" && <Timeline steps={timeLineProps} />}
+                  {row.rejectedByUserId ? (
+                    <>
+                      <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+                      {row.rejectedByUserId.userComment && (
+                        <div>
+                          <ul>
+                            <span className="font-semibold text-gray-500">Comment</span>
+                          </ul>
+                          <li className="list-disc list-inside ">
+                            {row.rejectedByUserId.userComment}
+                          </li>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+                        <p>--------</p>
+                      ) : (
+                        jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+                          <li key={index} className="list-disc list-inside">
+                            {reason}
+                          </li>
+                        ))
+                      )}
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              // Show application details
+              <>
+                <div>
+                  <span className="font-semibold text-gray-500">Position</span>
+                  <p className="capitalize">
+                    {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">CTC</span>
+                  <p className="capitalize">
+                    {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">CTC</span>
+                  <p className="capitalize">
+                    {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">Notice</span>
+                  <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
+                </div>
+              </>
+            )}
+          </>
+        )}
       </div>
     );
   };

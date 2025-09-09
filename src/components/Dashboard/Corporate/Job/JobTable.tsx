@@ -10,6 +10,7 @@ import { SelectedRow } from "./Jobs";
 import { getToastOptions } from "lib-worko-ui";
 import { useNavigate } from "react-router-dom";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -20,7 +21,7 @@ interface JobsTableProps {
   reset: () => void;
   handleJobCreation: (mode: "UPDATE" | "DUPLICATE", row: JobData) => void;
   updateJobStatus: (
-    status:JobStatusType,
+    status: JobStatusType,
     data: {
       id: string;
       companyId: string;
@@ -50,10 +51,13 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   fetchPreviousPage,
   pageSize,
   setPageSize,
-  getAllSelected
+  getAllSelected,
 }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{ id: string; companyId: string } | null>(null);
+  const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{
+    id: string;
+    companyId: string;
+  } | null>(null);
 
   //hook
   const nav = useNavigate();
@@ -63,14 +67,28 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       key: "jobTitle",
       label: "Job Title",
       render: (row: JobData) => (
-        <span className="font-bold w-full capitalize truncate block max-w-[99.3%] cursor-pointer" data-tooltip-id="my-tooltip" data-tooltip-content={row.jobTitle} data-tooltip-place="top" data-tooltip-delay-show={500} data-tooltip-delay-hide={500}>
+        <span
+          className=" w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row.jobTitle}
+          data-tooltip-place="top"
+          data-tooltip-delay-show={500}
+          data-tooltip-delay-hide={500}>
           {row.jobTitle}
         </span>
       ),
     },
     { key: "department", label: "Department" },
     { key: "totalApplications", label: "Total Applications" },
-    ...(activeTab === "PUBLISHED" ? [{ key: "pending", label: "Pending" }] : [{ key: "archivedBy", label: "Archived By" }]),
+    ...(activeTab === "PUBLISHED"
+      ? [{ key: "pending", label: "Pending" }]
+      : [
+          {
+            key: "updatedAt",
+            label: `${activeTab === "CLOSED" ? "Closed" : "Archived"} At`,
+            render: (row: JobData) => new Date(row.updatedAt).toLocaleDateString("en-GB"),
+          },
+        ]),
     ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status" }] : []),
     {
       key: "actions",
@@ -86,20 +104,85 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           }[]
         > = {
           PUBLISHED: [
-            { icon: <img src={View} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Applicants", onClick: () => nav(`/corporate/cApplicants/${row.id}`) },
-            { icon: <Filter className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Screen Resumes", onClick: () => nav(`/corporate/bulk-cv-check/listing/${row.id}`) },//@TODO-Rohit: change this to bulkID.
-            { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) },
-            { icon: <img src={Edit} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Update Job", onClick: () => handleJobCreation("UPDATE", row) },
-            { icon: <Link className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "View Job", onClick: () => window.open(`${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`, "_blank") },
-            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Close Job", onClick: () => setIsCloseJobModalOpen({ id: row.id, companyId: row.companyDetails.id }) },
-            { icon: <img src={Archive} className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Archive Job", onClick: () => updateJobStatus("ARCHIVED", { id: row.id, companyId: row.companyDetails.id }) },
+            {
+              icon: <img src={View} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "View Applicants",
+              onClick: () => nav(`/corporate/cApplicants/${row.id}`),
+            },
+            {
+              icon: <Filter className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Screen Resumes",
+              onClick: () => nav(`/corporate/bulk-cv-check/listing/${row.id}`),
+            }, //@TODO-Rohit: change this to bulkID.
+            {
+              icon: <img src={Duplicate} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Duplicate Job",
+              onClick: () => handleJobCreation("DUPLICATE", row),
+            },
+            {
+              icon: <img src={Edit} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Update Job",
+              onClick: () => handleJobCreation("UPDATE", row),
+            },
+            {
+              icon: <Link className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "View Job",
+              onClick: () =>
+                window.open(
+                  `${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`,
+                  "_blank"
+                ),
+            },
+            {
+              icon: <X className="w-5 h-5" />,
+              className: "btn-blue shrink-0",
+              tooltip: "Close Job",
+              onClick: () =>
+                setIsCloseJobModalOpen({ id: row.id, companyId: row.companyDetails.id }),
+            },
+            {
+              icon: <img src={Archive} className="w-5 h-5" />,
+              className: "btn-blue shrink-0",
+              tooltip: "Archive Job",
+              onClick: () =>
+                updateJobStatus("ARCHIVED", { id: row.id, companyId: row.companyDetails.id }),
+            },
           ],
           ARCHIVED: [
-            { icon: <X className="w-5 h-5" />, className: "btn-blue shrink-0", tooltip: "Remove Job", onClick: () => updateJobStatus("CLOSED", { id: row.id, companyId: row.companyDetails.id }) },
-            { icon: <img src={Repost} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Repost Job", onClick: () => updateJobStatus("PUBLISHED", { id: row.id, companyId: row.companyDetails.id }) },
-            { icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate", onClick: () => handleJobCreation("DUPLICATE", row) },
+            {
+              icon: <X className="w-5 h-5" />,
+              className: "btn-blue shrink-0",
+              tooltip: "Remove Job",
+              onClick: () =>
+                updateJobStatus("CLOSED", { id: row.id, companyId: row.companyDetails.id }),
+            },
+            {
+              icon: <img src={Repost} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Repost Job",
+              onClick: () =>
+                updateJobStatus("PUBLISHED", { id: row.id, companyId: row.companyDetails.id }),
+            },
+            {
+              icon: <img src={Duplicate} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Duplicate",
+              onClick: () => handleJobCreation("DUPLICATE", row),
+            },
           ],
-          CLOSED: [{ icon: <img src={Duplicate} className="w-5 h-5" />, className: "btn-sky shrink-0", tooltip: "Duplicate Job", onClick: () => handleJobCreation("DUPLICATE", row) }],
+          CLOSED: [
+            {
+              icon: <img src={Duplicate} className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Duplicate Job",
+              onClick: () => handleJobCreation("DUPLICATE", row),
+            },
+          ],
         };
 
         const buttons = tabButtonConfig[activeTab];
@@ -125,8 +208,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   const allSelected = getAllSelected(data);
   return (
     <div>
-      <button className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${selectedRows.length === 0 ? "hidden" : ""}`} onClick={() => reset()}>
-        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
+      <button
+        className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${
+          selectedRows.length === 0 ? "hidden" : ""
+        }`}
+        onClick={() => reset()}>
+        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">
+          &minus;
+        </span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
       <DynamicTable<JobData>
@@ -154,8 +243,16 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             </div>
             <div>
               <div className="text-gray-400">Created by</div>
-              {row.createdByUserId}
+              <CreatedByDisplay row={row} mode="created" />
             </div>
+            {activeTab !== "PUBLISHED" && (
+              <div>
+                <div className="text-gray-400">
+                  {activeTab === "CLOSED" ? "Closed" : "Archived"} by
+                </div>
+                <CreatedByDisplay row={row} mode="updated" />
+              </div>
+            )}
           </div>
         )}
         hasNextPage={hasNextPage}
@@ -170,7 +267,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           onClose={() => setIsCloseJobModalOpen(null)}
           onSubmit={() => {
             if (isCloseJobModalOpen?.id && isCloseJobModalOpen?.companyId) {
-              updateJobStatus("CLOSED", { id: isCloseJobModalOpen.id, companyId: isCloseJobModalOpen.companyId });
+              updateJobStatus("CLOSED", {
+                id: isCloseJobModalOpen.id,
+                companyId: isCloseJobModalOpen.companyId,
+              });
             } else {
               toast.error("Failed to perform this operation", getToastOptions({}));
               console.error("Missing id or companyId for closing job.");

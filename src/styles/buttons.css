@@ -99,6 +99,11 @@
   @apply p-2 text-white rounded-[10px] bg-sky-500 hover:bg-sky-600 transition-all duration-200 ease-in-out;
 }
 
+/* Secondary Action Buttons - View/Info Actions */
+.btn-info-2 {
+  @apply p-2 text-white rounded-[10px] bg-yellow-500 hover:bg-yellow-600 transition-all duration-200 ease-in-out;
+}
+
 /* Tertiary Action Buttons - Process/Workflow Actions */
 .btn-process {
   @apply p-2 text-white rounded-[10px] bg-blue-600 hover:bg-blue-700 transition-all duration-200 ease-in-out;

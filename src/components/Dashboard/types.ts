@@ -22,6 +22,8 @@ export type JobFormSchema = {
     salaryRange: {
       min: number;
       max: number;
+      variableComponentPercentage?: number;
+      fixedComponentPercentage?: number;
     };
     displaySalaryRange: boolean;
     softSkills: string[];
@@ -29,8 +31,6 @@ export type JobFormSchema = {
     typeofEmployment: "FULL_TIME" | "PART_TIME" | "CONTRACT" | 'INTERNSHIP';
     workMode: "WFO" | "WFH" | "HYBRID";
     jobDescription: string;
-    variableComponentPercentage?: number;
-    fixedComponentPercentage?: number;
     flexibleNotice: boolean;
   }
 

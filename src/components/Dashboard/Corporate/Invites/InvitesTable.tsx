@@ -3,12 +3,14 @@ import { Minus, Send } from "lucide-react";
 import Modal from "../../../Shared/Modal";
 import InviteForm from "../../../Shared/CorporateInvite/SendInviteForm";
 import RevokeForm from "../../../Shared/CorporateInvite/RevokeForm";
-import { CorporateInviteResponse, CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
+import { CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
 import { DynamicTable } from "../../../Shared/DynamicTable";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
+import { handleInvitePatch } from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUserTable";
+import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
 
 interface InviteTableProps {
-  data: CorporateInvite[];
+  data: CorporateUserPageRecDataDto[];
   fetchInvites: () => void;
   pagination: CommonCursorPaginationProp;
 }
@@ -85,13 +87,13 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         <>
           {row.inviteStatus !== "DELETED" && (
             <button
-              onClick={() => setIsSendInviteModalOpen(true)}
-              className={`px-3 py-2 rounded-lg text-white bg-blue-500 ${
-                row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED"
-                  ? "cursor-not-allowed opacity-50"
-                  : "hover:bg-blue-600"
-              }`}
-              disabled={row.inviteStatus === "ACCEPTED" || row.inviteStatus === "DELETED"}>
+              onClick={async () => await handleInvitePatch(row.id, "RESEND", fetchInvites)}
+              disabled={
+                row.inviteStatus === "ACCEPTED" ||
+                row.inviteStatus === "DELETED" ||
+                row.inviteStatus === "EXPIRED"
+              }
+              className={`px-3 py-2 rounded-lg text-white bg-blue-500 btn_disabled`}>
               <Send size={16} />
             </button>
           )}
@@ -105,12 +107,18 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         <>
           {row.inviteStatus !== "DELETED" && (
             <button
-              onClick={() => {
-                setIsRevokedModalOpen(true);
-                setSelectedInviteId(row.id);
+              onClick={async () => {
+                if (row.inviteStatus === "ACCEPTED") {
+                  if (row?.corporateUserDetails?.id) {
+                    await handleInvitePatch(row.corporateUserDetails.id, "DELETE_CORPORATE_USER", fetchInvites);
+                  }
+                } else {
+                  setIsRevokedModalOpen(true);
+                  setSelectedInviteId(row.id);
+                }
               }}
-              className="p-1 rounded-full border-2 border-blue-600 hover:bg-gray-100">
-              <Minus className="text-gray-500 font-bold" size={16} />
+              className="p-1 rounded-full border-2 border-red-500 hover:bg-gray-100">
+              <Minus className="text-red-500 font-bold" size={16} />
             </button>
           )}
         </>
@@ -120,7 +128,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
 
   return (
     <>
-      <DynamicTable<CorporateInvite>
+      <DynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
         rows={data ?? []}
         enableSelect={false}
@@ -135,11 +143,14 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         isOpen={isSendInviteModalOpen}
         onClose={() => setIsSendInviteModalOpen(false)}
         className="w-min">
-        <InviteForm 
-        onClose={() => {
-          fetchInvites();
-          setIsSendInviteModalOpen(false);
-        }}/>
+        <InviteForm
+          compId={data?.[0]?.companyId ?? ""} 
+          onClose={() => {
+            fetchInvites();
+            setIsSendInviteModalOpen(false);
+          }}
+          onRefetch={fetchInvites}
+        />
       </Modal>
       <Modal
         isOpen={isRevokedModalOpen}
@@ -147,7 +158,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
           setIsRevokedModalOpen(false);
           setSelectedInviteId(null);
         }}
-         className="h-52">
+        className="h-52">
         <RevokeForm
           inviteId={selectedInviteId as string}
           onClose={() => {

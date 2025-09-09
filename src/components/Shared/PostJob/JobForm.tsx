@@ -89,7 +89,7 @@ export default function JobForm({
       state: [],
     },
     experienceRange: { min: 0, max: 0 },
-    salaryRange: { min: 0, max: 0 },
+    salaryRange: { min: 0, max: 0, fixedComponentPercentage: 0, variableComponentPercentage: 0 },
     displaySalaryRange: true,
     coreSkills: [],
     technicalSkills: [],
@@ -99,8 +99,7 @@ export default function JobForm({
     typeofEmployment: "FULL_TIME",
     jobDescription: "",
     htmlJobDescription: "",
-    fixedComponentPercentage: 0,
-    variableComponentPercentage: 0,
+
     flexibleNotice: false,
   });
 
@@ -179,7 +178,7 @@ export default function JobForm({
     // Always start with clean defaults
     const defaultValues = getDefaultFormValues();
 
-    if (jobDetails) {
+    if ((mode === "UPDATE" || mode === "DUPLICATE") && jobDetails)  {
       // Populate with job details
       const formData = {
         ...defaultValues,
@@ -200,8 +199,6 @@ export default function JobForm({
         typeofEmployment: jobDetails?.typeofEmployment || "FULL_TIME",
         jobDescription: jobDetails?.htmlJobDescription || "",
         htmlJobDescription: jobDetails?.htmlJobDescription || "",
-        fixedComponentPercentage: jobDetails?.fixedComponent || 0,
-        variableComponentPercentage: jobDetails?.variableComponent || 0,
         flexibleNotice: false,
       };
 
@@ -542,7 +539,7 @@ export default function JobForm({
             {/* Fixed & Variable Components */}
             <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Controller
-                name="fixedComponentPercentage"
+                name="salaryRange.fixedComponentPercentage"
                 control={control}
                 rules={validationRules.defaultNumberPositive}
                 render={({ field }) => (
@@ -557,7 +554,7 @@ export default function JobForm({
                 )}
               />
               <Controller
-                name="variableComponentPercentage"
+                name="salaryRange.variableComponentPercentage"
                 control={control}
                 rules={validationRules.defaultNumberPositive}
                 render={({ field }) => (
@@ -646,7 +643,7 @@ export default function JobForm({
               {...register("noticePeriod", { required: "Please select a notice period" })}
               className="w-full rounded-xl !mt-1 bg-gray-100 p-2 sm:p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
               <option value="">Select notice period</option>
-              <option value="immediate">Immediate Joiner</option>
+              <option value="0">Immediate Joiner</option>
               <option value="15">15 Days</option>
               <option value="30">1 Month</option>
               <option value="60">2 Months</option>
@@ -720,7 +717,7 @@ export default function JobForm({
             )}
           </div>
 
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
+          <div className="col-span-1 sm:col-span-1 lg:col-span-1 xl:col-span-1">
             <TagInput
               label="Good to Have Skills"
               tags={miscellaneousSkills}
@@ -733,7 +730,7 @@ export default function JobForm({
           </div>
 
           {/* Other Requirements */}
-          <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
+          <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Other mandatory requirements* (Will not be visible to candidates)
             </label>

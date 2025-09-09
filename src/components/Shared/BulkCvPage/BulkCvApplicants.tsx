@@ -212,6 +212,7 @@ export default function ApplicantScreeningTable() {
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
                 data: application.feedback, // Assuming matchingScore is an object with details
                 matchingScore: row.matchingScore ?? 0,
+                candidateName: row.name,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
@@ -292,12 +293,14 @@ export default function ApplicantScreeningTable() {
     <div className="max-h-screen  ">
       {/* Header Section */}
       <div className="mb-6">
-        <div className="flex items-center gap-4 mb-6">
-          <button className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow">
+        <div className="flex  flex-wrap items-center gap-4 mb-6">
+          <button 
+          onClick={() => nav(-1)}
+          className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow">
             <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
 
-          <div className="flex gap-4">
+          <div className="flex flex-wrap gap-4">
             {/* Job Profile Card */}
             <div className="bg-white rounded-xl shadow-sm p-4 w-80">
               <div className="text-center">

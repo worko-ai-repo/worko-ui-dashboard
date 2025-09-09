@@ -27,7 +27,7 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
     try {
       const { status } = await httpServiceObj.patch(
         `https://api.dev.worko.work/corporate-invite/${inviteId}/delete`,
-        { reason: data.revokeReason },
+        { reasonForRevokingInvite: data.revokeReason },
         true,
         {},
         true

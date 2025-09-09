@@ -56,6 +56,7 @@ export interface JobData {
   workMode: string;
   jobDescription: string;
   createdByUserId: string;
+  createdByCorporateUserId: string;
   companyName: string;
   companyUrl: string;
   companyLogoUrl: string;
@@ -64,6 +65,8 @@ export interface JobData {
   sourcedFrom: string;
   createdAt: string;
   updatedAt: string;
+  updatedByCorporateUserId?: string;
+  updatedByUserId?: string;
   isDeleted: boolean;
   companyDetails: CompanyDetails;
 }

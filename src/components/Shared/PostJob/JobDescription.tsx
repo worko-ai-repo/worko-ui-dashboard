@@ -444,6 +444,7 @@ export default function JobDescription({
           type="button"
           onClick={() => {
             onClose();
+            setJobDetails(null)
             setIsJobFormModalOpen(true);
             setJobMode("CREATE");
           }}

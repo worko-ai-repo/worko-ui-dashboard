@@ -42,17 +42,14 @@ export interface JobOfferLetterDynamoResponseDto {
 /**
  * getLatestOfferLetterIssueRaisedDetails
  * 
- * @description Get the latest offer letter issue raised details from job application data
+ * @description Get the latest offer letter issue raised details or offer letter details from job application data
  * 
  * @param jobData - Job application data containing offer letter issue details
+ * @param mode - "ISSUE" for issue raised details, "LETTER" for offer letter details
  * @returns 
  */
-export const getLatestOfferLetterIssueRaisedDetails = (jobData?: JobApplicationDetailsDto) => {
-  if (
-    !jobData ||
-    !jobData.offerLetterIssueRaisedDetails ||
-    jobData.offerLetterIssueRaisedDetails.length === 0
-  ) {
+export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDetailsDto | undefined, mode: "ISSUE" | "LETTER" = "ISSUE") => {
+  if (!jobData) {
     return {
       cloudFileName: "",
       remarks: "",
@@ -60,16 +57,59 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData?: JobApplicationD
       type: "",
     };
   }
-  // go through all the dates and get the latest one
-  const sortedIssues = jobData.offerLetterIssueRaisedDetails.sort(
-    (a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
-  );
-  const latestIssue = sortedIssues[0];
+
+  if (mode === "ISSUE") {
+    // Handle offer letter issue raised details
+    if (!jobData.offerLetterIssueRaisedDetails || jobData.offerLetterIssueRaisedDetails.length === 0) {
+      return {
+        cloudFileName: "",
+        remarks: "",
+        date: "",
+        type: "",
+      };
+    }
+    
+    // Sort by date and get the latest issue
+    const sortedIssues = jobData.offerLetterIssueRaisedDetails.sort(
+      (a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
+    );
+    const latestIssue = sortedIssues[0];
+    return {
+      cloudFileName: latestIssue.cloudFileName,
+      remarks: latestIssue.remarks,
+      date: latestIssue.actionDate,
+      type: latestIssue.userType,
+    };
+  } else if (mode === "LETTER") {
+    // Handle regular offer letter details
+    if (!jobData.offerLetterDetails || jobData.offerLetterDetails.length === 0) {
+      return {
+        cloudFileName: "",
+        remarks: "",
+        date: "",
+        type: "",
+      };
+    }
+    
+    // Sort by date and get the latest offer letter
+    const sortedOfferLetters = jobData.offerLetterDetails.sort(
+      (a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
+    );
+    const latestOfferLetter = sortedOfferLetters[0];
+    return {
+      cloudFileName: latestOfferLetter.cloudFileName,
+      remarks: latestOfferLetter.remarks,
+      date: latestOfferLetter.actionDate,
+      type: latestOfferLetter.userType,
+    };
+  }
+
+  // Default return if mode is not recognized
   return {
-    cloudFileName: latestIssue.cloudFileName,
-    remarks: latestIssue.remarks,
-    date: latestIssue.actionDate,
-    type: latestIssue.userType,
+    cloudFileName: "",
+    remarks: "",
+    date: "",
+    type: "",
   };
 };
 
@@ -79,26 +119,39 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData?: JobApplicationD
  * @description Handle view document click to generate pre-signed URL and open document in new tab
  * 
  * @param applicationData - Job application data containing offer letter details
- * @param latestOfferLetterIssueRaisedDetails - Details of the latest offer letter issue raised
+ * @param mode - "ISSUE" for issue raised details, "LETTER" for offer letter details
  * @returns 
  */
-export const handleViewDocumentClick = async (applicationData:JobApplicationDetailsDto) => {
-  if (!applicationData || !applicationData.offerLetterDetails) {
-    toast.error("Job application or offer letter details not found", getToastOptions({}));
+export const handleViewDocumentClick = async (applicationData: JobApplicationDetailsDto, mode: "ISSUE" | "LETTER" = "ISSUE") => {
+  if (!applicationData) {
+    toast.error("Job application data not found", getToastOptions({}));
     return;
   }
-  const latestOfferLetterIssueRaisedDetails: {
+
+  // Check if the required data exists based on mode
+  if (mode === "ISSUE" && (!applicationData.offerLetterIssueRaisedDetails || applicationData.offerLetterIssueRaisedDetails.length === 0)) {
+    toast.error("Offer letter issue details not found", getToastOptions({}));
+    return;
+  }
+  
+  if (mode === "LETTER" && (!applicationData.offerLetterDetails || applicationData.offerLetterDetails.length === 0)) {
+    toast.error("Offer letter details not found", getToastOptions({}));
+    return;
+  }
+
+  const latestOfferLetterDetails: {
     cloudFileName: string;
     remarks: string;
     date: string;
     type: string;
-  } = getLatestOfferLetterIssueRaisedDetails(applicationData);
+  } = getLatestOfferLetterIssueRaisedDetails(applicationData, mode);
 
-  const cloudFileName = latestOfferLetterIssueRaisedDetails.cloudFileName; //@TODO :change to this latestOfferLetterIssueRaisedDetails.cloudFileName
+  const cloudFileName = latestOfferLetterDetails.cloudFileName;
   if (!cloudFileName) {
     toast.error("Document file not found", getToastOptions({}));
     return;
   }
+
   try {
     const payload = {
       jobApplicationId: applicationData.id,
@@ -109,9 +162,11 @@ export const handleViewDocumentClick = async (applicationData:JobApplicationDeta
     const { response, error } = await httpServiceObj.post<{
       objectUrl: string;
     }>(`/file/gsu2v/HR_OFFER_LETTER_SENT`, payload, true, {}, false, "JOB");
+    
     if (!response || error) {
       throw new Error("Failed to get pre-signed URL for document");
     }
+    
     // Open document in new tab
     const documentUrl = response.objectUrl;
     window.open(documentUrl, "_blank");

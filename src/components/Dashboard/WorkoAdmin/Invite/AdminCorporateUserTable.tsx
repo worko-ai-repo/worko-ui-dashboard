@@ -59,7 +59,7 @@ function modalReducer(state: ModalState, despatchAction: despatchAction): ModalS
   }
 }
 
-const handleInvitePatch = async (
+export const handleInvitePatch = async (
   id: string,
   action: "RESEND" | "GRANT_DUPLICACY_ACCESS" | "DELETE_CORPORATE_USER",
   onSuccessCallback: () => void
@@ -248,9 +248,9 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
   // Update renderExpandedDetails function
   const renderExpandedDetails = (row: CorporateUserPageAdminDataDto) => {
-    const handleDeleteUser = (userId: string) => {
-      console.log("Delete user:", userId);
-      // Implement delete user logic
+    const handleDeleteUser = async (userId: string) => {
+       await handleInvitePatch(userId, "DELETE_CORPORATE_USER", fetchCorporateUsers);
+     
     };
 
     const handleResendInvite = (inviteId: string) => {

@@ -201,7 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               secureStorage.clear();
               setUpdateCheck((prev: boolean) => !prev);
               // navigate("/auth/login");
-              window.location.href = "/";
+              window.location.href = "/jobs";
             }}
             className="hover:text-red-500 text-[13px] text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-1 rounded"
             aria-label="Logout">
