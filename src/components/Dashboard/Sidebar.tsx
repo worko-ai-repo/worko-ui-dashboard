@@ -14,6 +14,7 @@ import { LogOut } from "lucide-react";
 import CognitoServiceObj from "@Utils/Cognito.utils";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -72,9 +73,21 @@ const Sidebar: React.FC<SidebarProps> = ({
    * Filter navigation items based on current dashboard type
    * Only shows items that are either global or match current dashboard type
    */
-  const navItems = navigationItems.filter(
-    (item) => !item.dashboardTypes || item.dashboardTypes.includes(dashboardType)
-  );
+  const navItems = navigationItems.filter((item) => {
+    if (item.id === "switch-dashboard") {
+      if (!RBAC?.can("play_admin")) {
+        //dont show that item
+        return false;
+      }
+    }
+    return !item.dashboardTypes || item.dashboardTypes.includes(dashboardType);
+  });
+
+  /**
+   * Check AdminAccess
+   *
+   * if Nav Item contain switch-dashboard then check if RBAC.can("play-admin") is true then show the item otherwise filter it out
+   */
 
   /**
    * Handle navigation to different dashboard sections
@@ -95,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (NavItem: NavItem) => {
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
-      
+
       const currentPath = location.pathname;
       //If the current path is admin, switch to corporate dashboard
       if (currentPath.includes("admin")) {

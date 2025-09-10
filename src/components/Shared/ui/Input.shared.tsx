@@ -2,6 +2,7 @@ import React from "react";
 import { toast } from "react-toastify";
 import { ExternalLink, Link } from "lucide-react"; // or use your own external link icon
 import { clipboard } from "@AssetsFolder/assets";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 export interface InteractiveInputProps {
   data?: string | null;
@@ -38,11 +39,11 @@ export const InteractiveInput: React.FC<InteractiveInputProps> = ({
     navigator.clipboard
       .writeText(data)
       .then(() => {
-        toast.success("Copied to clipboard!");
+        toast.success("Copied to clipboard!" , getToastOptions({}));
         onCopy?.(data);
       })
       .catch(() => {
-        toast.error("Failed to copy to clipboard");
+        toast.error("Failed to copy to clipboard", getToastOptions({}));
       });
   };
 
@@ -55,7 +56,7 @@ export const InteractiveInput: React.FC<InteractiveInputProps> = ({
       window.open(url, "_blank", "noopener,noreferrer");
       onOpenLink?.(data);
     } catch (error) {
-      toast.error("Invalid URL");
+      toast.error("Invalid URL", getToastOptions({}));
     }
   };
 

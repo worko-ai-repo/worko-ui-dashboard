@@ -9,6 +9,7 @@ import { Building2, Edit, Trash2 } from "lucide-react";
 import { useReducer, useState } from "react";
 import DeleteCompany from "./DeleteCompanyModal";
 import UpdateCompany from "./UpdateCompany";
+import CompanyLogoRender from "./CompanyLogoRender";
 
 interface CompanyTableProps {
   data: CompanyDto[];
@@ -115,23 +116,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
       label: "Logo",
       sortable: false,
       render: (row: CompanyDto) => {
-        const [imgError, setImgError] = useState(false);
-        const finalLogoUrl = row.logo
-          ? `${import.meta.env.APP_WORKO_BASE_URL}/images/${row.logo}`
-          : row.logoUrl;
-        return finalLogoUrl && !imgError ? (
-          <img
-            data-tooltip-id="my-tooltip"
-            data-tooltip-content={row.name}
-            src={finalLogoUrl}
-            alt={row.name}
-            loading="lazy"
-            className="h-12 w-12 cursor-pointer border object-contain rounded-full"
-            onError={() => setImgError(true)} // This only affects the current component
-          />
-        ) : (
-          <Building2 className="h-12 w-12 cursor-pointer border p-2 rounded-full text-gray-400" />
-        );
+        return <CompanyLogoRender {...row} key={row.id} />;
       },
     },
     {
@@ -144,41 +129,46 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
       key: "action",
       label: "Actions",
       render: (row: CompanyDto) => (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() =>
-              dispatch({
-                type: "OPEN",
-                modal: "updateCompany",
-                payload: { data: row, key: row.id, fetchCompany },
-              })
-            }
-            className="btn-sky grid grid-cols-[20px_auto] ">
-            <Edit className="h-4 w-4" />
-            Update Status
-          </button>
-          <button
-            onClick={() =>
-              dispatch({
-                type: "OPEN",
-                modal: "deleteCompany",
-                payload: { data: row, key: row.id, fetchCompany },
-              })
-            }
-            className="bg-red-500 rounded-lg w-9 items-center   h-9 flex justify-center">
-            <Trash2 className=" text-white p-1" />
-          </button>
-        </div>
+      <div key={row.id} className="flex flex-col sm:flex-row gap-2">
+        <button
+        onClick={() =>
+          dispatch({
+          type: "OPEN",
+          modal: "updateCompany",
+          payload: { data: row, key: row.id, fetchCompany },
+          })
+        }
+        className="btn-sky grid grid-cols-[20px_auto] ">
+        <Edit className="h-4 w-4" />
+        Update Status
+        </button>
+        <button
+        onClick={() =>
+          dispatch({
+          type: "OPEN",
+          modal: "deleteCompany",
+          payload: { data: row, key: row.id, fetchCompany },
+          })
+        }
+        className="bg-red-500 rounded-lg w-9 items-center   h-9 flex justify-center">
+        <Trash2 className=" text-white p-1" />
+        </button>
+      </div>
       ),
     },
-  ];
+    ];
   const renderExpandedDetails = (row: CompanyDto) => {
     return (
-      <div className="flex items-center gap-4 p-4">
-        <span className="flex flex-col items-center mt-0 p-0">
-          <label className="font-semibold text-gray-500 ">About Company</label>
+
+      <div className="flex items-center gap-4 p-4 curs"
+      data-tooltip-id="my-tooltip"
+      data-tooltip-content={row.aboutCompany}
+
+      >
+        <span className="flex flex-col items-center mt-0 p-0 w-[800px]">
+          <label className="font-semibold text-gray-500  ">About Company</label>
           <div
-            className="whitespace-pre-wrap text-center"
+            className="whitespace-pre-wrap text-center text-wrap line-clamp-4"
             dangerouslySetInnerHTML={{ __html: row.aboutCompany || "------" }}></div>
         </span>
         <span className="flex flex-col items-center mt-0 p-0">

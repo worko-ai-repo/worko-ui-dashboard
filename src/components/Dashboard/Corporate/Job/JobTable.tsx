@@ -11,6 +11,8 @@ import { getToastOptions } from "lib-worko-ui";
 import { useNavigate } from "react-router-dom";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { keyFallbacksforJobs } from "@Components/Dashboard/WorkoAdmin/Job/JobTable";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -59,6 +61,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     companyId: string;
   } | null>(null);
 
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacksforJobs);
   //hook
   const nav = useNavigate();
 
@@ -66,6 +69,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     {
       key: "jobTitle",
       label: "Job Title",
+      sortable: true,
       render: (row: JobData) => (
         <span
           className=" w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
@@ -78,18 +82,19 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         </span>
       ),
     },
-    { key: "department", label: "Department" },
-    { key: "totalApplications", label: "Total Applications" },
+    { key: "department", label: "Department", sortable: true },
+    { key: "totalApplications", label: "Total Applications", sortable: true },
     ...(activeTab === "PUBLISHED"
-      ? [{ key: "pending", label: "Pending" }]
+      ? [{ key: "pending", label: "Pending", sortable: true }]
       : [
           {
             key: "updatedAt",
+            sortable: true,
             label: `${activeTab === "CLOSED" ? "Closed" : "Archived"} At`,
             render: (row: JobData) => new Date(row.updatedAt).toLocaleDateString("en-GB"),
           },
         ]),
-    ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status" }] : []),
+    ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status",sortable: true, }] : []),
     {
       key: "actions",
       label: "Actions",
@@ -220,9 +225,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       </button>
       <DynamicTable<JobData>
         columns={columns}
-        rows={data ?? []}
+        rows={sortedData ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}
         expandedRows={expandedRows}
+        onSortChange={onSortChange}
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
         toggleSelectAll={() => selectAllRows(data)}

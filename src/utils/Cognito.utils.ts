@@ -365,6 +365,8 @@ class CognitoService {
           }
         }
         secureStorage.setItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE, roles);
+      }else{
+        secureStorage.setItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE, [UserRole.GENERAL_USER]);
       }
 
       for (let i = 0; i < localStorage.length; i++) {

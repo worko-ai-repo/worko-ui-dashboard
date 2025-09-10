@@ -30,13 +30,13 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
       let payload = {};
       switch (type) {
         case "EMAIL":
-          payload = { isNumberVerified: inputValue };
+          payload = { isEmailVerified: true };
           break;
         case "MOBILE":
           payload = { isNumberVerified: true };
           break;
         case "COMPANY_EMAIL":
-          payload = { companyEmail: inputValue };
+          payload = { isCompanyEmailVerified: true };
           break;
         default:
           console.error("Invalid type");

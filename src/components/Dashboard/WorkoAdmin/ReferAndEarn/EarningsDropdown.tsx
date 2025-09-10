@@ -14,7 +14,7 @@ const EarningsCard = () => {
         <div className="space-y-4">
           {/* Total earning */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">Total earning:</span>
+            <span className="text-sm font-semibold">Total Referral amount:</span>
             <div className="border border-gray-300 rounded-lg px-3 py-1 flex items-center gap-1" style={{backgroundColor: '#f6f6f6', borderColor: '#c0b7b7'}}>
               
               <span className="font-semibold text-lg" style={{color: '#316bff'}}>Rs. 10,000</span>

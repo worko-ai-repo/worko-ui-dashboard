@@ -7,6 +7,7 @@ import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
+import CorporateReferrals from "@Components/Dashboard/Corporate/Referral/Referral";
 
 // Lazy load components
 const Jobs = lazy(() => import("@Components/Dashboard/Corporate/Job/Jobs"));
@@ -41,6 +42,14 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<SkeletonLoader showHeaderCards={true} showSearchBar={true} showButtons={true} buttonCount={1} showTabs={true} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />}>
               <Jobs />
+            </Suspense>
+          ),
+        },
+        {
+          path: "referral",
+          element: (
+            <Suspense fallback={<SkeletonLoader showHeaderCards={true} showSearchBar={true} showButtons={true} buttonCount={1} showTabs={true} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />}>
+              <CorporateReferrals />
             </Suspense>
           ),
         },

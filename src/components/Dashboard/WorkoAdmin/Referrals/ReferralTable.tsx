@@ -1,4 +1,3 @@
-
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
@@ -23,11 +22,7 @@ interface ReferralTableProps {
   pagination: CommonCursorPaginationProp;
 }
 const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
-  const keyFallbacks = {
-    candidateExperience_companyName: ["companyName", "candidateExperience.companyName"],
-    candidateExperience_department: ["department", "candidateExperience.department"],
-    candidateExperience_designation: ["designation", "candidateExperience.designation"],
-  };
+  const keyFallbacks = {};
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -67,7 +62,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       key: "jobUrl",
       label: "Job Url",
       render: (row: ReferralDetailsDto) => (
-        <a href="row?.jobUrl">
+        <a href={row?.jobUrl}>
           <Link
             size={34}
             onClick={(e) => {
@@ -79,7 +74,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
         </a>
       ),
     },
-    { key: "candidateName", label: "Candidate Name", sortable: true },
+    { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
       key: "matchingScore",
       label: "Matching Score",
@@ -89,14 +84,25 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
           <ProgressCircle
             key={"progress-" + row.PK}
             onClick={() => {
-             handleViewExtraDetails(row);
+              handleViewExtraDetails(row);
             }}
             value={row.matchingScore}
           />
         </div>
       ),
     },
-    { key: "employee_feedback", label: "Employee Feedback", sortable: false },
+    {
+      key: "emailFeedback",
+      label: "Employee Feedback",
+      sortable: false,
+      render: (row: ReferralDetailsDto) => (
+        <div className="flex justify-center">
+          <div className="text-center w-[800px] ">
+            <p className="text-wrap line-clamp-4">{row.emailFeedback}</p>
+          </div>
+        </div>
+      ),
+    },
     {
       key: "status",
       label: "Status",
@@ -123,7 +129,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       render: (row: ReferralDetailsDto) => (
         <button
           onClick={async () => {
-           handleViewExtraDetails(row);
+            handleViewExtraDetails(row);
           }}
           className="btn-sky grid grid-cols-[20px_auto] ">
           <img src={View} className="h-4 w-4" />
@@ -133,7 +139,9 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
     },
   ];
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
-    const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(row.status);
+    const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
+      row.status
+    );
     return timeLineProps ? (
       <div className="p-4 flex justify-evenly gap-4">
         <Timeline steps={timeLineProps} />
@@ -169,15 +177,15 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       <Modal
         isOpen={OpenExtraDetailsModal.isOpen}
         onClose={() => {
-          OpenExtraDetailsModal.isOpen && setOpenExtraDetailsModal({ isOpen: false, details: null,
-            key: undefined
-          });
+          OpenExtraDetailsModal.isOpen &&
+            setOpenExtraDetailsModal({ isOpen: false, details: null, key: undefined });
         }}
         className="w-[90vw] sm:max-w-4xl h-screen py-8">
         <ViewExtraReferralDetailsModal
-          key={OpenExtraDetailsModal.key} 
+          key={OpenExtraDetailsModal.key}
           details={OpenExtraDetailsModal.details}
-          onClose={() => setIsViewCVModalOpen(false)} />
+          onClose={() => setIsViewCVModalOpen(false)}
+        />
       </Modal>
     </>
   );

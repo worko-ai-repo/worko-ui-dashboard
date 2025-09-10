@@ -167,6 +167,8 @@ export interface JobApplicationDetailsDto {
   jobId: string;
   jobTitle: string;
   companyName: string;
+  updatedByUserId?: string;
+  updatedByCorporateUserId?: string;
   jobCreatedByCorporateUserId?: string;
   offerLetterDetails?: Array<{
     userType: string;

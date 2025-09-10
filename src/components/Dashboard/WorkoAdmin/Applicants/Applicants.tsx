@@ -54,7 +54,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(200);
+  const [pageSize, setPageSize] = useState(25);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
@@ -313,6 +313,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
               pageSize,
               setPageSize,
             }}
+            refetch={refetch}
             EvaluatorFormProps={EvaluatorFormProps}
             setEvaluatorFormProps={setEvaluatorFormProps}
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}

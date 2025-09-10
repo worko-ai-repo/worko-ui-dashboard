@@ -92,7 +92,7 @@ const Applicants = () => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(25);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
   // Extract the job Id from the URL using useParams
@@ -346,6 +346,9 @@ const Applicants = () => {
               pageSize,
               setPageSize,
             }}
+            refetch={
+              refetch
+            }
             EvaluatorFormProps={EvaluatorFormProps}
             setEvaluatorFormProps={setEvaluatorFormProps}
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}

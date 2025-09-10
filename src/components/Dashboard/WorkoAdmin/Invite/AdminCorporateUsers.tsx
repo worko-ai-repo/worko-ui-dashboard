@@ -98,7 +98,7 @@ const AdminCorporateInvites = () => {
         className="w-min">
         <InviteForm
           onRefetch={refetch}
-          compId={userDetails?.companyId ?? ""} // Pass the company ID here
+          compId={"ADMIN"} // Pass the company ID here
           onClose={() => {
             refetch;
             setIsSendInviteModalOpen(false);

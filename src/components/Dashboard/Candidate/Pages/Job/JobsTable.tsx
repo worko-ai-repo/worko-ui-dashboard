@@ -671,12 +671,12 @@ const JobsTable = memo(
       );
     };
 
-    console.log({
+    /* console.log({
       paginationCount: pagination?.count,
       currentPage,
       pageSize,
       hasNextPage: pagination?.count > currentPage * pageSize,
-    });
+    }); */
 
     return (
       <div className="w-full font-poppins">

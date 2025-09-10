@@ -54,7 +54,11 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   fetchGuidance,
   pagination,
 }) => {
-  const keyFallbacks = {};
+  const keyFallbacks = {
+    userDetails_name: ["name", "userDetails.name"],
+    userDetails_about: ["about", "userDetails.about"],
+  };
+
   const [modalState, dispatch] = useReducer(modalReducer, {
     activeModal: null,
     key: undefined,
@@ -63,7 +67,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     viewUpdateMode: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data, {});
+  const { sortedData, onSortChange } = useSortableData(data,keyFallbacks);
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
@@ -143,7 +147,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     return (
       <div className="flex items-center gap-4 p-4">
         <a
-          href="row?.jobUrl"
+          href={row?.jobUrl}
           className="flex text-blue-500 font-semibold cursor-pointer  flex-col items-center ">
           <label className="font-semibold text-gray-500">Job Url</label>
           Link

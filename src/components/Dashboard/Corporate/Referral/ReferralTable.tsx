@@ -1,172 +1,195 @@
-import React, { useState } from "react";
-import { Check, X, Eye } from "lucide-react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
-import ProgressCircle from "../../../Shared/CircularBar";
-import Modal from "../../../Shared/Modal";
-import RejectionForm from "../../../Shared/ApplicantsPage/RejectForm";
+import { DynamicTable } from "@Components/Shared/DynamicTable";
+import Modal from "@Components/Shared/Modal";
+import NoDataPresent from "@Components/Shared/NoDataPresent";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 
-interface WorkoRow {
-  id: string;
-  employeeName: string;
-  jobUrl: string;
-  candidateName: string;
-  score: number;
-  feedback: string;
-  status: "Referred" | "Accepted" | "Rejected";
-  timeline: { label: string; date: string }[];
+import { Eye, Link } from "lucide-react";
+import { useState } from "react";
+import ProgressCircle from "@Components/Shared/CircularBar";
+import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
+import CommonDashboardServicesObj, {
+  ExtraReferralDetailsResponse,
+} from "@Utils/CommonDashboard.utils";
+import { ReferralStatusType } from "src/types/JobsAndApplication.type";
+import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { View } from "@AssetsFolder/assets";
+import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewExtraReferrakDetailsModal";
+
+interface ReferralTableProps {
+  data: ReferralDetailsDto[];
+  fetchReferrals: () => void;
+  pagination: CommonCursorPaginationProp;
 }
+const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
+  const keyFallbacks = {};
 
-const data: WorkoRow[] = [
-  {
-    id: "1",
-    employeeName: "Avijit Dutta Gupta",
-    jobUrl: "https://example.com/job1",
-    candidateName: "Sayan Roy",
-    score: 80,
-    feedback: "This is not good as well as it is not working",
-    status: "Referred",
-    timeline: [{ label: "Requested", date: "12-01-2025" }],
-  },
-  {
-    id: "2",
-    employeeName: "Avijit Dutta Gupta",
-    jobUrl: "https://example.com/job2",
-    candidateName: "Anushka Goswami",
-    score: 80,
-    feedback: "This is not good as well as it is not working",
-    status: "Accepted",
-    timeline: [
-      { label: "Requested", date: "12-01-2025" },
-      { label: "Accepted", date: "12-02-2025" },
-      { label: "Done", date: "12-03-2025" },
-    ],
-  },
-  {
-    id: "3",
-    employeeName: "Avijit Dutta Gupta",
-    jobUrl: "https://example.com/job3",
-    candidateName: "Anushka Goswami",
-    score: 80,
-    feedback: "This is not good as well as it is not working",
-    status: "Rejected",
-    timeline: [
-      { label: "Requested", date: "12-01-2025" },
-      { label: "Rejected", date: "12-02-2025" },
-    ],
-  },
-];
-
-const statusColorMap = {
-  Referred: "bg-blue-100 text-blue-700",
-  Accepted: "bg-green-100 text-green-700",
-  Rejected: "bg-red-100 text-red-700",
-};
-
-export default function ReferralTable() {
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  const [isRejectModalOpen, setIsRejectModalOpen] = useState(false);
+  const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+  const [verifyModalOpen, setVerifyModalOpen] = useState<{
+    isOpen: boolean;
+    type: "EMAIL" | "MOBILE";
+    user: ReferralDetailsDto | {};
+    key?: number; // Add a unique key to force re-render
+  }>({ isOpen: false, type: "EMAIL", user: {} });
+  const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
+    isOpen: boolean;
+    details: ExtraReferralDetailsResponse | null;
+    key?: string;
+  }>({ isOpen: false, details: null, key: undefined });
+  const handleVerifyClick = (type: "EMAIL" | "MOBILE", user: ReferralDetailsDto) => {
+    setVerifyModalOpen({
+      isOpen: true,
+      type,
+      user,
+      key: Date.now(), // Add a unique timestamp
+    });
+  };
 
-  const toggleExpand = (id: string) => {
-    setExpandedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]));
+  const handleViewExtraDetails = async (row: ReferralDetailsDto) => {
+    const details = await CommonDashboardServicesObj.fetchExtraReferralDetails(row);
+    setOpenExtraDetailsModal({
+      isOpen: true,
+      details,
+      key: row.PK, // Use row ID as key to force re-render when different row is clicked
+    });
   };
 
   const columns = [
-    { key: "employeeName", label: "Employee name" },
+    { key: "name", label: "Employee Name", sortable: true },
     {
       key: "jobUrl",
-      label: "Job URL",
-      render: (row: WorkoRow) => (
-        <a href={row.jobUrl} className="text-blue-500 underline" target="_blank" rel="noreferrer">
-          link
+      label: "Job Url",
+      render: (row: ReferralDetailsDto) => (
+        <a href={row?.jobUrl}>
+          <Link
+            size={34}
+            onClick={(e) => {
+              e.stopPropagation();
+              window.open(row?.jobUrl, "_blank");
+            }}
+            className="flex items-center btn-sky cursor-pointer"
+          />
         </a>
       ),
     },
-    { key: "candidateName", label: "Candidate name" },
+    { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
-      key: "score",
-      label: "Worko score",
-      render: (row: WorkoRow) => (
+      key: "matchingScore",
+      label: "Matching Score",
+      sortable: true,
+      render: (row: ReferralDetailsDto) => (
         <div className="flex justify-center">
           <ProgressCircle
-            value={row.score}
-            onClick={function (): void {
-              throw new Error("Function not implemented.");
+            key={"progress-" + row.PK}
+            onClick={() => {
+              handleViewExtraDetails(row);
             }}
+            value={row.matchingScore}
           />
         </div>
       ),
     },
-    { key: "feedback", label: "Employee feedback" },
+    {
+      key: "emailFeedback",
+      label: "Employee Feedback",
+      sortable: false,
+
+      render: (row: ReferralDetailsDto) => (
+        <div className="flex justify-center">
+          <div className="text-center w-[800px] ">
+            <p className="text-wrap line-clamp-4">{row.emailFeedback}</p>
+          </div>
+        </div>
+      ),
+    },
     {
       key: "status",
       label: "Status",
-      render: (row: WorkoRow) => <span className={`text-sm px-3 py-1 rounded-full font-semibold ${statusColorMap[row.status]}`}>{row.status}</span>,
-    },
-    {
-      key: "actions",
-      label: "Actions",
-      render: (row: WorkoRow) => {
-        if (row.status === "Rejected") return null;
-
-        const showAccept = row.status === "Referred";
-        const showView = row.status === "Accepted";
-        const showReject = row.status === "Referred" || row.status === "Accepted";
+      sortable: true,
+      render: (row: ReferralDetailsDto) => {
+        // Status color mapping
+        const statusColors = CommonDashboardServicesObj.getReferralStatusColor;
+        const statusAliases = CommonDashboardServicesObj.getReferralStatusAlias;
+        const colorClass =
+          statusColors[row.status as ReferralStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex gap-2 justify-center">
-            {showAccept && (
-              <button className="bg-green-500 hover:bg-green-600 text-white p-3 rounded-[10px]">
-                <Check size={16} />
-              </button>
-            )}
-            {showView && (
-              <button className="btn-sky p-3">
-                <Eye size={16} />
-              </button>
-            )}
-            {showReject && (
-              <button onClick={() => setIsRejectModalOpen(true)} className="bg-red-500 hover:bg-red-600 text-white px-3 py-3 rounded-[10px]">
-                <X size={16} />
-              </button>
-            )}
+          <div className="flex justify-center relative">
+            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
+              {statusAliases[row.status as ReferralStatusType]}
+            </span>
           </div>
         );
       },
     },
+    {
+      key: "action",
+      label: "Actions",
+      render: (row: ReferralDetailsDto) => (
+        <button
+          onClick={async () => {
+            handleViewExtraDetails(row);
+          }}
+          className="btn-sky grid grid-cols-[20px_auto] ">
+          <img src={View} className="h-4 w-4" />
+          View more
+        </button>
+      ),
+    },
   ];
-
-  const renderExpandedRow = (row: WorkoRow) => {
-    if (row.timeline.length === 0) return null;
-
-    return (
-      <div className="flex w-full justify-start">
-        <div className="px-6 py-4">
-          <div className="flex items-center justify-start gap-6 w-full overflow-x-auto">
-            {row.timeline.map((step, index) => (
-              <React.Fragment key={index}>
-                <div className="flex flex-col items-center min-w-[100px]">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-emerald-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs font-bold">✓</div>
-                    <span className="text-sm font-semibold">{step.label}</span>
-                  </div>
-                  <span className="text-[10px] text-gray-500 mt-1">{step.date}</span>
-                </div>
-                {index < row.timeline.length - 1 && <div className="flex-1 h-1 bg-emerald-400 rounded-full" style={{ minWidth: "80px" }} />}
-              </React.Fragment>
-            ))}
-          </div>
-        </div>
+  const renderExpandedDetails = (row: ReferralDetailsDto) => {
+    const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
+      row.status
+    );
+    return timeLineProps ? (
+      <div className="p-4 flex justify-evenly gap-4">
+        <Timeline steps={timeLineProps} />
       </div>
+    ) : (
+      <span className="text-gray-500">No additional details available.</span>
     );
   };
 
+  /**
+   * Toggle row expansion
+   */
+  const toggleExpand = (id: string) => {
+    setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
+  };
   return (
     <>
-      <DynamicTable columns={columns} rows={data} expandedRows={expandedRows} toggleExpand={toggleExpand} renderExpandedDetails={renderExpandedRow} enableSelect={false} />
-
-      <Modal isOpen={isRejectModalOpen} onClose={() => setIsRejectModalOpen(false)} className="w-[90vw] sm:w-[455px] h-auto">
-        <RejectionForm />
+      <DynamicTable<ReferralDetailsDto>
+        columns={columns}
+        rows={sortedData ?? []}
+        enableSelect={false}
+        onSortChange={onSortChange}
+        pageSize={pagination.pageSize}
+        setPageSize={pagination.setPageSize}
+        handlePreviousPage={pagination.goToPreviousPage}
+        handleNextPage={pagination.goToNextPage}
+        hasNextPage={pagination.hasNextPage}
+        hasPrevPage={pagination.hasPreviousPage}
+        renderExpandedDetails={renderExpandedDetails}
+        expandedRows={expandedRows}
+        toggleExpand={toggleExpand}
+      />
+      <Modal
+        isOpen={OpenExtraDetailsModal.isOpen}
+        onClose={() => {
+          OpenExtraDetailsModal.isOpen &&
+            setOpenExtraDetailsModal({ isOpen: false, details: null, key: undefined });
+        }}
+        className="w-[90vw] sm:max-w-4xl h-screen py-8">
+        <ViewExtraReferralDetailsModal
+          key={OpenExtraDetailsModal.key}
+          details={OpenExtraDetailsModal.details}
+          onClose={() => setIsViewCVModalOpen(false)}
+        />
       </Modal>
     </>
   );
-}
+};
+
+export default ReferralTable;

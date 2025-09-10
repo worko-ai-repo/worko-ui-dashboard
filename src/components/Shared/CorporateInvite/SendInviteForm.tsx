@@ -7,6 +7,8 @@ import { validationRules } from "@Utils/FormValidator.utils";
 import { toast } from "react-toastify";
 import { getToastOptions } from "lib-worko-ui";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
+import CompanyInput from "../CompanyInput";
+import { CompanyShortDto } from "@Interfaces/JobsAndCompany.dto";
 
 type FormData = {
   firstName: string;
@@ -35,7 +37,15 @@ interface InviteApiPayload {
   cvDuplicacyAccess?: boolean;
 }
 
-const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:string,onRefetch:()=>void}) => {
+const InviteForm = ({
+  onClose,
+  compId,
+  onRefetch,
+}: {
+  onClose: () => void;
+  compId: string;
+  onRefetch: () => void;
+}) => {
   const {
     register,
     handleSubmit,
@@ -43,6 +53,7 @@ const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:
     formState: { errors, isValid },
     watch,
     setValue,
+    clearErrors,
     trigger,
   } = useForm<FormData>({
     defaultValues: {
@@ -58,7 +69,7 @@ const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:
     },
     mode: "onChange", // This enables instant validation
   });
-
+  const isAdmin = RBAC.can("play_admin") || compId === "ADMIN";
   const [inviteSent, setInviteSent] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [name, setName] = useState("");
@@ -80,9 +91,11 @@ const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:
         setIsSubmitting(false);
         return;
       }
+      const selectedCompanyId = data.companyId || compId;
+
       // Prepare API payload according to the API documentation
       const basePayload = {
-        companyId: compId,
+        companyId: selectedCompanyId, // Use the form data
         corporateUserType: data.corporateUserType,
         email: data.email,
         firstName: data.firstName,
@@ -141,9 +154,12 @@ const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:
       </div>
     );
   }
-
+  const handleCompanySelect = (company: CompanyShortDto) => {
+    setValue("companyId", company.id || company.SK.split("ID#")[1]); // Remove "ID#" prefix if present
+    clearErrors("companyId");
+  };
   return (
-    <div className="w-[650px] h-[640px] relative overflow-hidden bg-white rounded-xl">
+    <div className="w-[650px] h-[740px] relative overflow-hidden bg-white rounded-xl">
       <div className="w-full h-[640px] bg-white p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="h-full relative">
           {/* Header */}
@@ -156,6 +172,34 @@ const InviteForm = ({ onClose ,compId,onRefetch}: { onClose: () => void ,compId:
           <div className="grid grid-cols-2 gap-6">
             {/* Left Column */}
             <div className="space-y-6">
+              {/* Company Name */}
+              {isAdmin && (
+                <div>
+                  <label className="block mb-2 text-sm font-medium font-poppins">
+                    <span className="text-red-600">*</span>
+                    <span className="text-black/95 ml-1">Company Name</span>
+                  </label>
+                  <div className="relative">
+                    <>
+                      <CompanyInput
+                        errors={errors}
+                        clearErrors={clearErrors}
+                        setCompanyName={handleCompanySelect}
+                      />
+                      {errors.companyId && (
+                        <p className="text-sm text-left text-red-500">
+                          {errors.companyId.message?.toString()}
+                        </p>
+                      )}
+                    </>
+                    {errors.companyId && (
+                      <p className="text-red-500 text-xs mt-1 animate-pulse">
+                        {errors.companyId.message}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* First Name */}
               <div>
                 <label className="block mb-2 text-sm font-medium font-poppins">

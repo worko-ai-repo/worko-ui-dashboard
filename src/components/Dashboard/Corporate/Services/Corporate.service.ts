@@ -1,9 +1,24 @@
 import { JobFormSchema } from "@Components/Dashboard/types";
-import { ApiResponseDto, CorporateInvite, JobApiResponse, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import {
+  ApiResponseDto,
+  CorporateInvite,
+  JobApiResponse,
+  JobApplicationDetailsDto,
+  ReferralDetailsDto,
+} from "@Interfaces/CorporateDashboard.dto";
 import { JobDto } from "@Interfaces/JobsAndCompany.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SelectedRow } from "../Job/Jobs";
-import { CorporateBulkScreeningDto, FileMetadataDto, BulkUploadResponseDto, BulkScreeningListItemDto, ResumeScreeningRecordDto, JobEvaluationRequestDto, BulkJobApplicationUpdateItem, EvaluationResponseItemDto  } from "@Interfaces/CorporateServices.dto";
+import {
+  CorporateBulkScreeningDto,
+  FileMetadataDto,
+  BulkUploadResponseDto,
+  BulkScreeningListItemDto,
+  ResumeScreeningRecordDto,
+  JobEvaluationRequestDto,
+  BulkJobApplicationUpdateItem,
+  EvaluationResponseItemDto,
+} from "@Interfaces/CorporateServices.dto";
 
 /**
  * Corporate Service File
@@ -24,7 +39,14 @@ class CorporateService {
    */
   async postJobs(payload: JobFormSchema, params: object): Promise<JobDto | []> {
     try {
-      const { response } = await httpServiceObj.post<JobDto>("/job", payload, true, params, false, "JOB");
+      const { response } = await httpServiceObj.post<JobDto>(
+        "/job",
+        payload,
+        true,
+        params,
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -47,7 +69,13 @@ class CorporateService {
    */
   async fetchJobs(params: object): Promise<JobApiResponse> {
     try {
-      const { response } = await httpServiceObj.get<JobApiResponse>("/job", true, params, false, "JOB");
+      const { response } = await httpServiceObj.get<JobApiResponse>(
+        "/job",
+        true,
+        params,
+        false,
+        "JOB"
+      );
       if (response) return response;
       throw new Error("Empty response");
     } catch (error: any) {
@@ -74,7 +102,14 @@ class CorporateService {
    */
   async bulkUpdate(payload: { bulkJobUpdate: SelectedRow[] }): Promise<any> {
     try {
-      const { response } = await httpServiceObj.patch<any>("/job/bulk-update", payload, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.patch<any>(
+        "/job/bulk-update",
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
       if (response) return response;
       else {
         throw new Error();
@@ -105,7 +140,14 @@ class CorporateService {
     jobId: string
   ): Promise<JobDto | null> {
     try {
-      const { response } = await httpServiceObj.put<JobDto>(`/job/${jobId}`, payload, true, params, false, "JOB");
+      const { response } = await httpServiceObj.put<JobDto>(
+        `/job/${jobId}`,
+        payload,
+        true,
+        params,
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -129,7 +171,13 @@ class CorporateService {
   async fetchApplications(params: object): Promise<ApiResponseDto<JobApplicationDetailsDto>> {
     try {
       //path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType: ApiType = "BASE"
-      const { response } = await httpServiceObj.get<ApiResponseDto<JobApplicationDetailsDto>>("/job-application", true, params, false, "JOB");
+      const { response } = await httpServiceObj.get<ApiResponseDto<JobApplicationDetailsDto>>(
+        "/job-application",
+        true,
+        params,
+        false,
+        "JOB"
+      );
       if (response) return response;
       else {
         throw new Error();
@@ -161,9 +209,19 @@ class CorporateService {
          }
    * @return {Promise<JobApplicationDetailsDto>} -= Common job data that will be listed in the corporate dashboard.
    */
-  async updateApplicationStatus(payload: any, jobId: string): Promise<JobApplicationDetailsDto | null> {
+  async updateApplicationStatus(
+    payload: any,
+    jobId: string
+  ): Promise<JobApplicationDetailsDto | null> {
     try {
-      const { response } = await httpServiceObj.patch<JobApplicationDetailsDto>(`/job-application/${jobId}/corp-action`, payload, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.patch<JobApplicationDetailsDto>(
+        `/job-application/${jobId}/corp-action`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -188,7 +246,14 @@ class CorporateService {
    */
   async parseJobDescription(jobDescription: string): Promise<any> {
     try {
-      const { response } = await httpServiceObj.post<any>("/job/parsejd", { jobDescription }, true, {}, false, "JOB");
+      const { response } = await httpServiceObj.post<any>(
+        "/job/parsejd",
+        { jobDescription },
+        true,
+        {},
+        false,
+        "JOB"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -220,7 +285,14 @@ class CorporateService {
  */
   async bulkScreening(payload: any): Promise<CorporateBulkScreeningDto | {}> {
     try {
-      const { response } = await httpServiceObj.post<CorporateBulkScreeningDto>("/corporate-bulk-jd/", payload, true, {}, false, "BASE");
+      const { response } = await httpServiceObj.post<CorporateBulkScreeningDto>(
+        "/corporate-bulk-jd/",
+        payload,
+        true,
+        {},
+        false,
+        "BASE"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -240,9 +312,19 @@ class CorporateService {
    *
    * @returns  {BulkUploadResponseDto} -
    */
-  async bulkScreeningUpload(payload: FileMetadataDto[], bulkCvId: string): Promise<BulkUploadResponseDto | {}> {
+  async bulkScreeningUpload(
+    payload: FileMetadataDto[],
+    bulkCvId: string
+  ): Promise<BulkUploadResponseDto | {}> {
     try {
-      const { response } = await httpServiceObj.post<BulkUploadResponseDto>(`/corporate-bulk-jd/${bulkCvId}/resumes`, { bulkCvs: payload }, true, {}, false, "BASE");
+      const { response } = await httpServiceObj.post<BulkUploadResponseDto>(
+        `/corporate-bulk-jd/${bulkCvId}/resumes`,
+        { bulkCvs: payload },
+        true,
+        {},
+        false,
+        "BASE"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -264,7 +346,13 @@ class CorporateService {
 
   async fetchBulkScreenedJobs(params: object): Promise<ApiResponseDto<BulkScreeningListItemDto>> {
     try {
-      const { response } = await httpServiceObj.get<ApiResponseDto<BulkScreeningListItemDto>>(`/corporate-bulk-jd/`, true, params, false, "BASE");
+      const { response } = await httpServiceObj.get<ApiResponseDto<BulkScreeningListItemDto>>(
+        `/corporate-bulk-jd/`,
+        true,
+        params,
+        false,
+        "BASE"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -289,7 +377,13 @@ class CorporateService {
    */
   async getBulkScreeningResumes(params: object): Promise<ApiResponseDto<ResumeScreeningRecordDto>> {
     try {
-      const { response } = await httpServiceObj.get<ApiResponseDto<ResumeScreeningRecordDto>>(`/corporate-bulk-jd-resume/`, true, params, false, "BASE");
+      const { response } = await httpServiceObj.get<ApiResponseDto<ResumeScreeningRecordDto>>(
+        `/corporate-bulk-jd-resume/`,
+        true,
+        params,
+        false,
+        "BASE"
+      );
 
       if (!response) {
         throw new Error("No response received");
@@ -315,7 +409,13 @@ class CorporateService {
    */
   async fetchInvites(params: object): Promise<ApiResponseDto<CorporateInvite>> {
     try {
-      const { response } = await httpServiceObj.get<ApiResponseDto<CorporateInvite>>("/corporate-invite/", true, params, false, "BASE");
+      const { response } = await httpServiceObj.get<ApiResponseDto<CorporateInvite>>(
+        "/corporate-invite/",
+        true,
+        params,
+        false,
+        "BASE"
+      );
       if (response) {
         return response;
       }
@@ -340,10 +440,21 @@ class CorporateService {
 
   async postEvaluatorFeedbackRequest(payload: JobEvaluationRequestDto): Promise<any> {
     try {
-      const { response, status } = await httpServiceObj.post<any>("/request-evaluation/", payload, true, {}, false, "JOB");
+      const { response, status } = await httpServiceObj.post<any>(
+        "/request-evaluation/",
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
 
       if (status === 409) {
-        const error = new Error(`The application evaluator feedback request already exists against ${payload.evaluatorDetails.email || "this evaluator"}.`);
+        const error = new Error(
+          `The application evaluator feedback request already exists against ${
+            payload.evaluatorDetails.email || "this evaluator"
+          }.`
+        );
         (error as any).status = 409;
         throw error;
       }
@@ -361,7 +472,9 @@ class CorporateService {
    *
    * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
    */
-  async postBulkEvaluatorFeedbackRequest(payload: { requestEvaluations: JobEvaluationRequestDto[] }): Promise<any> {
+  async postBulkEvaluatorFeedbackRequest(payload: {
+    requestEvaluations: JobEvaluationRequestDto[];
+  }): Promise<any> {
     try {
       const { response, status } = await httpServiceObj.post<any>(
         "/request-evaluation/bulk",
@@ -393,7 +506,9 @@ class CorporateService {
    *
    * @description - This API is used to send multiple applications feedback requests for multiple job applications at once.
    */
-  async postBulkApplicationUpdate(payload: { bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[] }): Promise<any> {
+  async postBulkApplicationUpdate(payload: {
+    bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[];
+  }): Promise<any> {
     try {
       const { response, status } = await httpServiceObj.post<any>(
         "/job-application/bulk-update",
@@ -430,17 +545,44 @@ class CorporateService {
       return response;
     } catch (error) {
       console.error("[CORPORATE SERVICE]: Failed to fetch evaluation responses.", error);
-      return{
+      return {
         data: [],
         pagination: {
           count: 0,
           pageSize: 0,
         },
-      }
+      };
     }
   }
 
-  
+  /**
+   * ferchReferrals
+   *
+   * @description - This api is used to get referrals based on the tab .
+   */
+  async fetchReferrals(params: object): Promise<ApiResponseDto<ReferralDetailsDto>> {
+    try {
+      const { response } = await httpServiceObj.get<ApiResponseDto<ReferralDetailsDto>>(
+        "/referral",
+        true,
+        params,
+        false,
+        "BASE"
+      );
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[CORPORATE SERVICE]: Failed to fetch Referrals.", error);
+      // fallback response to prevent `null`
+      return {
+        data: [],
+        pagination: {
+          count: 0,
+          pageSize: 0,
+        },
+      };
+    }
+  }
 }
 
 const CorporateServiceObj = new CorporateService();

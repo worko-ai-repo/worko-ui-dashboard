@@ -43,7 +43,7 @@ const navigationItems: NavItem[] = [
     id: "referral",
     label: "Referral",
     icon: ReferralIcon,
-    dashboardTypes: ["EMPLOYEE", "CANDIDATE"],
+    dashboardTypes: ["EMPLOYEE", "CANDIDATE"/* ,"CORPORATE" */],
   },
   {
     id: "guidance",

@@ -14,12 +14,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { handleDeleteUsers } from "../Employee/EmployeeTable";
 
-interface EmployeeTableProps {
+interface CandidateTableProps {
   data: ApplicantDetails[];
   fetchEmployees: () => void;
   pagination: CommonCursorPaginationProp;
 }
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pagination }) => {
+const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, pagination }) => {
   const keyFallbacks = {
     candidateExperience_companyName: ["companyName", "candidateExperience.companyName"],
     candidateExperience_department: ["department", "candidateExperience.department"],
@@ -71,13 +71,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
     },
-    { key: "email", label: "Email" },
-    { key: "number", label: "Phone no" },
-    { key: "candidateExperience_companyName", label: "Company Name" },
-    { key: "referralCount", label: "Referrals Request Accepted" },
-    { key: "candidateExperience_designation", label: "Designation" },
+    { key: "email", label: "Email",sortable: true },
+    { key: "number", label: "Phone no" ,sortable: true },
+    { key: "candidateExperience_companyName", label: "Company Name",sortable: true  },
+    { key: "referralCount", label: "Referrals Request Accepted",sortable: true  },
+    { key: "candidateExperience_designation", label: "Designation",sortable: true  },
     {
       key: "Cv link",
       label: "Link",
@@ -216,4 +217,4 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   );
 };
 
-export default EmployeeTable;
+export default CandidateTable;

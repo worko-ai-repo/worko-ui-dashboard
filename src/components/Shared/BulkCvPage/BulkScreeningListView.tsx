@@ -13,6 +13,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import { useNavigate } from "react-router-dom";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
 
 // Define the data type for our screening records
 interface ScreeningRecord {
@@ -35,7 +36,15 @@ const ScreeningListView: FunctionComponent = () => {
     ? import.meta.env.APP_WORKO_COMP_ID
     : userDetails?.companyId || "";
   const [pageSize, setPageSize] = useState<number>(10);
-
+  const keyFallbacks = {
+    jobTitle: ["jobTitle", "jobTitle"],
+    location: ["jobLocation", "jobLocation"],
+    experienceRange: ["experienceRange", "experienceRange"],
+    totalCandidates: ["totalCandidates", "totalCandidates"],
+    screenOnDate: ["createdAt", "createdAt"],
+    doneBy: ["createdByCorporateUserId", "createdByCorporateUserId"],
+  };
+ 
   const params: Omit<CursorPaginationAdminBulkScreenedJobsParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
@@ -83,7 +92,7 @@ const ScreeningListView: FunctionComponent = () => {
       return [];
     }
   }, [data]); // Only recalculate when data changes
-
+  const { sortedData, onSortChange } = useSortableData(transformedData, keyFallbacks);
   const renderActions = useCallback(
     (row: ScreeningRecord) => (
       <div className="flex  items-center">
@@ -111,6 +120,7 @@ const ScreeningListView: FunctionComponent = () => {
     {
       key: "jobTitle",
       label: "Job title",
+      sortable: true,
       render: (row: ScreeningRecord) => (
         <span className="w-full capitalize text-center font-bold ">{row.jobTitle}</span>
       ),
@@ -118,22 +128,27 @@ const ScreeningListView: FunctionComponent = () => {
     {
       key: "location",
       label: "Location",
+      sortable: true,
     },
     {
       key: "experienceRange",
       label: "Experience range",
+      sortable: true,
     },
     {
       key: "totalCandidates",
       label: "Total candidates",
+      sortable: true,
     },
     {
       key: "screenOnDate",
       label: "Screen on date",
+      sortable: true,
     },
     {
       key: "doneBy",
       label: "Done by",
+      sortable: true,
     },
 
     {
@@ -151,8 +166,9 @@ const ScreeningListView: FunctionComponent = () => {
         <div className="max-w-full mx-auto">
           <DynamicTable
             columns={columns}
-            rows={transformedData ?? []}
+            rows={sortedData ?? []}
             enableSelect={false}
+            onSortChange={onSortChange}
             pageSize={pageSize}
             setPageSize={setPageSize}
             handlePreviousPage={goToPreviousPage}

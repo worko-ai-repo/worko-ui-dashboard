@@ -42,6 +42,7 @@ import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -55,6 +56,7 @@ interface ApplicationTableProps {
     hasRefetch: boolean
   ) => void;
   userType: string;
+  refetch: () => void;
   Pagination: CommonCursorPaginationProp;
   isAddEvaluatorModalOpen: boolean;
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -85,6 +87,7 @@ export default function ApplicationTable({
   showRejectReason,
   viewDuplicacyDetails,
   isBulkEvaluation,
+  refetch,
   onBulkUpdate,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
@@ -605,7 +608,7 @@ export default function ApplicationTable({
               <>
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
-                  <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
+                  <p><CreatedByDisplay row={row} mode="updated" /></p>
                 </div>
 
                 <div className="text-center">
@@ -788,7 +791,7 @@ export default function ApplicationTable({
           })
         }
         className="w-[90vw] sm:w-[455px] h-[500px] ">
-        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} />
+        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} refetch={refetch} />
       </Modal>
 
       <Modal

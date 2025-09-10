@@ -11,6 +11,7 @@ import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -35,6 +36,9 @@ interface JobsTableProps {
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   getAllSelected: (item: JobData[]) => boolean;
 }
+export const keyFallbacksforJobs = {
+  
+};
 
 const JobTableWrapper: React.FC<JobsTableProps> = ({
   activeTab,
@@ -58,7 +62,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     id: string;
     companyId: string;
   } | null>(null);
-
+ const { sortedData, onSortChange } = useSortableData(data, keyFallbacksforJobs);
   //hook
   const nav = useNavigate();
 
@@ -66,6 +70,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     {
       key: "jobTitle",
       label: "Job Title",
+      sortable: true,
       render: (row: JobData) => (
         <span
           className="w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
@@ -81,6 +86,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     {
       key: "companyName",
       label: "Company",
+      sortable: true,
       render: (row: JobData) => {
         const finalLogoUrl = row?.companyDetails?.logo
           ? `${import.meta.env.APP_WORKO_BASE_URL}/images/${row?.companyDetails?.logo}`
@@ -100,6 +106,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     {
       key: "location",
       label: "Location",
+      sortable: true,
       render: (row: JobData) => {
         const locations = row.location.fullLocation ||
           row.location.city ||
@@ -108,13 +115,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         return <span className="capitalize">{locations.join(", ")}</span>;
       },
     },
-    { key: "department", label: "Department" },
-    { key: "totalApplications", label: "Total Applications" },
+    { key: "department", label: "Department",sortable: true, },
+    { key: "totalApplications", label: "Total Applications",sortable: true, },
     ...(activeTab === "PUBLISHED"
       ? [{ key: "pending", label: "Pending" }]
       : [
           {
             key: "updatedAt",
+            sortable: true,
             label: `${activeTab === "CLOSED" ? "Closed" : "Archived"} At`,
             render: (row: JobData) => new Date(row.updatedAt).toLocaleDateString("en-GB"),
           },
@@ -250,9 +258,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       </button>
       <DynamicTable<JobData>
         columns={columns}
-        rows={data ?? []}
+        rows={sortedData ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}
         expandedRows={expandedRows}
+        onSortChange={onSortChange}
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
         toggleSelectAll={() => selectAllRows(data)}

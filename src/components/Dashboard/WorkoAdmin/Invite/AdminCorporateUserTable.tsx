@@ -112,7 +112,10 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     fetchCorporateUsers: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data, {});
+  const { sortedData, onSortChange } = useSortableData(data, {
+    companyDetails_name: ["companyDetails.name"],
+    
+  });
   const [subDataCompanyId, setSubDataCompanyId] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 

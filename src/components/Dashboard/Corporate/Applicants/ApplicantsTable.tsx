@@ -108,6 +108,7 @@ export interface ApplicationTableProps {
     hasRefetch: boolean
   ) => void;
   userType: string;
+  refetch: () => void;
   Pagination: CommonCursorPaginationProp;
   isAddEvaluatorModalOpen: boolean;
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -131,6 +132,7 @@ export default function ApplicationTable({
   setEvaluatorFormProps,
   isBulkEvaluation,
   onBulkUpdate,
+  refetch
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -665,7 +667,7 @@ export default function ApplicationTable({
           })
         }
         className="w-[90vw] sm:w-[455px] h-[500px] ">
-        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} />
+        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} refetch={refetch}/>
       </Modal>
 
       <Modal

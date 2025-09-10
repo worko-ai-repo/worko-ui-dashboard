@@ -10,65 +10,95 @@ interface UserData {
   // Add other user properties as needed
 }
 
-const CreatedByDisplay = ({ row, mode = "created" }: { row: JobData; mode: "created" | "updated" }) => {
-    const [userData, setUserData] = useState<string | null>(null);
-    const [loading, setLoading] = useState(false);
+export interface CreatedByDisplayProps<
+  T extends object = {
+    createdByUserId?: string;
+    createdByCorporateUserId?: string;
+    updatedByUserId?: string;
+    updatedByCorporateUserId?: string;
+  }
+> {
+  row: T;
+  mode?: "created" | "updated";
+}
 
-    useEffect(() => {
-        const fetchUserData = async () => {
-            let userId = "";
-            let corporateUserId = "";
+const CreatedByDisplay = <
+  T extends {
+    createdByUserId?: string;
+    createdByCorporateUserId?: string;
+    updatedByUserId?: string;
+    updatedByCorporateUserId?: string;
+  }
+>({
+  row,
+  mode = "created",
+}: CreatedByDisplayProps<T>) => {
+  const [userData, setUserData] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-            if (mode === "created") {
-                userId = row?.createdByUserId;
-                corporateUserId = row?.createdByCorporateUserId;
-            } else if (mode === "updated") {
-                userId = row?.updatedByUserId || "";
-                corporateUserId = row?.updatedByCorporateUserId || "";
-            }
+  useEffect(() => {
+    const fetchUserData = async () => {
+      let userId = "";
+      let corporateUserId = "";
 
-            if (!corporateUserId && !userId) return;
+      if (mode === "created") {
+        userId = row?.createdByUserId || "";
+        corporateUserId = row?.createdByCorporateUserId || "";
+      } else if (mode === "updated") {
+        userId = row?.updatedByUserId || "";
+        corporateUserId = row?.updatedByCorporateUserId || "";
+      }
 
-            setLoading(true);
-            try {
-                let url = "";
+      if (!corporateUserId && !userId) {
+        throw new Error("No user ID found for display");
+      }
 
-                if (corporateUserId) {
-                    url = `/corporate-user/${corporateUserId}`;
-                } else if (userId) {
-                    url = `/user/${userId}`;
-                }
+      setLoading(true);
+      try {
+        let url = "";
 
-                const { response, error } = await httpServiceObj.get<UserData[]>(
-                    url,
-                    true,
-                    {},
-                    false,
-                    "BASE"
-                );
-                if (!response?.length || error) {
-                    throw new Error("Failed to fetch user data");
-                }
+        if (corporateUserId) {
+          url = `/corporate-user/${corporateUserId}`;
+        } else if (userId) {
+          url = `/user/${userId}`;
+        }
 
-                //Construct display name
-                const displayName = response?.[0].firstName
-                    ? `${response?.[0].firstName} ${response?.[0].lastName || ""}`.trim()
-                    : response?.[0].name || response?.[0].id;
-                setUserData(displayName);
-            } catch (error) {
-                console.error("Error fetching user data:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
+        const { response, error } = await httpServiceObj.get<UserData[]>(
+          url,
+          true,
+          {},
+          false,
+          "BASE"
+        );
+        if (!response?.length || error) {
+          throw new Error("Failed to fetch user data");
+        }
 
-        fetchUserData();
-    }, [row?.createdByCorporateUserId, row?.createdByUserId, row?.updatedByCorporateUserId, row?.updatedByUserId, mode]);
+        //Construct display name
+        const displayName = response?.[0].firstName
+          ? `${response?.[0].firstName} ${response?.[0].lastName || ""}`.trim()
+          : response?.[0].name || response?.[0].id;
+        setUserData(displayName);
+      } catch (error) {
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    if (loading) return <div>Loading...</div>;
-    if (!userData) return <div>No user data</div>;
+    fetchUserData();
+  }, [
+    row?.createdByCorporateUserId,
+    row?.createdByUserId,
+    row?.updatedByCorporateUserId,
+    row?.updatedByUserId,
+    mode,
+  ]);
 
-    return <div>{userData}</div>;
+  if (loading) return <div>Loading...</div>;
+  if (!userData) return <div>No user data</div>;
+
+  return <div>{userData}</div>;
 };
 
 export default CreatedByDisplay;

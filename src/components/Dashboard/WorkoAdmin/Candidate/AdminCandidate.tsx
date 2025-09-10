@@ -6,7 +6,7 @@ import { CursorPaginationUsersDataAdminParams } from "@Interfaces/AdminServices.
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
 import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
-import EmployeeTable from "./CandidateTable";
+import CandidateTable from "./CandidateTable";
 import InputFromDataToDateFilter from "@Components/Shared/ui/InputFromDataToDateFilter";
 
 const AdminCandidate = () => {
@@ -78,7 +78,7 @@ const AdminCandidate = () => {
             rowCount={5}
           />
         ) : (
-          <EmployeeTable
+          <CandidateTable
             data={data}
             fetchEmployees={refetch}
             pagination={{

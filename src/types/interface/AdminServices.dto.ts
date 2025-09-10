@@ -87,6 +87,7 @@ export interface CursorPaginationReferralsDataAdminParams {
   pageSize: number;
   sortOrder: "ascending" | "descending";
   searchText?: string;
+  companyId?: string;
   lastKey?: string | undefined;
   status?: ReferralStatusType;
   fromDate?: string; // ISO date string

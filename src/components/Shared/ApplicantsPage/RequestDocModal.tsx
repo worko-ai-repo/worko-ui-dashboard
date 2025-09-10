@@ -64,6 +64,7 @@ const RequestDocumentModal: React.FC<
       row: JobApplicationDetailsDto,
       notify?: boolean
     ) => void;
+    refetch: () => void;
   }
 > = ({
   isOpen,
@@ -73,6 +74,7 @@ const RequestDocumentModal: React.FC<
   onViewDocument,
   onRequestMore,
   handleStatusUpdate,
+  refetch, // Properly destructure refetch here
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -99,9 +101,8 @@ const RequestDocumentModal: React.FC<
 
   const watchedFields = watch("documents");
   useEffect(() => {
-   setOfferLetterSent(hasOfferLetterSent(jobApplication));
-  }
-, [jobApplication]);
+    setOfferLetterSent(hasOfferLetterSent(jobApplication));
+  }, [jobApplication]);
   useEffect(() => {
     if (isOpen) {
       reset({ documents: [{ name: "" }] });
@@ -189,6 +190,7 @@ const RequestDocumentModal: React.FC<
       console.error("Error viewing document:", error);
       toast.error("Failed to view document", getToastOptions({}));
     } finally {
+      refetch();
       setIsLoading(false);
     }
   };
@@ -212,7 +214,6 @@ const RequestDocumentModal: React.FC<
         requestedDocumentNames: [docName],
         applicantName: jobApplication.applicantDetails.name,
       };
-      debugger;
 
       const { response, error } = await httpServiceObj.patch(
         `/job-application/${jobApplication.id}/corp-action`,
@@ -235,6 +236,7 @@ const RequestDocumentModal: React.FC<
       console.error("Error re-requesting document:", error);
       toast.error("Failed to re-request document", getToastOptions({}));
     } finally {
+      refetch();
       setIsLoading(false);
       setReRequestingDoc(null);
     }
@@ -280,6 +282,7 @@ const RequestDocumentModal: React.FC<
       console.error("Error verifying documents:", error);
       toast.error("Failed to verify documents", getToastOptions({}));
     } finally {
+      refetch();
       setIsVerifying(false);
       invalidateJobApplication();
       onClose();
@@ -358,6 +361,7 @@ const RequestDocumentModal: React.FC<
       console.error("Error submitting documents:", error);
       toast.error("Failed to request documents", getToastOptions({}));
     } finally {
+      refetch();
       setIsLoading(false);
       reset({ documents: [{ name: "" }] });
     }
@@ -535,8 +539,8 @@ const RequestDocumentModal: React.FC<
               <div className="flex justify-start items-center gap-3.5">
                 <div
                   className={`w-full h-11 bg-gray-50 rounded-xl border border-gray-200 flex items-center px-4 cursor-pointer hover:bg-gray-100`}
-                  onClick={async() => {
-                    await handleViewDocumentClick(jobApplication , "LETTER");
+                  onClick={async () => {
+                    await handleViewDocumentClick(jobApplication, "LETTER");
                   }}>
                   <FileText className="w-4 h-4 text-gray-400 mr-2" />
                   <span className={`text-sm truncate flex-1 capitalize text-left text-gray-700`}>
@@ -577,7 +581,7 @@ const RequestDocumentModal: React.FC<
         {mode !== "READ_ONLY" && (
           <button
             onClick={handleVerifyAndApprove}
-            disabled={isVerifying || documents.some(doc => !doc.submittedOn)}
+            disabled={isVerifying || documents.some((doc) => !doc.submittedOn)}
             className="w-48 h-11 pl-px pr-2.5 py-2.5 text-sm leading-3 tracking-tight font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-[10px] flex justify-center items-center gap-1">
             {isVerifying ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
