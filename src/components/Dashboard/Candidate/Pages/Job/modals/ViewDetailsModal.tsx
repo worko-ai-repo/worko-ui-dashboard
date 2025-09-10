@@ -34,7 +34,7 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
         //     setStrengths([]);
         //     return;
         // }
-        const raw = viewDetailsContent.scoreDetails;
+        const raw = viewDetailsContent?.scoreDetails;
         console.log(raw)
         if (typeof raw === 'string' && raw.trim() !== '') {
             try {
