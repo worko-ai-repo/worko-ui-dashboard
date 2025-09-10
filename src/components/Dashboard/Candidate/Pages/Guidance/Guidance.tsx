@@ -249,7 +249,7 @@ const Guidance = () => {
 
   // navigating to guidance page
   const handleRedirect = ()=>{
-    window.location.href = `${import.meta.env.APP_PROXY_BASE}guidance`;
+    window.location.href = `${"/"}guidance`;
   }
   // Initial data load
   useEffect(() => {

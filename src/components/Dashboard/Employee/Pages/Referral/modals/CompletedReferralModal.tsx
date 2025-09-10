@@ -10,6 +10,7 @@ interface CompletedReferralModalProps {
   isOpen: boolean;
   referralData:any;
   onRefresh: () => void;
+  isCandidate?:boolean;
 }
 
 const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
@@ -17,6 +18,7 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
   isOpen,
   referralData,
   onRefresh,
+  isCandidate,
 }) => {
 
     const [visible, setVisible] = useState(false);
@@ -49,7 +51,8 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
         setIsLoading(false);
         return
     }
-    try {
+    if(!isCandidate){
+        try {
         const payload = {
             action: "DONE",
             emailId: user.email,
@@ -73,6 +76,27 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
     } finally{
         setIsLoading(false)
     }
+    }else{
+      try {
+        console.log(referralData)
+        const url = `/user/${user.email}/referral/${referralData.id}/DONE`
+        const {response} = await httpServiceObj.put(url,{},true)
+        console.log(response)
+        if(response){
+            toast.success("Referral request marked as done", getToastOptions({}));
+            setIsError("")          
+            onRefresh()
+            onClose()
+        }
+    } catch (error: any) {
+        console.log(error);
+        const errorMsg = error?.message || "Something went wrong";
+        setIsError(errorMsg);
+        toast.error(errorMsg, getToastOptions({}));
+    } finally{
+        setIsLoading(false)
+    }
+    } 
   }
   return (
     <div

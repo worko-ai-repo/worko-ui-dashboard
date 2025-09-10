@@ -34,6 +34,7 @@ const Jobs = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<JobFilters>({});
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>(initialPaginationState);
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
 //   const dummyJobs = [
 //   { id: "dummy1", jobTitle: "Data Analyst", companyName: "InsightsAI", createdAt: new Date().toISOString(), matchingScore: 74, status: "APPLIED", action: null },
@@ -253,6 +254,16 @@ const Jobs = () => {
     fetchJobs(1, size, '');
   }, [fetchJobs]);
 
+  //filer data
+    const filteredData = useMemo(() => {
+    if (!data) return null;
+    if (!statusFilter) return data;
+
+    return {
+      ...data,
+      data: data.data.filter(item => item.status === statusFilter)
+    };
+  }, [data, statusFilter]);
   // Initial data load
   useEffect(() => {
     if (user?.email && !data) {   // only run once, on first load
@@ -313,11 +324,11 @@ const Jobs = () => {
                 className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
               >
                 <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
+                <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
               </div>
             ))}
           </div>
-
+        <div className='flex justify-center gap-2'>
           <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
               type="text"
@@ -334,6 +345,28 @@ const Jobs = () => {
               Search
             </button>
           </div>
+            <div className="relative">
+                <select
+                  className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="APPLIED">Applied</option>
+                  <option value="CV_DOWNLOADED">CV Downloaded</option>
+                  <option value="UNDER_EVALUATION">Under Evaluation</option>
+                  <option value="PROCESSING_INTERVIEW">Processing</option>
+                  <option value="INTERVIEW_DONE">Interview Done</option>
+                  <option value="HIRING_IN_PROCESS">Hiring</option>
+                  <option value="DOCUMENT_REQUESTED">Document Requested</option>
+                  <option value="DOCUMENT_SUBMITTED">Document Submitted</option>
+                  <option value="OFFER_SENT">Offer Recieved</option>
+                  <option value="HIRED">Hired</option>
+                  <option value="JOINED">Joined</option>
+                  <option value="REJECTED">Rejected</option>
+                </select>
+              </div>
+              </div>
         </div>
 
         <div className="flex flex-col gap-4 justify-center sm:items-end">
@@ -351,7 +384,7 @@ const Jobs = () => {
         </div>
       ) : (
         <JobsTable
-          data={data}
+          data={filteredData}
           pagination={paginationInfo}
           currentPage={currentPage}
           onPageChange={handlePageChange}

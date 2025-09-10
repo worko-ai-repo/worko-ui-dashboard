@@ -44,7 +44,7 @@ const Referrals = () => {
   const paginationKeysRef = useRef<Record<number, string>>({
     1: "",
   });
-
+  const [statusFilter, setStatusFilter] = useState<string>("");
   const { user, isLoadingUser } = useDashboardContext();
 
   const APP_API_URI = import.meta.env.APP_API_URI
@@ -66,7 +66,7 @@ const fetchReferrals = useCallback(
         try {
           const { response } = await httpServiceObj.get(url, true, {}, true);
           const data = response as UserDetails[]; 
-          if (Array.isArray(data) && data[0]?.id) {
+          if (Array.isArray(data) && data[0]?.companyId) {
             companyId = data[0].companyId;
             setCompanyID(companyId);
           } else {
@@ -149,6 +149,16 @@ const fetchReferrals = useCallback(
     [fetchReferrals]
   );
 
+    const filteredData = useMemo(() => {
+  if (!data) return null;
+  if (!statusFilter) return data;
+
+  return {
+    ...data,
+    data: data.data.filter(item => item.status === statusFilter)
+  };
+}, [data, statusFilter]);
+
   // const handleGetNewReferral = () => {
   //   window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}/referrals`;
   // };
@@ -200,7 +210,7 @@ const fetchReferrals = useCallback(
           </div> */}
             
           {/* search bar */}
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex justify-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
                 <input
@@ -219,6 +229,21 @@ const fetchReferrals = useCallback(
                 Search
                 </button>
             </div>
+            <div className="relative">
+                <select
+className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="ACCEPTED">Accepted</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="AWAITING">Awaiting</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="WITHDRAWN">Withdrawn</option>
+                  <option value="DONE">Done</option>
+                </select>
+              </div>
 
             {/* Get New Referral Button */}
             {/* <div className="flex justify-start">
@@ -249,7 +274,7 @@ const fetchReferrals = useCallback(
         </div>
       ) : (
         <ReferralsTable
-          data={data}
+          data={filteredData}
           pagination={paginationInfo}
           currentPage={currentPage}
           onPageChange={handlePageChange}

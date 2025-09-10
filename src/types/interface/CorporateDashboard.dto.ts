@@ -171,6 +171,7 @@ export interface JobApplicationDetailsDto {
     remarks: string;
     cloudFileName: string;
   }>;
+  action:string;
   offerLetterIssueRaisedDetails: Array<{
     userId: string;
     userType: string;

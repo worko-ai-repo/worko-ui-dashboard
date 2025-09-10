@@ -30,17 +30,18 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
     const [strengths, setStrengths] = useState<string[]>([]);
 
   useEffect(() => {
-        if (!show) {
-            setStrengths([]);
-            return;
-        }
+        // if (!show) {
+        //     setStrengths([]);
+        //     return;
+        // }
         const raw = viewDetailsContent.scoreDetails;
         console.log(raw)
         if (typeof raw === 'string' && raw.trim() !== '') {
             try {
             const parsed = JSON.parse(raw);
-            if (parsed && Array.isArray(parsed.Strengths)) {
-                setStrengths(parsed.Strengths);
+            if (parsed.RecruiterNote) {
+            // if (parsed && Array.isArray(parsed.Strengths)) {
+                setStrengths(parsed.RecruiterNote);
             } else {
                 setStrengths([]);
             }
@@ -83,15 +84,15 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
         <h2 className="text-xl font-semibold mb-4 text-left">Matching score details</h2>
             
 <div className="flex justify-center items-stretch gap-3">
-  <div style={{ flexBasis: '70%' }} className="flex-shrink-0">
+  <div style={{ flexBasis: '70%',minHeight: "180px" }} className="flex-shrink-0">
     <h1 className="text-lg font-semibold mb-4 text-left">
       Feedback summary for :{" "}
       <span className="text-blue-600">{viewDetailsContent?.name || "NA"}</span>
     </h1>
-    <p className="border rounded-xl bg-gray-200 text-sm p-4 text-left">{strengths}</p>
+    <p className="border rounded-xl bg-gray-200 text-sm p-4 text-left overflow-y-auto max-h-[180px]">{strengths}</p>
   </div>
 
-    <div style={{ flexBasis: '30%' }} className="border rounded-xl bg-blue-600 text-white p-4 flex flex-col justify-between">
+    <div style={{ flexBasis: '30%',minHeight: "180px" }} className="border rounded-xl bg-blue-600 text-white p-4 flex flex-col justify-between">
     <h1 className="text-sm font-semibold text-left">Matching Score</h1>
 
     <div className="w-20 flex flex-col items-center justify-center mx-auto relative">

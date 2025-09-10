@@ -4,22 +4,24 @@ import { useState, useEffect, useMemo } from "react";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import WithdrawDialog from "./WithdrawDialog";
 
-const ReferralsTable = ({ searchbarText }: any) => {
-  const { user } = useDashboardContext();
-  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
+const ReferralsTable = ({
+  referrals,
+  pagination,
+  currentPage,
+  isLoading,
+  error,
+  onPageChange,
+  onPageSizeChange,
+}: {
+  referrals: any[];
+  pagination: any;
+  currentPage: number;
+  isLoading: boolean;
+  error: string | null;
+  onPageChange: (page: number) => void;
+  onPageSizeChange: (size: number) => void;
+}) => {
 
-  const [referrals, setReferrals] = useState<any[]>([]);
-  const [Isloading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [pagination, setPagination] = useState({
-    count: 0,
-    pageSize: 25,
-    sortOrder: "descending",
-    timesQueried: 0,
-    queriedCount: 0,
-    lastKey: undefined,
-  });
-  const [currentPage, setCurrentPage] = useState(1);
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
   const [showDialog, setShowDialog] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState(null);
@@ -27,90 +29,90 @@ const ReferralsTable = ({ searchbarText }: any) => {
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
-  const fetchReferrals = async (page = 1, pageSize = 25) => {
-    if (!user?.email) {
-      setError("User email is not available");
-      setIsLoading(false);
-      return;
-    }
+  // const fetchReferrals = async (page = 1, pageSize = 25) => {
+  //   if (!user?.email) {
+  //     setError("User email is not available");
+  //     setIsLoading(false);
+  //     return;
+  //   }
 
-    setIsLoading(true);
-    setError(null);
+  //   setIsLoading(true);
+  //   setError(null);
 
-    try {
-      const lastKey = page > 1 ? lastKeyMap[page - 1] : undefined;
-      const lastKeyParam = lastKey ? `&lastKey=${encodeURIComponent(lastKey)}` : "";
-      const encodedEmail = encodeURIComponent(user.email);
+  //   try {
+  //     const lastKey = page > 1 ? lastKeyMap[page - 1] : undefined;
+  //     const lastKeyParam = lastKey ? `&lastKey=${encodeURIComponent(lastKey)}` : "";
+  //     const encodedEmail = encodeURIComponent(user.email);
 
-      const { response }: { response: any } = await httpServiceObj.get(
-        `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ""}`,
-        true,
-        {},
-        true
-      );
-      console.log(response)
-      if (!response?.data || !Array.isArray(response.data)) {
-        setReferrals([]);
-        setPagination(prev => ({
-          ...prev,
-          count: 0,
-          lastKey: undefined,
-        }));
-        return;
-      }
+  //     const { response }: { response: any } = await httpServiceObj.get(
+  //       `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ""}`,
+  //       true,
+  //       {},
+  //       true
+  //     );
+  //     console.log(response)
+  //     if (!response?.data || !Array.isArray(response.data)) {
+  //       setReferrals([]);
+  //       setPagination(prev => ({
+  //         ...prev,
+  //         count: 0,
+  //         lastKey: undefined,
+  //       }));
+  //       return;
+  //     }
 
-      const formatted = response.data
-        .map((item: any) => ({
-          id: item.id || `temp-${Math.random()}`,
-          name: item.recipientDetails?.name || "N/A",
-          jobTitle: item.jobDetails?.title || "N/A",
-          email: item.recipientDetails?.email || "N/A",
-          phone: item.recipientDetails?.phoneNumber || "N/A",
-          jobApplicationStatus: item.jobApplicationStatus,
-          dateReferred: item.referredDate
-            ? new Date(item.referredDate).toLocaleDateString("en-GB")
-            : "N/A",
-          dateApplied: item.jobApplicationStatus && item.updatedAt
-            ? new Date(item.updatedAt).toLocaleDateString("en-GB")
-            : "----",
-          status: item.status || "PENDING",
-          referralBonus: item.commissionAmount || 0,
-        }))
-        .filter(Boolean);
+  //     const formatted = response.data
+  //       .map((item: any) => ({
+  //         id: item.id || `temp-${Math.random()}`,
+  //         name: item.recipientDetails?.name || "N/A",
+  //         jobTitle: item.jobDetails?.title || "N/A",
+  //         email: item.recipientDetails?.email || "N/A",
+  //         phone: item.recipientDetails?.phoneNumber || "N/A",
+  //         jobApplicationStatus: item.jobApplicationStatus,
+  //         dateReferred: item.referredDate
+  //           ? new Date(item.referredDate).toLocaleDateString("en-GB")
+  //           : "N/A",
+  //         dateApplied: item.jobApplicationStatus && item.updatedAt
+  //           ? new Date(item.updatedAt).toLocaleDateString("en-GB")
+  //           : "----",
+  //         status: item.status || "PENDING",
+  //         referralBonus: item.commissionAmount || 0,
+  //       }))
+  //       .filter(Boolean);
 
-      setReferrals(formatted);
+  //     setReferrals(formatted);
 
-      if (response?.pagination?.lastKey) {
-        setLastKeyMap(prev => ({ ...prev, [page]: response.pagination.lastKey }));
-      }
+  //     if (response?.pagination?.lastKey) {
+  //       setLastKeyMap(prev => ({ ...prev, [page]: response.pagination.lastKey }));
+  //     }
 
-      setPagination({
-        count: response?.pagination?.count || formatted.length,
-        pageSize,
-        sortOrder: "descending",
-        timesQueried: response?.pagination?.timesQueried || 1,
-        queriedCount: response?.pagination?.queriedCount || 0,
-        lastKey: response?.pagination?.lastKey,
-      });
-    } catch (error: any) {
-      console.error("Error fetching referrals:", error);
-      setError("Failed to load referrals. Please try again.");
-      setReferrals([]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //     setPagination({
+  //       count: response?.pagination?.count || formatted.length,
+  //       pageSize,
+  //       sortOrder: "descending",
+  //       timesQueried: response?.pagination?.timesQueried || 1,
+  //       queriedCount: response?.pagination?.queriedCount || 0,
+  //       lastKey: response?.pagination?.lastKey,
+  //     });
+  //   } catch (error: any) {
+  //     console.error("Error fetching referrals:", error);
+  //     setError("Failed to load referrals. Please try again.");
+  //     setReferrals([]);
+  //   } finally {
+  //     setIsLoading(false);
+  //   }
+  // };
 
-  useEffect(() => {
-    fetchReferrals(currentPage, pagination.pageSize);
-  }, [user?.email, currentPage, pagination.pageSize, searchbarText]);
+  // useEffect(() => {
+  //   fetchReferrals(currentPage, pagination.pageSize);
+  // }, [user?.email, currentPage, pagination.pageSize, searchbarText]);
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
-  const handlePageSizeChange = (pageSize: number) => {
-    setPagination(prev => ({ ...prev, pageSize }));
-    setCurrentPage(1);
-    setLastKeyMap({});
-  };
+  // const handlePageChange = (page: number) => setCurrentPage(page);
+  // const handlePageSizeChange = (pageSize: number) => {
+  //   setPagination(prev => ({ ...prev, pageSize }));
+  //   setCurrentPage(1);
+  //   setLastKeyMap({});
+  // };
 
   const getStatusLabelAndStyle = (status: string) => {
     const map: Record<string, { label: string; style: string }> = {
@@ -143,9 +145,44 @@ const ReferralsTable = ({ searchbarText }: any) => {
       : "text-yellow-600";
 
 const columns = [
-  { key: "name", label: "Name", sortable: true },
-  { key: "jobTitle", label: "Job Title", sortable: true },
-  { key: "email", label: "Email", sortable: true },
+  { key: "name", label: "Name", sortable: true ,
+    render: (row: any) =>(
+      <div className='flex justify-center m-auto w-[150px]'>
+        <span 
+          className="truncate block w-full"
+          title={row.name}>
+          {row.name}
+        </span>
+      </div>
+    )
+  },
+  { key: "jobTitle", label: "Job Title", sortable: true ,
+      render: (row: any) =>(
+      <div className='flex justify-center m-auto w-[150px]'>
+        <span 
+          className="truncate block w-full"
+          title={row.jobTitle}>
+          {row.jobTitle}
+        </span>
+      </div>
+    )
+  },
+{
+  key: "email", 
+  label: "Email", 
+  sortable: true,
+  render: (row: any) =>(
+      <div className='flex justify-center m-auto w-[150px]'>
+        <span 
+          className="truncate block w-full"
+          title={row.email}>
+          {row.email?.toLowerCase()}
+        </span>
+      </div>
+    )
+},
+
+
   { key: "phone", label: "Phone" },
   { key: "dateReferred", label: "Date Referred", sortable: true },
   { key: "dateApplied", label: "Date Applied", sortable: true },
@@ -156,6 +193,7 @@ const columns = [
     render: (row: any) => {
       if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
         return (
+          <div className='flex justify-center m-auto w-[150px]'>
           <button
             className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
             onClick={() => {
@@ -176,34 +214,35 @@ const columns = [
               setShowDialog(true);
             }}
           >
-            Withdraw
+            Achieved
           </button>
+          </div>
         );
       }
       if (row.jobApplicationStatus === "REJECTED") {
         return (
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center m-auto w-[150px]">
           <div className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
             Rejected
           </div>
         </div>
         );
       }
-      if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
+      // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
         return (
-          <div className="flex justify-center items-center">
+          <div className="flex justify-center m-auto w-[150px]">
           <div className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
             Not Achieved Yet
           </div>
         </div>
         );
-      }
-      const statusInfo = getStatusLabelAndStyle(row.status);
-      return (
-        <div className={`px-4 py-3 rounded-full border ${statusInfo.style}`}>
-          <span className="text-xs">{statusInfo.label}</span>
-        </div>
-      );
+      // }
+      // const statusInfo = getStatusLabelAndStyle(row.status);
+      // return (
+      //   <div className={`px-4 py-3 rounded-full border flex justify-center m-auto w-[150px] ${statusInfo.style}`}>
+      //     <span className="text-xs">{statusInfo.label}{"fdgfgdfdg"}</span>
+      //   </div>
+      // );
     },
   },
   {
@@ -259,7 +298,7 @@ const columns = [
 
   return (
     <div className="w-full">
-            {Isloading ? (
+            {isLoading  ? (
         <div className="w-full py-12 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
@@ -272,14 +311,14 @@ const columns = [
           columns={columns}
           rows={sortedData}
           pageSize={pagination.pageSize}
-          setPageSize={handlePageSizeChange}
-          handlePreviousPage={() => handlePageChange(currentPage - 1)}
-          handleNextPage={() => handlePageChange(currentPage + 1)}
+          setPageSize={onPageSizeChange}
+          handlePreviousPage={() => onPageChange(currentPage - 1)}
+          handleNextPage={() => onPageChange(currentPage + 1)}
           hasPrevPage={currentPage > 1}
           hasNextPage={!!pagination.lastKey}
           emptyStateMessage={error || "No referrals found"}
           emptyStateSubMessage={error ? "Please try again." : "Try adjusting your filters"}
-          isLoading={Isloading}
+          isLoading={isLoading}
           onSortChange={handleSortChange}
           sortField={sortField}
           sortOrder={sortOrder}

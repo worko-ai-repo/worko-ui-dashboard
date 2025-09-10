@@ -12,13 +12,15 @@ interface ProvideFeedbackModalProps {
   isOpen: boolean;
   referralData:any;
   onRefresh: () => void;
+  isCandidate?:boolean
 }
 
 const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh
+  onRefresh,
+  isCandidate
 }) => {
 
   const [visible, setVisible] = useState(false);
@@ -29,90 +31,111 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
   const { user } = useDashboardContext();
   const {userDetails}=useAppContext();
   const [rating, setRating] = useState(1);
+  const [alreadySubmitted,setAlreadySubmitted] = useState(false)
+  const [feedback,setFeedback] = useState<any>({})
+  const [isFetchingFeedback, setIsFetchingFeedback] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async() =>{
-    if(!user){
-      toast.error("No user found",getToastOptions({}))
-      setIsLoading(false);
-      return
+const handleSubmit = async () => {
+  if (!user) {
+    toast.error("No user found", getToastOptions({}));
+    return;
+  }
+  if (!comments.trim()) {
+  toast.error("Please provide your feedback before submitting.", getToastOptions({}));
+  setIsSubmitting(false);
+  return;
+}
+
+  setIsSubmitting(true); 
+
+  const fullEmail = referralData?.PK.split("#");
+  const emailOfCandidate = fullEmail[fullEmail.length - 1];
+
+  let id;
+
+  try {
+    const userData = await profileService.fetchUserData(emailOfCandidate, "details");
+
+    if (!userData || !userData[0]?.id) {
+      toast.error("Candidate ID not found", getToastOptions({}));
+      return;
     }
-    const fullEmail = referralData?.PK.split("#")
-    const emailOfCandidate = fullEmail[fullEmail.length-1]
 
-    let id
-    try {
-        const userData = await profileService.fetchUserData(emailOfCandidate,"details")
-
-        if (!userData || !userData[0]?.id) {
-        toast.error("Candidate ID not found", getToastOptions({}));
-        return;
-        }
-        id = userData[0].id
-        } catch (error: any) {
-            console.error("Error fetching user data:", error);
-            setIsError(error?.message || "Failed to fetch user data");
-            setIsLoading(false);
-            return;
-        }
-    try {
-            const payload = {
-                rating:rating,
-                ratingForUserType: "CAND",
-                referalId: referralData.id,
-                reviewContext: "CAND_USER",             
-                reviewText: comments,
-            }
-            const url = `/user/${id}/review`
-            console.log(payload,url)
-            const {response,error} = await httpServiceObj.post(url,payload,true)
-            if(response){
-                toast.success("Feedback submitted Successfully", getToastOptions({}));
-                setIsError("")          
-                onRefresh()
-                onClose()
-            }
-            if(error){
-                toast.error("Cannot submit feedback something went wrong", getToastOptions({}));
-                console.log(error)
-                setIsLoading(false)
-            }
-        } catch (error: any) {
-            console.log(error);
-            const errorMsg = error?.message || "Something went wrong";
-            setIsError(errorMsg);
-            toast.error(errorMsg, getToastOptions({}));
-        } finally{
-            setIsLoading(false)
-        }
+    id = userData[0].id;
+  } catch (error: any) {
+    console.error("Error fetching user data:", error);
+    setIsError(error?.message || "Failed to fetch user data");
+    return;
   }
 
-  const fetchFeedback = async()=>{
-    const fullEmail = referralData?.PK.split("#")
-    const emailOfCandidate = fullEmail[fullEmail.length-1]
+  try {
+    const payload = {
+      rating: rating,
+      ratingForUserType: isCandidate? "EMP":"CAND",
+      referalId: referralData.id,
+      reviewContext: isCandidate? "EMP_REFERRAL":"CAND_USER",
+      reviewText: comments,
+    };
 
-    let id
-    try {
-        const userData = await profileService.fetchUserData(emailOfCandidate,"details")
+    const url = `/user/${id}/review`;
+    const { response, error } = await httpServiceObj.post(url, payload, true);
 
-        if (!userData || !userData[0]?.id) {
-        toast.error("Candidate ID not found", getToastOptions({}));
-        return;
-        }
-        id = userData[0].id
-        } catch (error: any) {
-            console.error("Error fetching user data:", error);
-            setIsError(error?.message || "Failed to fetch user data");
-            setIsLoading(false);
-            return;
-        }
-        try {
-            const url = `/user/${id}/review/received?referalId=${referralData.id}`
-            const {response,error} = await httpServiceObj.get(url,true)
-            console.log(response)
-        } catch (error) {
-            
-        }
+    if (response) {
+      toast.success("Feedback submitted Successfully", getToastOptions({}));
+      setIsError("");
+      onRefresh();
+      onClose();
+    }
+
+    if (error) {
+      toast.error("Cannot submit feedback. Something went wrong.", getToastOptions({}));
+      console.log(error);
+    }
+  } catch (error: any) {
+    console.log(error);
+    const errorMsg = error?.message || "Something went wrong";
+    setIsError(errorMsg);
+    toast.error(errorMsg, getToastOptions({}));
+  } finally {
+    setIsSubmitting(false);
   }
+};
+
+  const fetchFeedback = async () => {
+  const fullEmail = referralData?.PK.split("#");
+  const emailOfCandidate = fullEmail[fullEmail.length - 1];
+
+  let id;
+  setIsFetchingFeedback(true); // ✅ separate loading state
+  try {
+    const userData = await profileService.fetchUserData(emailOfCandidate, "details");
+
+    if (!userData || !userData[0]?.id) {
+      toast.error("Candidate ID not found", getToastOptions({}));
+      return;
+    }
+
+    id = userData[0].id;
+
+    const url = `/user/${id}/review/received?referalId=${referralData.id}`;
+    const { response } = await httpServiceObj.get(url, true);
+
+    if (response.length > 0) {
+      setAlreadySubmitted(true);
+      setFeedback(response[0]);
+    } else {
+      setAlreadySubmitted(false);
+    }
+  } catch (error: any) {
+    console.error(error);
+    setIsError(error?.message || "Failed to fetch user data");
+  } finally {
+    setIsFetchingFeedback(false);
+  }
+};
+
+
   useEffect(() => {
     fetchFeedback()
       if (isOpen) {
@@ -126,6 +149,45 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
       }
     }, [isOpen]);
 
+    if (isFetchingFeedback) {
+      return null; 
+    }
+
+  if (alreadySubmitted) {
+    return (
+        <div
+            className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+                isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+            } ${visible ? "visible" : "invisible"}`}
+            >
+        <div
+            className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"
+            }`}
+        >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          ×
+        </button>
+<h2 className="text-xl font-semibold mb-4 text-left">Feedback Review</h2>
+
+<div className="mb-4 flex items-center gap-2">
+  <span className="text-sm font-medium text-gray-700">Rating:</span>
+  <span className="inline-flex items-center justify-center px-3 py-1 text-sm font-semibold text-white bg-blue-600 rounded-full">
+    {feedback.rating} / 5
+  </span>
+</div>
+
+<div className="bg-gray-100 text-gray-800 text-sm p-4 rounded-md border border-gray-200 leading-relaxed whitespace-pre-line">
+  {feedback.reviewText || "No feedback text provided."}
+</div>
+
+        </div>
+        </div>
+    );
+  }
   return (
        <div
         className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
@@ -174,13 +236,13 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
         <div className="flex justify-center gap-3">
             <button
                 onClick={handleSubmit}
-                disabled={isLoading}
+                disabled={isSubmitting}
                 className={`w-30 flex items-center gap-2 text-white text-sm font-medium px-4 py-3 rounded-xl transition-colors duration-200 ${
-                    isLoading ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-300'
+                    isSubmitting  ? 'bg-blue-300 cursor-not-allowed' : 'bg-blue-500 hover:bg-blue-300'
                 }`}
                 >
                 <SendIcon className="w-4 h-4" />
-                {isLoading ? 'Submitting...' : 'Submit'}
+                {isSubmitting ? 'Submitting...' : 'Submit'}
                 </button>
             <button
                 onClick={onClose}

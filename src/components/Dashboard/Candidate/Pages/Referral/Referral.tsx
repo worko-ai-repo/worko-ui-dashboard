@@ -16,12 +16,12 @@ const initialPaginationState: PaginationInfo = {
   lastKey: "",
 };
 
-// const statsItems = [
-//   { label: "Total Referrals", value: 52 },
-//   { label: "Accepted", value: 30 },
-//   { label: "Pending", value: 15 },
-//   { label: "Rejected", value: 7 },
-// ];
+const statsItems = [
+  { label: "Total Referrals", value: 52 },
+  { label: "Accepted", value: 30 },
+  { label: "Pending", value: 15 },
+  { label: "Rejected", value: 7 },
+];
 
 const Referrals = () => {
   const [searchBarText, setSearchBarText] = useState("");
@@ -31,6 +31,7 @@ const Referrals = () => {
   const [pageSize, setPageSize] = useState(25);
   const [filters, setFilters] = useState<ReferralFilters>({});
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+  const [statusFilter, setStatusFilter] = useState<string>("");
 
   const paginationKeysRef = useRef<Record<number, string>>({
     1: "",
@@ -122,7 +123,7 @@ const fetchReferrals = useCallback(
 
     setIsLoading(true);
     try {
-      const url = `${APP_API_URI}/user/${user.email}/referral?lastKey=${lastKey}&pageSize=${size}`;
+      const url = `${APP_API_URI}/user/${user.email}/referral?lastKey=${lastKey}&pageSize=${size}&searchText=${searchBarText || ""}`;
       const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true, {}, true);
 
       if (response) {
@@ -194,7 +195,7 @@ const fetchReferrals = useCallback(
   );
 
   const handleGetNewReferral = () => {
-    window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}referrals`;
+    window.location.href = `${window.location.origin}${"/"}referrals`;
   };
 
   useEffect(() => {
@@ -205,6 +206,17 @@ const fetchReferrals = useCallback(
       fetchReferrals(1, pageSize, "");
     }
   }, [user, fetchReferrals, pageSize]);
+
+  const filteredData = useMemo(() => {
+  if (!data) return null;
+  if (!statusFilter) return data;
+
+  return {
+    ...data,
+    data: data.data.filter(item => item.status === statusFilter)
+  };
+}, [data, statusFilter]);
+
 
   useEffect(() => {
     return () => {
@@ -228,23 +240,22 @@ const fetchReferrals = useCallback(
 
   return (
     <div className="w-full space-y-[35px] px-0">
-      {/* stats cards */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between">
+      <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
-          {/* <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
+          <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
             {statsItems.map((stat) => (
               <div
                 key={stat.label}
                 className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
               >
                 <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
+                <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
               </div>
             ))}
-          </div> */}
+          </div>
             
           {/* search bar */}
-            <div className="flex flex-col gap-4 w-full">
+            <div className="flex justify-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
                 <input
@@ -262,8 +273,24 @@ const fetchReferrals = useCallback(
                 >
                 Search
                 </button>
-            </div>
 
+            </div>
+              <div className="relative">
+                <select
+className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                >
+                  <option value="">All Statuses</option>
+                  <option value="ACCEPTED">Accepted</option>
+                  <option value="REJECTED">Rejected</option>
+                  <option value="AWAITING">Awaiting</option>
+                  <option value="CANCELLED">Cancelled</option>
+                  <option value="WITHDRAWN">Withdrawn</option>
+                  <option value="DONE">Done</option>
+                </select>
+              </div>
+            </div>
             {/* Get New Referral Button */}
             <div className="flex justify-start">
             <button
@@ -273,8 +300,10 @@ const fetchReferrals = useCallback(
                 Get New Referral
             </button>
             </div>
-            </div>
-
+        </div>
+                <div className="flex flex-col gap-4 justify-center sm:items-end">
+          <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
+          </div>
         </div>
       </div>
 
@@ -287,7 +316,7 @@ const fetchReferrals = useCallback(
         </div>
       ) : (
         <ReferralsTable
-          data={data}
+          data={filteredData}
           pagination={paginationInfo}
           currentPage={currentPage}
           onPageChange={handlePageChange}
