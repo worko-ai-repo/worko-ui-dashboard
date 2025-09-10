@@ -11,21 +11,35 @@ interface RaiseIssueModalProps {
   isOpen: boolean;
   referralData:any;
   onRefresh: () => void;
+  isCandidate:boolean;
 }
 
 const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh
+  onRefresh,
+  isCandidate
 }) => {
-  const options = [
-    "Behaviour not good",
-    "Fake CV",
-    "Not relevant experience",
-    "Already applied earlier",
-    "Others"
-  ];
+  let options
+
+  if(isCandidate){
+      options = [
+      "Referee not responding",
+      "Rude Behaviour",
+      "Referral has not been done",
+      "Others"
+    ];
+  }else if(!isCandidate){
+    options = [
+      "Behaviour not good",
+      "Fake CV",
+      "Not relevant experience",
+      "Already applied earlier",
+      "Others"
+    ];
+  }
+
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [reason, setReason] = useState("");
@@ -53,16 +67,16 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
     const firstName = splitedName?.[0];
     const lastName = splitedName?.[splitedName.length-1];
     try {
-            const payload = {
-                contextId: referralData.id,
-                contextType: "REFERRAL",
-                userEmail: user.email,
-                userFirstName:firstName,
-                userLastName:lastName,              
-                userMessage: comments,
-                userRole:"EMP",
-                userSupportType: reason,
-            }
+          const payload = {
+              contextId: referralData.id,
+              contextType: "REFERRAL",
+              userEmail: user.email,
+              userFirstName:firstName,
+              userLastName:lastName,              
+              userMessage: comments,
+              userRole: isCandidate ? "CAND" : "EMP",
+              userSupportType: reason,
+          }
             const url = `/support`
             const {response,error} = await httpServiceObj.post(url,payload,true)
             if(response){

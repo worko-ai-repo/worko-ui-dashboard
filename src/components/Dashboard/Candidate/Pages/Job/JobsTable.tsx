@@ -20,6 +20,7 @@ import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/Deta
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
+import ViewDetailsModal from "./modals/ViewDetailsModal";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -283,56 +284,36 @@ const JobsTable = memo(
     );
 
     const MatchingScoreCircle = memo(
-      ({ score, row }: { score: number; row?: JobApplicationDetailsDto }) => {
-        if (!row || row === undefined) {
-          toast.error("Failed to open Score details", getToastOptions({}));
-          return null;
-        }
-
-        const handleViewDetailsClick = () => {
-          console.log("Handle view details clicked for row:", row);
-          setShowViewDetails(true);
-          const application = jobApplicationServiceObj.getScoreDetails(row);
-          if (!application) return;
-          setViewDetailsContent({
-            title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
-            data: application.feedback,
-            matchingScore: row.matchingScore ?? 0,
-            details: true,
-            candidateName: userDetails?.fullName,
-            showCloseButton: true,
-            onClose: () => setShowViewDetails(false),
-          });
-        };
-
-        return (
-          <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
-            <div
-              className="w-16 relative h-16 cursor-pointer flex items-center justify-center"
-              onClick={handleViewDetailsClick}>
-              <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
-                <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-                <circle
-                  cx="32.5"
-                  cy="32.5"
-                  r="30"
-                  fill="none"
-                  stroke="#4cbc9a"
-                  strokeWidth="5"
-                  strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-                  transform="rotate(-90 32.5 32.5)"
-                />
-              </svg>
-              <div className="absolute font-semibold text-xs">{score}%</div>
-            </div>
-            <button
-              onClick={handleViewDetailsClick}
-              className="text-[9px] font-semibold text-gray-500 text-center hover:text-gray-700">
-              View details
-            </button>
+      ({ score, scoreDetails, status }: { score: number; scoreDetails?: any; status?: string }) => (
+        <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
+          <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
+            <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
+              <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
+              <circle
+                cx="32.5"
+                cy="32.5"
+                r="30"
+                fill="none"
+                stroke="#4cbc9a"
+                strokeWidth="5"
+                strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+                transform="rotate(-90 32.5 32.5)"
+              />
+            </svg>
+            <div className="absolute font-semibold text-xs">{score}%</div>
+            {status !== "REJECTED" && (
+              <button
+                onClick={() => {
+                  setShowViewDetails(true);
+                  setViewDetailsContent(scoreDetails);
+                }}
+                className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">
+                View details
+              </button>
+            )}
           </div>
-        );
-      }
+        </div>
+      )
     );
 
     const StatusBadge = memo(({ status }: { status: string }) => {
@@ -426,6 +407,7 @@ const JobsTable = memo(
     });
 
     const ActionButton = memo(({ type, job }: { type: string; job: JobApplicationDetailsDto }) => {
+      console.log(job);
       const isProcessing = processingJobId === job.id;
 
       const actionConfigs: Record<
@@ -500,13 +482,24 @@ const JobsTable = memo(
         label: "Job Title",
         sortable: true,
         render: (row: JobApplicationDetailsDto) => (
-          <span className="font-semibold capitalize">{row.jobTitle}</span>
+          <div className="flex justify-center m-auto w-[150px]">
+            <span className="truncate block w-full" title={row.jobTitle}>
+              {row.jobTitle}
+            </span>
+          </div>
         ),
       },
       {
         key: "companyName",
         label: "Company",
         sortable: true,
+        render: (row: JobApplicationDetailsDto) => (
+          <div className="flex justify-center m-auto w-[150px]">
+            <span className="truncate block w-full" title={row.companyName}>
+              {row.companyName}
+            </span>
+          </div>
+        ),
       },
       {
         key: "createdAt",
@@ -519,10 +512,12 @@ const JobsTable = memo(
         label: "Matching Score",
         sortable: true,
         render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center">
-            <div>
-              <MatchingScoreCircle score={row.matchingScore ?? 0} row={row} />
-            </div>
+          <div className="flex justify-center m-auto w-[150px]">
+            <MatchingScoreCircle
+              score={row.matchingScore ?? 0}
+              scoreDetails={row}
+              status={row.status}
+            />
           </div>
         ),
       },
@@ -531,7 +526,7 @@ const JobsTable = memo(
         label: "Status",
         sortable: true,
         render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center">
+          <div className="flex justify-center m-auto w-[150px]">
             <StatusBadge status={row.status} />
           </div>
         ),
@@ -542,7 +537,7 @@ const JobsTable = memo(
         sortable: true,
         render: (row: JobApplicationDetailsDto) =>
           row.action ? (
-            <div className="flex justify-center">
+            <div className="flex justify-center m-auto w-[150px]">
               <ActionButton type={row.action} job={row} />
             </div>
           ) : null,
@@ -554,7 +549,7 @@ const JobsTable = memo(
           const isDisabled = !!row.followUpRequest?.[0];
 
           return (
-            <div className="flex justify-center">
+            <div className="flex justify-center m-auto w-[150px]">
               <div className="relative group">
                 <button
                   onClick={() => !isDisabled && requestFollowup(row.id)}
@@ -574,7 +569,9 @@ const JobsTable = memo(
 
                 {/* Hover Cross Icon for Disabled Button */}
                 {isDisabled && (
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity"></div>
+                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity bg-white/80 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md px-4 py-2">
+                    Follow up already sent
+                  </div>
                 )}
               </div>
             </div>
@@ -708,17 +705,11 @@ const JobsTable = memo(
           onClose={() => setShowFeedbackModal(false)}
         />
 
-        <Modal isOpen={showViewDetails} onClose={() => setShowViewDetails(false)} className="">
-          <ScorePointsModal
-            data={viewDetailsContent}
-            title={viewDetailsContent?.title || ""}
-            showCloseButton={false}
-            onClose={() => setShowViewDetails(false)}
-            matchingScore={viewDetailsContent?.matchingScore || 0}
-            candidateName={viewDetailsContent?.candidateName || ""}
-            details={viewDetailsContent?.details || false}
-          />
-        </Modal>
+        <ViewDetailsModal
+          show={showViewDetails}
+          viewDetailsContent={viewDetailsContent}
+          onClose={() => setShowViewDetails(false)}
+        />
 
         <SubmitDocumentModal
           userDetails={user}

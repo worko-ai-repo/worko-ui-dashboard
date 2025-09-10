@@ -15,6 +15,9 @@ export interface ReferralDetailsDto {
   jobUrl:string;
   PK:string;
   chatId:String;
+  userDetails:{
+    name:string,
+  }
 }
 
 export type ReferralStatus = 

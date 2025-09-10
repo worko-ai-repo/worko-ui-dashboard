@@ -214,7 +214,7 @@ export function DynamicTable<T extends { id: string }>({
                       return (
                         <td
                           key={col.key}
-                          className={`px-4 border-b py-4 text-sm whitespace-nowrap capitalize ${baseBg}
+                          className={`px-4 border-b py-4 text-sm whitespace-nowrap ${col.key !== "email" ? "capitalize" : ""} ${baseBg}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
                           ${

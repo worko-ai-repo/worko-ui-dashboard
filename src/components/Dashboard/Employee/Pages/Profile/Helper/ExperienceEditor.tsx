@@ -8,6 +8,8 @@ export interface Experience {
   designation: string;
   department: string;
   YOE: number;
+  startDate: string,
+  endDate: string,
 }
 
 interface ExperienceEditorProps {
@@ -28,9 +30,12 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
   const [yoe, setYOE] = useState<number | string>("");
+  const [startDate, setStartDate] = useState<string>("");
+  const [endDate, setEndDate] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const today = new Date().toISOString().split("T")[0];
 
   const clearForm = () => {
     setEditingIndex(null);
@@ -38,7 +43,18 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     setDesignation("");
     setDepartment("");
     setYOE("");
+    setStartDate("");
+    setEndDate("");
   };
+
+  function formatDate(isoDate?: string) {
+  if (!isoDate) return "N/A";
+  const date = new Date(isoDate);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); 
+  const year = String(date.getFullYear());
+  return `${month}-${year}`;
+}
 
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
@@ -47,6 +63,8 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     setDesignation(item.designation);
     setDepartment(item.department);
     setYOE(item.YOE);
+    setStartDate(item.startDate);
+    setEndDate(item.endDate);
   };
 
   const handleRemoveItem = (index: number) => {
@@ -55,8 +73,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   };
 
   const handleAddOrUpdate = () => {
-    if (!companyName.trim() || !designation.trim()) {
+    if (!companyName.trim() || !designation.trim() || !department.trim()) {
       toast.error("Company Name and Designation are required.", getToastOptions({}));
+      return;
+    }
+
+    if (!startDate.trim() || !endDate.trim()) {
+      toast.error("Start and End are required", getToastOptions({}));
       return;
     }
 
@@ -69,7 +92,9 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
       companyName: companyName.trim(),
       designation: designation.trim(),
       department: department.trim(),
-      YOE: Number(yoe) || 0
+      YOE: Number(yoe) || 0,
+      startDate: startDate.trim(),
+      endDate: endDate.trim(),
     };
 
     if (editingIndex !== null) {
@@ -144,6 +169,8 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
               <span className="hidden sm:inline-block text-gray-400">|</span>
               <div className="text-sm text-gray-700 truncate">{item.department}</div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
+              <div className="text-sm text-gray-500 whitespace-nowrap">{formatDate(item.startDate)}-{formatDate(item.endDate)}</div>
+              <span className="hidden sm:inline-block text-gray-400">|</span>
               <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div>
             </div>
             <div className="flex space-x-2 ml-4">
@@ -178,49 +205,86 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
       )}
 
       {/* Form */}
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
+  <div className="flex flex-col">
+    <label className="block text-xs font-semibold mb-1">Designation</label>
     <input
-        type="text"
-        placeholder="Designation"
-        value={designation}
-        onChange={(e) => setDesignation(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+      type="text"
+      placeholder="Designation"
+      value={designation}
+      onChange={(e) => setDesignation(e.target.value)}
+      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
     />
-    <input
-        type="text"
-        placeholder="Company Name"
-        value={companyName}
-        onChange={(e) => setCompanyName(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-    />
-    <input
-        type="text"
-        placeholder="Department"
-        value={department}
-        onChange={(e) => setDepartment(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-    />
+  </div>
 
-    {/* YOE and Add button on same row */}
-    <div className="flex items-center gap-3">
-        <input
+  <div className="flex flex-col">
+    <label className="block text-xs font-semibold mb-1">Company Name</label>
+    <input
+      type="text"
+      placeholder="Company Name"
+      value={companyName}
+      onChange={(e) => setCompanyName(e.target.value)}
+      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+    />
+  </div>
+
+  <div className="flex flex-col">
+    <label className="block text-xs font-semibold mb-1">Department</label>
+    <input
+      type="text"
+      placeholder="Department"
+      value={department}
+      onChange={(e) => setDepartment(e.target.value)}
+      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+    />
+  </div>
+
+  {/* YOE, Start Date, End Date, Add button */}
+  <div className="flex items-end gap-3">
+    <div className="flex flex-col flex-grow">
+      <label className="block text-xs font-semibold mb-1">YOE</label>
+      <input
         type="number"
         min={0}
         placeholder="Years of Experience"
         value={yoe}
         onChange={(e) => setYOE(e.target.value)}
-        className="flex-grow border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-        />
-        <button
-        onClick={handleAddOrUpdate}
-        disabled={!designation.trim() || !companyName.trim()}
-        className="flex items-center justify-center rounded-md bg-blue-600 p-2 text-white disabled:bg-blue-300"
-        aria-label="Add experience"
-        >
-        <Plus size={16} />
-        </button>
+        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+      />
     </div>
+
+    <div className="flex flex-col flex-grow">
+      <label className="block text-xs font-semibold mb-1">Start Date</label>
+      <input
+        type="date"
+        max={today}
+        value={startDate}
+        onChange={(e) => setStartDate(e.target.value)}
+        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+      />
     </div>
+
+    <div className="flex flex-col flex-grow">
+      <label className="block text-xs font-semibold mb-1">End Date</label>
+      <input
+        type="date"
+        max={today}
+        value={endDate}
+        onChange={(e) => setEndDate(e.target.value)}
+        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
+      />
+    </div>
+
+    <button
+      onClick={handleAddOrUpdate}
+      disabled={!designation.trim() || !companyName.trim()}
+      className="flex items-center justify-center rounded-md bg-blue-600 p-2 text-white disabled:bg-blue-300"
+      aria-label="Add experience"
+    >
+      <Plus size={16} />
+    </button>
+  </div>
+</div>
 
 
     </div>

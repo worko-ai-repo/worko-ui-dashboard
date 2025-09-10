@@ -282,11 +282,11 @@ const hasCandidateExperience =
     payload.isCandidateFresher = false;
   }
   
-    if(!flag || flag === undefined){
-      delete payload.multipleCandidateExperience;
-      delete payload.isCandidateFresher;
-      delete payload.candidateExperience;
-    }
+    // if(!flag || flag === undefined){
+    //   delete payload.multipleCandidateExperience;
+    //   delete payload.isCandidateFresher;
+    //   delete payload.candidateExperience;
+    // }
 
     console.log(payload,"payload 297")
     return await this.updateUserData(email, 'details', payload, 'PUT');
@@ -334,9 +334,9 @@ const hasCandidateExperience =
       payload.isCandidateFresher = false;
     }
 
-    delete payload.multipleCandidateExperience;
-    delete payload.isCandidateFresher;
-    delete payload.candidateExperience;
+    // delete payload.multipleCandidateExperience;
+    // delete payload.isCandidateFresher;
+    // delete payload.candidateExperience;
 
   console.log(payload,"payload 356")
   return await this.updateUserData(email, 'details', payload, 'PUT');

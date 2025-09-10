@@ -2,6 +2,14 @@ import { Group } from "@Assets";
 import { Briefcase, Edit, Pencil,Link } from "lucide-react";
 import React, { MouseEventHandler } from "react";
 
+function formatDate(isoDate?: string) {
+  if (!isoDate) return "N/A";
+  const date = new Date(isoDate);
+  const day = String(date.getDate()).padStart(2, "0");
+  const month = String(date.getMonth() + 1).padStart(2, "0"); // months are zero-indexed
+  const year = String(date.getFullYear()); // last two digits
+  return `${month}-${year}`;
+}
 interface RenderCardProps {
   title: string;
   children: React.ReactNode;
@@ -23,6 +31,8 @@ interface ExperienceItem {
   designation: string;
   department: string;
   YOE: number;
+  startDate:string;
+  endDate:string;
 }
 
 export const renderCard = ({
@@ -226,9 +236,9 @@ export const renderListSection = ({
                   </p>
                 )}
               </div>
-              <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
-                {item.YOE} {item.YOE === 1 ? "year" : "years"}
-              </div>
+            <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
+              {formatDate(item.startDate)} - {formatDate(item.endDate)} . {item.YOE} {item.YOE === 1 ? "year" : "years"}
+            </div>
             </div>
             {index < items.length - 1 && (
               <div className="border-t border-gray-200 opacity-20 my-4"></div>
