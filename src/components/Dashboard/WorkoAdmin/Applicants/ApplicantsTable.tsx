@@ -123,7 +123,12 @@ export default function ApplicationTable({
   });
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [evaluatorFormCount, setEvaluatorFormCount] = useState(10);
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState(false);
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState(
+    {
+      isOpen: false,
+      jobApplication: null as JobApplicationDetailsDto | null,
+    }
+  );
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({
@@ -361,7 +366,7 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center relative">
+          <div className="flex justify-center p-2 w-fit relative">
             <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
@@ -803,10 +808,10 @@ export default function ApplicationTable({
       </Modal>
 
       <Modal
-        isOpen={isNoteModalOpen}
-        onClose={() => setIsNoteModalOpen(false)}
+        isOpen={isNoteModalOpen.isOpen}
+        onClose={() => setIsNoteModalOpen({ isOpen: false, jobApplication: null })}
         className="w-full sm:max-w-4xl h-auto">
-        <NotesApp />
+        {isNoteModalOpen.jobApplication && <NotesApp jobApplication={isNoteModalOpen.jobApplication}/>}
       </Modal>
 
       <Modal

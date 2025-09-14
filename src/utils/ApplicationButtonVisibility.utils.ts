@@ -146,7 +146,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         SEND_TO_EVALUATOR: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         MARK_DUPLICATE: {
           visible: false,
           condition: (application) =>
@@ -169,7 +169,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         PROCESS_INTERVIEW: { visible: true },
@@ -188,7 +188,7 @@ export function getActionVisibilityConfig(
         HIRE: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         INTERVIEW_DONE: { visible: true /* ,condition: CONDITIONS.hasEvaluatorResponse */ },
         VIEW_EVALUATION: {
           visible: false,
@@ -202,7 +202,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         VIEW_EVALUATION: {
           visible: false,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -217,7 +217,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         VIEW_EVALUATION: {
@@ -244,7 +244,7 @@ export function getActionVisibilityConfig(
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         VIEW_DOCUMENT: {
           visible: true,
           tabOverrides: { All: false, Hired: true },
@@ -272,7 +272,7 @@ export function getActionVisibilityConfig(
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         VIEW_EVALUATION: {
           visible: false,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -306,7 +306,7 @@ export function getActionVisibilityConfig(
         },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         VIEW_OFFER_LETTER_ISSUE: {
           visible: true,
           condition: CONDITIONS.hasOfferLetterIssue,
@@ -337,7 +337,7 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         JOINED: { visible: true, tabOverrides: { All: false, Hired: true } },
         // REJECT: { visible: false, tabOverrides: { All: true, Hired: true } },
         ONHOLD: {
@@ -368,7 +368,7 @@ export function getActionVisibilityConfig(
     case JobApplicationStatusEnum.REJECTED:
       baseConfig = {
         ...HIDDEN_ALL,
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
         VIEW_DOCUMENT: {
           visible: true,
           tabOverrides: { All: false, Hired: true, Joined: true },
@@ -403,7 +403,7 @@ export function getActionVisibilityConfig(
         VIEW_EVALUATION: { visible: true, condition: CONDITIONS.hasEvaluatorResponse },
         // INTERVIEW: { visible: true },
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
       };
       break;
 
@@ -417,7 +417,7 @@ export function getActionVisibilityConfig(
         // INTERVIEW: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        // NOTES: { visible: true },
+        NOTES: { visible: true },
       };
   }
 

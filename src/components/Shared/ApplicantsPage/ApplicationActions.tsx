@@ -64,7 +64,10 @@ type Props = {
       jobData: JobApplicationDetailsDto;
     }>
   >;
-  setIsNoteModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsNoteModalOpen: React.Dispatch<React.SetStateAction<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>>;
   setIsRejectModalOpen: React.Dispatch<React.SetStateAction<any>>;
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvaluatorFormProps: React.Dispatch<React.SetStateAction<EvaluatorFormProps | null>>;
@@ -202,7 +205,10 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
         key="notes"
         title="Notes"
         className="flex gap-2 items-center btn-info"
-        onClick={() => setIsNoteModalOpen(true)}>
+        onClick={() => setIsNoteModalOpen({
+          isOpen: true,
+          jobApplication: row,
+        })}>
         <NotebookIcon size={16} />
       </button>
     ),
