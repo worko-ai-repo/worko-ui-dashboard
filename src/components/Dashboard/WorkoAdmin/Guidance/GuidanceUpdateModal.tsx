@@ -12,6 +12,8 @@ import AdminServiceObj from "../Services/Admin.service";
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface GuidanceUpdateModalProps {
   data: GuidanceRequestDto;
@@ -49,7 +51,12 @@ interface FormData {
   meetingLink?: string;
 }
 
-const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose ,overrideType,fetchGuidance}) => {
+const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
+  data,
+  onClose,
+  overrideType,
+  fetchGuidance,
+}) => {
   const [searchResults, setSearchResults] = useState<MentorSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -91,21 +98,21 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose
     switch (status) {
       case "PENDING":
         return [
-          { value: "MENTOR_ASSIGNED", label: "Schedule Meeting" },
+          { value: "MENTOR_ASSIGNED", label: "Assign a Mentor" },
           { value: "REJECTED", label: "Reject" },
         ];
       case "MEETING_CONFIRMED":
-        return [
-          { value: "RESCHEDULE_MEETING", label: "Reschedule Meeting" },
-          { value: "PROJECT_COMPLETED", label: "Project Completed" },
-        ];
+        return [{ value: "PROJECT_COMPLETED", label: "Project Completed" }];
       case "PAYMENT_CONFIRMATION_PENDING":
         return [{ value: "PAYMENT_CONFIRMATION_DONE", label: "Payment Confirmation Done" }];
       case "PAYMENT_CONFIRMATION_DONE":
         return [{ value: "MEETING_CONFIRMED", label: "Meeting Confirm" }];
       case "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE":
       case "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR":
-        return [{ value: "MEETING_RESCHEDULE_CONFIRMED", label: "Meeting Reschedule Confirmed" }];
+        return [
+          { value: "MEETING_RESCHEDULE_CONFIRMED", label: "Meeting Reschedule Confirmed" },
+          { value: "RESCHEDULE_MEETING", label: "Reschedule Meeting" },
+        ];
       case "MEETING_CONFIRMED":
       case "MEETING_RESCHEDULE_CONFIRMED":
         return [{ value: "PROJECT_COMPLETED", label: "Project Completed" }];
@@ -120,8 +127,7 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose
     } else if (overrideType === "RESCHEDULE") {
       setValue("selectedAction", "RESCHEDULE_MEETING");
     }
-  }
-  , [overrideType]);
+  }, [overrideType]);
 
   const availableActions = getAvailableActions(data?.status);
 
@@ -255,8 +261,8 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose
       }
 
       const response = await AdminServiceObj.patchGuidanceStatus(data?.id || "", requestBody);
-
       if (response) {
+        toast.success("Status updated successfully", getToastOptions());
         onClose();
         fetchGuidance();
       }
@@ -294,34 +300,36 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         {/* Action Selection Dropdown */}
-        {!overrideType&&<div>
-          <Controller
-            name="selectedAction"
-            control={control}
-            rules={validationRules.default}
-            render={({ field }) => (
-              <select
-                {...field}
-                onChange={(e) => {
-                  field.onChange(e);
-                  handleActionChange(e.target.value);
-                }}
-                className={`w-full p-3 border rounded-lg ${
-                  errors.selectedAction ? "border-red-500" : ""
-                }`}>
-                <option value="">Choose an action...</option>
-                {availableActions.map((action) => (
-                  <option key={action.value} value={action.value}>
-                    {action.label}
-                  </option>
-                ))}
-              </select>
+        {!overrideType && (
+          <div>
+            <Controller
+              name="selectedAction"
+              control={control}
+              rules={validationRules.default}
+              render={({ field }) => (
+                <select
+                  {...field}
+                  onChange={(e) => {
+                    field.onChange(e);
+                    handleActionChange(e.target.value);
+                  }}
+                  className={`w-full p-3 border rounded-lg ${
+                    errors.selectedAction ? "border-red-500" : ""
+                  }`}>
+                  <option value="">Choose an action...</option>
+                  {availableActions.map((action) => (
+                    <option key={action.value} value={action.value}>
+                      {action.label}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+            {errors.selectedAction && (
+              <div className="mt-1 text-sm text-red-600">{errors.selectedAction.message}</div>
             )}
-          />
-          {errors.selectedAction && (
-            <div className="mt-1 text-sm text-red-600">{errors.selectedAction.message}</div>
-          )}
-        </div>}
+          </div>
+        )}
         {generalError && (
           <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600">
             {generalError}
@@ -600,10 +608,11 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({ data, onClose
 
             {/* Remarks */}
             <div>
-              <label className="block text-sm font-medium mb-2">Remarks (Optional)</label>
+              <label className="block text-sm font-medium mb-2">Remarks</label>
               <Controller
                 name="remarks"
                 control={control}
+                rules={{ required: "Date is required" }}
                 render={({ field }) => (
                   <textarea
                     {...field}

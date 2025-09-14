@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { inviteTick } from "@AssetsFolder/assets";
 import { validationRules } from "@Utils/FormValidator.utils";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import CompanyInput from "../CompanyInput";
 import { CompanyShortDto } from "@Interfaces/JobsAndCompany.dto";
@@ -159,8 +159,8 @@ const InviteForm = ({
     clearErrors("companyId");
   };
   return (
-    <div className="w-[650px] h-[740px] relative overflow-hidden bg-white rounded-xl">
-      <div className="w-full h-[640px] bg-white p-6">
+    <div className="w-[650px]  relative overflow-hidden bg-white rounded-xl">
+      <div className="w-full h-fit text-left bg-white p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="h-full relative">
           {/* Header */}
           <div className="mb-8 w-full text-left">
@@ -279,18 +279,6 @@ const InviteForm = ({
                 </div>
               </div>
 
-              {/* Designation */}
-              <div>
-                <label className="block mb-2 text-sm font-medium font-poppins text-black/95">
-                  Designation
-                </label>
-                <input
-                  {...register("designation")}
-                  placeholder="Enter designation (optional)"
-                  className="w-full h-11 px-4 bg-gray-100 rounded-xl text-black text-sm font-normal font-poppins focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black/40"
-                />
-              </div>
-
               {/* Pricing Plan */}
               {!isCorporate && (
                 <div>
@@ -379,7 +367,17 @@ const InviteForm = ({
                   )}
                 </div>
               </div>
-
+              {/* Designation */}
+              <div>
+                <label className="block mb-2 text-sm font-medium font-poppins text-black/95">
+                  Designation
+                </label>
+                <input
+                  {...register("designation")}
+                  placeholder="Enter designation (optional)"
+                  className="w-full h-11 px-4 bg-gray-100 rounded-xl text-black text-sm font-normal font-poppins focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder:text-black/40"
+                />
+              </div>
               {/* CV Duplicacy */}
               {!isCorporate && (
                 <div>

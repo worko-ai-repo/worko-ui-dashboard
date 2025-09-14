@@ -140,7 +140,7 @@ const Sidebar: React.FC<SidebarProps> = ({
    * Avatar component - reusable user profile image/icon
    */
   const Avatar = (
-    <div className="w-full h-full">
+    <div className="w-fit h-full">
       <img
         src={finalUserDetails?.profileImageUrl || User}
         alt="User Avatar"
@@ -156,13 +156,13 @@ const Sidebar: React.FC<SidebarProps> = ({
                 md:relative md:block
                 max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 
                 ${sidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}`}>
-      <div className="h-full  flex flex-col justify-between  ">
+      <div className="h-full   flex flex-col justify-between  ">
         <div className="flex  justify-between items-center mb-6 ">
           {!collapsed ? (
-            <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2 overflow-hidden">
+            <div className="flex  items-center  w-full">
+              <div className="flex w-full gap-1  items-center overflow-hidden">
                 {Avatar}
-                <span className="text-base text-start font-bold capitalize">{userName}</span>
+                <span className=" w-full text-sm text-start font-bold capitalize">{userName}</span>
               </div>
               <button
                 onClick={() => setCollapsed(true)}
@@ -181,8 +181,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="w-full h-10 flex justify-center ">{Avatar}</div>
           )}
         </div>
-        <div className=" h-full min-w-10 flex flex-col justify-start items-center overflow-scroll no-scrl-web">
-          <nav className="space-y-2 overflow-scroll no-scrl-web">
+        <div className=" h-full min-w-10 flex flex-col justify-start items-start overflow-scroll no-scrl-web">
+          <nav className="space-y-2  w-full overflow-scroll no-scrl-web">
             {navItems.map((item) => (
               <SidebarItem
                 key={item.id}

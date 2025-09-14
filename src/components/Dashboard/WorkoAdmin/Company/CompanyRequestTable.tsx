@@ -1,5 +1,5 @@
 
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -65,8 +65,8 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
-  const columns = [
-    { key: "userName", label: "Requested By", sortable: true, className: "w-40" },
+  const columns:Column<CompanyRequestDto>[] = [
+    { key: "userName", label: "Requested By", sortable: true, /* className: "w-40"  */},
     { key: "companyDetail_name", label: "Company Name", sortable: true },
 
     {
@@ -106,9 +106,10 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth: "max-w-none",
       render: (row: CompanyRequestDto) => (
         <span
-          className={`px-3 py-1 rounded-full text-white font-semibold ${
+          className={`px-3 py-0 rounded-full text-white font-semibold ${
             row.status === "approved"
               ? "bg-green-500"
               : row.status === "denied"

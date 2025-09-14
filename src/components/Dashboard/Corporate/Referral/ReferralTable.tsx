@@ -57,7 +57,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   };
 
   const columns = [
-    { key: "name", label: "Employee Name", sortable: true },
+    { key: "employeeDetails_name", label: "Employee Name", sortable: true },
     {
       key: "jobUrl",
       label: "Job Url",

@@ -21,12 +21,12 @@ function CorporateDashboardLayout(): JSX.Element {
                     setCollapsed={setCollapsed}
                 />
                 
-                <div className="grid grid-rows-[auto_1fr] h-screen">
+                <div className="overflow-auto grid grid-rows-[auto_1fr] h-screen no-scrl-web">
                     <Header
                         sidebarOpen={sidebarOpen}
                         setSidebarOpen={setSidebarOpen}
                     />
-                    <main className=" overflow-auto p-0 lg:py-0 lg:px-4">
+                    <main className="  p-0 lg:py-0 lg:px-4">
                         <Outlet />
                     </main>
                 </div>

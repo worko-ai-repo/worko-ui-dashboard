@@ -1,4 +1,4 @@
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { useState } from "react";
 import { toast } from "react-toastify";
 
@@ -33,9 +33,7 @@ export function useListSelection<T, U>({
 
   const toggleSelectAll = (items: T[]) => {
     const mapped = items.slice(0, limit).map(mapFn);
-    setSelectedRows((prev) =>
-      prev.length === mapped.length ? [] : mapped
-    );
+    setSelectedRows((prev) => (prev.length === mapped.length ? [] : mapped));
   };
 
   const isSelected = (item: T) => {

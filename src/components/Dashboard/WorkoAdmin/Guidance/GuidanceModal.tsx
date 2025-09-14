@@ -91,15 +91,13 @@ const GuidanceModal: React.FC<GuidanceModalProps> = ({ data, onStatusChanged, on
 
   // Handler for request cancel
   const handleRequestCancel = () => {
-    if (onStatusChanged)
-    onStatusChanged("REJECT");
+    if (onStatusChanged) onStatusChanged("REJECT");
     else onClose();
   };
 
   // Handler for request reschedule
   const handleRequestReschedule = () => {
-    if (onStatusChanged)
-    onStatusChanged("RESCHEDULE");
+    if (onStatusChanged) onStatusChanged("RESCHEDULE");
     else onClose();
   };
 
@@ -175,7 +173,7 @@ const GuidanceModal: React.FC<GuidanceModalProps> = ({ data, onStatusChanged, on
           <div className="mt-6 flex items-center gap-9">
             <span className="text-slate-400 text-xs font-medium font-inter">Guidance fees</span>
             <span className="text-blue-600 text-base font-semibold font-poppins">
-              ₹{paymentRequestDetails.totalAmount.toLocaleString()}
+              ₹{paymentRequestDetails.guidanceFee.toLocaleString()}
             </span>
           </div>
 
@@ -221,8 +219,15 @@ const GuidanceModal: React.FC<GuidanceModalProps> = ({ data, onStatusChanged, on
                 isJoinButtonEnabled ? "text-blue-600 fill-slate-100" : "text-gray-600 fill-gray-300"
               }`}
             />
-            <span className="text-white text-xs font-semibold font-poppins">
-              {isJoinButtonEnabled ? "Join meeting" : "Meeting not available"}
+            <span
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={
+                isJoinButtonEnabled
+                  ? "Join the meeting"
+                  : "You can join the meeting 15 minutes before and up to 30 minutes after the scheduled time."
+              }
+              className="text-white text-xs font-semibold font-poppins">
+              {isJoinButtonEnabled ? "Join meeting" : "Meeting link not active"}
             </span>
           </button>
         )}
@@ -231,23 +236,18 @@ const GuidanceModal: React.FC<GuidanceModalProps> = ({ data, onStatusChanged, on
           <button
             onClick={handleRequestCancel}
             className="text-blue-600 text-xs font-semibold font-poppins underline hover:text-blue-800">
-            Request cancel
+            Cancel Request
           </button>
         )}
 
-        {/* Reschedule button */}
-        {![
-          "PROJECT_COMPLETED",
-          "REJECTED",
-          "CANCELLED",
+        {[
           "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
-          "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR",
-          "MEETING_RESCHEDULE_CONFIRMED",
+          "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE",
         ].includes(finalData.status) && (
           <button
             onClick={handleRequestReschedule}
             className="text-blue-600 text-xs font-semibold font-poppins underline hover:text-blue-800">
-            Request reschedule
+            Reschedule meeting
           </button>
         )}
       </div>

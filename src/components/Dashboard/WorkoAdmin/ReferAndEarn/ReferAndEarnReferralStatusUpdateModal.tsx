@@ -1,14 +1,13 @@
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { ReferAndEarnDto } from "@Interfaces/AdminServices.dto";
 import SimpleSelectInput from "@Components/Shared/PostJob/InputSelect";
 import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
 import { ReferAndEarnJobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
 import { ReferAndEarnJobStatusOptionsArray } from "@TypesAndConstants/common.constants";
 import AdminServiceObj from "../Services/Admin.service";
-
 
 interface ReferAndEarnReferralStatusUpdateModalProps {
   data: ReferAndEarnDto;
@@ -21,16 +20,16 @@ interface StatusUpdateFormData {
 }
 
 // Convert status options to select format
-const statusSelectOptions = Object.entries(ReferAndEarnJobStatusOptionsArray).map(([key, value]) => ({
-  value: key,
-  label: value.label,
-}));
+const statusSelectOptions = Object.entries(ReferAndEarnJobStatusOptionsArray).map(
+  ([key, value]) => ({
+    value: key,
+    label: value.label,
+  })
+);
 
-const ReferAndEarnReferralStatusUpdateModal: React.FC<ReferAndEarnReferralStatusUpdateModalProps> = ({
-  data,
-  refetch,
-  onClose,
-}) => {
+const ReferAndEarnReferralStatusUpdateModal: React.FC<
+  ReferAndEarnReferralStatusUpdateModalProps
+> = ({ data, refetch, onClose }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
@@ -63,7 +62,7 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<ReferAndEarnReferralStatus
       }
 
       toast.success("Status updated successfully!", getToastOptions());
-      
+
       refetch();
       onClose();
     } catch (error) {
@@ -104,7 +103,6 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<ReferAndEarnReferralStatus
 
         {/* Action Buttons */}
         <div className="flex justify-start gap-4 pt-4">
-
           <button
             type="submit"
             disabled={isSubmitting}
@@ -112,8 +110,7 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<ReferAndEarnReferralStatus
               isSubmitting
                 ? "bg-gray-400 cursor-not-allowed text-gray-600"
                 : "bg-blue-600 hover:bg-blue-700 text-white"
-            }`}
-          >
+            }`}>
             {isSubmitting ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>

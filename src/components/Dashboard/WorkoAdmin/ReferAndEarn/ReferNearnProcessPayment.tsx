@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { ModalBodyTable } from "@Components/Modals/ModalBodyTable";
 import { ReferAndEarnDto, ReferAndEarnPaymentDoneDetailsDto } from "@Interfaces/AdminServices.dto";
 import Input from "@Components/Shared/PostJob/Input";

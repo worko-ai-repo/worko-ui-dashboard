@@ -14,8 +14,8 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import { toast } from "react-toastify";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { CorporateUserDetail } from "@Context/App.context";
-import { getToastOptions } from "lib-worko-ui";
+import { CorporateUserDetail, useAppContext } from "@Context/App.context";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { CompanyShortDto, JobDto } from "@Interfaces/JobsAndCompany.dto";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
 import { useQueryClient } from "@tanstack/react-query";
@@ -24,7 +24,7 @@ import CompanyInput from "../CompanyInput";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
 
-type JobFormMode = "CREATE" | "UPDATE" | "DUPLICATE";
+type JobFormMode = "CREATE" | "UPDATE" | "DUPLICATE" | "CREATE_WITH_DATA";
 
 interface JobFormProps {
   onClose: () => void;
@@ -64,6 +64,13 @@ export default function JobForm({
   onSuccess,
 }: JobFormProps) {
   const queryClient = useQueryClient();
+  // if corporate present in the pathname then fetch the companyID form the
+  const pathname = window.location.pathname;
+  const isCorporatePath = pathname.includes("corporate");
+  let companyIdFromPath = "";
+  if (isCorporatePath && userDetailsOne) {
+    companyIdFromPath = userDetailsOne?.companyId || "";
+  }
 
   const [selectedLocations, setSelectedLocations] = useState<OptionType[]>([]);
   const [hasFormChanged, setHasFormChanged] = useState(false);
@@ -72,7 +79,7 @@ export default function JobForm({
   const isSubmitDisabled = mode === "DUPLICATE" && !hasFormChanged;
   const userRole =
     secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE) || UserRole.GENERAL_USER;
-
+  // debugger;
   // Define default values as a constant to avoid repetition
   const getDefaultFormValues = (): JobFormSchema => ({
     jobTitle: "",
@@ -90,7 +97,7 @@ export default function JobForm({
     },
     experienceRange: { min: 0, max: 0 },
     salaryRange: { min: 0, max: 0, fixedComponentPercentage: 0, variableComponentPercentage: 0 },
-    displaySalaryRange: true,
+    displaySalaryRange: false,
     coreSkills: [],
     technicalSkills: [],
     softSkills: [],
@@ -178,7 +185,7 @@ export default function JobForm({
     // Always start with clean defaults
     const defaultValues = getDefaultFormValues();
 
-    if ((mode === "UPDATE" || mode === "DUPLICATE") && jobDetails)  {
+    if ((mode === "UPDATE" || mode === "DUPLICATE" || mode === "CREATE_WITH_DATA") && jobDetails) {
       // Populate with job details
       const formData = {
         ...defaultValues,
@@ -248,6 +255,11 @@ export default function JobForm({
     }
   }, [jobDetails, mode, reset]);
 
+  /*   useEffect(() => {
+    console.log("JobDetails htmlJobDescription:", jobDetails?.htmlJobDescription);
+    console.log("Form htmlJobDescription value:", watch("htmlJobDescription"));
+  }, [jobDetails, watch]); */
+
   /**
    * onSubmit- Function to submit the job posting updating
    *
@@ -255,6 +267,9 @@ export default function JobForm({
    * @returns
    */
   const onSubmit = async (data: JobFormSchema) => {
+    if (isCorporatePath) {
+      data.companyId = companyIdFromPath; // Ensure companyId is set from path for corporate users
+    }
     // Check if form has changed for duplicate mode
     if (mode === "DUPLICATE" && !hasFormChanged) {
       toast.error("Please make some changes before creating a duplicate job", getToastOptions());
@@ -390,7 +405,8 @@ export default function JobForm({
         {/* Job Description */}
         <div className="mb-4 sm:mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            {mode === "UPDATE" ? "Edit Job Description*" : "Job Description*"}
+            {mode === "UPDATE" ? "Edit Job Description" : "Job Description"}
+            <span className="text-red-500">*</span>
           </label>
           <Controller
             name="htmlJobDescription"
@@ -398,7 +414,7 @@ export default function JobForm({
             rules={validationRules.jobDescription}
             render={({ field }) => (
               <Editor
-                value={field.value || ""} //  Now controlled by form state
+                value={field.value || jobDetails?.htmlJobDescription || ""} //  Now controlled by form state
                 onChange={(val: string, plainVal: string) => {
                   setValue("jobDescription", plainVal);
                   field.onChange(val); //  Update form state
@@ -420,7 +436,9 @@ export default function JobForm({
               {mode === "DUPLICATE" || mode === "UPDATE" ? (
                 // Show disabled input with company name for duplicate/update mode
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company*</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company<span className="text-red-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={companyName}
@@ -433,6 +451,9 @@ export default function JobForm({
               ) : (
                 // Show company selection for create mode
                 <>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Company<span className="text-red-500">*</span>
+                  </label>
                   <CompanyInput
                     errors={errors}
                     clearErrors={clearErrors}
@@ -455,7 +476,12 @@ export default function JobForm({
               control={control}
               rules={validationRules.jobTitle}
               render={({ field }) => (
-                <Input label="Job Title*" {...field} error={errors.jobTitle?.message} />
+                <Input
+                  label="Job Title*"
+                  required={true}
+                  {...field}
+                  error={errors.jobTitle?.message}
+                />
               )}
             />
           </div>
@@ -466,7 +492,7 @@ export default function JobForm({
               name="department"
               control={control}
               rules={validationRules.department}
-              render={({ field }) => <Input label="Department*" {...field} />}
+              render={({ field }) => <Input label="Department" required={true} {...field} />}
             />
             {errors.department && (
               <span className="block text-sm text-red-500">{errors.department.message}</span>
@@ -480,7 +506,12 @@ export default function JobForm({
               control={control}
               rules={validationRules.defaultNumberPositive}
               render={({ field }) => (
-                <Input label="Number of opening" {...field} error={errors.numOfOpenings?.message} />
+                <Input
+                  label="Number of opening"
+                  required={true}
+                  {...field}
+                  error={errors.numOfOpenings?.message}
+                />
               )}
             />
           </div>
@@ -491,7 +522,9 @@ export default function JobForm({
             <div className="col-span-1 sm:col-span-2 space-y-3">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <label className="text-sm font-medium text-gray-700">Salary*</label>
+                  <label className="text-sm font-medium text-gray-700">
+                    Salary<span className="text-red-500">*</span>
+                  </label>
                   <select className="appearance-none border-2 rounded-full px-2 sm:px-3 py-1 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                     <option value="INR">INR</option>
                     <option value="USD">USD</option>
@@ -499,6 +532,7 @@ export default function JobForm({
                 </div>
                 <label className="flex items-center text-xs font-medium text-gray-700">
                   <input
+                    required={false}
                     type="checkbox"
                     {...register("displaySalaryRange")}
                     className="form-checkbox text-blue-600 w-3 h-3 focus:ring-0 mr-1 accent-blue-600"
@@ -544,6 +578,7 @@ export default function JobForm({
                 rules={validationRules.defaultNumberPositive}
                 render={({ field }) => (
                   <Input
+                    required={true}
                     label="Fixed Component (In %)"
                     customClass="my-3.5"
                     {...field}
@@ -559,6 +594,7 @@ export default function JobForm({
                 rules={validationRules.defaultNumberPositive}
                 render={({ field }) => (
                   <Input
+                    required={true}
                     label="Variable Component (In %)"
                     customClass="my-3.5"
                     {...field}
@@ -605,7 +641,7 @@ export default function JobForm({
           {/* Experience Range */}
           <div className="col-span-1  space-y-1">
             <label className="block text-sm m-1  font-medium text-gray-700">
-              Experience* (in years)
+              Experience (in years)<span className="text-red-500">*</span>
             </label>
             <div className="flex flex-wrap items-center gap-2  overflow-hidden">
               <input
@@ -637,7 +673,9 @@ export default function JobForm({
           </div>
           {/* Notice Period */}
           <div className="col-span-1  sm:col-span-1 space-y-2">
-            <label className="block !mb-0  text-sm font-medium text-gray-700">Notice Period*</label>
+            <label className="block !mb-0  text-sm font-medium text-gray-700">
+              Notice Period<span className="text-red-500">*</span>
+            </label>
 
             <select
               {...register("noticePeriod", { required: "Please select a notice period" })}
@@ -683,7 +721,8 @@ export default function JobForm({
           {/* Skills Section */}
           <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <TagInput
-              label="Core Skills*"
+              required={true}
+              label="Core Skills"
               tags={coreSkills}
               onAddTag={(tag) => addTag("coreSkills", tag)}
               onRemoveTag={(tag) => removeTag("coreSkills", tag)}
@@ -695,7 +734,8 @@ export default function JobForm({
 
           <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <TagInput
-              label="Technical Skills*"
+              required={true}
+              label="Technical Skills"
               tags={technicalSkills}
               onAddTag={(tag) => addTag("technicalSkills", tag)}
               onRemoveTag={(tag) => removeTag("technicalSkills", tag)}
@@ -707,7 +747,8 @@ export default function JobForm({
 
           <div className="col-span-1 sm:col-span-2 lg:col-span-2 xl:col-span-2">
             <TagInput
-              label="Soft Skills*"
+              required={true}
+              label="Soft Skills"
               tags={softSkills}
               onAddTag={(tag) => addTag("softSkills", tag)}
               onRemoveTag={(tag) => removeTag("softSkills", tag)}
@@ -732,7 +773,8 @@ export default function JobForm({
           {/* Other Requirements */}
           <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Other mandatory requirements* (Will not be visible to candidates)
+              Other mandatory requirements<span className="text-red-500">*</span> (Will not be
+              visible to candidates)
             </label>
             <textarea
               {...register("otherRequirements", validationRules.defaultTextarea)}

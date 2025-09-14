@@ -19,6 +19,7 @@ import {
   BulkJobApplicationUpdateItem,
   EvaluationResponseItemDto,
 } from "@Interfaces/CorporateServices.dto";
+import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
 
 /**
  * Corporate Service File
@@ -244,7 +245,7 @@ class CorporateService {
          }
    * @return {Promise<any>} -= Parsed job description data.
    */
-  async parseJobDescription(jobDescription: string): Promise<any> {
+  async parseJobDescription(jobDescription: string): Promise<BulkJdParsedData | null> {
     try {
       const { response } = await httpServiceObj.post<any>(
         "/job/parsejd",

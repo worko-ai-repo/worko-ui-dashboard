@@ -8,6 +8,11 @@ import { DynamicTable } from "../../../Shared/DynamicTable";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 import { handleInvitePatch } from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUserTable";
 import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 
 interface InviteTableProps {
   data: CorporateUserPageRecDataDto[];
@@ -29,7 +34,10 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
   const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
   const [isRevokedModalOpen, setIsRevokedModalOpen] = useState(false);
   const [selectedInviteId, setSelectedInviteId] = useState<string | null>(null);
-
+  const KeyFallback = {
+    name: ["firstName", "lastName"],
+  };
+  const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback);
   const status: Record<string, string> = {
     ACCEPTED: "Joined",
     AWAITING: "Sent",
@@ -41,20 +49,51 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (row: (typeof data)[0]) => (
         <span className="w-full capitalize">
           {row?.firstName} {row?.lastName}
         </span>
       ),
     },
-    { key: "email", label: "Email" },
-    { key: "phone", label: "Phone no" },
+    { key: "email", label: "Email", sortable: true },
+    {
+      key: "phoneNumberDetails",
+      label: "Phone Number",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const phoneNumber = row?.phoneNumberDetails
+          ? row.phoneNumberDetails.countryCode + row.phoneNumberDetails.phoneNumber
+          : "N/A";
+        return (
+          <span className="w-36 mx-auto cursor-pointer select-all" title="Double click to copy">
+            {phoneNumber}
+          </span>
+        );
+      },
+    },
     {
       key: "createdAt",
       label: "Date",
+      sortable: true,
       render: (row: (typeof data)[0]) => formatDateToDDMMYYYY(row.createdAt),
     },
-    { key: "access", label: "Access" },
+    {
+      key: "access",
+      label: "Access",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const userType = row?.corporateUserDetails?.corporateUserType || row?.corporateUserType;
+        const isAdmin = userType === "corporate-admin";
+        return (
+          <span
+            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium truncate block max-w-[99.3%] cursor-pointer ${
+              isAdmin ? "bg-red-500 text-white" : "bg-blue-500 text-white"
+            }`}
+            data-tooltip-place="top">
+            {isAdmin ? "Admin" : "Recruiter"}
+          </span>
+        );
+      },
+    },
     {
       key: "inviteStatus",
       label: "Invite status",
@@ -74,7 +113,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
             color = "bg-gray-100 text-gray-600";
         }
         return (
-          <span className={`px-3 py-1 rounded-full text-sm font-medium ${color}`}>
+          <span className={`px-3 py-0 rounded-full text-sm font-medium ${color}`}>
             {status[row.inviteStatus]}
           </span>
         );
@@ -100,7 +139,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         </>
       ),
     },
-    {
+    ...(secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) === UserRole.CORPORATE_ADMIN  ? [{
       key: "revoke",
       label: "Revoke",
       render: (row: (typeof data)[0]) => (
@@ -110,7 +149,11 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
               onClick={async () => {
                 if (row.inviteStatus === "ACCEPTED") {
                   if (row?.corporateUserDetails?.id) {
-                    await handleInvitePatch(row.corporateUserDetails.id, "DELETE_CORPORATE_USER", fetchInvites);
+                    await handleInvitePatch(
+                      row.corporateUserDetails.id,
+                      "DELETE_CORPORATE_USER",
+                      fetchInvites
+                    );
                   }
                 } else {
                   setIsRevokedModalOpen(true);
@@ -123,14 +166,15 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
           )}
         </>
       ),
-    },
+    }] : [])
   ];
 
   return (
     <>
       <DynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
-        rows={data ?? []}
+        rows={sortedData ?? []}
+        onSortChange={onSortChange}
         enableSelect={false}
         pageSize={pagination.pageSize}
         setPageSize={pagination.setPageSize}
@@ -144,7 +188,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         onClose={() => setIsSendInviteModalOpen(false)}
         className="w-min">
         <InviteForm
-          compId={data?.[0]?.companyId ?? ""} 
+          compId={data?.[0]?.companyId ?? ""}
           onClose={() => {
             fetchInvites();
             setIsSendInviteModalOpen(false);

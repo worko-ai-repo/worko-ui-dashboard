@@ -7,9 +7,9 @@ import {
   JobApplicationDetailsDto,
   JobData,
 } from "@Interfaces/CorporateDashboard.dto";
-import { useAppContext } from "@Context/App.context";
+import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
-import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
+
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import CorporateServiceObj from "../Services/Corporate.service";
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
@@ -27,6 +27,7 @@ import { useListSelection } from "@Hooks/useListSelection.hook";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;

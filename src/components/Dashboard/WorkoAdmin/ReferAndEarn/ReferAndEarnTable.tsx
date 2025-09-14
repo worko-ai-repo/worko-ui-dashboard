@@ -11,12 +11,15 @@ import {
   ReferAndEarnJobStatusOptionsArray,
   ReferAndEarnStatusOptionsLabel,
 } from "@TypesAndConstants/common.constants";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
-import { Edit, RefreshCcw, X } from "lucide-react";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Check, Edit, RefreshCcw, X } from "lucide-react";
 import Modal from "@Components/Shared/Modal";
 import ReferNearnProcessPayment from "./ReferNearnProcessPayment";
 import ReferNearnRejectReferral from "./ReferNearnRejectReferral";
 import ReferAndEarnReferralStatusUpdateModal from "./ReferAndEarnReferralStatusUpdateModal";
+import AdminServiceObj from "../Services/Admin.service";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface ReferAndEarnTableProps {
   data: ReferAndEarnDto[];
@@ -50,6 +53,31 @@ const modalReducer = (state: modalState, action: despatchAction): modalState => 
       return state;
   }
 };
+
+
+  /**
+   * Handle handleAcceptWithdrawal
+   */
+  const handleAcceptWithdrawal = async (id:string,callbackFn:()=>void) => {
+    try {
+
+      const response = await AdminServiceObj.patchReferAndEarnStatus(id, {
+        status: "WITHDRAWAL_ACCEPTED",
+      });
+      if (!response) {
+        throw new Error("No response from server");
+      }
+      toast.success("Withdrawal request accepted successfully!", getToastOptions());
+    } catch (error) {
+      console.error("Error making request:", error);
+      toast.error("Failed to update referral. Please try again.", getToastOptions());
+    } finally {
+      callbackFn();
+    }
+  };
+
+
+
 const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
   data,
   fetchRefernEarn,
@@ -80,28 +108,22 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       : "text-yellow-600";
 
   // Define columns for the table
-  const columns = [
-    {
-      key: "id",
-      label: "Referral ID",
-      sortable: true,
-    },
+  const columns:Column<ReferAndEarnDto>[] = [
+
     {
       key: "referrerDetails_name",
       label: "Referred by",
       sortable: true,
-      className: "capitalize font-semibold text-sm text-nowrap",
+      // className: "capitalize font-semibold text-sm text-nowrap",
     },
-
     {
-      key: "referrerDetails_email",
-      label: "Email",
+      key: "recipientDetails_name",
+      label: "Referral name",
       sortable: true,
-      className: "text-sm",
     },
     {
       key: "referrerDetails_phoneNumber",
-      className: "text-sm",
+      // className: "text-sm",
       label: "Phone",
       render: (row: ReferAndEarnDto) => (
         <span>
@@ -112,7 +134,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "createdAt",
-      className: "text-sm",
+      // className: "text-sm",
       label: "Date referred",
       sortable: true,
       render: (row: ReferAndEarnDto) =>
@@ -126,7 +148,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "jobAppliedDate",
-      className: "text-sm",
+      // className: "text-sm",
       label: "Date applied",
       sortable: true,
       render: (row: ReferAndEarnDto) =>
@@ -144,12 +166,12 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       key: "jobDetails_title",
       label: "Job title",
       sortable: true,
-      className: "capitalize text-sm",
+      // className: "capitalize text-sm",
     },
 
     {
       key: "jobApplicationStatus",
-      className: "text-xs",
+      // className: "text-xs",
       label: "Referral Status",
       sortable: true,
       render: (row: ReferAndEarnDto) => {
@@ -167,7 +189,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "referralBonus",
-      className: "text-sm",
+      // className: "text-sm",
       label: "Referral bonus",
       sortable: true,
       render: (row: ReferAndEarnDto) => (
@@ -178,7 +200,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "status",
-      className: "text-xs",
+      // className: "text-xs",
       label: "Withdrawal Status",
       sortable: true,
       render: (row: ReferAndEarnDto) => {
@@ -195,26 +217,40 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     {
       key: "Actions",
       label: "Actions",
+      contentWidth: "max-w-none",
       render: (row: ReferAndEarnDto) => {
         // 3 Buttons: Reject Referrals, Process Payment, Update Status
         const rejectBtnNotVisible = !["WITHDRAWAL_REQUESTED"].includes(row.status);
         return (
-          <div className="flex gap-2">
-            <button
-               disabled={rejectBtnNotVisible}
-              className="btn-reject flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg btn_disabled"
-              onClick={() =>
-                dispatch({
-                  type: "OPEN",
-                  modal: "reject",
-                  payload: { data: row, fetchRefernEarn },
-                })
-              }>
-              <X className="mr-2 h-4 w-4" />
-              Reject
-            </button>
-            <button
-               disabled={row.status != "WITHDRAWAL_ACCEPTED"}
+          <div className="flex gap-2 justify-center">
+           {!rejectBtnNotVisible && (
+            <>
+              <button
+                 disabled={rejectBtnNotVisible}
+                className="btn-reject flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-lg btn_disabled"
+                onClick={async () =>
+                  await handleAcceptWithdrawal(row.id,fetchRefernEarn)
+                }>
+                <Check className="mr-2 h-4 w-4" />
+                Accept
+              </button>
+              <button
+                 disabled={rejectBtnNotVisible}
+                className="btn-reject flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg btn_disabled"
+                onClick={() =>
+                  dispatch({
+                    type: "OPEN",
+                    modal: "reject",
+                    payload: { data: row, fetchRefernEarn },
+                  })
+                }>
+                <X className="mr-2 h-4 w-4" />
+                Reject
+              </button>
+            </>
+           )}
+            {row.status === "WITHDRAWAL_ACCEPTED" && <button
+               disabled={row.status !== "WITHDRAWAL_ACCEPTED"}
               className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg btn_disabled"
               onClick={() =>
                 dispatch({
@@ -225,7 +261,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
               }>
               <RefreshCcw className="mr-2 h-4 w-4" />
               Process Payment
-            </button>
+            </button>}
             <button
               className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg"
               onClick={() =>
@@ -247,9 +283,14 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
   const renderExpandedDetails = (row: ReferAndEarnDto) => {
     return (
       <div className="p-4  flex justify-start gap-12">
+
+        <span>
+          <label>Id</label>
+          <p className="capitalize">{row.id}</p>
+        </span>
         <span>
           <label>Referral name</label>
-          <p className="capitalize">{row.recipientDetails.name}</p>
+          <p className="capitalize">{row?.referrerDetails?.email}</p>
         </span>
 
         <span>

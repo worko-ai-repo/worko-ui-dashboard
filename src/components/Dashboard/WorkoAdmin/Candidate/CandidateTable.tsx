@@ -1,7 +1,7 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -67,7 +67,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       toast.error("Failed to fetch CV. Please try again.", getToastOptions({}));
     }
   };
-  const columns = [
+  const columns: Column<ApplicantDetails>[] = [
     {
       key: "name",
       label: "Name",
@@ -97,6 +97,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
     {
       key: "Actions",
       label: "Actions",
+      contentWidth: "max-w-none !w-[900px]",
       render: (row: ApplicantDetails) => {
         return (
           <div className="flex gap-3 px-2  justify-between">
@@ -138,7 +139,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       <div className="p-4  flex justify-evenly gap-4">
         <span>
           <label>Experience</label>
-          <p>{row.YOE}</p>
+          <p>{row?.YOE || "  "}  </p>
         </span>
         <span>
           <label>Account created at</label>
@@ -147,7 +148,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
 
         <span>
           <label>Department</label>
-          <p>{new Date(row?.candidateExperience?.department).toLocaleDateString()}</p>
+          <p>{row?.candidateExperience?.department}</p>
         </span>
 
         <div>
@@ -155,7 +156,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
           <p className="capitalize">{row.CTC ? `${row.CTC} LPA` : "-"}</p>
         </div>
         <div>
-          <span className=" text-gray-500">Expeceted CTC</span>
+          <span className=" text-gray-500">Expected CTC</span>
           <p className="capitalize">{row.ECTC ? `${row.ECTC} LPA` : "-"}</p>
         </div>
       </div>

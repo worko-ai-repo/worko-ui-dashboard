@@ -97,9 +97,26 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
                 </button>
               </div>
 
+            </div>
+
+            {/* Right Content - Score Card */}
+            <div className="w-48 h-52 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl relative flex flex-col items-center justify-center p-6">
+              <div className="text-white text-sm font-semibold font-['Poppins'] mb-4">
+                Matching Score
+              </div>
+
+              {/* Circular Gauge */}
+              <CircularGauge percentage={matchingScore} />
+
+              <div className="text-white text-sm font-semibold font-['Poppins'] mt-4">
+                {getScoreRating(matchingScore)}
+              </div>
+            </div>
+          </div>
+          
               {/* Collapsible Details */}
               {showDetails && (
-                <div className="mt-6 space-y-4">
+                <div className="mt-2 space-y-4 text-left">
                   {/* Strengths */}
                   {strengths.length > 0 && (
                     <div>
@@ -137,22 +154,6 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
                   )}
                 </div>
               )}
-            </div>
-
-            {/* Right Content - Score Card */}
-            <div className="w-48 h-52 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl relative flex flex-col items-center justify-center p-6">
-              <div className="text-white text-sm font-semibold font-['Poppins'] mb-4">
-                Matching Score
-              </div>
-
-              {/* Circular Gauge */}
-              <CircularGauge percentage={matchingScore} />
-
-              <div className="text-white text-sm font-semibold font-['Poppins'] mt-4">
-                {getScoreRating(matchingScore)}
-              </div>
-            </div>
-          </div>
         </div>
       </article>
     </section>

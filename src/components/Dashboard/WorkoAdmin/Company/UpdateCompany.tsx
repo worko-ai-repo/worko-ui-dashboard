@@ -5,7 +5,7 @@ import Editor from "@Components/Shared/PostJob/RichTextEditor";
 import Input from "@Components/Shared/PostJob/Input";
 import SimpleSelectInput from "@Components/Shared/PostJob/InputSelect";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { CompanyDto } from "@Interfaces/JobsAndCompany.dto";
 import { industryTypeOptions } from "../../../../types/common.constants";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -345,7 +345,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
   };
 
   return (
-    <div className="overflow-auto p-4 sm:p-6 text-start max-h-[90vh]">
+    <div className="overflow-auto p-4 sm:p-6 text-start max-h-[90vh] max-w-[800px]">
       <h2 className="text-xl font-semibold mb-6">{getFormTitle(mode)}</h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -472,11 +472,11 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
             </div>
           </div>
 
-          {/* LogoUrl */}
           <Controller
             name="logoUrl"
             control={control}
             rules={{
+              required: "Logo URL is required",
               pattern: {
                 value: /^https?:\/\/.+\..+/,
                 message: "Please enter a valid logo URL",
@@ -531,13 +531,13 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
           />
 
           {/* About Company - Rich Text Editor */}
-          <div className="mb-6 md:col-span-2">
+          <div className="mb-2 md:col-span-2">
             <label className="block text-sm font-medium text-gray-700 mb-2">
               About Company<span className="text-red-500 ml-1">*</span>
             </label>
             <Editor
               value={mode === "UPDATE" ? companyData?.aboutCompany || "" : ""}
-              style={{ height: "100px" }}
+              style={{ height: "200px" }}
               onChange={(htmlVal: string, plainVal: string) => {
                 setValue("aboutCompany", plainVal);
                 trigger("aboutCompany");
@@ -550,7 +550,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
         </div>
 
         {/* Submit Button */}
-        <div className="flex justify-start space-x-4 pt-6">
+        <div className="flex justify-start space-x-4 pt-0">
           <button
             type="submit"
             disabled={isSubmitting || (mode === "UPDATE" && !hasFormChanged)}

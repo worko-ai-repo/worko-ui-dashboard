@@ -60,6 +60,8 @@ export interface JobData {
   companyName: string;
   companyUrl: string;
   companyLogoUrl: string;
+  detailedSoftDeleteReason?: string;
+  shortSoftDeleteReason?: string;
   id: string;
   jobUrl: string;
   sourcedFrom: string;
@@ -269,6 +271,7 @@ export interface ApplicantDetails {
   profileImage: string;
   profileImageAwsS3SignedUrl: string;
   cvAwsS3SignedUrl: string;
+  companyName?: string;
   CV: string;
   country: string;
   number: string;
@@ -283,6 +286,7 @@ export interface ApplicantDetails {
   isNumberVerified: boolean;
   isWhatsappNotificationEnabled: boolean;
   isCandidateFresher: boolean;
+  isCurrentCompEmailVerified?: boolean;
   lastAccessedDash: string;
   about: string;
   createdAt: string;
@@ -365,6 +369,7 @@ export interface ReferralDetailsDto {
     detail: string;
   }[];
   matchingScore: number;
+  userDetails:any;
   jobPortal: string;
   jdExtracted?: string;
   userSubscriptionId: string;

@@ -1,7 +1,8 @@
 import { FunctionComponent, useState, useCallback } from "react";
 import Table from "../../SharedComponents/Table";
 import { customer_support } from "@Assets";
-import { Button } from "lib-worko-ui";
+import { Button } from "@headlessui/react";
+
 
 const Support = () => {
   const [isHelpOpen, setHelpOpen] = useState(false);

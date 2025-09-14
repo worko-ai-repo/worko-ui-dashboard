@@ -361,8 +361,9 @@ export interface CursorPaginationCorporateUserRecDataParams {
   pageSize: number;
   sortOrder: "ascending" | "descending";
   searchText?: string;
-  companyId: string;
+  companyId?: string;
   includeCompanyDetails: boolean;
+  corporateUserType?: 'corporate-admin' | 'corporate-recruiter';
   includeRegisteredCorporateDetails: boolean;
   lastKey?: string | undefined;
 }

@@ -74,7 +74,7 @@ const ViewExtraReferralDetailsModal: React.FC<ViewExtraReferralDetailsModalProps
           }
         />
 
-        <ModalBodyTable
+       {/*  <ModalBodyTable
           label="Job description extracted"
           value={
             <div
@@ -85,7 +85,7 @@ const ViewExtraReferralDetailsModal: React.FC<ViewExtraReferralDetailsModalProps
             />
           }
           multiline
-        />
+        /> */}
       </div>
     </>
   );

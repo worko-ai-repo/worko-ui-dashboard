@@ -7,7 +7,7 @@ import JobDescription from "@Components/Shared/PostJob/JobDescription";
 import { JobData, JobDetails } from "@Interfaces/CorporateDashboard.dto";
 import JobTableWrapper from "./JobTable";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
@@ -34,8 +34,10 @@ const AdminJobs = () => {
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
-  const [jobFormMode, setJobFormMode] = useState<"UPDATE" | "CREATE" | "DUPLICATE">("CREATE");
-  const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(SecureStorageKeyEnum.COGNITOUSERDETAILS);
+  const [jobFormMode, setJobFormMode] = useState<"UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA">("CREATE");
+  const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
+    SecureStorageKeyEnum.COGNITOUSERDETAILS
+  );
   const userType = userCognitoDetails?.["cognito:groups"];
 
   const {
@@ -45,7 +47,7 @@ const AdminJobs = () => {
     getAllSelected,
     reset: resetSelection,
   } = useListSelection({
-    limit: 30, 
+    limit: 30,
     mapFn: (job: JobData) => ({
       jobId: job.id,
       companyId: job.companyDetails.id,
@@ -67,7 +69,16 @@ const AdminJobs = () => {
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
 
-  const { data, isLoading, hasNextPage, hasPreviousPage, goToNextPage, goToPreviousPage, refetch, reset } = useCursorPagination<JobData, CursorPaginationAdminJobDataParams>({
+  const {
+    data,
+    isLoading,
+    hasNextPage,
+    hasPreviousPage,
+    goToNextPage,
+    goToPreviousPage,
+    refetch,
+    reset,
+  } = useCursorPagination<JobData, CursorPaginationAdminJobDataParams>({
     queryKey: ["AdminJobsQuery", activeTab, !!searchBarText, params],
     queryFn: AdminServiceObj.fetchJobs,
     baseParams: params,
@@ -90,7 +101,8 @@ const AdminJobs = () => {
       row.status = params;
     }
     const response = await AdminServiceObj.bulkUpdate(updatedData);
-    if (response) toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
+    if (response)
+      toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
     else toast.error("Failed to perform this operation.", getToastOptions({}));
     refetch();
   }
@@ -109,15 +121,41 @@ const AdminJobs = () => {
     data: {
       id: string;
       companyId: string;
-    }
+    },
+    closeReason?: { reason: string; note: string }
   ) {
     // construct the payload
-    const payload = {
+    const payload: {
+      companyId: string;
+      status?: JobStatusType;
+      shortSoftDeleteReason?: string;
+      detailedSoftDeleteReason?: string;
+    } = {
       companyId: data.companyId,
       status: type,
     };
-    const response = await AdminServiceObj.updateJob(payload, {}, data.id);
-    if (response) {
+    if (type === "CLOSED" && closeReason) {
+    //  "companyId": "string",
+    //   "shortSoftDeleteReason": "string",
+    //   "detailedSoftDeleteReason": "string" // optional
+      delete payload.status;
+      payload.shortSoftDeleteReason = closeReason.reason;
+      payload.detailedSoftDeleteReason = closeReason.note;
+    }
+    let response;
+    if (type === "CLOSED" ){
+      response = await AdminServiceObj.deleteJob(payload, data.id);
+    }
+    else{
+      if (payload.status) {
+        response = await AdminServiceObj.updateJob(
+          { ...payload, status: payload.status }, 
+          {}, 
+          data.id
+        );
+      }
+    }
+      if (response) {
       toast.success(`Job ${type.toLocaleLowerCase()} successfully`, getToastOptions({}));
     } else {
       toast.error("Failed to perform this operation.", getToastOptions({}));
@@ -126,22 +164,41 @@ const AdminJobs = () => {
   }
 
   return (
-    <div className="flex flex-col gap-[35px] w-full px-0">
+    <div className="flex flex-col gap-[35px] mt-2 w-full px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
         <div className=" flex-1 flex flex-col gap-4">
-          <div className="flex flex-wrap gap-4 justify-start">
-            <HeaderDetails />
-          </div>
 
           <div className="flex justify-between items-end gap-4">
-            <SearchBar searchBarText={searchBarText} setSearchBarText={setSearchBarText} handleClick={() => refetch()} />
+            <SearchBar
+              searchBarText={searchBarText}
+              setSearchBarText={setSearchBarText}
+              handleClick={() => refetch()}
+            />
             <div className="flex w-3/12 flex-shrink-0  gap-4 justify-center lg:items-end">
               <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
                 {/* <FilterToggle /> */}
-                <BulkOption options={[activeTab != "PUBLISHED" ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") } : null, activeTab != "CLOSED" ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") } : null, activeTab != "ARCHIVED" ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") } : null].filter((option): option is { label: string; onClick: () => Promise<void> } => option !== null)} disabled={selectedRows.length === 0} />
+                <BulkOption
+                  options={[
+                    activeTab != "PUBLISHED"
+                      ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
+                      : null,
+                    activeTab != "CLOSED"
+                      ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") }
+                      : null,
+                    activeTab != "ARCHIVED"
+                      ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") }
+                      : null,
+                  ].filter(
+                    (option): option is { label: string; onClick: () => Promise<void> } =>
+                      option !== null
+                  )}
+                  disabled={selectedRows.length === 0}
+                />
               </div>
               <div className="flex">
-                <button onClick={() => setIsJobDescriptionModalOpen(true)} className="bg-gradient-to-b from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
+                <button
+                  onClick={() => setIsJobDescriptionModalOpen(true)}
+                  className="bg-gradient-to-b from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
                   + Post Job
                 </button>
               </div>
@@ -153,7 +210,14 @@ const AdminJobs = () => {
       {/* Container to render top 3 switch buttions  */}
       <div className="flex justify-center gap-[57px]">
         {tabs.map((tab) => (
-          <button key={tab} className={`pb-2 border-b-2 text-sm ${activeTab === tab ? "border-blue-500 text-blue-700 font-semibold" : "border-transparent text-gray-500"}`} onClick={() => setActiveTab(tab)}>
+          <button
+            key={tab}
+            className={`pb-2 border-b-2 text-sm ${
+              activeTab === tab
+                ? "border-blue-500 text-blue-700 font-semibold"
+                : "border-transparent text-gray-500"
+            }`}
+            onClick={() => setActiveTab(tab)}>
             {tab === "PUBLISHED" ? "Open" : tab === "ARCHIVED" ? "Archived" : "Closed"}
           </button>
         ))}
@@ -162,14 +226,44 @@ const AdminJobs = () => {
       {isLoading ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
-        <JobTableWrapper activeTab={activeTab} data={data ?? []} selectedRows={selectedRows} selectRows={toggleRow} selectAllRows={toggleSelectAll} handleJobCreation={handleJobCreation} reset={resetSelection} updateJobStatus={updateJobStatus} hasNextPage={!!data && hasNextPage} hasPrevPage={hasPreviousPage} fetchNextPage={goToNextPage} fetchPreviousPage={goToPreviousPage} pageSize={pageSize} setPageSize={setPageSize} getAllSelected={getAllSelected} />
+        <JobTableWrapper
+          activeTab={activeTab}
+          data={data ?? []}
+          selectedRows={selectedRows}
+          selectRows={toggleRow}
+          selectAllRows={toggleSelectAll}
+          handleJobCreation={handleJobCreation}
+          reset={resetSelection}
+          updateJobStatus={updateJobStatus}
+          hasNextPage={!!data && hasNextPage}
+          hasPrevPage={hasPreviousPage}
+          fetchNextPage={goToNextPage}
+          fetchPreviousPage={goToPreviousPage}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          getAllSelected={getAllSelected}
+        />
       )}
-      <Modal isOpen={isJobFormModalOpen} onClose={() => setIsJobFormModalOpen(false)} title="Check the details" className="w-[100dvw] lg:w-[70dvw] h-full text-left no-scrl no-scrl-web ">
-        <JobForm onClose={() => setIsJobFormModalOpen(false)} jobDetails={jobDetails} userDetailsOne={userDetails} mode={jobFormMode} key={jobDetails?.id} />
+      <Modal
+        isOpen={isJobFormModalOpen}
+        onClose={() => setIsJobFormModalOpen(false)}
+        className="w-[100dvw] lg:w-[70dvw] h-full text-left no-scrl no-scrl-web ">
+        <JobForm
+          onClose={() => setIsJobFormModalOpen(false)}
+          jobDetails={jobDetails}
+          userDetailsOne={userDetails}
+          mode={jobFormMode}
+          key={jobDetails?.id}
+        />
       </Modal>
 
       <Modal isOpen={isJobDescriptionModalOpen} onClose={() => setIsJobDescriptionModalOpen(false)}>
-        <JobDescription onClose={() => setIsJobDescriptionModalOpen(false)} setIsJobFormModalOpen={setIsJobFormModalOpen} setJobDetails={setJobDetails} setJobMode={setJobFormMode}/>
+        <JobDescription
+          onClose={() => setIsJobDescriptionModalOpen(false)}
+          setIsJobFormModalOpen={setIsJobFormModalOpen}
+          setJobDetails={setJobDetails}
+          setJobMode={setJobFormMode}
+        />
       </Modal>
     </div>
   );

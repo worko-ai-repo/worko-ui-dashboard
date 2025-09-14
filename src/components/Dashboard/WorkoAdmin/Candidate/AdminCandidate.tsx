@@ -26,6 +26,7 @@ const AdminCandidate = () => {
     sortOrder: "descending",
     userType: "CAND",
     ...(fromDateToDate && fromDateToDate.fromDate ? { fromDate: fromDateToDate.fromDate } : {}),
+    ...(fromDateToDate && fromDateToDate.toDate ? { toDate: fromDateToDate.toDate } : {}),
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
 
@@ -67,30 +68,34 @@ const AdminCandidate = () => {
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
             />
-            <InputFromDataToDateFilter onDateChange={setFromDateToDate} />
+            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
+              <InputFromDataToDateFilter onDateChange={setFromDateToDate} />
+            </div>
           </div>
         </div>
-        {queryIsJobsLoading ? (
-          <SkeletonLoader
-            showTableHeader={true}
-            showTableRows={true}
-            tableColumns={5}
-            rowCount={5}
-          />
-        ) : (
-          <CandidateTable
-            data={data}
-            fetchEmployees={refetch}
-            pagination={{
-              goToNextPage,
-              goToPreviousPage,
-              hasNextPage,
-              hasPreviousPage,
-              pageSize,
-              setPageSize,
-            }}
-          />
-        )}
+        <div className="sticky top-60 ">
+          {queryIsJobsLoading ? (
+            <SkeletonLoader
+              showTableHeader={true}
+              showTableRows={true}
+              tableColumns={5}
+              rowCount={5}
+            />
+          ) : (
+            <CandidateTable
+              data={data}
+              fetchEmployees={refetch}
+              pagination={{
+                goToNextPage,
+                goToPreviousPage,
+                hasNextPage,
+                hasPreviousPage,
+                pageSize,
+                setPageSize,
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -76,7 +76,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     key?: string;
   }>({ isOpen: false, details: null, key: undefined });
 
-  const columns = [
+  const columns:Column<GuidanceRequestDto>[] = [
     { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
       key: "userDetails_about",
@@ -85,7 +85,10 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       render: (row: GuidanceRequestDto) => (
         <div className="flex justify-center">
           <div className="text-center w-[800px] ">
-            <p className="text-wrap line-clamp-4">{row.userDetails?.about}</p>
+            <p
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={row.userDetails?.about} 
+            className="text-wrap line-clamp-4">{row.userDetails?.about}</p>
           </div>
         </div>
       ),
@@ -113,8 +116,9 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     {
       key: "action",
       label: "Actions",
+      contentWidth: "max-w-none w-96",
       render: (row: GuidanceRequestDto) => (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex justify-center w-full  flex-col sm:flex-row gap-2">
           <button
             onClick={() =>
               dispatch({

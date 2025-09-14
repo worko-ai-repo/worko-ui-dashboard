@@ -7,7 +7,7 @@ import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 import { toast } from "react-toastify";
 import { SelectedRow } from "./Jobs";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { useNavigate } from "react-router-dom";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
@@ -72,6 +72,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       sortable: true,
       render: (row: JobData) => (
         <span
+          onClick={() => nav(`/corporate/cApplicants/${row.id}`)}
           className=" w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
           data-tooltip-id="my-tooltip"
           data-tooltip-content={row.jobTitle}
@@ -82,8 +83,19 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         </span>
       ),
     },
+    {
+      key: "location",
+      label: "Location",
+      sortable: true,
+      render: (row: JobData) => {
+        const locations = row.location.fullLocation ||
+          row.location.city ||
+          row.location.state ||
+          row.location.country || ["Not specified"];
+        return <span className="capitalize">{locations.join(", ")}</span>;
+      },
+    },
     { key: "department", label: "Department", sortable: true },
-    { key: "totalApplications", label: "Total Applications", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [{ key: "pending", label: "Pending", sortable: true }]
       : [
@@ -94,10 +106,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             render: (row: JobData) => new Date(row.updatedAt).toLocaleDateString("en-GB"),
           },
         ]),
-    ...(activeTab === "CLOSED" ? [{ key: "status", label: "Status",sortable: true, }] : []),
+    ...(activeTab === "CLOSED"
+      ? [
+          { key: "status", label: "Status" },
+          { key: "shortSoftDeleteReason", label: "Reason" },
+          {
+            key: "detailedSoftDeleteReason ",
+            label: "Other Reason",
+            render: (row: JobData) => row.detailedSoftDeleteReason || "-",
+          },
+        ]
+      : []),
     {
       key: "actions",
       label: "Actions",
+      contentWidth: `max-w-none ${activeTab === "PUBLISHED" ? "!min-w-96" : ""} `,
       render: (row: JobData) => {
         const tabButtonConfig: Record<
           string,
@@ -119,8 +142,11 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               icon: <Filter className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "Screen Resumes",
-              onClick: () => nav(`/corporate/bulk-cv-check/listing/${row.id}`),
-            }, //@TODO-Rohit: change this to bulkID.
+              onClick: () =>
+                nav(`/corporate/bulk-cv-check`, {
+                  state: { jobDesc: row.jobDescription },
+                }),
+            },
             {
               icon: <img src={Duplicate} className="w-5 h-5" />,
               className: "btn-sky shrink-0",

@@ -4,7 +4,6 @@ import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useAppContext } from "@Context/App.context";
-import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
 
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { clipboard } from "@Assets";
@@ -23,6 +22,7 @@ import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import { handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;

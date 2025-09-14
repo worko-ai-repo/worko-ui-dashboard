@@ -27,12 +27,12 @@ const navigationItems: NavItem[] = [
     icon: InterviewIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
-  {
+/*   {
     id: "home",
     label: "Home",
     icon: HomeIcon,
     dashboardTypes: ["CORPORATE"],
-  },
+  }, */
   {
     id: "jobs",
     label: "Jobs",
@@ -154,12 +154,12 @@ const navigationItems: NavItem[] = [
     dashboardTypes: ["ADMIN"],
   }, */
 
-  {
+/*   {
     id: "interviews",
     label: "Interviews",
     icon: InterviewIcon,
     dashboardTypes: ["CORPORATE"],
-  },
+  }, */
   {
     id: "bulk-cv-check",
     label: "Bulk CV Check",

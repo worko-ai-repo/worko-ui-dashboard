@@ -4,10 +4,11 @@ import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { useAppContext } from "@Context/App.context";
 import {
   CursorPaginationCorporateUserAdminDataParams,
+  CursorPaginationCorporateUserRecDataParams,
   CursorPaginationInviteDataParams,
 } from "@Interfaces/CorporateServices.dto";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CorporateUserPageAdminDataDto } from "@Interfaces/AdminServices.dto";
+import { CorporateUserPageAdminDataDto, CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
 import AdminServiceObj from "../Services/Admin.service";
 import SearchBar from "@Components/Shared/SearchBar";
 import AdminCorporateUserTable from "./AdminCorporateUserTable";
@@ -15,18 +16,17 @@ import Modal from "@Components/Shared/Modal";
 import InviteForm from "@Components/Shared/CorporateInvite/SendInviteForm";
 
 const AdminCorporateInvites = () => {
-  const { userDetails } = useAppContext();
-
   const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(25);
 
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
 
-  const params: Omit<CursorPaginationCorporateUserAdminDataParams, "lastKey"> = {
+  const params: Omit<CursorPaginationCorporateUserRecDataParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
-    corporateUserType: "corporate-admin", // Filter for corporate users only
-    // Add search text if it exists and is not emp
+    includeCompanyDetails: true,
+    includeRegisteredCorporateDetails: true,
+    corporateUserType: "corporate-admin",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
 
@@ -39,14 +39,10 @@ const AdminCorporateInvites = () => {
     goToPreviousPage,
     refetch,
     reset,
-  } = useCursorPagination<
-    CorporateUserPageAdminDataDto,
-    CursorPaginationCorporateUserAdminDataParams
-  >({
-    queryKey: ["CorporateJobsApplicationQuery", !!userDetails?.companyId, !!searchBarText, params],
-    queryFn: AdminServiceObj.fetchCorporateUsersAdmin,
+  } = useCursorPagination<CorporateUserPageRecDataDto, CursorPaginationCorporateUserRecDataParams>({
+    queryKey: ["CorporateUsersQuery", params],
+    queryFn: AdminServiceObj.fetchCorporateUsersRec,
     baseParams: params,
-    enabled: !!userDetails?.companyId, // only run if companyId exists
   });
   /**
    * UseEffect to reset selected rows when the active tab changes
@@ -79,7 +75,7 @@ const AdminCorporateInvites = () => {
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <AdminCorporateUserTable // Switch the order to match the state
-          data={data as CorporateUserPageAdminDataDto[]}
+          data={data as CorporateUserPageRecDataDto[]}
           fetchCorporateUsers={refetch}
           pagination={{
             goToNextPage,

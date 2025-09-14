@@ -16,7 +16,7 @@ interface JobDescriptionProps {
   onClose: () => void;
   setIsJobFormModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setJobDetails: React.Dispatch<React.SetStateAction<JobDetails | null>>;
-  setJobMode: React.Dispatch<React.SetStateAction<"CREATE" | "UPDATE" | "DUPLICATE">>;
+  setJobMode: React.Dispatch<React.SetStateAction<"CREATE" | "UPDATE" | "DUPLICATE" | "CREATE_WITH_DATA">>;
 }
 
 interface JdParsedResponse {
@@ -160,6 +160,7 @@ export default function JobDescription({
       if (response) {
         const mappedJob = mapParsedToJobDetails(response);
         setJobDetails(mappedJob);
+        setJobMode("CREATE_WITH_DATA");
       }
 
       return true;
@@ -307,10 +308,10 @@ export default function JobDescription({
       // Send job description to API for parsing
       const success = await parseJD(data.description.trim());
       if (success) {
-        // fuse the jd in setJobDetails
+        /*         // fuse the jd in setJobDetails
         setJobDetails((prev) =>
-          prev ? { ...prev, htmlJobDescription: data.description.trim() } : prev
-        );
+          prev ? { ...prev, htmlJobDescription: data..trim() } : prev
+        ); */
         setIsJobFormModalOpen(true);
         onClose();
       }
@@ -444,7 +445,7 @@ export default function JobDescription({
           type="button"
           onClick={() => {
             onClose();
-            setJobDetails(null)
+            setJobDetails(null);
             setIsJobFormModalOpen(true);
             setJobMode("CREATE");
           }}

@@ -10,6 +10,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import ScreeningListView from "@Components/Shared/BulkCvPage/BulkScreeningListView";
 import BulkCvForm from "@Components/Shared/BulkCvPage/BulkCvForm";
 import Modal from "@Components/Shared/Modal";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 const BulkCVCheck: React.FC = () => {
   const [isScreeningNew, setisScreeningNew] = useState(true);
@@ -26,6 +28,19 @@ const BulkCVCheck: React.FC = () => {
     setisScreeningNew(tab !== "screening-list");
   }, [location.search]);
 
+  //UseEffect to get the state from location for description and open the form directly if data is present in state and page is screening new
+  useEffect(() => {
+    if (location.state && isScreeningNew) {
+      const stateData = location.state as { jobDesc: string };
+      if (stateData.jobDesc) {
+        handleParseJd(stateData.jobDesc);
+        setDropDownData(null);
+      }
+      // Clear the state to prevent re-triggering on subsequent renders
+      navigate(location.pathname, { replace: true });
+    }
+  }, [location.state, isScreeningNew, navigate]);
+  
   const handleTabChange = (isFormOpen: boolean) => {
     setisScreeningNew(isFormOpen);
     const tab = isFormOpen ? "new-screening" : "screening-list";
@@ -34,6 +49,10 @@ const BulkCVCheck: React.FC = () => {
 
   async function handleParseJd(jobDescription: string) {
     try {
+      if (!jobDescription.trim()) {
+        toast.error("Please enter a valid job description.", getToastOptions());
+        return;
+      }
       setLoader(true);
       const response = await CorporateServiceObj.parseJobDescription(jobDescription);
       if (!response) {
@@ -60,7 +79,7 @@ const BulkCVCheck: React.FC = () => {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex flex-wrap justify-center mb-6 border-gray-200">
+      <div className="flex flex-wrap justify-center mb-4 mt-2 border-gray-200">
         <button
           className={`px-4 py-2 font-medium ${
             isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"

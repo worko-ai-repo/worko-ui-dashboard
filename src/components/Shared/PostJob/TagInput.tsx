@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function TagInput({ label, tags, onAddTag, onRemoveTag }: { label: string; tags: string[]; onAddTag: (tag: string) => void; onRemoveTag?: (tag: string) => void }) {
+export default function TagInput({ label, tags, onAddTag, onRemoveTag,required }: { label: string; tags: string[]; onAddTag: (tag: string) => void; onRemoveTag?: (tag: string) => void ,required?:boolean }) {
   const [inputValue, setInputValue] = useState("");
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -13,7 +13,7 @@ export default function TagInput({ label, tags, onAddTag, onRemoveTag }: { label
 
   return (
     <div className="no-scrl no-scrl-web">
-      <label className=" mb-5  text-sm font-medium text-gray-700">{label}</label>
+      <label className=" mb-5  text-sm font-medium text-gray-700">{label}{required && <span className="text-red-500">*</span>}</label>
       <div className="mt-3 bg-gray-100 rounded-xl p-2 min-h-[133px] flex flex-col justify-between no-scrl no-scrl-web">
         {/* Tags container */}
         {tags && (
@@ -33,7 +33,7 @@ export default function TagInput({ label, tags, onAddTag, onRemoveTag }: { label
           </div>
         )}
         {/* Input takes full width on next line */}
-        <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} className="w-full bg-transparent rounded-xl outline-none text-sm px-3 py-3" placeholder="Add more" />
+        <input type="text" value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={handleKeyDown} className="w-full bg-transparent rounded-xl  border-2 text-sm px-3 py-3" placeholder="Add more" />
       </div>
     </div>
   );

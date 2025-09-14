@@ -3,16 +3,13 @@ import { DynamicTable } from "@Components/Shared/DynamicTable";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
-import {
-  CorporateUserPageAdminDataDto,
-  CorporateUserPageRecDataDto,
-} from "@Interfaces/AdminServices.dto";
+import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
 import {
   CommonCursorPaginationProp,
   CursorPaginationCorporateUserRecDataParams,
 } from "@Interfaces/CorporateServices.dto";
 
-import { Building2, Edit, Trash, Trash2 } from "lucide-react";
+import { Building2, Edit, Minus, Send, Trash, Trash2 } from "lucide-react";
 import { useReducer, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import CorporateUsersSubTable from "./AdminCorporateSubTable";
@@ -20,9 +17,10 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import Modal from "@Components/Shared/Modal";
 import RevokeForm from "@Components/Shared/CorporateInvite/RevokeForm";
+import CompanyLogoRender from "../Company/CompanyLogoRender";
 
 interface AdminCorporateUserTableProps {
-  data: CorporateUserPageAdminDataDto[];
+  data: CorporateUserPageRecDataDto[];
   fetchCorporateUsers: () => void;
   pagination: CommonCursorPaginationProp;
 }
@@ -34,7 +32,7 @@ type ModalType = "revoke" | "add" | null;
 interface ModalState {
   activeModal: ModalType;
   key?: string;
-  data?: CorporateUserPageAdminDataDto | null;
+  data?: CorporateUserPageRecDataDto | null;
   fetchCorporateUsers?: () => void;
 }
 
@@ -114,7 +112,6 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
   const { sortedData, onSortChange } = useSortableData(data, {
     companyDetails_name: ["companyDetails.name"],
-    
   });
   const [subDataCompanyId, setSubDataCompanyId] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -123,8 +120,39 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     pageSize: 200,
     sortOrder: "descending",
     companyId: subDataCompanyId,
-    includeCompanyDetails: true,
+    includeCompanyDetails: false,
     includeRegisteredCorporateDetails: true,
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    await handleInvitePatch(userId, "DELETE_CORPORATE_USER", fetchCorporateUsers);
+  };
+
+  const handleResendInvite = (inviteId: string) => {
+    handleInvitePatch(inviteId, "RESEND", fetchCorporateUsers);
+  };
+
+  const handleGrantDuplicacyAccess = (inviteId: string) => {
+    handleInvitePatch(inviteId, "GRANT_DUPLICACY_ACCESS", fetchCorporateUsers);
+  };
+
+  const handleRevokeInvite = (row: CorporateUserPageRecDataDto, inviteId: string) => {
+    dispatch({
+      type: "OPEN",
+      modal: "revoke",
+      payload: {
+        key: inviteId,
+        data: row,
+        fetchCorporateUsers: fetchCorporateUsers,
+      },
+    });
+  };
+
+  const handleRevokeInviteForSubTable = (inviteId: string) => {
+    const row = subData?.find((item) => item.id === inviteId);
+    if (row) {
+      handleRevokeInvite(row, inviteId);
+    }
   };
 
   const {
@@ -137,7 +165,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     refetch,
     reset,
   } = useCursorPagination<CorporateUserPageRecDataDto, CursorPaginationCorporateUserRecDataParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!subDataCompanyId, params],
+    queryKey: ["CorporateSubUsersQuery", !!subDataCompanyId, params],
     queryFn: AdminServiceObj.fetchCorporateUsersRec,
     baseParams: params,
     enabled: !!subDataCompanyId, // only run if companyId exists
@@ -147,144 +175,194 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     {
       key: "id",
       label: "ID",
-      sortable: true,
-      render: (row: CorporateUserPageAdminDataDto) => (
-        <InteractiveInput
-          data={row?.id}
-          isLoading={false}
-          variant="copy"
-          placeholder="No company URL available"
-          width="w-48 mx-auto lowercase"
-        />
+      render: (row: CorporateUserPageRecDataDto) => (
+        <span
+          className="lowercase text-xs cursor-pointer select-all"
+          onDoubleClick={(e) => {
+            const text = row?.corporateUserDetails?.id || row?.id || "No ID available";
+            navigator.clipboard.writeText(text);
+          }}
+          title="Double click to copy">
+          {row?.corporateUserDetails?.id || row?.id || "No ID available"}
+        </span>
       ),
     },
     {
       key: "companyDetails_name",
       label: "Company Name",
       sortable: true,
-      render: (row: CorporateUserPageAdminDataDto) => {
-        const [imgError, setImgError] = useState(false);
-        const finalLogoUrl = row?.companyDetails?.logo
-          ? `${import.meta.env.APP_WORKO_BASE_URL}/images/${row?.companyDetails?.logo}`
-          : row?.companyDetails?.logoUrl;
-        return finalLogoUrl && !imgError ? (
-          <div className="flex items-center gap-2 mx-auto justify-start w-64">
-            <img
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={row?.companyDetails?.name}
-              src={finalLogoUrl}
-              alt={row?.companyDetails?.name}
-              loading="lazy"
-              className="h-12 w-12 cursor-pointer border object-contain rounded-full  "
-              onError={() => setImgError(true)} // This only affects the current component
-            />
-            <span>{row.companyDetails?.name}</span>
-          </div>
-        ) : (
-          <div className="flex items-center gap-2  mx-auto justify-start w-64">
-            <Building2
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={row?.companyDetails?.name}
-              className="h-12 w-12 cursor-pointer border p-2 rounded-full text-gray-400"
-            />
-            <span>{row.companyDetails?.name}</span>
-          </div>
-        );
-      },
-    },
-    {
-      key: "firstName",
-      label: "Name",
-      sortable: true,
-      render: (row: CorporateUserPageAdminDataDto) => (
-        <span
-          className=" capitalize truncate block max-w-[99.3%] cursor-pointer"
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={row?.firstName + " " + row?.lastName}
-          data-tooltip-place="top">
-          {row?.firstName} {row?.lastName}
+      render: (row: CorporateUserPageRecDataDto) => (
+        <span className="capitalize flex gap-2 items-center justify-center text-center truncate max-w-[99.3%] cursor-pointer text-sm">
+          {row?.companyDetails && row.companyDetails.id ? (
+            <CompanyLogoRender {...row.companyDetails} key={row.id} />
+          ) : null}
+          {row?.companyDetails?.name || "No company available"}
         </span>
       ),
+    },
+    {
+      key: "name",
+      label: "Name",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const firstName = row?.corporateUserDetails?.firstName || row?.firstName;
+        const lastName = row?.corporateUserDetails?.lastName || row?.lastName;
+        return (
+          <span
+            className="capitalize text-center truncate block max-w-[99.3%] cursor-pointer text-sm"
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={`${firstName} ${lastName}`}
+            data-tooltip-place="top">
+            {firstName} {lastName}
+          </span>
+        );
+      },
     },
     {
       key: "email",
       label: "Email",
       sortable: true,
-      render: (row: CorporateUserPageAdminDataDto) => (
-        <InteractiveInput
-          data={row?.email}
-          isLoading={false}
-          variant="copy"
-          placeholder="No company URL available"
-          width="w-48 mx-auto lowercase"
-        />
-      ),
-    },
-    {
-      key: "AccessType",
-      label: "Access Type",
-      sortable: true,
-      render: (row: CorporateUserPageAdminDataDto) => (
+      render: (row: CorporateUserPageRecDataDto) => (
         <span
-          className=" capitalize bg-red-500 w-fit mx-auto px-3 rounded-full p-1 text-white  truncate block max-w-[99.3%] cursor-pointer"
-          data-tooltip-place="top">
-          Admin
+          className="w-48 mx-auto lowercase cursor-pointer select-all"
+          onDoubleClick={(e) => {
+            const text = row?.corporateUserDetails?.email || row?.email || "No email available";
+            navigator.clipboard.writeText(text);
+          }}
+          title="Double click to copy">
+          {row?.corporateUserDetails?.email || row?.email || "No email available"}
         </span>
       ),
     },
+    {
+      key: "phoneNumberDetails",
+      label: "Phone Number",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const phoneNumber = row?.phoneNumberDetails
+          ? row.phoneNumberDetails.countryCode + row.phoneNumberDetails.phoneNumber
+          : "N/A";
+        return (
+          <span
+            className="w-36 mx-auto cursor-pointer select-all"
+            title="Double click to copy">
+            {phoneNumber}
+          </span>
+        );
+      },
+    },
+    {
+      key: "accessType",
+      label: "Access Type",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const userType = row?.corporateUserDetails?.corporateUserType || row?.corporateUserType;
+        const isAdmin = userType === "corporate-admin";
+        return (
+          <span
+            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium truncate block max-w-[99.3%] cursor-pointer ${
+              isAdmin ? "bg-red-500 text-white" : "bg-blue-500 text-white"
+            }`}
+            data-tooltip-place="top">
+            {isAdmin ? "Admin" : "Recruiter"}
+          </span>
+        );
+      },
+    },
+    {
+      key: "status",
+      label: "Status",
+      render: (subRow: CorporateUserPageRecDataDto) => {
+        const status = subRow?.inviteStatus;
+        const getStatusStyle = (status: string) => {
+          switch (status) {
+            case "ACCEPTED":
+              return "bg-green-100 text-green-800";
+            case "AWAITING":
+              return "bg-yellow-100 text-yellow-800";
+            case "EXPIRED":
+              return "bg-gray-100 text-gray-800";
+            case "DELETED":
+              return "bg-red-100 text-red-800";
+            default:
+              return "bg-gray-100 text-gray-800";
+          }
+        };
+        return (
+          <div className="w-full flex justify-start  ">
+            <span
+              className={`capitalize mx-auto   px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(
+                status
+              )}`}>
+              {status || "Active"}
+            </span>
+          </div>
+        );
+      },
+    },
 
     {
-      key: "action",
+      key: "actions",
       label: "Actions",
-      render: (row: CorporateUserPageAdminDataDto) => (
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={() => handleInvitePatch(row.id, "DELETE_CORPORATE_USER", fetchCorporateUsers)}
-            disabled={row.isDeleted}
-            className={`px-3 py-2 mx-auto rounded-lg text-white bg-red-500 btn_disabled`}>
-            <Trash size={16} />
-          </button>
-        </div>
-      ),
+      render: (subRow: CorporateUserPageRecDataDto) => {
+        const hasUserDetails = !!subRow?.corporateUserDetails;
+        const isDeleted = subRow?.corporateUserDetails?.isDeleted;
+        const isAccepted = subRow?.inviteStatus === "ACCEPTED";
+        const CantRevoke =
+          isAccepted ||
+          isDeleted ||
+          hasUserDetails ||
+          subRow?.inviteStatus === "EXPIRED" ||
+          subRow?.inviteStatus === "DELETED";
+        return (
+          <div className="flex flex-col sm:flex-row gap-1 justify-center">
+            {/* Delete button - only show for registered users (has corporateUserDetails) */}
+            {hasUserDetails && handleDeleteUser && (
+              <button
+                onClick={() =>
+                  subRow?.corporateUserDetails?.id &&
+                  handleDeleteUser(subRow?.corporateUserDetails?.id)
+                }
+                disabled={isDeleted}
+                className=" btn_disabled px-2 py-2 rounded-lg text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Delete User">
+                <Trash size={14} />
+              </button>
+            )}
+
+            {/* Resend invite button - only for pending invites */}
+            {!hasUserDetails && !isAccepted && handleResendInvite && (
+              <button
+                disabled={CantRevoke}
+                onClick={() => handleResendInvite(subRow?.id)}
+                className="btn_disabled px-2 py-1.5 rounded-lg text-white bg-blue-500 hover:bg-blue-600"
+                title="Resend Invite">
+                <Send size={14} />
+              </button>
+            )}
+
+            {/* Revoke invite button - only for non-deleted invites */}
+            {!hasUserDetails && handleRevokeInviteForSubTable && (
+              <button
+                disabled={CantRevoke}
+                onClick={() => handleRevokeInviteForSubTable(subRow?.id)}
+                className="btn_disabled p-1 rounded-full border-2 border-red-600 hover:bg-red-50"
+                title="Revoke Invite">
+                <Minus className="text-red-500 font-bold" size={14} />
+              </button>
+            )}
+          </div>
+        );
+      },
     },
   ];
-
   // Update renderExpandedDetails function
-  const renderExpandedDetails = (row: CorporateUserPageAdminDataDto) => {
-    const handleDeleteUser = async (userId: string) => {
-       await handleInvitePatch(userId, "DELETE_CORPORATE_USER", fetchCorporateUsers);
-     
-    };
-
-    const handleResendInvite = (inviteId: string) => {
-      handleInvitePatch(inviteId, "RESEND", fetchCorporateUsers);
-    };
-
-    const handleGrantDuplicacyAccess = (inviteId: string) => {
-      handleInvitePatch(inviteId, "GRANT_DUPLICACY_ACCESS", fetchCorporateUsers);
-    };
-
-    const handleRevokeInvite = (inviteId: string) => {
-      dispatch({
-        type: "OPEN",
-        modal: "revoke",
-        payload: {
-          key: inviteId,
-          data: row,
-          fetchCorporateUsers: fetchCorporateUsers,
-        },
-      });
-    };
-
+  const renderExpandedDetails = () => {
     return (
       <>
-        {/* Reusable Sub Table */}
         <CorporateUsersSubTable
           data={subData || []}
           isLoading={queryIsJobsLoading}
           onDeleteUser={handleDeleteUser}
           onResendInvite={handleResendInvite}
-          onRevokeInvite={handleRevokeInvite}
+          onRevokeInvite={handleRevokeInviteForSubTable}
           showActions={true}
           className="mt-4"
         />
@@ -304,8 +382,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
       } else {
         // Expand the new row and collapse others
         const company = data.find((d) => d.id === id);
-        if (company?.companyDetails?.id) {
-          setSubDataCompanyId(company?.companyDetails?.id);
+        if (company?.companyId) {
+          setSubDataCompanyId(company.companyId);
           refetch(); // Explicitly trigger the API call
         }
         return [id];
@@ -315,7 +393,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
   return (
     <>
-      <DynamicTable<CorporateUserPageAdminDataDto>
+      <DynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

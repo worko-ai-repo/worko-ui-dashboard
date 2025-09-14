@@ -9,7 +9,7 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import httpServiceObj from "@Services/ApiHandler.service";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import NoDataPresent from "../NoDataPresent";

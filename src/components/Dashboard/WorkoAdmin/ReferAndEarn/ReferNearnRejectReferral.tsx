@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { ModalBodyTable } from "@Components/Modals/ModalBodyTable";
 import { ReferAndEarnDto } from "@Interfaces/AdminServices.dto";
 import SimpleSelectInput from "@Components/Shared/PostJob/InputSelect";
@@ -168,9 +168,7 @@ const ReferNearnRejectReferral: React.FC<ReferNearnRejectReferralProps> = ({
               onClick={handleRejectReferralClick}
               className="w-44 mx-auto h-11 bg-red-600 hover:bg-red-700 rounded-lg flex justify-center items-center gap-2 transition-colors">
               <XMarkIcon className="w-3.5 h-3.5 text-white" />
-              <span className="text-white text-xs  font-semibold font-poppins">
-                Reject Request
-              </span>
+              <span className="text-white text-xs  font-semibold font-poppins">Reject Request</span>
             </button>
           </div>
         </>
@@ -179,7 +177,7 @@ const ReferNearnRejectReferral: React.FC<ReferNearnRejectReferralProps> = ({
         <form onSubmit={handleSubmit(onSubmit)} className="h-full flex flex-col">
           {/* Header */}
           <div className="text-black  text-left text-sm font-semibold font-poppins leading-tight mb-6">
-          Reject Withdrawal Request
+            Reject Withdrawal Request
           </div>
 
           {/* Form Fields */}

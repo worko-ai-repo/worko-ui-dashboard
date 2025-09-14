@@ -421,6 +421,7 @@ export default function ApplicationTable({
     actions: {
       key: "actions",
       label: "Actions",
+      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-96" : ""} `,
       render: (row: JobApplicationDetailsDto) => (
         <JobApplicationActions
           row={row}
@@ -837,7 +838,6 @@ export default function ApplicationTable({
             const applicantData = sortedData.find((row) => row.id === JobApplicationId);
             /* console.log("Applicant Data:", applicantData); */
             if (applicantData) {
-              debugger;
               setEvaluatorFormProps({
                 Defaultvalues: {
                   jobApplicationId: [applicantData.id],

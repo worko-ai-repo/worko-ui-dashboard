@@ -110,6 +110,8 @@ class AdminService {
     payload: {
       companyId: string;
       status: string;
+      shortSoftDeleteReason?: string;
+      detailedSoftDeleteReason?: string;
     },
     params: object,
     jobId: string
@@ -131,6 +133,32 @@ class AdminService {
     } catch (error: any) {
       console.error("[ADMIN SERVICE]: Failed to update Job.", error);
       return null;
+    }
+  }
+
+  /**
+   * deleteJob
+   *
+   * @type {DELETE}
+   * @description - This api is used to delete a job.
+   */
+  async deleteJob(payload: any, jobId: string): Promise<any> {
+    try {
+      const { response, status } = await httpServiceObj.put(
+        `/job/${jobId}/delete`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+      if (status !== 204) {
+        throw new Error("No response received");
+      }
+      return true;
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to delete Job.", error);
+      return false;
     }
   }
 
@@ -807,11 +835,14 @@ class AdminService {
 
   /**
    * updateCorporateUserInviteStatus
-   * 
+   *
    * @method PATCH
    * @description - This api is used to update corporate user invite status.
    */
-  async updateCorporateUserInviteStatus(corporateInviteId: string, payload:object): Promise<CorporateUserPageRecDataDto | null> {
+  async updateCorporateUserInviteStatus(
+    corporateInviteId: string,
+    payload: object
+  ): Promise<CorporateUserPageRecDataDto | null> {
     try {
       const { response } = await httpServiceObj.patch<CorporateUserPageRecDataDto>(
         `/corporate-invite/${corporateInviteId}`,
@@ -834,7 +865,7 @@ class AdminService {
 
   /**
    * deleteCorporateUser
-   * 
+   *
    * @method DELETE
    * @description - This api is used to delete a corporate user.
    */
@@ -848,7 +879,7 @@ class AdminService {
         false,
         "BASE"
       );
-      if (status !==  204) {
+      if (status !== 204) {
         throw new Error("No response received");
       }
       return true;

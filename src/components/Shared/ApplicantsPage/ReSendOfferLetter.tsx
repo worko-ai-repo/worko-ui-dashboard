@@ -9,7 +9,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import { eyeIcon, viewFeedback } from "@AssetsFolder/assets";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
@@ -41,14 +41,17 @@ export interface JobOfferLetterDynamoResponseDto {
 
 /**
  * getLatestOfferLetterIssueRaisedDetails
- * 
+ *
  * @description Get the latest offer letter issue raised details or offer letter details from job application data
- * 
+ *
  * @param jobData - Job application data containing offer letter issue details
  * @param mode - "ISSUE" for issue raised details, "LETTER" for offer letter details
- * @returns 
+ * @returns
  */
-export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDetailsDto | undefined, mode: "ISSUE" | "LETTER" = "ISSUE") => {
+export const getLatestOfferLetterIssueRaisedDetails = (
+  jobData: JobApplicationDetailsDto | undefined,
+  mode: "ISSUE" | "LETTER" = "ISSUE"
+) => {
   if (!jobData) {
     return {
       cloudFileName: "",
@@ -60,7 +63,10 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDe
 
   if (mode === "ISSUE") {
     // Handle offer letter issue raised details
-    if (!jobData.offerLetterIssueRaisedDetails || jobData.offerLetterIssueRaisedDetails.length === 0) {
+    if (
+      !jobData.offerLetterIssueRaisedDetails ||
+      jobData.offerLetterIssueRaisedDetails.length === 0
+    ) {
       return {
         cloudFileName: "",
         remarks: "",
@@ -68,7 +74,7 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDe
         type: "",
       };
     }
-    
+
     // Sort by date and get the latest issue
     const sortedIssues = jobData.offerLetterIssueRaisedDetails.sort(
       (a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
@@ -90,7 +96,7 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDe
         type: "",
       };
     }
-    
+
     // Sort by date and get the latest offer letter
     const sortedOfferLetters = jobData.offerLetterDetails.sort(
       (a, b) => new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
@@ -115,26 +121,36 @@ export const getLatestOfferLetterIssueRaisedDetails = (jobData: JobApplicationDe
 
 /**
  * handleViewDocumentClick
- * 
+ *
  * @description Handle view document click to generate pre-signed URL and open document in new tab
- * 
+ *
  * @param applicationData - Job application data containing offer letter details
  * @param mode - "ISSUE" for issue raised details, "LETTER" for offer letter details
- * @returns 
+ * @returns
  */
-export const handleViewDocumentClick = async (applicationData: JobApplicationDetailsDto, mode: "ISSUE" | "LETTER" = "ISSUE") => {
+export const handleViewDocumentClick = async (
+  applicationData: JobApplicationDetailsDto,
+  mode: "ISSUE" | "LETTER" = "ISSUE"
+) => {
   if (!applicationData) {
     toast.error("Job application data not found", getToastOptions({}));
     return;
   }
 
   // Check if the required data exists based on mode
-  if (mode === "ISSUE" && (!applicationData.offerLetterIssueRaisedDetails || applicationData.offerLetterIssueRaisedDetails.length === 0)) {
+  if (
+    mode === "ISSUE" &&
+    (!applicationData.offerLetterIssueRaisedDetails ||
+      applicationData.offerLetterIssueRaisedDetails.length === 0)
+  ) {
     toast.error("Offer letter issue details not found", getToastOptions({}));
     return;
   }
-  
-  if (mode === "LETTER" && (!applicationData.offerLetterDetails || applicationData.offerLetterDetails.length === 0)) {
+
+  if (
+    mode === "LETTER" &&
+    (!applicationData.offerLetterDetails || applicationData.offerLetterDetails.length === 0)
+  ) {
     toast.error("Offer letter details not found", getToastOptions({}));
     return;
   }
@@ -162,11 +178,11 @@ export const handleViewDocumentClick = async (applicationData: JobApplicationDet
     const { response, error } = await httpServiceObj.post<{
       objectUrl: string;
     }>(`/file/gsu2v/HR_OFFER_LETTER_SENT`, payload, true, {}, false, "JOB");
-    
+
     if (!response || error) {
       throw new Error("Failed to get pre-signed URL for document");
     }
-    
+
     // Open document in new tab
     const documentUrl = response.objectUrl;
     window.open(documentUrl, "_blank");
@@ -240,7 +256,6 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
   /**
    * Generate pre-signed URLs and open document in new tab
    */
-
 
   const onSubmit = async (data: HireFormInputs) => {
     try {
@@ -323,15 +338,15 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred. Please try again.", getToastOptions({}));
-    }finally {
-          RBAC.can("play_admin")
-            ? queryClient.invalidateQueries({
-                queryKey: ["AdminJobsApplicationQuery"],
-              })
-            : queryClient.invalidateQueries({
-                queryKey: ["CorporateJobsApplicationQuery"],
-              });
-        }
+    } finally {
+      RBAC.can("play_admin")
+        ? queryClient.invalidateQueries({
+            queryKey: ["AdminJobsApplicationQuery"],
+          })
+        : queryClient.invalidateQueries({
+            queryKey: ["CorporateJobsApplicationQuery"],
+          });
+    }
   };
 
   return (
@@ -341,7 +356,11 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
       <h2 className=" absolute top-4  text-lg font-semibold text-gray-800">Re-Send Offer Letter</h2>
       <button
         type="button"
-        onClick={() =>{jobData ? handleViewDocumentClick(jobData):toast.error("Failed to view document", getToastOptions({}))}}
+        onClick={() => {
+          jobData
+            ? handleViewDocumentClick(jobData)
+            : toast.error("Failed to view document", getToastOptions({}));
+        }}
         className="absolute top-3 right-2 px-3 py-2 btn_t1 bg-gradient-to-t rounded-xl w-36 items-center text-left bg-cyan-400 text-white flex gap-2">
         <img src={eyeIcon} alt="viewFeedback" className="w-5 h-5" /> View Offer Letter
       </button>

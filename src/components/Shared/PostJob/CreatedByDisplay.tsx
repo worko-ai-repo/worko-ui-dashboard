@@ -60,7 +60,8 @@ const CreatedByDisplay = <
         if (corporateUserId) {
           url = `/corporate-user/${corporateUserId}`;
         } else if (userId) {
-          url = `/user/${userId}`;
+          // user/:createdByUserId/detail`
+          url = `/user/${userId}/detail`;
         }
 
         const { response, error } = await httpServiceObj.get<UserData[]>(

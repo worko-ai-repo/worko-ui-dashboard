@@ -8,6 +8,7 @@ export interface Column<T> {
   key: (keyof T & string) | string;
   label: string;
   sortable?: boolean;
+  contentWidth?: string; // e.g., "w-32", "w-48"
   render?: (row: T) => React.ReactNode;
 }
 
@@ -129,11 +130,11 @@ export function DynamicTable<T extends { id: string }>({
   }
 
   return (
-    <div className="bg-white flex flex-col justify-between rounded-lg p-2 md:p-4 w-full h-screen">
+    <div className="bg-white overflow-x-auto flex flex-col justify-between rounded-lg p-2 md:p-2 w-[94vw] h-screen">
       {/* Scroll wrapper */}
-      <div className=" overflow-x-auto overflow-y-scroll  pb-4 rounded-md  no-scrl min-h-[calc(86vh)] max-h-[calc(100vh-200px)]">
+      <div className=" overflow-x-auto overflow-y-scroll  pb-4 rounded-md   min-h-[calc(86vh)] max-h-[calc(100vh-200px)]">
         <table className="min-w-full table-auto">
-          <thead className="bg-[#EFFFFF] text-[#94A3B8] sticky top-0 z-10">
+            <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-10 shadow-sm border-b border-blue-200">
             <tr>
               {enableSelect && (
                 <th className="p-3 text-center rounded-l-xl">
@@ -149,7 +150,7 @@ export function DynamicTable<T extends { id: string }>({
                 return (
                   <th
                     key={col.key}
-                    className="px-4 py-2 text-sm whitespace-nowrap text-center font-medium">
+                    className="px-4 py-2  max-w-96 text-sm whitespace-nowrap text-center font-medium">
                     <span className="flex items-center justify-center gap-1">
                       {col.label}
                       {col.sortable && onSortChange && (
@@ -214,13 +215,21 @@ export function DynamicTable<T extends { id: string }>({
                       return (
                         <td
                           key={col.key}
-                          className={`px-4 border-b py-4 text-sm whitespace-nowrap ${col.key !== "email" ? "capitalize" : ""} ${baseBg}
+                          className={`w-min max-w-60 ${col.contentWidth || ''}  px-4 border-b py-4 text-sm whitespace-nowrap ${col.key !== "email" ? "capitalize" : ""} ${baseBg}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
                           ${
-                            isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
                           }`}>
-                          {getCellValue(row, col)}
+                          <div className=" truncate cursor-pointer  "
+                          onDoubleClick={(e) =>
+                            navigator.clipboard.writeText(getCellValue(row, col) as string)
+                          }
+                          {...(typeof getCellValue(row, col) === 'string' ? {
+                            'data-tooltip-id': "my-tooltip",
+                            'data-tooltip-content': getCellValue(row, col) as string
+                          } : {})}
+                          >{getCellValue(row, col)}</div>
                         </td>
                       );
                     })}

@@ -15,6 +15,8 @@ import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corpor
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import { useNavigate } from "react-router-dom";
 import ChipInput from "../ui/InputWithChips";
+import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
+import { useDashboardContext } from "@Context/Dashboard.context";
 
 interface JobData {
   companyId: string;
@@ -34,12 +36,13 @@ interface JobData {
 interface BulkCvFormProps {
   isOpen: boolean;
   onClose: () => void;
-  jobData: JobData;
+  jobData: BulkJdParsedData;
   dropDownData: DropDownSelectedJobData | null;
 }
 
 const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropDownData }) => {
   const nav = useNavigate();
+  const {setBulkScreenDone}  = useDashboardContext();
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -81,7 +84,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
   useEffect(() => {
     try {
       if (!jobData) {
-        return; //@Todo#TEST
+        return; 
       }
       if (jobData) {
         setValue("jobTitle", jobData.jobTitle || "");
@@ -93,19 +96,16 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
         setValue("goodToHave", jobData.goodToHaveSkills || []);
         setValue(
           "jobLocation",
-          jobData.jobjobLocation !== "Not Mentioned" ? jobData.jobjobLocation : ""
+          jobData.location !== "Not Mentioned" ? jobData.location : ""
         );
 
-        // Extract technical skills from job description (basic implementation)
-        const techSkillsMatch = jobData.jobDescription?.match(
-          /technical[^.]*skills[^.]*:?\s*([^.]*)/i
-        );
-        if (techSkillsMatch) {
-          setValue(
-            "technicalSkills",
-            techSkillsMatch[1].split(",").map((skill) => skill.trim())
-          );
-        }
+      
+       // setTechnicalSkills, coreSkills, softSkills to empty arrays as they are not provided in jobData
+        setValue("technicalSkills", jobData.technicalSkills || []);
+        setValue("coreSkills", jobData.coreSkills || []);
+        setValue("softSkills", jobData.softSkills || []);
+        setValue("goodToHave", jobData.goodToHaveSkills || []);
+        setValue("industryPreference", jobData.department || "");
       }
     } catch (error) {
       console.error("Error pre-filling form data:", error);
@@ -222,7 +222,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
       await Promise.all(uploadPromises);
 
       // Success - continue to next step
-      toast.success("Files uploaded successfully!", getToastOptions({}));
+      // toast.success("Files uploaded successfully!", getToastOptions({}));
       // Simulate additional processing time
       setTimeout(() => {
         setIsProcessing(false);
@@ -241,7 +241,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
       return;
     }
 
-    setIsProcessing(true);
+    // setIsProcessing(true);
+    onClose();
+    toast.info("Your request is being processed , you will be notified once done.", getToastOptions({ autoClose: 8000 }));
     setUploadError("");
     try {
       const finalPayload = {
@@ -272,9 +274,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
       }));
 
       await storeDataToS3(filePayload, bulkJdId);
-
-      // Use bulkJdId in subsequent logic
-      console.log("Bulk Job Description ID:", bulkJdId);
+      setBulkScreenDone(true);
     } catch (error) {
       console.error("Error creating bulk screening request:", error);
       setUploadError("Failed to create bulk screening request");
@@ -295,12 +295,12 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
           }  max-sm:min-w-[95vw]  overflow-y-auto max-h-[90vh] `}
           onClick={(e) => e.stopPropagation()}>
           {isProcessing ? (
-            <div className="w-full h-full flex  flex-col items-center justify-center text-blue-600">
+            <div className="w-min h-min flex  flex-col items-center justify-center text-blue-600">
               <Loader2 className="w-8 h-8 animate-spin mb-2" />
               <p className="text-sm font-medium">Processing...</p>
             </div>
           ) : (
-            <div className="m-1 sm:m-2 h-full    overflow-y-auto">
+            <div className="m-1 sm:m-2 h-full   max-w-[1000px]  overflow-y-auto">
               {isFormOpen ? (
                 <div className="m-1 sm:m-5 px-2 h-full   overflow-y-auto">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">

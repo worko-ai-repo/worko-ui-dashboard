@@ -13,6 +13,7 @@ import {
   ReferAndEarnJobApplicationStatusEnum,
   ReferAndEarnStatusEnum,
 } from "@Enums/JobAndApplication.enum";
+import { CompanyDto } from "./JobsAndCompany.dto";
 
 /**
  * APIResponseDto
@@ -428,9 +429,14 @@ export interface CorporateUserPageRecDataDto {
   inviteStatus: "PENDING" | "ACCEPTED" | "REJECTED" | string;
   isDeleted: boolean;
   lastName: string;
+  phoneNumberDetails?: {
+    countryCode: number;
+    phoneNumber: number;
+  } 
   updatedAt: string; // ISO date string
   SK: string;
   corporateUserDetails?: CorporateUserDetails; // only present when inviteStatus = "ACCEPTED"
+  companyDetails?: CompanyDto; // only present when includeCompanyDetails = true in params  
 }
 
 interface CorporateUserDetails {

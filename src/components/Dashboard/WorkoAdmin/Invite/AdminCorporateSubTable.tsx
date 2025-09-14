@@ -69,6 +69,20 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
       ),
     },
     {
+      key: "phoneNumberDetails",
+      label: "Phone Number",
+      render: (row: CorporateUserPageRecDataDto) => {
+        const phoneNumber = row?.phoneNumberDetails
+          ? row.phoneNumberDetails.countryCode + row.phoneNumberDetails.phoneNumber
+          : "N/A";
+        return (
+          <span className="w-36 mx-auto cursor-pointer select-all" title="Double click to copy">
+            {phoneNumber}
+          </span>
+        );
+      },
+    },
+    {
       key: "accessType",
       label: "Access Type",
       render: (subRow: CorporateUserPageRecDataDto) => {
@@ -108,12 +122,12 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
 
         return (
           <div className="w-full flex justify-start  ">
-              <span
-                className={`capitalize text-left   px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(
-                  status
-                )}`}>
-                {status || "Active"}
-              </span>
+            <span
+              className={`capitalize text-left   px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(
+                status
+              )}`}>
+              {status || "Active"}
+            </span>
           </div>
         );
       },
@@ -125,9 +139,14 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
             label: "Actions",
             render: (subRow: CorporateUserPageRecDataDto) => {
               const hasUserDetails = !!subRow?.corporateUserDetails;
-              const isDeleted =  subRow?.corporateUserDetails?.isDeleted ;
+              const isDeleted = subRow?.corporateUserDetails?.isDeleted;
               const isAccepted = subRow?.inviteStatus === "ACCEPTED";
-              const CantRevoke = isAccepted || isDeleted || hasUserDetails || subRow?.inviteStatus === "EXPIRED" || subRow?.inviteStatus === "REVOKED";
+              const CantRevoke =
+                isAccepted ||
+                isDeleted ||
+                hasUserDetails ||
+                subRow?.inviteStatus === "EXPIRED" ||
+                subRow?.inviteStatus === "REVOKED";
               return (
                 <div className="flex flex-col sm:flex-row gap-1 justify-center">
                   {/* Delete button - only show for registered users (has corporateUserDetails) */}
@@ -147,7 +166,7 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
                   {/* Resend invite button - only for pending invites */}
                   {!hasUserDetails && !isAccepted && onResendInvite && (
                     <button
-                    disabled={CantRevoke}
+                      disabled={CantRevoke}
                       onClick={() => onResendInvite(subRow?.id)}
                       className="btn_disabled px-2 py-1.5 rounded-lg text-white bg-blue-500 hover:bg-blue-600"
                       title="Resend Invite">
@@ -156,17 +175,15 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
                   )}
 
                   {/* Revoke invite button - only for non-deleted invites */}
-                  {!hasUserDetails  && onRevokeInvite && (
+                  {!hasUserDetails && onRevokeInvite && (
                     <button
-                     disabled={CantRevoke}
+                      disabled={CantRevoke}
                       onClick={() => onRevokeInvite(subRow?.id)}
                       className="btn_disabled p-1 rounded-full border-2 border-red-600 hover:bg-red-50"
                       title="Revoke Invite">
                       <Minus className="text-red-500 font-bold" size={14} />
                     </button>
                   )}
-
-                
                 </div>
               );
             },

@@ -41,6 +41,7 @@ import { RequestDocModalProps } from "./RequestDocModal";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 
 type Props = {
   row: JobApplicationDetailsDto;
@@ -76,7 +77,9 @@ type Props = {
     notify?: boolean
   ) => void;
   handleMarkAsDuplicateJob: (action: "EDIT" | "VIEW") => void;
-  setJoinedModalOpen: React.Dispatch<React.SetStateAction<{ isOpen: boolean; jobApplication: JobApplicationDetailsDto; }>>
+  setJoinedModalOpen: React.Dispatch<
+    React.SetStateAction<{ isOpen: boolean; jobApplication: JobApplicationDetailsDto }>
+  >;
 };
 
 export const JobApplicationActions: React.FC<Props> = (props) => {
@@ -103,6 +106,19 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
   } = props;
 
   /**
+   * Handler for Accept action - specific logic can be added here
+   */
+  const handleAcceptForAdmin = (row: JobApplicationDetailsDto) => {
+    // Example logic: Directly update status to ACCEPTED for admin users
+    if (RBAC.can("play_admin")) {
+      handleStatusUpdate("ACCEPTED", row);
+      !row.displayToCorporate && sendApplicationToRecruiter && sendApplicationToRecruiter?.(row.id);
+    } else {
+      handleStatusUpdate("ACCEPTED", row);
+    }
+  };
+
+  /**
    * Action button definitions - Pure UI components with their handlers
    */
   const actionButtons: Record<JobApplicationActionType, React.ReactNode> = {
@@ -110,7 +126,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         key="accept"
         title="Accept"
-        onClick={() => handleStatusUpdate("ACCEPTED", row)}
+        onClick={() => handleAcceptForAdmin(row)}
         className="btn-success">
         <Check size={16} />
       </button>
@@ -173,7 +189,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
           setPdfViewDetails(row.id);
           setIsViewCVModalOpen(true);
           if (row.status === "ACCEPTED") {
-            handleStatusUpdate("CV_DOWNLOADED", row,false );
+            handleStatusUpdate("CV_DOWNLOADED", row, false);
           }
         }}
         className="flex gap-2 items-center btn-info">
@@ -296,15 +312,31 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
 
     PUSH_TO_RECRUITER: (
       <button
+        disabled={
+          jobApplicationServiceObj.showPushToRecruiterButton(row) === false || !row.displayToCorporate
+        }
         key="push-recruiter"
-        title={row.displayToCorporate ? "Already sent to recruiter" : "Send to Recruiter"}
+        title={
+          row.displayToCorporate === true
+            ? "Already sent to recruiter"
+            : jobApplicationServiceObj.showPushToRecruiterButton(row) || !row.displayToCorporate
+            ? "Cannot send to recruiter"
+            : "Send to Recruiter"
+        }
         onClick={() =>
           !row.displayToCorporate &&
           sendApplicationToRecruiter &&
           sendApplicationToRecruiter(row.id)
         }
-        disabled={row.displayToCorporate}
-        className={`flex gap-2 items-center bg-green-600 text-white p-2 rounded-xl ${
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={
+          row.displayToCorporate === true
+            ? "Already sent to recruiter"
+            : jobApplicationServiceObj.showPushToRecruiterButton(row) || !row.displayToCorporate
+            ? "Cannot send to recruiter"
+            : "Send to Recruiter"
+        }
+        className={`btn_disabled flex gap-2 items-center bg-green-600 text-white p-2 rounded-xl ${
           row.displayToCorporate ? "btn-gray cursor-not-allowed opacity-60" : "btn-sky"
         }`}>
         <Forward size={16} />
@@ -370,7 +402,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         key="joined"
         title="Joined"
-        onClick={() => setJoinedModalOpen({isOpen:true, jobApplication:row})}
+        onClick={() => setJoinedModalOpen({ isOpen: true, jobApplication: row })}
         className="btn-success flex gap-2 items-center">
         <Award size={16} />
       </button>

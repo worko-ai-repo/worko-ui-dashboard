@@ -114,7 +114,7 @@ export const GUIDANCE_STATUS_LABELS: Record<UserGuidanceRequestStatusType, strin
   MEETING_RESCHEDULE_CONFIRMED: "Reschedule Confirmed",
   REJECTED: "Rejected",
   CANCELLED: "Cancelled",
-  PROJECT_COMPLETED: "Completed",
+  PROJECT_COMPLETED: "Project Completed",
 };
 
 /**

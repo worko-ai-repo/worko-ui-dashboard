@@ -15,6 +15,8 @@ import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { View } from "@AssetsFolder/assets";
 import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewExtraReferrakDetailsModal";
+import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
+import ScorePointsModal from "@Components/Shared/DetailedAnalysis";
 
 interface ReferralTableProps {
   data: ReferralDetailsDto[];
@@ -27,6 +29,17 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+  const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [scorePointsModal, setScorePointsModal] = useState<{
+    title: string;
+    data: any;
+    matchingScore: number;
+    candidateName: string;
+    details?: boolean;
+    showCloseButton?: boolean;
+    onClose?: () => void;
+  } | null>(null);
+
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
@@ -57,7 +70,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   };
 
   const columns = [
-    { key: "name", label: "Employee Name", sortable: true },
+    { key: "employeeDetails_name", label: "Employee Name", sortable: true },
     {
       key: "jobUrl",
       label: "Job Url",
@@ -69,7 +82,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
               e.stopPropagation();
               window.open(row?.jobUrl, "_blank");
             }}
-            className="flex items-center btn-sky cursor-pointer"
+            className="flex items-center mx-auto btn-sky cursor-pointer"
           />
         </a>
       ),
@@ -82,9 +95,21 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       render: (row: ReferralDetailsDto) => (
         <div className="flex justify-center">
           <ProgressCircle
-            key={"progress-" + row.PK}
             onClick={() => {
-              handleViewExtraDetails(row);
+              setFeedbackModalOpen(true);
+
+              const application = jobApplicationServiceObj.getScoreDetails(row as any);
+              if (application === null) return;
+              setScorePointsModal({
+                title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
+                data: application.feedback, // Assuming matchingScore is an object with details
+                matchingScore: row.matchingScore ?? 0,
+                candidateName: row.userDetails.name,
+                details: true,
+                showCloseButton: true,
+                onClose: () => setFeedbackModalOpen(false),
+              });
+              // console.log("Matching Score Details:", scorePointsModal);
             }}
             value={row.matchingScore}
           />
@@ -98,7 +123,12 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       render: (row: ReferralDetailsDto) => (
         <div className="flex justify-center">
           <div className="text-center w-[800px] ">
-            <p className="text-wrap line-clamp-4">{row.emailFeedback}</p>
+            <p
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row.emailFeedback}
+              className="text-wrap line-clamp-4">
+              {row.emailFeedback}
+            </p>
           </div>
         </div>
       ),
@@ -131,7 +161,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
           onClick={async () => {
             handleViewExtraDetails(row);
           }}
-          className="btn-sky grid grid-cols-[20px_auto] ">
+          className="btn-sky mx-auto grid grid-cols-[20px_auto] ">
           <img src={View} className="h-4 w-4" />
           View more
         </button>
@@ -180,12 +210,18 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
           OpenExtraDetailsModal.isOpen &&
             setOpenExtraDetailsModal({ isOpen: false, details: null, key: undefined });
         }}
-        className="w-[90vw] sm:max-w-4xl h-screen py-8">
+        className="sm:max-w-4xl  py-8">
         <ViewExtraReferralDetailsModal
           key={OpenExtraDetailsModal.key}
           details={OpenExtraDetailsModal.details}
           onClose={() => setIsViewCVModalOpen(false)}
         />
+      </Modal>
+      <Modal
+        isOpen={feedbackModalOpen}
+        onClose={() => setFeedbackModalOpen(false)}
+        className="py-5">
+        {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
       </Modal>
     </>
   );

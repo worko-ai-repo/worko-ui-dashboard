@@ -65,6 +65,8 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
   DOCUMENT_ADDITIONAL_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0]",
   OFFER_ISSUE_RAISED: "bg-[#FFD700] text-[#856404]",
   REVISED_OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0]",
+  REVISED_LETTER: "bg-[#D6F4FF] text-[#00ADC0]",
+  OFFER_ACCEPTED: "bg-[#D1E7DD] text-[#0F5132]",
 };
 export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   // All Status that will be displayed in the table
@@ -96,6 +98,8 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   DOCUMENT_ADDITIONAL_REQUESTED: "Document Requested",
   OFFER_ISSUE_RAISED: "Offer Issue Raised",
   REVISED_OFFER_SENT: "Revised Offer Sent",
+  REVISED_LETTER: "Revised Letter Sent",
+  OFFER_ACCEPTED: "Offer Accepted",
 };
 export interface ApplicationTableProps {
   activeTab: "All" | "Hired" | "Joined";
@@ -132,7 +136,7 @@ export default function ApplicationTable({
   setEvaluatorFormProps,
   isBulkEvaluation,
   onBulkUpdate,
-  refetch
+  refetch,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -190,7 +194,9 @@ export default function ApplicationTable({
     ],
     profile: ["applicantDetails.candidateExperience.designation"],
     location: ["applicantDetails.location"],
-    applicantDetails_candidateExperience_designation: ["applicantDetails.candidateExperience.designation"],
+    applicantDetails_candidateExperience_designation: [
+      "applicantDetails.candidateExperience.designation",
+    ],
     applicantDetails_CTC: ["applicantDetails.CTC"],
   };
 
@@ -305,6 +311,7 @@ export default function ApplicationTable({
     actions: {
       key: "actions",
       label: "Actions",
+      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-96" : ""} `,
       render: (row: JobApplicationDetailsDto) => (
         <JobApplicationActions
           row={row}
@@ -393,8 +400,12 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          { key: "applicantDetails_CTC", label: "CTC" ,sortable:true},
-          { key: "applicantDetails_candidateExperience_designation", label: "Designation",sortable:true },
+          { key: "applicantDetails_CTC", label: "CTC", sortable: true },
+          {
+            key: "applicantDetails_candidateExperience_designation",
+            label: "Designation",
+            sortable: true,
+          },
           { key: "hiredBy", label: "Hired By" },
           {
             key: "status_actionDate",
@@ -414,7 +425,7 @@ export default function ApplicationTable({
               </div>
             ),
           },
-        /*   {
+          /*   {
             key: "actions",
             label: "Documents",
             render: (jobData: JobApplicationDetailsDto) => (
@@ -667,7 +678,11 @@ export default function ApplicationTable({
           })
         }
         className="w-[90vw] sm:w-[455px] h-[500px] ">
-        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} refetch={refetch}/>
+        <RequestDocumentModal
+          {...isRequestDocModalOpen}
+          handleStatusUpdate={handleStatusUpdate}
+          refetch={refetch}
+        />
       </Modal>
 
       <Modal

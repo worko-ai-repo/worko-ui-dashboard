@@ -23,6 +23,7 @@ import CVPreviewRaw from "../CvPreviewRaw";
 import { toast } from "react-toastify";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { getToastOptions } from "@Utils/Toast.utils";
+import CreatedByDisplay from "../PostJob/CreatedByDisplay";
 
 interface ApplicantScreeningRecord extends ResumeScreeningRecordDto {
   id: string;
@@ -235,6 +236,8 @@ export default function ApplicantScreeningTable() {
               setPdfViewDetails(url);
               setIsViewCVModalOpen(true);
             }}
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="View CV"
             className="p-2 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
             <FileText className="w-4 h-4 text-blue-600" />
           </button>
@@ -322,7 +325,7 @@ export default function ApplicantScreeningTable() {
               <div className="text-center">
                 <div className="text-sm text-gray-500 mb-1">Screening done by</div>
                 <div className="text-lg font-semibold text-gray-800">
-                  {data?.[0]?.createdByCorporateUserId}
+                <CreatedByDisplay row={data?.[0] } mode="created" />
                 </div>
               </div>
             </div>
@@ -334,7 +337,7 @@ export default function ApplicantScreeningTable() {
                 <div className="text-lg font-semibold text-gray-800">
                   {new Date(data?.[0]?.createdAt).toLocaleString()}
                 </div>
-              </div>
+            </div>
             </div>
           </div>
         </div>
