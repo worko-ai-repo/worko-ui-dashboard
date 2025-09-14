@@ -7,9 +7,9 @@ import {
   JobApplicationDetailsDto,
   JobData,
 } from "@Interfaces/CorporateDashboard.dto";
-import { useAppContext } from "@Context/App.context";
+import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
-import { CognitoMetaDataDto, getToastOptions } from "lib-worko-ui";
+
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import CorporateServiceObj from "../Services/Corporate.service";
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
@@ -26,6 +26,8 @@ import { EvaluatorFormProps } from "../../../Shared/ApplicantsPage/EvaluatorForm
 import { useListSelection } from "@Hooks/useListSelection.hook";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -56,10 +58,11 @@ export async function handleJobApplicationStatusUpdate(
     if (!response) {
       throw new Error("Failed to update application status");
     }
-    if (refetch) toast.success(
-      `Application status updated to ${payload.status.toLocaleLowerCase()}`,
-      getToastOptions({})
-    );
+    if (refetch)
+      toast.success(
+        `Application status updated to ${payload.status.toLocaleLowerCase()}`,
+        getToastOptions({})
+      );
     return true;
     // Optionally, you can refresh the data or perform other actions after updating
   } catch (error) {
@@ -90,7 +93,7 @@ const Applicants = () => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(100);
+  const [pageSize, setPageSize] = useState(25);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
   // Extract the job Id from the URL using useParams
@@ -249,23 +252,13 @@ const Applicants = () => {
             <HeaderDetails />
             <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
-              <div className="flex border rounded-lg items-center">
-                <div className="px-2 py-1 rounded-lg truncate text-[#C0B7B7]">
-                  {!queryIsJobsLoading ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "Fetching"}
-                </div>
-                <button
-                  onClick={() => {
-                    const jobUrl = data ? (data[0] as JobApplicationDetailsDto)?.jobUrl : "";
-                    if (jobUrl) {
-                      navigator.clipboard.writeText(jobUrl).then(() => {
-                        toast.success("Copied to clipboard!", getToastOptions({}));
-                      });
-                    }
-                  }}
-                  className="bg-blue-500  p-1 w-auto h-full rounded-lg active:scale-95 ">
-                  <img src={clipboard} alt="Clipboard icon" className="  min-w-4 min-h-4  " />
-                </button>
-              </div>
+              <InteractiveInput
+                data={data && data.length > 0 ? data[0].jobUrl : ""}
+                isLoading={queryIsJobsLoading}
+                variant="copy"
+                placeholder="No job URL available"
+                width="w-auto"
+              />
             </div>
             {/*       <div className="flex flex-col gap-2 h-min mt-4 bg-white rounded-xl px-7 py-3  shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap bc">Job Status</span>
@@ -278,7 +271,7 @@ const Applicants = () => {
             <SearchBar
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("Search clicked")}
+              handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
               <GenericDropdown
@@ -304,7 +297,7 @@ const Applicants = () => {
                   { label: "Interview Done", onClick: () => onBulkUpdate("INTERVIEW_DONE") },
                   { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
                   { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                /*   { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
+                  /*   { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
                 ]}
                 apiStatus={apiStatus}
                 disabled={
@@ -354,6 +347,9 @@ const Applicants = () => {
               pageSize,
               setPageSize,
             }}
+            refetch={
+              refetch
+            }
             EvaluatorFormProps={EvaluatorFormProps}
             setEvaluatorFormProps={setEvaluatorFormProps}
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}

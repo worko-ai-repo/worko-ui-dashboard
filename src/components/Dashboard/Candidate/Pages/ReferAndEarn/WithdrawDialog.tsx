@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SendIcon } from "lucide-react";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [accountHolderName, setAccountHolderName] = useState("");
@@ -11,7 +11,7 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [ifscCode, setIfscCode] = useState("");
   const [branchName, setBranchName] = useState("");
   const [panNumber, setPanNumber] = useState("");
-  const [amount,setAmount] = useState("")
+  const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -19,12 +19,20 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const handleSubmit = async () => {
-    if (!accountHolderName || !accountNumber || !ifscCode || !branchName || !reEnterAccountNumber || !panNumber || !amount) {
-      toast.error("Please fill all the fields",getToastOptions({}));
+    if (
+      !accountHolderName ||
+      !accountNumber ||
+      !ifscCode ||
+      !branchName ||
+      !reEnterAccountNumber ||
+      !panNumber ||
+      !amount
+    ) {
+      toast.error("Please fill all the fields", getToastOptions({}));
       return;
     }
     if (accountNumber !== reEnterAccountNumber) {
-      toast.error("Account number not matching",getToastOptions({}));
+      toast.error("Account number not matching", getToastOptions({}));
       return;
     }
 
@@ -38,20 +46,24 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
         branchName,
       };
 
-      await httpServiceObj.patch(`/refer-and-earn/${statusData.id}/request-withdrawal
-    `, payload, true);
+      await httpServiceObj.patch(
+        `/refer-and-earn/${statusData.id}/request-withdrawal
+    `,
+        payload,
+        true
+      );
 
-          toast.success("Withdrawal request submitted successfully!",getToastOptions({}));
-          onClose();
-        } catch (error) {
-          console.error("Withdrawal failed:", error);
-          toast.error("Something went wrong. Please try again.",getToastOptions({}));
-        } finally {
-          setLoading(false);
-        }
-      };
-    
-    useEffect(() => {
+      toast.success("Withdrawal request submitted successfully!", getToastOptions({}));
+      onClose();
+    } catch (error) {
+      console.error("Withdrawal failed:", error);
+      toast.error("Something went wrong. Please try again.", getToastOptions({}));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     if (isOpen) {
       setVisible(true);
       const timer = setTimeout(() => setIsAnimatingIn(true), 10);
@@ -63,31 +75,25 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
     }
   }, [isOpen]);
 
-
-
   // if (!isOpen) return null;
 
   useEffect(() => {
-    console.log("statusData",statusData)
-  }, [])
-  
+    console.log("statusData", statusData);
+  }, []);
 
-return (
-        <div
-          className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
-            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-          } ${visible ? "visible" : "invisible"}`}
-        >
-        <div
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[100vh] ${
-            isAnimatingIn ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+        isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+      } ${visible ? "visible" : "invisible"}`}>
+      <div
+        className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[100vh] ${
+          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+        }`}>
         <button
           className="absolute top-3 right-3 text-gray-600 hover:text-red-500"
           onClick={onClose}
-          disabled={loading}
-        >
+          disabled={loading}>
           ×
         </button>
 
@@ -150,7 +156,7 @@ return (
             disabled={loading}
             className="border p-2 rounded"
           />
-            <input
+          <input
             type="text"
             placeholder="Withdraw amount"
             value={amount}
@@ -164,8 +170,7 @@ return (
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-3  rounded-xl hover:bg-blue-300"
-          >
+            className="flex items-center gap-2 bg-blue-500 text-white text-sm font-medium px-4 py-3  rounded-xl hover:bg-blue-300">
             <SendIcon className="w-4 h-4" />
             {loading ? "Sending OTP..." : "Send OTP"}
           </button>

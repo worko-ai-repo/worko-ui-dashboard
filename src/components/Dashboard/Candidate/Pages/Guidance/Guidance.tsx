@@ -3,8 +3,6 @@ import { useDashboardContext } from "@Context/Dashboard.context";
 import GuidanceTable from "./GuidanceTable";
 import { magnifyingQuestion } from "@Assets";
 import httpServiceObj from "@Services/ApiHandler.service";
-import { Button } from "lib-worko-ui";
-import { DynamicTable, Column } from "@Components/Shared/DynamicTable";
 import profileService from "../../Service/ProfileService";
 
 

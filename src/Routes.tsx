@@ -5,7 +5,8 @@ import ErrorFallback from "@Pages/errors/base-error/ErrorFallback";
 import ProtectedRoute from "@Services/SessionValidator.service";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import AdminDashboard from "@Pages/WorkoAdmin/AdminDashboard";
-import EmployeeDashboard from "./Pages/Employee/EmployeeDashboard";
+import EmployeeDashboard from "@Pages/Employee/EmployeeDashboard";
+
 
 const EvaluatorDashboard = lazy(() => import("@Components/EvaluatorDashboard/EvaluatorDashboard"));
 const CorporateDashboard = lazy(() => import("@Pages/Corporate/CorporateDashboard"));

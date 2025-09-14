@@ -1,10 +1,13 @@
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
+import httpServiceObj from "@Services/ApiHandler.service";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { BadgeCheck, Check } from "lucide-react";
 import React, { useState } from "react";
+import { toast } from "react-toastify";
 
 interface VerifyUserContactProps {
   type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-  user: ApplicantDetails | {};
+  user: ApplicantDetails ;
   onClose: () => void;
   refetch: () => void;
 }
@@ -29,24 +32,40 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
       let payload = {};
       switch (type) {
         case "EMAIL":
-          payload = { email: inputValue };
+          payload = { isEmailVerified: true };
           break;
         case "MOBILE":
-          payload = { phoneNumber: inputValue };
+          payload = { isNumberVerified: true };
           break;
         case "COMPANY_EMAIL":
-          payload = { companyEmail: inputValue };
+          payload = { isEmailVerified: true };
           break;
         default:
           console.error("Invalid type");
           return;
       }
-      console.log("Payload:", payload);
-
+      const finalPath = type !== "COMPANY_EMAIL" ? 'details' : "experience";
+      const {response , error } = await httpServiceObj.patch(
+        `/user/${user.email}/${finalPath}`,
+        payload,
+        true,
+        {},
+        false,
+        "BASE")
+      if(error || !response){
+        toast.error("Failed to verify user",getToastOptions());
+        throw new Error("Failed to verify user");
+      }
+      toast.success("User verified successfully", getToastOptions());
       setSuccesModalOpen(true);
-      refetch();
     } catch (error) {
       console.error("Error verifying user:", error);
+    }
+    finally {
+      refetch();
+      setTimeout(() => {
+        onClose();
+      }, 1500);
     }
   };
 

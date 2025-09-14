@@ -3,8 +3,9 @@ import { Submit } from "@AssetsFolder/assets";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+
 import { joining_success_img } from "@Assets";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface JoinedModalProps {
   isOpen: boolean;

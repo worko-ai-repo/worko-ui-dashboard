@@ -38,7 +38,7 @@ const Timeline: React.FC<{ steps: TimelineStep[] }> = ({ steps }) => {
                   </div>
                   <span className="text-xs  relative text-left">
                     {step.label}
-                    <div className="absolute top-4 text-[8px] text-gray-500">{step.date}</div>
+                    <div className="absolute top-4 text-[8px] text-gray-500">{new Date(step.date).toLocaleDateString()}</div>
                   </span>
                 </div>
               </div>

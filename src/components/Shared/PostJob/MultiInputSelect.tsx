@@ -46,7 +46,7 @@ export default function MultiSelectDropdownWithChips({ label, options, selected,
 
   return (
     <div className="space-y-2 relative" ref={dropdownRef}>
-      <label className="text-sm font-medium text-gray-700">{label}</label>
+      <label className="text-sm font-medium text-gray-700">{label}<span className="text-red-500">*</span></label>
 
       <div className="bg-gray-100 p-2 rounded-xl h-[138px] overflow-auto no-scrl no-scrl-web cursor-pointer" onClick={() => setIsOpen(!isOpen)}>
         {/* Chips */}

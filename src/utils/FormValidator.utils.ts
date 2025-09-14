@@ -330,6 +330,17 @@ export const validationRules = {
   },
 
   /**
+   * defaultNumberPositive
+   */
+  defaultNumberPositive: {
+    required: "This field is required",
+    pattern: {
+      value: /^[1-9]*$/,
+      message: "Invalid input",
+    },
+  },
+
+  /**
    * defaultTextarea
    *
    * @description - Default validation rules for form fields. This is used for textarea fields.
@@ -362,7 +373,6 @@ export const validationRules = {
   jobTitle: {
     required: "Job title is required",
     minLength: { value: 3, message: "Minimum 3 characters required" },
-    pattern: { value: /^[A-Za-z\s]+$/, message: "Special characters and Numbers are not allowed" }, // Only allows letters and spaces
   },
 
   /**

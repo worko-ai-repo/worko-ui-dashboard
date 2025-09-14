@@ -5,14 +5,16 @@ type InputProps = {
   name: string;
   customClass?: string; // Optional custom class for additional styling
   error?: string;
+  required?: boolean; 
 } & React.InputHTMLAttributes<HTMLInputElement>;
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ label, name, error,customClass, ...rest }, ref) => {
+  ({ label, name, error,customClass, required,...rest }, ref) => {
     return (
       <div className={`space-y-1 ${customClass || ''}`}>
         <label htmlFor={name} className="text-sm font-medium text-gray-700">
           {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
         </label>
         <input
           id={name}

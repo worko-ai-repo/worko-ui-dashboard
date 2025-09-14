@@ -64,3 +64,5 @@ export const RolePermissions: Record<UserRole, UserRolesActions[]> = {
   [UserRole.LINKEDIN]: ["play_linkedin", "view_jobs", "apply_jobs"],
   [UserRole.GENERAL_USER]: ["play_general_user", "view_jobs", "apply_jobs"],
 };
+
+//@TODO: For corp_rec and admin permusion not working as expected need to check it once again

@@ -56,14 +56,19 @@ export interface JobData {
   workMode: string;
   jobDescription: string;
   createdByUserId: string;
+  createdByCorporateUserId: string;
   companyName: string;
   companyUrl: string;
   companyLogoUrl: string;
+  detailedSoftDeleteReason?: string;
+  shortSoftDeleteReason?: string;
   id: string;
   jobUrl: string;
   sourcedFrom: string;
   createdAt: string;
   updatedAt: string;
+  updatedByCorporateUserId?: string;
+  updatedByUserId?: string;
   isDeleted: boolean;
   companyDetails: CompanyDetails;
 }
@@ -156,6 +161,7 @@ export interface JobDetails {
   htmlJobDescription: string;
   fixedComponent?: number;
   variableComponent?: number;
+  companyDetails: CompanyDetails;
 }
 export interface JobApplicationDetailsDto {
   id: string;
@@ -163,6 +169,8 @@ export interface JobApplicationDetailsDto {
   jobId: string;
   jobTitle: string;
   companyName: string;
+  updatedByUserId?: string;
+  updatedByCorporateUserId?: string;
   jobCreatedByCorporateUserId?: string;
   offerLetterDetails?: Array<{
     userType: string;
@@ -263,6 +271,7 @@ export interface ApplicantDetails {
   profileImage: string;
   profileImageAwsS3SignedUrl: string;
   cvAwsS3SignedUrl: string;
+  companyName?: string;
   CV: string;
   country: string;
   number: string;
@@ -277,6 +286,7 @@ export interface ApplicantDetails {
   isNumberVerified: boolean;
   isWhatsappNotificationEnabled: boolean;
   isCandidateFresher: boolean;
+  isCurrentCompEmailVerified?: boolean;
   lastAccessedDash: string;
   about: string;
   createdAt: string;
@@ -359,6 +369,7 @@ export interface ReferralDetailsDto {
     detail: string;
   }[];
   matchingScore: number;
+  userDetails:any;
   jobPortal: string;
   jdExtracted?: string;
   userSubscriptionId: string;

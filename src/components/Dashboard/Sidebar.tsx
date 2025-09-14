@@ -14,6 +14,7 @@ import { LogOut } from "lucide-react";
 import CognitoServiceObj from "@Utils/Cognito.utils";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 interface SidebarProps {
   sidebarOpen: boolean;
@@ -72,9 +73,21 @@ const Sidebar: React.FC<SidebarProps> = ({
    * Filter navigation items based on current dashboard type
    * Only shows items that are either global or match current dashboard type
    */
-  const navItems = navigationItems.filter(
-    (item) => !item.dashboardTypes || item.dashboardTypes.includes(dashboardType)
-  );
+  const navItems = navigationItems.filter((item) => {
+    if (item.id === "switch-dashboard") {
+      if (!RBAC?.can("play_admin")) {
+        //dont show that item
+        return false;
+      }
+    }
+    return !item.dashboardTypes || item.dashboardTypes.includes(dashboardType);
+  });
+
+  /**
+   * Check AdminAccess
+   *
+   * if Nav Item contain switch-dashboard then check if RBAC.can("play-admin") is true then show the item otherwise filter it out
+   */
 
   /**
    * Handle navigation to different dashboard sections
@@ -95,7 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleTabClick = (NavItem: NavItem) => {
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
-      
+
       const currentPath = location.pathname;
       //If the current path is admin, switch to corporate dashboard
       if (currentPath.includes("admin")) {
@@ -129,7 +142,7 @@ const Sidebar: React.FC<SidebarProps> = ({
    * Avatar component - reusable user profile image/icon
    */
   const Avatar = (
-    <div className="w-full h-full">
+    <div className="w-fit h-full">
       <img
         src={finalUserDetails?.profileImageAwsS3SignedUrl || User}
         alt="User Avatar"
@@ -145,17 +158,14 @@ const Sidebar: React.FC<SidebarProps> = ({
                 md:relative md:block
                 max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 
                 ${sidebarOpen ? "max-md:translate-x-0" : "max-md:-translate-x-full"}`}>
-      <div className="h-full  flex flex-col justify-between  ">
+      <div className="h-full   flex flex-col justify-between  ">
         <div className="flex  justify-between items-center mb-6 ">
           {!collapsed ? (
-            <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-2 overflow-hidden">
-              {Avatar}
-              <span className="text-base text-start font-bold capitalize truncate min-w-[100px] max-w-[100px]"
-              title={userName}>
-                {userName}
-              </span>
-            </div>
+            <div className="flex  items-center  w-full">
+              <div className="flex w-full gap-1  items-center overflow-hidden">
+                {Avatar}
+                <span className=" w-full text-sm text-start font-bold capitalize">{userName}</span>
+              </div>
               <button
                 onClick={() => setCollapsed(true)}
                 className="hidden sm:flex focus:outline-none"
@@ -173,8 +183,8 @@ const Sidebar: React.FC<SidebarProps> = ({
             <div className="w-full h-10 flex justify-center ">{Avatar}</div>
           )}
         </div>
-        <div className=" h-full min-w-10 flex flex-col justify-start items-center overflow-scroll no-scrl-web">
-          <nav className="space-y-2 overflow-scroll no-scrl-web">
+        <div className=" h-full min-w-10 flex flex-col justify-start items-start overflow-scroll no-scrl-web">
+          <nav className="space-y-2  w-full overflow-scroll no-scrl-web">
             {navItems.map((item) => (
               <SidebarItem
                 key={item.id}
@@ -206,7 +216,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               secureStorage.clear();
               setUpdateCheck((prev: boolean) => !prev);
               // navigate("/auth/login");
-              window.location.href = "/";
+              window.location.href = "/jobs";
             }}
             className="hover:text-red-500 text-[13px] text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-1 rounded"
             aria-label="Logout">

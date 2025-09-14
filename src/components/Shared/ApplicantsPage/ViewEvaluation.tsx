@@ -53,7 +53,8 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate,
     );
 
   const finalData = response.data as EvaluationResponseItemDto[];
-  const currentEvaluation = finalData[activeTab];
+  const sortedData = [...finalData].reverse(); // Create a reversed copy
+  const currentEvaluation = sortedData[activeTab];
   const latest = currentEvaluation?.statusTracker?.[currentEvaluation?.statusTracker?.length - 1] || null;
   const interviews = currentEvaluation?.scheduledInterviewDetails || [];
 
@@ -75,14 +76,14 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate,
     <div className="mx-auto mt-6 bg-white overflow-hidden ">
       {/* Tab Headers */}
       <div className="flex  items-center no-scrl no-scrl-web flex-wrap w-[95%] overflow-auto">
-        {finalData.map((response, index) => (
+        {sortedData.map((response, index) => (
           <div key={response.id} className="flex justify-start items-center">
-            <button onClick={() => setActiveTab(index)} className={`px-4 py-3 text-sm text-nowrap font-semibold ${index === activeTab ? "text-black border-b-2 border-black" : "text-gray-400"}`} style={{ fontFamily: "Poppins" }}>
-              Evaluator {index + 1}
+            <button onClick={() => setActiveTab(index)} className={`px-4 py-3 capitalize truncate  text-sm text-nowrap font-semibold ${index === activeTab ? "text-black border-b-2 border-black" : "text-gray-400"}`} style={{ fontFamily: "Poppins" }}>
+            {response.evaluatorName || `Evaluator ${index + 1}`}
             </button>
 
             {/* Vertical separator (not after last tab) */}
-            {index < finalData.length - 1 && <div className="w-px h-5 bg-gray-300 mx-1" />}
+            {index < sortedData.length - 1 && <div className="w-px h-5 bg-gray-300 mx-1" />}
           </div>
         ))}
       </div>
@@ -185,20 +186,20 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate,
         {/* Availability Schedule Section */}
         {interviews.length > 0 && (
           <div className="flex justify-start items-start">
-            <span className="text-gray-500 text-xs font-medium" style={{ fontFamily: "Inter" }}>
+            <span className="text-gray-500 text-sm font-medium" style={{ fontFamily: "Inter" }}>
               Availability Schedule
             </span>
 
-            <div className="flex flex-col w-1/3 gap-2">
+            <div className="flex flex-col  w-62   gap-3">
               {/* Table Headers */}
-              <div className="flex text-gray-500 font-medium" style={{ fontFamily: "Inter" }}>
+              <div className="flex text-gray-500  font-medium" style={{ fontFamily: "Inter" }}>
                 <div className="w-1/2">Date</div>
                 <div className="w-1/2">Time</div>
               </div>
 
               {/* Table Rows */}
               {interviews.map((interview, index) => (
-                <div key={index} className="flex">
+                <div key={index} className="flex gap-2">
                   <div className="w-1/2">
                     <div className="bg-cyan-100 rounded-lg px-4 py-1 inline-block">
                       <span className="text-gray-700 font-semibold  " style={{ fontFamily: "Inter" }}>
@@ -207,9 +208,9 @@ const ResponseEvaluation: React.FC<Props> = ({ jobApplicationData, handleUpdate,
                     </div>
                   </div>
                   <div className="w-1/2">
-                    <div className="bg-cyan-100 rounded-lg px-4 py-1 inline-block">
-                      <span className="text-gray-700 font-semibold  " style={{ fontFamily: "Inter" }}>
-                        {interview.startTime || "N/A"}
+                    <div className="bg-cyan-100 rounded-lg px-4 text-nowrap py-1 inline-block">
+                      <span className="text-gray-700 lowercase font-semibold  " style={{ fontFamily: "Inter" }}>
+                        {interview.startTime +  " to " + interview.endTime  || "N/A"}
                       </span>
                     </div>
                   </div>

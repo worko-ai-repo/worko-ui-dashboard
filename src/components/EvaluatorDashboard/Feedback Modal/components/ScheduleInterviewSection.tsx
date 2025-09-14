@@ -1,7 +1,6 @@
 import React from "react";
 import { Calendar } from "lucide-react";
 import "react-datepicker/dist/react-datepicker.css";
-import { Button } from "lib-worko-ui";
 import { useEffect } from "react";
 import DatePicker from "react-datepicker";
 export interface ScheduledSlot {

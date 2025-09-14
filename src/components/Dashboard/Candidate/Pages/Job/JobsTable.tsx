@@ -1,22 +1,26 @@
-import React, { memo, useState, useCallback, useMemo } from 'react';
-import { JobApiResponse, JobTypes, PaginationInfo } from './JobTypes';
-import { Check } from 'lucide-react';
-import { viewFeedback, iHaveJoined, checkAndAccept, askQuestion } from '@Assets';
-import RejectionFeedbackModal from './modals/RejectionFeedbackModal';
-import SubmitDocumentModal from './modals/SubmitDocumentModal';
-import JobService from '../../Service/JobsService';
-import { useDashboardContext } from '@Context/Dashboard.context';
-import { DynamicTable } from '@Components/Shared/DynamicTable';
-import Stepper from './Stepper';
-import { JobApplicationStatusType } from 'src/types/JobsAndApplication.type';
-import { JobApplicationDetailsDto } from '@Interfaces/CorporateDashboard.dto';
-import CheckAcceptModal from './modals/CheckAcceptModal';
-import JoinedModal from './modals/JoinedModal';
-import httpServiceObj from '@Services/ApiHandler.service';
-import RequestFolloupModal from './modals/RequestFolloupModal';
-import { toast } from 'react-toastify';
-import { getToastOptions } from '@Utils/Toast.utils';
-import ViewDetailsModal from './modals/ViewDetailsModal';
+import React, { memo, useState, useCallback, useMemo } from "react";
+import { JobApiResponse, JobTypes, PaginationInfo } from "./JobTypes";
+import { Check } from "lucide-react";
+import { viewFeedback, iHaveJoined, checkAndAccept, askQuestion } from "@Assets";
+import RejectionFeedbackModal from "./modals/RejectionFeedbackModal";
+import SubmitDocumentModal from "./modals/SubmitDocumentModal";
+import JobService from "../../Service/JobsService";
+import { useDashboardContext } from "@Context/Dashboard.context";
+import { DynamicTable } from "@Components/Shared/DynamicTable";
+import Stepper from "./Stepper";
+import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import CheckAcceptModal from "./modals/CheckAcceptModal";
+import JoinedModal from "./modals/JoinedModal";
+import httpServiceObj from "@Services/ApiHandler.service";
+import RequestFolloupModal from "./modals/RequestFolloupModal";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
+import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
+import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
+import Modal from "@Components/Shared/Modal";
+import { useAppContext } from "@Context/App.context";
+import ViewDetailsModal from "./modals/ViewDetailsModal";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -60,55 +64,55 @@ const JobsTable = memo(({
 }>({ message: "", isError: false, open: false });
   const [parsingJobId, setParsingJobId] = useState<string>("")
 
-  const [isError, setIsError] = useState(false);
+    const [isError, setIsError] = useState(false);
+    const { userDetails } = useAppContext();
+    const APP_API_URI = import.meta.env.APP_API_URI;
+    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
+    // Map the status to action for the specific cases
+    const getActionFromStatus = (status: string): string | null => {
+      switch (status) {
+        // case 'APPLIED':
+        //   return null;
+        // case 'CV_DOWNLOADED':
+        //   return null;
+        // case 'UNDER_EVALUATION':
+        //   return null;
+        case "REJECTED":
+          return "VIEW_FEEDBACK";
+        // case 'PROCESSING_INTERVIEW':
+        //   return null;
+        // case 'INTERVIEW_DONE':
+        //   return null;
+        // case 'HIRING_IN_PROCESS':
+        //   return null;
+        case "DOCUMENT_REQUESTED":
+          return "SUBMIT_DOCUMENT";
+        case "DOCUMENT_ADDITIONAL_REQUESTED":
+          return "SUBMIT_DOCUMENT";
+        case "DOCUMENT_REVISION_REQUESTED":
+          return "SUBMIT_DOCUMENT";
+        // case 'DOCUMENT_VERIFIED':
+        //   return null;
+        case "OFFER_SENT":
+          return "CHECK_ACCEPT";
+        // case 'OFFER_ISSUE_RAISED':
+        //   return null;
+        case "REVISED_OFFER_SENT":
+          return "CHECK_ACCEPT";
+        case "HIRED":
+          return "JOINED";
+        // case 'JOINED':
+        //   return null;
+        default:
+          return null;
+      }
+    };
 
-  const APP_API_URI= import.meta.env.APP_API_URI
-  const APP_JOBS_API_URI= import.meta.env.APP_JOBS_API_URI
-  // Map the status to action for the specific cases
-  const getActionFromStatus = (status: string): string | null => {
-    switch (status) {
-      // case 'APPLIED':
-      //   return null;
-      // case 'CV_DOWNLOADED':
-      //   return null;
-      // case 'UNDER_EVALUATION':
-      //   return null;
-      case 'REJECTED':
-        return 'VIEW_FEEDBACK';
-      // case 'PROCESSING_INTERVIEW':
-      //   return null;
-      // case 'INTERVIEW_DONE':
-      //   return null;
-      // case 'HIRING_IN_PROCESS':
-      //   return null;
-      case 'DOCUMENT_REQUESTED':
-        return 'SUBMIT_DOCUMENT';
-      case 'DOCUMENT_ADDITIONAL_REQUESTED':
-        return 'SUBMIT_DOCUMENT';
-      case 'DOCUMENT_REVISION_REQUESTED':
-        return 'SUBMIT_DOCUMENT';
-      // case 'DOCUMENT_VERIFIED':
-      //   return null;
-      case 'OFFER_SENT':
-        return 'CHECK_ACCEPT';
-      // case 'OFFER_ISSUE_RAISED':
-      //   return null;
-      case 'REVISED_OFFER_SENT':
-        return 'CHECK_ACCEPT';
-      case 'HIRED':
-        return 'JOINED';
-      // case 'JOINED':
-      //   return null;
-      default:
-        return null;
-    }
-  };
-
-  // Process data to add actions based on status
-  const processedJobs = data?.data?.map(job => ({
-    ...job,
-    action: job.action || getActionFromStatus(job.status)
-  }));
+    // Process data to add actions based on status
+    const processedJobs = data?.data?.map((job) => ({
+      ...job,
+      action: job.action || getActionFromStatus(job.status),
+    }));
 
 
 const jobs = processedJobs || [];
@@ -134,8 +138,8 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
     const payload = { applicationDate: new Date().toISOString() };
     const url = `${APP_JOBS_API_URI}/job-application/${id}/request-feedback`;
 
-    try {
-      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+      try {
+        const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
 
       if (!error) {
         setModalMessage({
@@ -166,114 +170,115 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
   };
 
 
-  const handleSubmitDocs = (submittedFiles: Record<string, File | null>) => {
-  console.log("Submitted files:", submittedFiles);
-    // TODO: handle file upload
-  };
+    const handleSubmitDocs = (submittedFiles: Record<string, File | null>) => {
+      console.log("Submitted files:", submittedFiles);
+      // TODO: handle file upload
+    };
 
+    const handleActionClick = useCallback(
+      async (type: string, job: JobApplicationDetailsDto) => {
+        if (!user?.email) return;
 
-  const handleActionClick = useCallback(async (type: string, job: JobApplicationDetailsDto) => {
-  if (!user?.email) return;
+        setProcessingJobId(job.id);
 
-  setProcessingJobId(job.id);
+        try {
+          let result;
 
-  try {
-    let result;
+          switch (type) {
+            case "VIEW_FEEDBACK":
+              handleViewFeedback(job);
+              console.log(job);
+              break;
 
-    switch (type) {
-      case 'VIEW_FEEDBACK':
-        handleViewFeedback(job);
-        console.log(job)
-        break;
+            case "CHECK_ACCEPT":
+              // result = await JobService.acceptOffer(job.id, user.email);
+              // console.log(result)
+              // if (result.response) {
+              //   onRefresh();
+              // }
+              setCurrentJobForCheckAccept(job);
+              setShowCheckAcceptModal(true);
+              break;
 
-      case 'CHECK_ACCEPT':
-        // result = await JobService.acceptOffer(job.id, user.email);
-        // console.log(result)
-        // if (result.response) {
-        //   onRefresh();
-        // }
-        setCurrentJobForCheckAccept(job);
-        setShowCheckAcceptModal(true);
-        break;
+            case "JOINED":
+              // result = await JobService.markAsJoined(job.id, user.email);
+              // if (result.response) {
+              //   onRefresh();
+              // }
+              setCurrentJobForCheckAccept(job);
+              setShowJoinedModal(true);
+              break;
 
-      case 'JOINED':
-        // result = await JobService.markAsJoined(job.id, user.email);
-        // if (result.response) {
-        //   onRefresh();
-        // }
-        setCurrentJobForCheckAccept(job);
-        setShowJoinedModal(true);
-        break;
+            case "SUBMIT_DOCUMENT":
+              setShowDocumentUploadModal(true);
+              console.log(`Submit document for job ID: ${job.id}`);
+              if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
+                console.log(job);
+                setRequestedDocumentsList(job);
+                setParsingJobId(job.id);
+              }
+              break;
 
-      case 'SUBMIT_DOCUMENT':
-        setShowDocumentUploadModal(true);
-        console.log(`Submit document for job ID: ${job.id}`);
-        if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-            console.log(job)
-            setRequestedDocumentsList(job)
-            setParsingJobId(job.id)
+            case "APPLIED":
+              console.log(`Already applied for job: ${job.id}`);
+              break;
+
+            case "CV_DOWNLOADED":
+              console.log(`CV downloaded for job: ${job.id}`);
+              break;
+
+            case "UNDER_EVALUATION":
+              console.log(`Job under evaluation: ${job.id}`);
+              break;
+
+            case "PROCESSING_INTERVIEW":
+              console.log(`Processing interview for job: ${job.id}`);
+              break;
+
+            case "INTERVIEW_DONE":
+              console.log(`Interview completed for job: ${job.id}`);
+              break;
+
+            case "HIRING_IN_PROCESS":
+              console.log(`Hiring in process for job: ${job.id}`);
+              break;
+
+            case "DOCUMENT_REQUESTED":
+              console.log(`Document requested for job: ${job.id}`);
+              break;
+
+            case "DOCUMENT_REVISION_REQUESTED":
+              setShowDocumentUploadModal(true);
+              console.log(`Submit document for job ID: ${job.id}`);
+              if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
+                console.log(job);
+                setRequestedDocumentsList(job);
+                setParsingJobId(job.id);
+              }
+              break;
+
+            case "DOCUMENT_ADDITIONAL_REQUESTED":
+              setShowDocumentUploadModal(true);
+              console.log(`Submit document for job ID: ${job.id}`);
+              if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
+                console.log(job);
+                setRequestedDocumentsList(job);
+                setParsingJobId(job.id);
+              }
+              break;
+
+            default:
+              console.warn(`Unhandled action type: ${type}`);
+              break;
           }
-        break;
-
-      case 'APPLIED':
-        console.log(`Already applied for job: ${job.id}`);
-        break;
-
-      case 'CV_DOWNLOADED':
-        console.log(`CV downloaded for job: ${job.id}`);
-        break;
-
-      case 'UNDER_EVALUATION':
-        console.log(`Job under evaluation: ${job.id}`);
-        break;
-
-      case 'PROCESSING_INTERVIEW':
-        console.log(`Processing interview for job: ${job.id}`);
-        break;
-
-      case 'INTERVIEW_DONE':
-        console.log(`Interview completed for job: ${job.id}`);
-        break;
-
-      case 'HIRING_IN_PROCESS':
-        console.log(`Hiring in process for job: ${job.id}`);
-        break;
-
-      case 'DOCUMENT_REQUESTED':
-        console.log(`Document requested for job: ${job.id}`);
-        break;
-
-      case 'DOCUMENT_REVISION_REQUESTED':
-          setShowDocumentUploadModal(true);
-          console.log(`Submit document for job ID: ${job.id}`);
-          if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-              console.log(job)
-              setRequestedDocumentsList(job)
-              setParsingJobId(job.id)
-          }
-        break;
-
-      case 'DOCUMENT_ADDITIONAL_REQUESTED':
-            setShowDocumentUploadModal(true);
-            console.log(`Submit document for job ID: ${job.id}`);
-            if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-                console.log(job)
-                setRequestedDocumentsList(job)
-                setParsingJobId(job.id)
-            }
-        break;
-        
-      default:
-        console.warn(`Unhandled action type: ${type}`);
-        break;
-    }
-  } catch (error) {
-    console.error(`Error processing action ${type}:`, error);
-  } 
-  finally {
-    setProcessingJobId(null);
-  }
-}, [handleViewFeedback, onRefresh, user?.email]);
+        } catch (error) {
+          console.error(`Error processing action ${type}:`, error);
+        } finally {
+          setProcessingJobId(null);
+        }
+      },
+      [handleViewFeedback, onRefresh, user?.email]
+    );
 
 
   const MatchingScoreCircle = memo((
@@ -521,116 +526,116 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 }
   ];
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize);
-    onPageSizeChange(newPageSize);
-  };
+    const handlePageSizeChange = (newPageSize: number) => {
+      setPageSize(newPageSize);
+      onPageSizeChange(newPageSize);
+    };
 
-  const sortData = (data: JobApplicationDetailsDto[], field: string): JobApplicationDetailsDto[] => {
-    if (!field) return data;
-    
-    return [...data].sort((a: any, b: any) => {
-      let aValue = a[field];
-      let bValue = b[field];
-      
-      // Special handling for dates
-      if (field === "createdAt") {
-        aValue = new Date(aValue).getTime();
-        bValue = new Date(bValue).getTime();
+    const sortData = (
+      data: JobApplicationDetailsDto[],
+      field: string
+    ): JobApplicationDetailsDto[] => {
+      if (!field) return data;
+
+      return [...data].sort((a: any, b: any) => {
+        let aValue = a[field];
+        let bValue = b[field];
+
+        // Special handling for dates
+        if (field === "createdAt") {
+          aValue = new Date(aValue).getTime();
+          bValue = new Date(bValue).getTime();
+        }
+
+        // Special handling for numbers
+        if (field === "matchingScore") {
+          aValue = Number(aValue);
+          bValue = Number(bValue);
+        }
+
+        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    };
+
+    // Modify your handleSortChange function
+    const handleSortChange = (columnKey: string) => {
+      if (sortField === columnKey) {
+        // Toggle sort order if clicking the same column
+        setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+      } else {
+        // Set new sort field and default to ascending
+        setSortField(columnKey);
+        setSortOrder("asc");
       }
-      
-      // Special handling for numbers
-      if (field === "matchingScore") {
-        aValue = Number(aValue);
-        bValue = Number(bValue);
-      }
-      
-      if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
-      if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
-  };
+    };
 
-  // Modify your handleSortChange function
-  const handleSortChange = (columnKey: string) => {
-    if (sortField === columnKey) {
-      // Toggle sort order if clicking the same column
-      setSortOrder(prev => prev === "asc" ? "desc" : "asc");
-    } else {
-      // Set new sort field and default to ascending
-      setSortField(columnKey);
-      setSortOrder("asc");
-    }
-  };
+    // Add sorted data calculation
+    const sortedData = useMemo(() => {
+      return sortData(jobs, sortField);
+    }, [jobs, sortField, sortOrder]);
 
-  // Add sorted data calculation
-  const sortedData = useMemo(() => {
-    return sortData(jobs, sortField);
-  }, [jobs, sortField, sortOrder]);
-
-  const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
+    const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
       if (row.statusTracker[0].newStatus === "REJECTED") {
-    return null;
+        return null;
       }
-    if (row.statusTracker && row.statusTracker.length > 0) {
-      return <Stepper statusTracker={row.statusTracker[row.statusTracker.length-1]} />;
-    }
-    return row.applicationSteps ? <Stepper steps={row.applicationSteps} /> : null;
-  };
+      if (row.statusTracker && row.statusTracker.length > 0) {
+        return <Stepper statusTracker={row.statusTracker[row.statusTracker.length - 1]} />;
+      }
+      return row.applicationSteps ? <Stepper steps={row.applicationSteps} /> : null;
+    };
 
-  //old toogle
-  //     const toggleExpand = (id: string) => {
-  //   setExpandedRows(prev => 
-  //     prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
-  //   );
-  // };
+    //old toogle
+    //     const toggleExpand = (id: string) => {
+    //   setExpandedRows(prev =>
+    //     prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+    //   );
+    // };
 
-  const toggleExpand = (id: string) => {
-    const row = sortedData.find(item => item.id === id);
-    const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
+    const toggleExpand = (id: string) => {
+      const row = sortedData.find((item) => item.id === id);
+      const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
 
-    if (latestStatus === "REJECTED") {
-      return; // Don't allow expansion for rejected rows
-    }
+      if (latestStatus === "REJECTED") {
+        return; // Don't allow expansion for rejected rows
+      }
 
-    setExpandedRows(prev =>
-      prev.includes(id)
-        ? prev.filter(rowId => rowId !== id)
-        : [...prev, id]
-    );
-  };
+      setExpandedRows((prev) =>
+        prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+      );
+    };
 
+    /* console.log({
+      paginationCount: pagination?.count,
+      currentPage,
+      pageSize,
+      hasNextPage: pagination?.count > currentPage * pageSize,
+    }); */
 
-console.log({ 
-  paginationCount: pagination?.count, 
-  currentPage, 
-  pageSize,
-  hasNextPage: pagination?.count > currentPage * pageSize
-});
-
-  return (
-    <div className="w-full font-poppins">
-      <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
-        <DynamicTable
-          columns={columns}
-          rows={sortedData}
-          pageSize={pageSize}
-          setPageSize={handlePageSizeChange}
-          handlePreviousPage={() => onPageChange(currentPage - 1)}
-          handleNextPage={() => onPageChange(currentPage + 1)}
-          hasPrevPage={currentPage > 1}
-          hasNextPage={hasNextPage}
-          renderExpandedDetails={renderExpandedDetails}
-          enableSelect={false}
-          emptyStateMessage="No job applications found"
-          emptyStateSubMessage="Try adjusting your search filters"
-          onSortChange={handleSortChange}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          expandedRows={expandedRows} 
-          toggleExpand={toggleExpand} 
-        />
-      </div>
+    return (
+      <div className="w-full font-poppins">
+        <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+          <DynamicTable
+            columns={columns}
+            rows={sortedData}
+            pageSize={pageSize}
+            setPageSize={handlePageSizeChange}
+            handlePreviousPage={() => onPageChange(currentPage - 1)}
+            handleNextPage={() => onPageChange(currentPage + 1)}
+            hasPrevPage={currentPage > 1}
+            hasNextPage={hasNextPage}
+            renderExpandedDetails={renderExpandedDetails}
+            enableSelect={false}
+            emptyStateMessage="No job applications found"
+            emptyStateSubMessage="Try adjusting your search filters"
+            onSortChange={handleSortChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            expandedRows={expandedRows}
+            toggleExpand={toggleExpand}
+          />
+        </div>
 
       <RejectionFeedbackModal 
         show={showFeedbackModal} 
@@ -646,67 +651,66 @@ console.log({
         onClose={() => setShowViewDetails(false)} 
       />
 
-      <SubmitDocumentModal
-        userDetails={user}
-        show={showDocumentUploadModal}
-        documents={requestedDocumentsList}
-        onClose={() => setShowDocumentUploadModal(false)}
-        onSubmit={handleSubmitDocs}
-        onSuccess={() => {
-          setShowDocumentUploadModal(false);
-          onRefresh();
-        }}
-        userID={user?.sub ?? ""}
-        jobId={parsingJobId ?? ""}
-      />
-
-      {showCheckAcceptModal && currentJobForCheckAccept && (
-      <CheckAcceptModal
-        userDetails={user}
-        job={currentJobForCheckAccept}
-        onClose={() => setShowCheckAcceptModal(false)}
-        onSuccess={() => {
-        onRefresh();
-        setShowCheckAcceptModal(false);
-      }}
-        onConfirm={async () => {
-          if (!user?.email || !currentJobForCheckAccept) return;
-          const result = await JobService.acceptOffer(currentJobForCheckAccept.id, user.email);
-          if (result.response) {
+        <SubmitDocumentModal
+          userDetails={user}
+          show={showDocumentUploadModal}
+          documents={requestedDocumentsList}
+          onClose={() => setShowDocumentUploadModal(false)}
+          onSubmit={handleSubmitDocs}
+          onSuccess={() => {
+            setShowDocumentUploadModal(false);
             onRefresh();
-          }
-          setShowCheckAcceptModal(false);
-        }}
-      />
-    )}
+          }}
+          userID={user?.sub ?? ""}
+          jobId={parsingJobId ?? ""}
+        />
 
-    <JoinedModal
-      userDetails={user}
-      job={currentJobForCheckAccept}
-      isOpen={showJoinedModal}
-      onClose={() => setShowJoinedModal(false)}
-      onSuccess={() => {
-        onRefresh();
-        setShowJoinedModal(false);
-      }}
-      // onSubmit={(data) => {
-      //   console.log("Form data:", data);
-      //   // call JobService.markAsJoined(job.id, user.email, data)
-      // }}
-    />
-    {modalMessage.open && (
-      <RequestFolloupModal
-        message={modalMessage.message}
-        isError={modalMessage.isError}
-        onClose={closeModal}
-      />
-    )}
+        {showCheckAcceptModal && currentJobForCheckAccept && (
+          <CheckAcceptModal
+            userDetails={user}
+            job={currentJobForCheckAccept}
+            onClose={() => setShowCheckAcceptModal(false)}
+            onSuccess={() => {
+              onRefresh();
+              setShowCheckAcceptModal(false);
+            }}
+            onConfirm={async () => {
+              if (!user?.email || !currentJobForCheckAccept) return;
+              const result = await JobService.acceptOffer(currentJobForCheckAccept.id, user.email);
+              if (result.response) {
+                onRefresh();
+              }
+              setShowCheckAcceptModal(false);
+            }}
+          />
+        )}
 
+        <JoinedModal
+          userDetails={user}
+          job={currentJobForCheckAccept}
+          isOpen={showJoinedModal}
+          onClose={() => setShowJoinedModal(false)}
+          onSuccess={() => {
+            onRefresh();
+            setShowJoinedModal(false);
+          }}
+          // onSubmit={(data) => {
+          //   console.log("Form data:", data);
+          //   // call JobService.markAsJoined(job.id, user.email, data)
+          // }}
+        />
+        {modalMessage.open && (
+          <RequestFolloupModal
+            message={modalMessage.message}
+            isError={modalMessage.isError}
+            onClose={closeModal}
+          />
+        )}
+      </div>
+    );
+  }
+);
 
-    </div>
-  );
-});
-
-JobsTable.displayName = 'JobsTable';
+JobsTable.displayName = "JobsTable";
 
 export default JobsTable;

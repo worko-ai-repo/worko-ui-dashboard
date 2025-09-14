@@ -21,7 +21,6 @@ const ReferralsTable = ({
   onPageChange: (page: number) => void;
   onPageSizeChange: (size: number) => void;
 }) => {
-
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
   const [showDialog, setShowDialog] = useState(false);
   const [selectedReferral, setSelectedReferral] = useState(null);
@@ -144,131 +143,128 @@ const ReferralsTable = ({
       ? "text-blue-600"
       : "text-yellow-600";
 
-const columns = [
-  { key: "name", label: "Name", sortable: true ,
-    render: (row: any) =>(
-      <div className='flex justify-center m-auto w-[150px]'>
-        <span 
-          className="truncate block w-full"
-          title={row.name}>
-          {row.name}
-        </span>
-      </div>
-    )
-  },
-  { key: "jobTitle", label: "Job Title", sortable: true ,
-      render: (row: any) =>(
-      <div className='flex justify-center m-auto w-[150px]'>
-        <span 
-          className="truncate block w-full"
-          title={row.jobTitle}>
-          {row.jobTitle}
-        </span>
-      </div>
-    )
-  },
-{
-  key: "email", 
-  label: "Email", 
-  sortable: true,
-  render: (row: any) =>(
-      <div className='flex justify-center m-auto w-[150px]'>
-        <span 
-          className="truncate block w-full"
-          title={row.email}>
-          {row.email?.toLowerCase()}
-        </span>
-      </div>
-    )
-},
+  const columns = [
+    {
+      key: "name",
+      label: "Name",
+      sortable: true,
+      render: (row: any) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span className="truncate block w-full" title={row.name}>
+            {row.name}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "jobTitle",
+      label: "Job Title",
+      sortable: true,
+      render: (row: any) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span className="truncate block w-full" title={row.jobTitle}>
+            {row.jobTitle}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "email",
+      label: "Email",
+      sortable: true,
+      render: (row: any) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span className="truncate block w-full" title={row.email}>
+            {row.email?.toLowerCase()}
+          </span>
+        </div>
+      ),
+    },
 
-
-  { key: "phone", label: "Phone" },
-  { key: "dateReferred", label: "Date Referred", sortable: true },
-  { key: "dateApplied", label: "Date Applied", sortable: true },
-  {
-    key: "status",
-    label: "Status",
-    sortable: true,
-    render: (row: any) => {
-      if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
-        return (
-          <div className='flex justify-center m-auto w-[150px]'>
-          <button
-            className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
-            onClick={() => {
-              setSelectedReferral(row);
-              setStatusData({
-                id:row.id,
-                dateApplied:row.dateApplied,
-                dateReferred:row.dateReferred,
-                email:row.email,
-                jobApplicationStatus:row.jobApplicationStatus,
-                jobTitle:row.jobTitle,
-                name:row.name,
-                phone:row.phone,
-                referralBonus:row.referralBonus,
-                status:row.status,
-              });
-              console.log(row)
-              setShowDialog(true);
-            }}
-          >
-            Achieved
-          </button>
-          </div>
-        );
-      }
-      if (row.jobApplicationStatus === "REJECTED") {
+    { key: "phone", label: "Phone" },
+    { key: "dateReferred", label: "Date Referred", sortable: true },
+    { key: "dateApplied", label: "Date Applied", sortable: true },
+    {
+      key: "status",
+      label: "Status",
+      sortable: true,
+      render: (row: any) => {
+        if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
+          return (
+            <div className="flex justify-center m-auto w-[150px]">
+              <button
+                className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
+                onClick={() => {
+                  setSelectedReferral(row);
+                  setStatusData({
+                    id: row.id,
+                    dateApplied: row.dateApplied,
+                    dateReferred: row.dateReferred,
+                    email: row.email,
+                    jobApplicationStatus: row.jobApplicationStatus,
+                    jobTitle: row.jobTitle,
+                    name: row.name,
+                    phone: row.phone,
+                    referralBonus: row.referralBonus,
+                    status: row.status,
+                  });
+                  console.log(row);
+                  setShowDialog(true);
+                }}>
+                Achieved
+              </button>
+            </div>
+          );
+        }
+        if (row.jobApplicationStatus === "REJECTED") {
+          return (
+            <div className="flex justify-center m-auto w-[150px]">
+              <div className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
+                Rejected
+              </div>
+            </div>
+          );
+        }
+        // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
         return (
           <div className="flex justify-center m-auto w-[150px]">
-          <div className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
-            Rejected
+            <div className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
+              Not Achieved Yet
+            </div>
           </div>
-        </div>
         );
-      }
-      // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
+        // }
+        // const statusInfo = getStatusLabelAndStyle(row.status);
+        // return (
+        //   <div className={`px-4 py-3 rounded-full border flex justify-center m-auto w-[150px] ${statusInfo.style}`}>
+        //     <span className="text-xs">{statusInfo.label}{"fdgfgdfdg"}</span>
+        //   </div>
+        // );
+      },
+    },
+    {
+      key: "jobApplicationStatus",
+      label: "Job Status",
+      sortable: true,
+      render: (row: any) => {
+        const { label, style } = getStatusLabelAndStyle(row.jobApplicationStatus);
         return (
-          <div className="flex justify-center m-auto w-[150px]">
-          <div className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
-            Not Achieved Yet
+          <div className={`px-4 py-3 rounded-full border ${style}`}>
+            <span className="text-xs">{label}</span>
           </div>
-        </div>
         );
-      // }
-      // const statusInfo = getStatusLabelAndStyle(row.status);
-      // return (
-      //   <div className={`px-4 py-3 rounded-full border flex justify-center m-auto w-[150px] ${statusInfo.style}`}>
-      //     <span className="text-xs">{statusInfo.label}{"fdgfgdfdg"}</span>
-      //   </div>
-      // );
+      },
     },
-  },
-  {
-    key: "jobApplicationStatus",
-    label: "Job Status",
-    sortable: true,
-    render: (row: any) => {
-      const { label, style } = getStatusLabelAndStyle(row.jobApplicationStatus);
-      return (
-        <div className={`px-4 py-3 rounded-full border ${style}`}>
-          <span className="text-xs">{label}</span>
+    {
+      key: "referralBonus",
+      label: "Referral Bonus",
+      render: (row: any) => (
+        <div className={`flex justify-center items-center ${getBonusColor(row.status)}`}>
+          <span className="font-semibold">Rs. {row.referralBonus || 0}</span>
         </div>
-      );
+      ),
     },
-  },
-  {
-    key: "referralBonus",
-    label: "Referral Bonus",
-    render: (row: any) => (
-      <div className={`flex justify-center items-center ${getBonusColor(row.status)}`}>
-        <span className="font-semibold">Rs. {row.referralBonus || 0}</span>
-      </div>
-    ),
-  },
-];
-
+  ];
 
   const sortedData = useMemo(() => {
     if (!sortField) return referrals;
@@ -289,7 +285,7 @@ const columns = [
 
   const handleSortChange = (columnKey: string) => {
     if (sortField === columnKey) {
-      setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
     } else {
       setSortField(columnKey);
       setSortOrder("asc");
@@ -298,7 +294,7 @@ const columns = [
 
   return (
     <div className="w-full">
-            {isLoading  ? (
+      {isLoading ? (
         <div className="w-full py-12 flex items-center justify-center">
           <div className="flex flex-col items-center">
             <div className="w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
@@ -306,26 +302,26 @@ const columns = [
           </div>
         </div>
       ) : (
-      <div className="bg-white rounded-2xl shadow p-4">
-        <DynamicTable
-          columns={columns}
-          rows={sortedData}
-          pageSize={pagination.pageSize}
-          setPageSize={onPageSizeChange}
-          handlePreviousPage={() => onPageChange(currentPage - 1)}
-          handleNextPage={() => onPageChange(currentPage + 1)}
-          hasPrevPage={currentPage > 1}
-          hasNextPage={!!pagination.lastKey}
-          emptyStateMessage={error || "No referrals found"}
-          emptyStateSubMessage={error ? "Please try again." : "Try adjusting your filters"}
-          isLoading={isLoading}
-          onSortChange={handleSortChange}
-          sortField={sortField}
-          sortOrder={sortOrder}
-          enableSelect={false}
-          keyExtractor={(row:any) => row.id}
-        />
-      </div>
+        <div className="bg-white rounded-2xl shadow p-4">
+          <DynamicTable
+            columns={columns}
+            rows={sortedData}
+            pageSize={pagination.pageSize}
+            setPageSize={onPageSizeChange}
+            handlePreviousPage={() => onPageChange(currentPage - 1)}
+            handleNextPage={() => onPageChange(currentPage + 1)}
+            hasPrevPage={currentPage > 1}
+            hasNextPage={!!pagination.lastKey}
+            emptyStateMessage={error || "No referrals found"}
+            emptyStateSubMessage={error ? "Please try again." : "Try adjusting your filters"}
+            isLoading={isLoading}
+            onSortChange={handleSortChange}
+            sortField={sortField}
+            sortOrder={sortOrder}
+            enableSelect={false}
+            keyExtractor={(row: any) => row.id}
+          />
+        </div>
       )}
       <WithdrawDialog
         isOpen={showDialog}

@@ -27,12 +27,12 @@ const navigationItems: NavItem[] = [
     icon: InterviewIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
-  {
+/*   {
     id: "home",
     label: "Home",
     icon: HomeIcon,
     dashboardTypes: ["CORPORATE"],
-  },
+  }, */
   {
     id: "jobs",
     label: "Jobs",
@@ -43,7 +43,7 @@ const navigationItems: NavItem[] = [
     id: "referral",
     label: "Referral",
     icon: ReferralIcon,
-    dashboardTypes: ["EMPLOYEE", "CANDIDATE"],
+    dashboardTypes: ["EMPLOYEE", "CANDIDATE"/* ,"CORPORATE" */],
   },
   {
     id: "guidance",
@@ -135,31 +135,31 @@ const navigationItems: NavItem[] = [
     icon: HomeIcon,
     dashboardTypes: ["ADMIN"],
   },
-  {
+/*   { //@NEXT-RELEASE : NEXT RELEASE
     id: "aPayments",
     label: "Payments",
     icon: InvoiceAndPaymentIcon,
     dashboardTypes: ["ADMIN"],
-  },
+  }, */
   {
     id: "aCompanies",
     label: "Companies",
     icon: <i className="fa-solid fa-building"></i>,
     dashboardTypes: ["ADMIN"],
   },
-  {
+ /*  { //@NEXT-RELEASE : NEXT RELEASE
     id: "aPackages",
     label: "Packages",
     icon: <i className="fa-solid fa-box-open"></i>,
     dashboardTypes: ["ADMIN"],
-  },
+  }, */
 
-  {
+/*   {
     id: "interviews",
     label: "Interviews",
     icon: InterviewIcon,
     dashboardTypes: ["CORPORATE"],
-  },
+  }, */
   {
     id: "bulk-cv-check",
     label: "Bulk CV Check",
@@ -178,12 +178,12 @@ const navigationItems: NavItem[] = [
         icon: InvoiceAndPaymentIcon,
         dashboardTypes: ['CORPORATE'],
     }, */
-  {
+  /* { //@NEXT-RELEASE : NEXT RELEASE
     id: "support",
     label: "Support",
     icon: SupportIcon,
     dashboardTypes: ["ADMIN", "EMPLOYEE", "CANDIDATE"],
-  },
+  }, */
 ];
 
 export default navigationItems;

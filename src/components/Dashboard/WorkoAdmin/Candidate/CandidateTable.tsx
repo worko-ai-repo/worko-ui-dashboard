@@ -1,7 +1,7 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -14,12 +14,12 @@ import { useState } from "react";
 import { toast } from "react-toastify";
 import { handleDeleteUsers } from "../Employee/EmployeeTable";
 
-interface EmployeeTableProps {
+interface CandidateTableProps {
   data: ApplicantDetails[];
   fetchEmployees: () => void;
   pagination: CommonCursorPaginationProp;
 }
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pagination }) => {
+const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, pagination }) => {
   const keyFallbacks = {
     candidateExperience_companyName: ["companyName", "candidateExperience.companyName"],
     candidateExperience_department: ["department", "candidateExperience.department"],
@@ -33,9 +33,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
-    user: ApplicantDetails | {};
+    user: ApplicantDetails;
     key?: number; // Add a unique key to force re-render
-  }>({ isOpen: false, type: "EMAIL", user: {} });
+  }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
 
   const handleVerifyClick = (type: "EMAIL" | "MOBILE", user: ApplicantDetails) => {
     setVerifyModalOpen({
@@ -67,17 +67,18 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
       toast.error("Failed to fetch CV. Please try again.", getToastOptions({}));
     }
   };
-  const columns = [
+  const columns: Column<ApplicantDetails>[] = [
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
     },
-    { key: "email", label: "Email" },
-    { key: "number", label: "Phone no" },
-    { key: "candidateExperience_companyName", label: "Company Name" },
-    { key: "referralCount", label: "Referrals Request Accepted" },
-    { key: "candidateExperience_designation", label: "Designation" },
+    { key: "email", label: "Email",sortable: true },
+    { key: "number", label: "Phone no" ,sortable: true },
+    { key: "candidateExperience_companyName", label: "Company Name",sortable: true  },
+    { key: "referralCount", label: "Referrals Request Accepted",sortable: true  },
+    { key: "candidateExperience_designation", label: "Designation",sortable: true  },
     {
       key: "Cv link",
       label: "Link",
@@ -96,6 +97,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
     {
       key: "Actions",
       label: "Actions",
+      contentWidth: "max-w-none !w-[900px]",
       render: (row: ApplicantDetails) => {
         return (
           <div className="flex gap-3 px-2  justify-between">
@@ -137,7 +139,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
       <div className="p-4  flex justify-evenly gap-4">
         <span>
           <label>Experience</label>
-          <p>{row.YOE}</p>
+          <p>{row?.YOE || "  "}  </p>
         </span>
         <span>
           <label>Account created at</label>
@@ -146,7 +148,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
 
         <span>
           <label>Department</label>
-          <p>{new Date(row?.candidateExperience?.department).toLocaleDateString()}</p>
+          <p>{row?.candidateExperience?.department}</p>
         </span>
 
         <div>
@@ -154,7 +156,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
           <p className="capitalize">{row.CTC ? `${row.CTC} LPA` : "-"}</p>
         </div>
         <div>
-          <span className=" text-gray-500">Expeceted CTC</span>
+          <span className=" text-gray-500">Expected CTC</span>
           <p className="capitalize">{row.ECTC ? `${row.ECTC} LPA` : "-"}</p>
         </div>
       </div>
@@ -200,14 +202,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         key={verifyModalOpen.key} // Use the unique key to force re-render
         isOpen={verifyModalOpen.isOpen}
         onClose={() => {
-          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
         }}
         className="w-72 sm:max-w-3xl h-full py-4">
         <VerifyUserContact
           type={verifyModalOpen.type}
           user={verifyModalOpen.user}
           onClose={() => {
-            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails});
           }}
           refetch={fetchEmployees}
         />
@@ -216,4 +218,4 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   );
 };
 
-export default EmployeeTable;
+export default CandidateTable;

@@ -1,4 +1,4 @@
-import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferralStatusEnum } from "@Enums/JobAndApplication.enum";
+import { JobApplicationStatusEnum, JobStatusTypeEnum, ReferAndEarnJobApplicationStatusEnum, ReferAndEarnStatusEnum, ReferralStatusEnum, UserGuidanceRequestStatusEnum, UserGuidanceRequestTypeEnum } from "@Enums/JobAndApplication.enum";
 
 /**
  * JobStatus
@@ -27,3 +27,39 @@ export type JobTypeofEmploymentType = "FULL_TIME" | "PART_TIME" | "CONTRACT" | "
  * @description - Represents the type of status a referral can have
  */
 export type ReferralStatusType = `${ReferralStatusEnum}`;
+
+/**
+ * UserGuidanceRequestType
+ * 
+ * @description - Represents the type of user guidance request
+ */
+export type UserGuidanceRequestType = `${UserGuidanceRequestTypeEnum}`;
+
+/**
+ * UserGuidanceRequestStatusType
+ * 
+ * @description - Represents the type of status a user guidance request can have
+ */
+export type UserGuidanceRequestStatusType = `${UserGuidanceRequestStatusEnum}`; 
+  
+
+/**
+ * ReferAndEarnStatusType
+ * 
+ * @description - Represents the type of status a refer and earn can have
+ */
+export type ReferAndEarnStatusType = `${ReferAndEarnStatusEnum}`;
+
+/**
+ * ReferAndEarnJobApplicationStatusType
+ * 
+ * @description - Represents the type of status a refer and earn job application can have
+ */
+export type ReferAndEarnJobApplicationStatusType = `${ReferAndEarnJobApplicationStatusEnum}`;
+
+/**
+ * ReferAndEarnFullStatusType
+ * 
+ * @description - Represents the type of status a refer and earn or its job application can have
+ */
+export type ReferAndEarnFullStatusType = ReferAndEarnStatusType | ReferAndEarnJobApplicationStatusType;

@@ -8,17 +8,26 @@ import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
 import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import EmployeeTable from "./EmployeeTable";
+import InputFromDataToDateFilter from "@Components/Shared/ui/InputFromDataToDateFilter";
 
 const Employee = () => {
   const [pageSize, setPageSize] = useState(25);
 
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
-
+  const [fromDateToDate, setFromDateToDate] = useState<{
+    fromDate: string;
+    toDate: string;
+  }>({
+    fromDate: "",
+    toDate: "",
+  });
   const params: Omit<CursorPaginationUsersDataAdminParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
     userType: "EMP",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
+    ...(fromDateToDate && fromDateToDate.fromDate ? { fromDate: fromDateToDate.fromDate } : {}),
+    ...(fromDateToDate && fromDateToDate.toDate ? { toDate: fromDateToDate.toDate } : {}),
   };
 
   const {
@@ -31,7 +40,7 @@ const Employee = () => {
     refetch,
     reset,
   } = useCursorPagination<ApplicantDetails, CursorPaginationUsersDataAdminParams>({
-    queryKey: ["CorporateJobsApplicationQuery", !!searchBarText, params],
+    queryKey: ["CorporateJobsApplicationQuery", !!searchBarText, params,fromDateToDate],
     queryFn: AdminServiceObj.fetchAdminUsers,
     baseParams: params,
     enabled: !!params,
@@ -43,19 +52,6 @@ const Employee = () => {
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
   }, [searchBarText, pageSize]);
-
-  if (queryIsJobsLoading) {
-    return (
-      <SkeletonLoader
-        showButtons={true}
-        buttonCount={1}
-        showTableHeader={true}
-        showTableRows={true}
-        tableColumns={5}
-        rowCount={5}
-      />
-    );
-  }
 
   return (
     <div>
@@ -70,29 +66,10 @@ const Employee = () => {
             <SearchBar
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("Search clicked")}
+              handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              {/*  <BulkStatusDropDown
-                options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
-                  {
-                    label: "Send to evaluator",
-                    onClick: () => {
-                      handleBulkEvaluatorUpdate();
-                    },
-                  },
-                  { label: "Initiate Interview", onClick: () => onBulkUpdate("PROCESSING_INTERVIEW") },
-                  { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
-                  { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
-                  { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
-                ]}
-                apiStatus={apiStatus} // Change this to test
-                disabled={apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"}
-                tooltipMessage="Select a bulk status update"
-                selectTitle="Bulk"
-              /> */}
+              <InputFromDataToDateFilter onDateChange={setFromDateToDate} />
             </div>
           </div>
         </div>

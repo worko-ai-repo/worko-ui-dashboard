@@ -23,6 +23,7 @@ export type JobApplicationActionType =
   | "HIRE"
   | "REQUEST_DOCUMENT"
   | "VIEW_DOCUMENT"
+  | "VIEW_DOCUMENT_READ"
   | "HIRE_NOW"
   | "VIEW_OFFER_LETTER_ISSUE"
   | "JOINED"
@@ -45,24 +46,34 @@ export type ActionVisibilityMap = Record<JobApplicationActionType, ActionVisibil
  */
 export const CONDITIONS = {
   canAccept: (app: JobApplicationDetailsDto): boolean => {
-      return RBAC.can("manage_users");
+    return RBAC.can("manage_users");
   },
   hasOfferLetterIssue: (app: JobApplicationDetailsDto): boolean => {
-    return Boolean(app?.status === JobApplicationStatusEnum.OFFER_ISSUE_RAISED); 
+    return Boolean(app?.status === JobApplicationStatusEnum.OFFER_ISSUE_RAISED);
   },
   hasEvaluatorResponse: (app: JobApplicationDetailsDto) => {
     return Boolean(app.isEvaluatorResponded);
   },
   isStale: (app: JobApplicationDetailsDto) =>
     isApplicationStatusStale(app.status, app.statusTracker),
-  shouldShowPushToRecruiter: (app: JobApplicationDetailsDto) =>
-    jobApplicationServiceObj.showPushToRecruiterButton(app),
+  shouldShowPushToRecruiter: (app: JobApplicationDetailsDto) =>{ return jobApplicationServiceObj.showPushToRecruiterButton(app)},
   hasDuplicacyInfo: (app: JobApplicationDetailsDto) =>
     Boolean(app?.hiredFromOtherPortal?.portal && app?.hiredFromOtherPortal?.date),
   canMarkDuplicate: (app: JobApplicationDetailsDto) =>
     CONDITIONS.isStale(app) && !CONDITIONS.hasDuplicacyInfo(app),
   hasDocumentResponse: (app: JobApplicationDetailsDto) =>
     Boolean(app?.responseDocumentDetails && app?.responseDocumentDetails?.length > 0),
+  hasDocRequested: (app: JobApplicationDetailsDto) =>
+    Boolean(
+      app?.statusTracker?.some((entry) =>
+        [
+          JobApplicationStatusEnum.DOCUMENT_REQUESTED,
+          JobApplicationStatusEnum.OFFER_SENT,
+          JobApplicationStatusEnum.DOCUMENT_ADDITIONAL_REQUESTED,
+          JobApplicationStatusEnum.DOCUMENT_REVISION_REQUESTED,
+        ].includes(entry.newStatus as JobApplicationStatusEnum)
+      )
+    ),
 };
 
 // Helper functions (moved from JobApplicationActions)
@@ -95,6 +106,7 @@ const HIDDEN_ALL: ActionVisibilityMap = Object.fromEntries(
     "REQUEST_DOCUMENT",
     "VIEW_DOCUMENT",
     "VIEW_OFFER_LETTER_ISSUE",
+    "VIEW_DOCUMENT_READ",
     "JOINED",
     "MARK_DUPLICATE",
     "VIEW_DUPLICACY",
@@ -121,7 +133,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         PUSH_TO_RECRUITER: {
           visible: true && RBAC.can("push_to_recruiter"),
-          condition: CONDITIONS.shouldShowPushToRecruiter,
+          // condition: CONDITIONS.shouldShowPushToRecruiter,
         },
         ACCEPT: { visible: true, condition: CONDITIONS.canAccept },
         REJECT: { visible: true },
@@ -134,7 +146,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         SEND_TO_EVALUATOR: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         MARK_DUPLICATE: {
           visible: false,
           condition: (application) =>
@@ -157,10 +169,11 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         PROCESS_INTERVIEW: { visible: true },
+        SEND_TO_EVALUATOR: { visible: true },
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -175,7 +188,7 @@ export function getActionVisibilityConfig(
         HIRE: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         INTERVIEW_DONE: { visible: true /* ,condition: CONDITIONS.hasEvaluatorResponse */ },
         VIEW_EVALUATION: {
           visible: false,
@@ -189,7 +202,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         VIEW_EVALUATION: {
           visible: false,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -203,11 +216,20 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
-        HIRE_NOW: { visible: true, tabOverrides: { All: true, Hired: true } },
-        NOTES: { visible: true },
+        HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
+        // NOTES: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
-        REQUEST_DOCUMENT: { visible: true, tabOverrides: { All: true, Hired: true } },
+        VIEW_EVALUATION: {
+          visible: false,
+          condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+
+        REQUEST_DOCUMENT: { visible: true, tabOverrides: { All: false, Hired: true } },
       };
       break;
 
@@ -222,27 +244,55 @@ export function getActionVisibilityConfig(
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         VIEW_DOCUMENT: {
           visible: true,
-          tabOverrides: { All: true, Hired: true },
-          //@TODO::CONDITION: CONDITIONS.hasEvaluatorResponse AND ADD CONDTIONS BELOW
-          // condition: CONDITIONS.hasDocumentResponse
+          tabOverrides: { All: false, Hired: true },
         },
-        HIRE_NOW: { visible: true, tabOverrides: { All: true, Hired: true } },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+          condition: CONDITIONS.hasDocRequested,
+        },
+        VIEW_EVALUATION: {
+          visible: false,
+          condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+        HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
       };
       break;
 
-      case JobApplicationStatusEnum.DOCUMENT_VERIFIED:
-        baseConfig = {
-          ...HIDDEN_ALL,
-          REJECT: { visible: true },
-          ONHOLD: { visible: true },
-          VIEW_CV: { visible: true },
-          NOTES: { visible: true },
-          HIRE_NOW: { visible: true, tabOverrides: { All: true, Hired: true } },
-        };
-        break;
+    case JobApplicationStatusEnum.DOCUMENT_VERIFIED:
+      baseConfig = {
+        ...HIDDEN_ALL,
+        REJECT: { visible: true },
+        ONHOLD: { visible: true },
+        VIEW_CV: { visible: true },
+        // NOTES: { visible: true },
+        VIEW_EVALUATION: {
+          visible: false,
+          condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+          condition: CONDITIONS.hasDocRequested,
+        },
+        VIEW_DOCUMENT: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+        },
+        HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
+      };
+      break;
 
     case JobApplicationStatusEnum.OFFER_SENT:
     case JobApplicationStatusEnum.REVISED_OFFER_SENT:
@@ -256,17 +306,28 @@ export function getActionVisibilityConfig(
         },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
         VIEW_OFFER_LETTER_ISSUE: {
           visible: true,
           condition: CONDITIONS.hasOfferLetterIssue,
-          tabOverrides: { All: true, Hired: true },
+          tabOverrides: { All: false, Hired: true },
+        },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true }, 
+          condition: CONDITIONS.hasDocRequested,
+        },
+        VIEW_EVALUATION: {
+          visible: false,
+          condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
         },
         VIEW_DOCUMENT: {
           visible: true,
-          tabOverrides: { All: true, Hired: true },
-          //@TODO::CONDITION: CONDITIONS.hasEvaluatorResponse AND ADD CONDTIONS BELOW
-          // condition: CONDITIONS.hasDocumentResponse
+          tabOverrides: { All: false, Hired: true },
         },
       };
 
@@ -276,9 +337,9 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         VIEW_CV: { visible: true },
-        NOTES: { visible: true },
-        JOINED: { visible: true, tabOverrides: { All: true, Hired: true } },
-        REJECT: { visible: false, tabOverrides: { All: true, Hired: true } },
+        // NOTES: { visible: true },
+        JOINED: { visible: true, tabOverrides: { All: false, Hired: true } },
+        // REJECT: { visible: false, tabOverrides: { All: true, Hired: true } },
         ONHOLD: {
           visible: true,
           tabOverrides: { All: true, Hired: true },
@@ -286,6 +347,19 @@ export function getActionVisibilityConfig(
         VIEW_EVALUATION: {
           visible: false,
           condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+          condition: CONDITIONS.hasDocRequested,
+        },
+        VIEW_DOCUMENT: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
         },
       };
       break;
@@ -294,7 +368,25 @@ export function getActionVisibilityConfig(
     case JobApplicationStatusEnum.REJECTED:
       baseConfig = {
         ...HIDDEN_ALL,
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
+        VIEW_DOCUMENT: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true, Joined: true },
+        },
+        VIEW_EVALUATION: {
+          visible: false,
+          condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+            Joined: true,
+          },
+        },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true }, 
+          condition: CONDITIONS.hasDocRequested,
+        },
         VIEW_CV: { visible: true },
       };
       break;
@@ -303,10 +395,15 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         REJECT: { visible: true },
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+          condition: CONDITIONS.hasDocRequested,
+        },
         VIEW_EVALUATION: { visible: true, condition: CONDITIONS.hasEvaluatorResponse },
         // INTERVIEW: { visible: true },
         VIEW_CV: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
       };
       break;
 
@@ -320,7 +417,7 @@ export function getActionVisibilityConfig(
         // INTERVIEW: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },
-        NOTES: { visible: true },
+        // NOTES: { visible: true },
       };
   }
 
@@ -328,6 +425,7 @@ export function getActionVisibilityConfig(
   const finalConfig = { ...baseConfig };
   Object.entries(finalConfig).forEach(([action, config]) => {
     const actionKey = action as JobApplicationActionType;
+    // If there's a tab override for the active tab, apply it
     if (config.tabOverrides && activeTab in config.tabOverrides) {
       finalConfig[actionKey] = {
         ...config,
@@ -345,13 +443,15 @@ export function getActionVisibilityConfig(
 // Whitelist of actions admin can see for corporate jobs
 const ADMIN_ALLOWED_ACTIONS_FOR_CORPORATE: JobApplicationActionType[] = [
   "VIEW_CV",
-  'ACCEPT',
+  "ACCEPT",
   "REJECT",
   "NOTES",
   "VIEW_EVALUATION",
   "VIEW_DOCUMENT",
   "VIEW_DUPLICACY",
   "VIEW_OFFER_LETTER_ISSUE",
+  "VIEW_DOCUMENT_READ",
+  "PUSH_TO_RECRUITER",
 ];
 
 // Helper to check if job was posted by Worko

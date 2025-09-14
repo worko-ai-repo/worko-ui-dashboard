@@ -4,7 +4,7 @@ import { TimelineStep } from "@Components/Shared/Timeline";
 import { JobApplicationStatusEnum } from "@Enums/JobAndApplication.enum";
 
 class JobApplicationService {
-  private readonly THRESHOLD_SCORE = 50;
+  private readonly THRESHOLD_SCORE = 40;
   private readonly UPPER_MID_SCORE = 70;
   private readonly HIGH_SCORE = 90;
   private readonly STATUS_REJECTED = "REJECTED";
@@ -21,6 +21,8 @@ class JobApplicationService {
     [JobApplicationStatusEnum.OFFER_SENT]: "Offer Sent",
     [JobApplicationStatusEnum.OFFER_ISSUE_RAISED]: "Offer Issue Raised",
     [JobApplicationStatusEnum.REVISED_OFFER_SENT]: "Revised Offer Sent",
+    [JobApplicationStatusEnum.REVISED_LETTER]: "Revised Letter",
+    [JobApplicationStatusEnum.OFFER_ACCEPTED]: "Offer Accepted",
     [JobApplicationStatusEnum.HIRED]: "Hired",
     [JobApplicationStatusEnum.JOINED]: "Joined",
     [JobApplicationStatusEnum.REJECTED]: "Rejected",
@@ -62,7 +64,6 @@ class JobApplicationService {
    */
   public showPushToRecruiterButton(jobApplication: JobApplicationDetailsDto): boolean {
     if (!jobApplication?.statusTracker?.length || !jobApplication.matchingScore) return false;
-
     // Find the latest APPLIED status change
     const appliedStatus = [...jobApplication.statusTracker]
       .reverse()
@@ -82,7 +83,12 @@ class JobApplicationService {
         jobApplication.matchingScore <= this.UPPER_MID_SCORE) ||
         jobApplication.matchingScore >= this.HIGH_SCORE) &&
       Boolean(jobApplication.scoreDetails);
-
+    console.log(
+      isWithin24Hours &&
+        jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
+        jobApplication.status !== this.STATUS_REJECTED &&
+        scoreIsValid
+    );
     return (
       isWithin24Hours &&
       jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
@@ -161,17 +167,16 @@ class JobApplicationService {
 
   public getTimelineDetails(row: JobApplicationDetailsDto): TimelineStep[] {
     const seen = new Set<JobApplicationStatusEnum>();
-  
+
     return row.statusTracker
       .filter(
-        (s: StatusTracker) =>
-          this.STATUS_LABELS[s.newStatus as JobApplicationStatusEnum] // only major ones
+        (s: StatusTracker) => this.STATUS_LABELS[s.newStatus as JobApplicationStatusEnum] // only major ones
       )
       .map((s: StatusTracker) => {
         const status = s.newStatus as JobApplicationStatusEnum;
         if (seen.has(status)) return null; // avoid duplicates
         seen.add(status);
-  
+
         return {
           label: this.STATUS_LABELS[status],
           date: s.actionDate ? new Date(s.actionDate).toLocaleDateString() : "",
@@ -180,7 +185,6 @@ class JobApplicationService {
       })
       .filter(Boolean) as TimelineStep[];
   }
-  
 }
 
 const jobApplicationServiceObj = new JobApplicationService();

@@ -1,16 +1,16 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
 import ExperienceForm from "@Components/Dashboard/Candidate/Pages/Profile/Helper/ExperienceForm";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 export interface Experience {
   companyName: string;
   designation: string;
   department: string;
   YOE: number;
-  startDate: string,
-  endDate: string,
+  startDate: string;
+  endDate: string;
 }
 
 interface ExperienceEditorProps {
@@ -52,13 +52,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   };
 
   function formatDate(isoDate?: string) {
-  if (!isoDate) return "N/A";
-  const date = new Date(isoDate);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); 
-  const year = String(date.getFullYear());
-  return `${month}-${year}`;
-}
+    if (!isoDate) return "N/A";
+    const date = new Date(isoDate);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear());
+    return `${month}-${year}`;
+  }
 
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
@@ -140,6 +140,21 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           <button
             onClick={onCancel}
             disabled={isSubmitting}
+            className="text-xs font-semibold text-blue-600">
+            Cancel
+          </button>
+          <button
+            onClick={() => {
+              setEditingIndex(null);
+              setCompanyName('');
+              setDesignation('');
+              setDepartment('');
+              setYOE('');
+              setStartDate('');
+              setEndDate('');
+              setFormModal(true);
+            }}
+            disabled={isSubmitting}
             className="text-xs font-semibold text-blue-600"
           >
             Cancel
@@ -163,8 +178,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="flex items-center justify-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-500"
-          >
+            className="flex items-center justify-center rounded-md bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-blue-500">
             {isSubmitting ? "Saving..." : "Save"}
           </button>
         </div>
@@ -184,14 +198,17 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
         editedItems.map((item, index) => (
           <div
             key={index}
-            className="flex items-center justify-between py-2 border-b border-gray-200 gap-2"
-          >
+            className="flex items-center justify-between py-2 border-b border-gray-200 gap-2">
             <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-2 truncate">
-              <div className="font-medium truncate">{item.designation} - {item.companyName}</div>
+              <div className="font-medium truncate">
+                {item.designation} - {item.companyName}
+              </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
               <div className="text-sm text-gray-700 truncate">{item.department}</div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-500 whitespace-nowrap">{formatDate(item.startDate)}-{formatDate(item.endDate)}</div>
+              <div className="text-sm text-gray-500 whitespace-nowrap">
+                {formatDate(item.startDate)}-{formatDate(item.endDate)}
+              </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
               <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div>
             </div>
@@ -199,26 +216,23 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
               <button
                 onClick={() => handleEditItem(index)}
                 className="text-gray-500 hover:text-blue-500"
-                aria-label="Edit experience"
-              >
-                        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" />
-        </svg>
+                aria-label="Edit experience">
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round">
+                  <path d="M17 3a2.85 2.85 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3Z" />
+                </svg>
               </button>
               <button
                 onClick={() => handleRemoveItem(index)}
                 className="text-gray-500 hover:text-red-500"
-                aria-label="Remove experience"
-              >
+                aria-label="Remove experience">
                 <X size={16} />
               </button>
             </div>

@@ -6,6 +6,8 @@ import DashboardLayout from "@Layouts/Dashboard.layout";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
+import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
+import CorporateReferrals from "@Components/Dashboard/Corporate/Referral/Referral";
 
 // Lazy load components
 const Jobs = lazy(() => import("@Components/Dashboard/Corporate/Job/Jobs"));
@@ -44,6 +46,14 @@ const CorporateDashboard = () => {
           ),
         },
         {
+          path: "referral",
+          element: (
+            <Suspense fallback={<SkeletonLoader showHeaderCards={true} showSearchBar={true} showButtons={true} buttonCount={1} showTabs={true} showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />}>
+              <CorporateReferrals />
+            </Suspense>
+          ),
+        },
+        {
           path: "cApplicants",
           children: [
             {
@@ -73,6 +83,14 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<MainLoader />}>
               <BulkCVCheck />
+            </Suspense>
+          ),
+        },
+        {
+          path: "bulk-cv-check/listing/:id",  
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <ApplicantScreeningTable />
             </Suspense>
           ),
         },

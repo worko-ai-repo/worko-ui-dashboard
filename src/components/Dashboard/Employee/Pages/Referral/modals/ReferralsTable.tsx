@@ -1,10 +1,10 @@
 import React, { memo, useMemo, useState } from "react";
-import {ReferralApiResponse,ReferralDetailsDto,PaginationInfo,} from "./ReferralTypes";
+import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo } from "./ReferralTypes";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import { chat, eyeIcon } from "@AssetsFolder/assets";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui";
+import { getToastOptions } from "@Utils/Toast.utils";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import SimpleStepper from "./SimpleStepper";
 import profileService from "@Components/Dashboard/Candidate/Service/ProfileService";
@@ -27,12 +27,19 @@ interface ReferralsTableProps {
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
 }
-interface StepperProps{
-  status:string
+interface StepperProps {
+  status: string;
 }
 
 const ReferralsTable = memo(
-  ({ data, pagination, currentPage, onPageChange, onPageSizeChange,onRefresh }: ReferralsTableProps) => {
+  ({
+    data,
+    pagination,
+    currentPage,
+    onPageChange,
+    onPageSizeChange,
+    onRefresh,
+  }: ReferralsTableProps) => {
     const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
     const [sortField, setSortField] = useState<string>("");
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -40,7 +47,7 @@ const ReferralsTable = memo(
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showRaiseIssueModal, setShowRaiseIssueModal] = useState(false);
     const [showCompletedModal, setShowCompletedModal] = useState(false);
-    const [selectedRow,setSelectedRow] = useState<ReferralDetailsDto | null>(null)
+    const [selectedRow, setSelectedRow] = useState<ReferralDetailsDto | null>(null);
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -49,17 +56,17 @@ const ReferralsTable = memo(
     const [referralData, setReferralData] = useState<any>(null);
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
-    const [viewDetailsContent, setViewDetailsContent] = useState<string>('');
+    const [viewDetailsContent, setViewDetailsContent] = useState<string>("");
 
-    const APP_API_URI= import.meta.env.APP_API_URI
-    const APP_JOBS_API_URI= import.meta.env.APP_JOBS_API_URI
+    const APP_API_URI = import.meta.env.APP_API_URI;
+    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
     const { user } = useDashboardContext();
 
     const referrals = data?.data || [];
 
     const keyExtractor = (item: ReferralDetailsDto) =>
       item.id?.toString() ?? Math.random().toString();
-    
+
     const handleSelectChange = (
       e: React.ChangeEvent<HTMLSelectElement>,
       row: ReferralDetailsDto
@@ -67,26 +74,26 @@ const ReferralsTable = memo(
       const value = e.target.value;
       if (value === "accept") {
         // console.log("Accepted", row);
-        setReferralData(row)
-        setShowAcceptModal(true)
+        setReferralData(row);
+        setShowAcceptModal(true);
       } else if (value === "reject") {
         // console.log("Rejected", row);
-        setReferralData(row)
-        setShowRejectModal(true)
-      } else if(value === "raiseIssue"){
-        setReferralData(row)
-        setShowRaiseIssueModal(true)
-      } else if(value === "markDone"){
-        setReferralData(row)
-        setShowCompletedModal(true)
+        setReferralData(row);
+        setShowRejectModal(true);
+      } else if (value === "raiseIssue") {
+        setReferralData(row);
+        setShowRaiseIssueModal(true);
+      } else if (value === "markDone") {
+        setReferralData(row);
+        setShowCompletedModal(true);
       }
       e.target.selectedIndex = 0;
     };
 
     const fetchData = async (row: ReferralDetailsDto) => {
-      const PK = row.PK.split("#")
-      const userEmail = PK[PK.length-1]
-      
+      const PK = row.PK.split("#");
+      const userEmail = PK[PK.length - 1];
+
       try {
         setIsLoading(true);
         setError(null);
@@ -94,8 +101,11 @@ const ReferralsTable = memo(
         if (!userEmail) {
           throw new Error("User not found");
         }
-        console.log(userEmail)
-        const { response } = await httpServiceObj.get<UserDetails[]>(`/user/${userEmail}/details`, true);
+        console.log(userEmail);
+        const { response } = await httpServiceObj.get<UserDetails[]>(
+          `/user/${userEmail}/details`,
+          true
+        );
 
         if (!response || response.length === 0) {
           toast.error("No CV found", getToastOptions({}));
@@ -106,8 +116,8 @@ const ReferralsTable = memo(
         const url = response[0].cvAwsS3SignedUrl;
 
         if (!url) {
-          toast.error("No CV found",getToastOptions({}))
-        };
+          toast.error("No CV found", getToastOptions({}));
+        }
 
         return url;
       } catch (err: any) {
@@ -124,36 +134,40 @@ const ReferralsTable = memo(
         label: "Candidate Name",
         sortable: true,
         render: (row: ReferralDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-          <span 
-          className="truncate block w-full"
-          title={row.userDetails.name}>{row.userDetails.name}</span>
-        </div>
-          )
+          <div className="flex justify-center m-auto w-[150px]">
+            <span className="truncate block w-full" title={row.userDetails.name}>
+              {row.userDetails.name}
+            </span>
+          </div>
+        ),
       },
       {
         key: "referredJobURL",
         label: "Job URL",
         sortable: true,
-        render: (row: ReferralDetailsDto) => (
-          row.jobUrl ?
-          (<div className="flex justify-center m-auto w-[150px]">
-          <a className="text-blue-500 visited:text-blue-500 truncate block w-full" href={row.jobUrl}>Link</a>
-            </div>): (
-              <p className="truncate block w-full">-</p>
-            )     
-          )
+        render: (row: ReferralDetailsDto) =>
+          row.jobUrl ? (
+            <div className="flex justify-center m-auto w-[150px]">
+              <a
+                className="text-blue-500 visited:text-blue-500 truncate block w-full"
+                href={row.jobUrl}>
+                Link
+              </a>
+            </div>
+          ) : (
+            <p className="truncate block w-full">-</p>
+          ),
       },
       {
         key: "createdAt",
         label: "Request Date",
         sortable: true,
         render: (row: ReferralDetailsDto) =>
-          new Date(row.createdAt).toLocaleDateString('en-GB', {
-          year: 'numeric',
-          month: '2-digit',
-          day: '2-digit',
-        }),
+          new Date(row.createdAt).toLocaleDateString("en-GB", {
+            year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+          }),
       },
       {
         key: "matchingScore",
@@ -161,13 +175,13 @@ const ReferralsTable = memo(
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <MatchingScoreCircle 
+            <MatchingScoreCircle
               score={row.matchingScore ?? 0}
               scoreDetails={row}
               status={row.status}  
               />
           </div>
-          ),
+        ),
       },
       {
         key: "status",
@@ -175,65 +189,64 @@ const ReferralsTable = memo(
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-          <div
-              className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${              
+            <div
+              className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${
                 row.status === "ACCEPTED"
-                ? "bg-green-100 text-green-500"
-                : row.status === "PENDING"
-                ? "bg-yellow-100 text-yellow-600"
-                : row.status === "AWAITING"
-                ? "bg-blue-100 text-blue-500"
-                : row.status === "DONE"
-                ? "bg-gray-100 text-gray-600"
-                : "bg-red-400 text-white"
-            }`}
-          >
-            {row.status}
-          </div>
+                  ? "bg-green-100 text-green-500"
+                  : row.status === "PENDING"
+                  ? "bg-yellow-100 text-yellow-600"
+                  : row.status === "AWAITING"
+                  ? "bg-blue-100 text-blue-500"
+                  : row.status === "DONE"
+                  ? "bg-gray-100 text-gray-600"
+                  : "bg-red-400 text-white"
+              }`}>
+              {row.status}
+            </div>
           </div>
         ),
       },
       {
         key: "viewCV",
         label: "View CV",
-        render: (row: ReferralDetailsDto) => 
-        <div className="flex justify-center m-auto w-[150px]">
-        <a
-          href="#"
-          onClick={async (e) => {
-            e.preventDefault();
-            const url = await fetchData(row);
-            if (url) {
-              window.open(url, "_blank");
-            }
-          }}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img
-            className="w-8 h-8 rounded-md bg-[#57E1E1]"
-            src={eyeIcon}
-            alt="View CV"
-          />
-          </a>
-        </div>
+        render: (row: ReferralDetailsDto) => (
+          <div className="flex justify-center m-auto w-[150px]">
+            <a
+              href="#"
+              onClick={async (e) => {
+                e.preventDefault();
+                const url = await fetchData(row);
+                if (url) {
+                  window.open(url, "_blank");
+                }
+              }}
+              target="_blank"
+              rel="noopener noreferrer">
+              <img className="w-8 h-8 rounded-md bg-[#57E1E1]" src={eyeIcon} alt="View CV" />
+            </a>
+          </div>
+        ),
       },
       {
         key: "chat",
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
-          row.status !== "REJECTED" ? 
-          ( <div className="flex justify-center m-auto w-[150px]">
-            <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline ">
-              <img src={chat} alt="" />
-            </a>
-          </div>)
-          : <div className="flex justify-center m-auto w-[150px]">
-                      <a href={""} className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
+          row.status !== "REJECTED" ? (
+            <div className="flex justify-center m-auto w-[150px]">
+              <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline ">
+                <img src={chat} alt="" />
+              </a>
+            </div>
+          ) : (
+            <div className="flex justify-center m-auto w-[150px]">
+              <a
+                href={""}
+                className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
                         bg-gray-300 cursor-not-allowed grayscale">
-                        <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
-                      </a>
-          </div>,  
+                <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
+              </a>
+            </div>
+          ),
       },
       {
         key: "update",
@@ -245,8 +258,7 @@ const ReferralsTable = memo(
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
-                  className="w-full text-center bg-transparent border-none focus:outline-none cursor-pointer"
-                >
+                  className="w-full text-center bg-transparent border-none focus:outline-none cursor-pointer">
                   <option value="" disabled>
                     Select
                   </option>
@@ -261,8 +273,7 @@ const ReferralsTable = memo(
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
-                  className="w-full text-center bg-transparent border-none focus:outline-none cursor-pointer"
-                >
+                  className="w-full text-center bg-transparent border-none focus:outline-none cursor-pointer">
                   <option value="" disabled>
                     Select
                   </option>
@@ -271,26 +282,28 @@ const ReferralsTable = memo(
                 </select>
               </div>
             </div>
-          ): row.status === "DONE" ? (
+          ) : row.status === "DONE" ? (
             <div className="flex justify-center m-auto w-[150px]">
               <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-yellow-200 text-black">
-                <button className="truncate w-full overflow-hidden whitespace-nowrap"
-                  onClick={()=>{
-                    setShowProvideFeedback(true)
-                    setReferralData(row)
-                    }}>
+                <button
+                  className="truncate w-full overflow-hidden whitespace-nowrap"
+                  onClick={() => {
+                    setShowProvideFeedback(true);
+                    setReferralData(row);
+                  }}>
                   Feedback
                 </button>
               </div>
             </div>
-          ):<div className="flex justify-center m-auto w-[150px]">
+          ) : (
+            <div className="flex justify-center m-auto w-[150px]">
               <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-white text-black">
-                <button className="truncate w-full overflow-hidden whitespace-nowrap">
-                </button>
+                <button className="truncate w-full overflow-hidden whitespace-nowrap"></button>
               </div>
-            </div>;
+            </div>
+          );
         },
-      }
+      },
     ];
 
     const handlePageSizeChange = (newPageSize: number) => {
@@ -298,10 +311,7 @@ const ReferralsTable = memo(
       onPageSizeChange(newPageSize);
     };
 
-    const sortData = (
-      rows: ReferralDetailsDto[],
-      field: string
-    ): ReferralDetailsDto[] => {
+    const sortData = (rows: ReferralDetailsDto[], field: string): ReferralDetailsDto[] => {
       if (!field) return rows;
 
       return [...rows].sort((a, b) => {
@@ -326,7 +336,6 @@ const ReferralsTable = memo(
       });
     };
 
-
     const handleSortChange = (columnKey: string) => {
       if (sortField === columnKey) {
         setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
@@ -341,36 +350,38 @@ const ReferralsTable = memo(
       [referrals, sortField, sortOrder]
     );
 
-    
-  const MatchingScoreCircle = memo((
-      { score, scoreDetails, status }: { score: number; scoreDetails?: any,status?: string }
-    ) => (
-    <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
-      <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
-        <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
-          <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-          <circle 
-            cx="32.5" 
-            cy="32.5" 
-            r="30" 
-            fill="none" 
-            stroke="#4cbc9a" 
-            strokeWidth="5"
-            strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-            transform="rotate(-90 32.5 32.5)"
-          />
-        </svg>
-        <div className="absolute font-semibold text-xs">{score}%</div>
-        {status !== "REJECTED" &&
-        <button 
-          onClick={()=>{        
-            setShowViewDetails(true)
-            setViewDetailsContent(scoreDetails)}}
-          className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details
-        </button>}
-      </div>
-    </div>
-  ));
+    const MatchingScoreCircle = memo(
+      ({ score, scoreDetails, status }: { score: number; scoreDetails?: any; status?: string }) => (
+        <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
+          <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
+            <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
+              <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
+              <circle
+                cx="32.5"
+                cy="32.5"
+                r="30"
+                fill="none"
+                stroke="#4cbc9a"
+                strokeWidth="5"
+                strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+                transform="rotate(-90 32.5 32.5)"
+              />
+            </svg>
+            <div className="absolute font-semibold text-xs">{score}%</div>
+            {status !== "REJECTED" && (
+              <button
+                onClick={() => {
+                  setShowViewDetails(true);
+                  setViewDetailsContent(scoreDetails);
+                }}
+                className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">
+                View details
+              </button>
+            )}
+          </div>
+        </div>
+      )
+    );
 
     const renderExpandedDetails = (row: StepperProps) => {
       if (["REJECTED", "CANCELLED", "WITHDRAWN"].includes(row.status)) return null;
@@ -378,9 +389,8 @@ const ReferralsTable = memo(
       return <SimpleStepper currentStatus={row.status} />;
     };
 
-
     const toggleExpand = (id: string) => {
-      const row = sortedData.find(r => r.id === id);
+      const row = sortedData.find((r) => r.id === id);
       if (!row) return;
 
       if (["CANCELLED", "REJECTED", "WITHDRAWN"].includes(row.status)) {
@@ -388,11 +398,10 @@ const ReferralsTable = memo(
         return;
       }
 
-      setExpandedRows(prev =>
-        prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+      setExpandedRows((prev) =>
+        prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
       );
     };
-
 
     return (
       <div className="w-full font-poppins">
@@ -418,11 +427,11 @@ const ReferralsTable = memo(
             expandedRows={expandedRows}
           />
           <ViewDetailsModal
-            show={showViewDetails} 
-            viewDetailsContent={viewDetailsContent} 
-            onClose={() => setShowViewDetails(false)} 
+            show={showViewDetails}
+            viewDetailsContent={viewDetailsContent}
+            onClose={() => setShowViewDetails(false)}
           />
-            {showAcceptModal && (
+          {showAcceptModal && (
             <AcceptRefferralModal
               onClose={() => setShowAcceptModal(false)}
               isOpen={showAcceptModal}
@@ -430,7 +439,7 @@ const ReferralsTable = memo(
               onRefresh={onRefresh}
             />
           )}
-            {showRejectModal && (
+          {showRejectModal && (
             <RejectRefferralModal
               onClose={() => setShowRejectModal(false)}
               isOpen={showRejectModal}
@@ -438,7 +447,7 @@ const ReferralsTable = memo(
               onRefresh={onRefresh}
             />
           )}
-            {showRaiseIssueModal && (
+          {showRaiseIssueModal && (
             <RaiseIssueModal
               onClose={() => setShowRaiseIssueModal(false)}
               isOpen={showRaiseIssueModal}
@@ -447,7 +456,7 @@ const ReferralsTable = memo(
               isCandidate={false}
             />
           )}
-            {showCompletedModal && (
+          {showCompletedModal && (
             <CompletedReferralModal
               onClose={() => setShowCompletedModal(false)}
               isOpen={showCompletedModal}
@@ -456,7 +465,7 @@ const ReferralsTable = memo(
               isCandidate={false}
             />
           )}
-            {showProvideFeedback && (
+          {showProvideFeedback && (
             <ProvideFeedbackModal
               onClose={() => setShowProvideFeedback(false)}
               isOpen={showProvideFeedback}

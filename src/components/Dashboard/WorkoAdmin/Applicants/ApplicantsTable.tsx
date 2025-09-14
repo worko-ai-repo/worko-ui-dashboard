@@ -30,7 +30,10 @@ import {
   statusColors,
 } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 import { JobApplicationActions } from "@Components/Shared/ApplicantsPage/ApplicationActions";
-import ResendOfferLetter, { getLatestOfferLetterIssueRaisedDetails, handleViewDocumentClick } from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
+import ResendOfferLetter, {
+  getLatestOfferLetterIssueRaisedDetails,
+  handleViewDocumentClick,
+} from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import Duplicacy from "@Components/Shared/ApplicantsPage/Duplicacy";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
@@ -39,6 +42,7 @@ import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -52,6 +56,7 @@ interface ApplicationTableProps {
     hasRefetch: boolean
   ) => void;
   userType: string;
+  refetch: () => void;
   Pagination: CommonCursorPaginationProp;
   isAddEvaluatorModalOpen: boolean;
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -82,6 +87,7 @@ export default function ApplicationTable({
   showRejectReason,
   viewDuplicacyDetails,
   isBulkEvaluation,
+  refetch,
   onBulkUpdate,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
@@ -141,6 +147,13 @@ export default function ApplicationTable({
       "scoreDetails.matchingScore",
       "scoreDetails.matchingScorePercentage",
     ],
+    experience: ["applicantDetails.YOE", "yoe"],
+    location: ["applicantDetails.location"],
+
+    applicantDetails_candidateExperience_designation: [
+      "applicantDetails.candidateExperience.designation",
+    ],
+    applicantDetails_CTC: ["applicantDetails.CTC"],
   };
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
@@ -238,6 +251,7 @@ export default function ApplicationTable({
     name: {
       key: "name",
       label: "Applicants name",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <User size={20} />
@@ -248,6 +262,7 @@ export default function ApplicationTable({
     experience: {
       key: "experience",
       label: "Experience",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>
@@ -273,6 +288,7 @@ export default function ApplicationTable({
     location: {
       key: "location",
       label: "Location",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>{row.applicantDetails?.location ?? "Not Disclosed"}</span>
@@ -295,6 +311,7 @@ export default function ApplicationTable({
                 data: application.feedback, // Assuming matchingScore is an object with details
                 matchingScore: row.matchingScore ?? 0,
                 details: true,
+                candidateName: row.applicantDetails.name,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
@@ -333,7 +350,7 @@ export default function ApplicationTable({
       ),
     },
 
- status: {
+    status: {
       key: "status",
       label: "Status",
       sortable: true,
@@ -404,6 +421,7 @@ export default function ApplicationTable({
     actions: {
       key: "actions",
       label: "Actions",
+      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-96" : ""} `,
       render: (row: JobApplicationDetailsDto) => (
         <JobApplicationActions
           row={row}
@@ -442,8 +460,9 @@ export default function ApplicationTable({
       ),
     },
     company: {
-      key: "company",
+      key: "companyName",
       label: "Current Company",
+      sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>{row.companyName}</span>
@@ -470,7 +489,6 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           commonColumns.company,
-          // commonColumns.profile,
           commonColumns.experience, // Enhanced from yoe
           commonColumns.location,
           commonColumns.matchingScore,
@@ -496,37 +514,50 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          { key: "applicantDetails_CTC", label: "CTC" },
-          { key: "applicantDetails_candidateExperience_designation", label: "Designation" },
+          { key: "applicantDetails_CTC", label: "CTC", sortable: true },
+          {
+            key: "applicantDetails_candidateExperience_designation",
+            label: "Designation",
+            sortable: true,
+          },
           { key: "hiredBy", label: "Hired By" },
-          { key: "status_actionDate", label: "Joining Date",
+          {
+            key: "status_actionDate",
+            label: "Joining Date",
             render: (row: JobApplicationDetailsDto) => (
               <div className="flex items-center justify-center gap-2">
                 <span>
-                    {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    })}
+                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
+                    "en-GB",
+                    {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                    }
+                  )}
                 </span>
               </div>
-            )
-           },
-          {
+            ),
+          },
+          /*     {
             key: "actions",
             label: "Documents",
-            render: (jobData:JobApplicationDetailsDto) => (
+            render: (jobData: JobApplicationDetailsDto) => (
               <div className="flex gap-2 justify-center">
-                <button className="flex gap-2 items-center btn-sky"
+                <button
+                  className="flex gap-2 items-center btn-sky"
                   onClick={() => {
-                    jobData ? handleViewDocumentClick(jobData) : toast.error("Failed to view document", getToastOptions({}));
+                    jobData
+                      ? handleViewDocumentClick(jobData)
+                      : toast.error("Failed to view document", getToastOptions({}));
                   }}>
                   <Eye size={16} />
                   View Document
                 </button>
               </div>
             ),
-          },
+          }, */
+          commonColumns.actions,
         ];
       default:
         return [];
@@ -558,85 +589,90 @@ export default function ApplicationTable({
    * Render expanded row details
    */
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
-    let timeLineProps:TimelineStep[] = [];
-        if(row.status === "JOINED"){
-          timeLineProps  = jobApplicationServiceObj.getTimelineDetails(row);
-        }
+    let timeLineProps: TimelineStep[] = [];
+    if (row.status === "JOINED") {
+      timeLineProps = jobApplicationServiceObj.getTimelineDetails(row);
+    }
     return (
       <div className="flex justify-evenly flex-nowrap items-start gap-4">
-        {row.status === "JOINED" ? <Timeline steps={timeLineProps}  />:
-        <>
-        <div className="basis-2/3">
-          <span className="font-semibold text-gray-500 ">About</span>
-          <p>{row.applicantDetails.about ?? "--------"}</p>
-        </div>
-
-        {row.status === "REJECTED" ? (
-          // Show rejection details
-          <>
-            <div>
-              <span className="font-semibold text-gray-500">Rejected by</span>
-              <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
-            </div>
-
-            <div className="text-center">
-              <div className="font-semibold text-gray-500 text-center">Reason</div>
-
-              {row.rejectedByUserId ? (
-                <>
-                  <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                  {row.rejectedByUserId.userComment && (
-                    <div>
-                      <ul>
-                        <span className="font-semibold text-gray-500">Comment</span>
-                      </ul>
-                      <li className="list-disc list-inside ">{row.rejectedByUserId.userComment}</li>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <>
-                  {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                    <p>--------</p>
-                  ) : (
-                    jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                      <li key={index} className="list-disc list-inside">
-                        {reason}
-                      </li>
-                    ))
-                  )}
-                </>
-              )}
-            </div>
-          </>
+        {row.status === "JOINED" && activeTab === "Joined" ? (
+          <Timeline steps={timeLineProps} />
         ) : (
-          // Show application details
           <>
-            <div>
-              <span className="font-semibold text-gray-500">Position</span>
-              <p className="capitalize">
-                {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}
-              </p>
+            <div className="basis-2/3">
+              <span className="font-semibold text-gray-500 ">About</span>
+              <p>{row.applicantDetails.about ?? "--------"}</p>
             </div>
-            <div>
-              <span className="font-semibold text-gray-500">CTC</span>
-              <p className="capitalize">
-                {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
-              </p>
-            </div>
-            <div>
-              <span className="font-semibold text-gray-500">CTC</span>
-              <p className="capitalize">
-                {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
-              </p>
-            </div>
-            <div>
-              <span className="font-semibold text-gray-500">Notice</span>
-              <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
-            </div>
+
+            {row.status === "REJECTED" ? (
+              // Show rejection details
+              <>
+                <div>
+                  <span className="font-semibold text-gray-500">Rejected by</span>
+                  <p><CreatedByDisplay row={row} mode="updated" /></p>
+                </div>
+
+                <div className="text-center">
+                  <div className="font-semibold text-gray-500 text-center">Reason</div>
+
+                  {row.rejectedByUserId ? (
+                    <>
+                      <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+                      {row.rejectedByUserId.userComment && (
+                        <div>
+                          <ul>
+                            <span className="font-semibold text-gray-500">Comment</span>
+                          </ul>
+                          <li className="list-disc list-inside ">
+                            {row.rejectedByUserId.userComment}
+                          </li>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+                        <p>--------</p>
+                      ) : (
+                        jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+                          <li key={index} className="list-disc list-inside">
+                            {reason}
+                          </li>
+                        ))
+                      )}
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              // Show application details
+              <>
+                <div>
+                  <span className="font-semibold text-gray-500">Position</span>
+                  <p className="capitalize">
+                    {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">CTC</span>
+                  <p className="capitalize">
+                    {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">CTC</span>
+                  <p className="capitalize">
+                    {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
+                  </p>
+                </div>
+                <div>
+                  <span className="font-semibold text-gray-500">Notice</span>
+                  <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
+                </div>
+              </>
+            )}
           </>
         )}
-        </>}
       </div>
     );
   };
@@ -756,7 +792,7 @@ export default function ApplicationTable({
           })
         }
         className="w-[90vw] sm:w-[455px] h-[500px] ">
-        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} />
+        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} refetch={refetch} />
       </Modal>
 
       <Modal
@@ -802,7 +838,6 @@ export default function ApplicationTable({
             const applicantData = sortedData.find((row) => row.id === JobApplicationId);
             /* console.log("Applicant Data:", applicantData); */
             if (applicantData) {
-              debugger;
               setEvaluatorFormProps({
                 Defaultvalues: {
                   jobApplicationId: [applicantData.id],

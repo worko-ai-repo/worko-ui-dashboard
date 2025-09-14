@@ -1,6 +1,6 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
@@ -40,9 +40,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-    user: ApplicantDetails | {};
+    user: ApplicantDetails ;
     key?: number; // Add a unique key to force re-render
-  }>({ isOpen: false, type: "EMAIL", user: {} });
+  }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
 
   const handleVerifyClick = (
     type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL",
@@ -56,27 +56,32 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
     });
   };
 
-  const columns = [
+  const columns:Column<ApplicantDetails>[] = [
     {
       key: "name",
       label: "Name",
       render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
     },
-    { key: "email", label: "Email" },
-    { key: "number", label: "Phone no" },
-    { key: "candidateExperience_companyName", label: "Company Name" },
-    { key: "referralCount", label: "Referrals Request Pending" },
-    { key: "candidateExperience_department", label: "Department" },
-    { key: "candidateExperience_designation", label: "Designation" },
+    { key: "email", label: "Email",sortable: true },
+    { key: "number", label: "Phone no",sortable: true },
+    { key: "candidateExperience_companyName", label: "Company Name" ,sortable: true,
+      render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.candidateExperience?.companyName ??row?.companyName ?? "N/A"}</span>
+    },
+    { key: "referralCount", label: "Referrals Request Pending" ,sortable: true},
+    { key: "candidateExperience_department", label: "Department",sortable: true },
+    { key: "candidateExperience_designation", label: "Designation",sortable: true },
     { key: "isEmailVerified", label: "Company Email Verified" },
     {
       key: "Actions",
       label: "Actions",
+      contentWidth: "max-w-none w-96",
       render: (row: ApplicantDetails) => {
         return (
           <div className="flex gap-3 px-2  justify-between">
             <button
-              disabled={row.isNumberVerified === false}
+              data-tooltip-id= "my-tooltip"
+              data-tooltip-content= {row.isNumberVerified !== false ? "Mobile already verified" : "Verify mobile number"}
+              disabled={row.isNumberVerified !== false }
               onClick={() => handleVerifyClick("MOBILE", row)}
               className=" cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
               <img src={mobile_install} alt="Verify Mobile" className="h-4 w-4 flex-shrink-0" />
@@ -86,7 +91,9 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
             </button>
 
             <button
-              disabled={row.isEmailVerified === true}
+              disabled={row.isCurrentCompEmailVerified === true || !row.companyEmailId}
+              data-tooltip-id= "my-tooltip"
+              data-tooltip-content= {!row.companyEmailId ? "No company email found" : row.isCurrentCompEmailVerified === true ? "Company email already verified" : "Verify company email"}
               onClick={() => handleVerifyClick("COMPANY_EMAIL", row)}
               className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
               <img src={email_sync} alt="Verify Email" className="h-4 w-4 flex-shrink-0" />
@@ -96,6 +103,8 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
             </button>
 
             <button
+              data-tooltip-id= "my-tooltip"
+              data-tooltip-content= {row.isEmailVerified === true ? "Email already verified" : "Verify email"}
               onClick={() => handleVerifyClick("EMAIL", row)}
               disabled={row.isEmailVerified === true} //@TODO:ROHIT ADD ATTRB
               className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
@@ -169,14 +178,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         key={verifyModalOpen.key} // Use the unique key to force re-render
         isOpen={verifyModalOpen.isOpen}
         onClose={() => {
-          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+          setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
         }}
         className="w-72 sm:max-w-3xl h-full py-4">
         <VerifyUserContact
           type={verifyModalOpen.type}
           user={verifyModalOpen.user}
           onClose={() => {
-            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} });
+            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
           }}
           refetch={fetchEmployees}
         />

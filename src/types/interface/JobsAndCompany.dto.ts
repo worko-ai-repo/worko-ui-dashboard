@@ -17,11 +17,38 @@ export interface CompanyDto {
   teamSize: number;
   createdAt: string;
   updatedAt: string;
+  website: string;
   PK: string;
   SK: string;
   GSI1PK: string;
   GSI1SK: string;
+  isCompanyRequestPageFlag?: boolean;
 }
+/**
+ * CompanyRequestsDto
+ * 
+ * @description- Interface for company add request
+ */
+export interface CompanyRequestDto {
+    id: string;
+    PK: string;
+    SK: string;
+    companyId: string;
+    companyDetail: {
+      name: string;
+      industry: string;
+      linkedIn: string;
+      carrierPage: string;
+    };
+    createdAt: string; // ISO date string
+    updatedAt: string; // ISO date string
+    isDeleted: boolean;
+    status: "approved" | 'new' | 'denied'; // extend as needed
+    userEmail: string;
+    userName: string;
+    userType: "EMP" | "CAND" ; // depending on your domain
+  }
+  
 
 /**
  * @interface CompanyShortDto
