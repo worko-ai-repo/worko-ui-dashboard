@@ -5,6 +5,7 @@ import { checkbubble, eyeIcon } from '@Assets';
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import MentorDetails from './modals/MentorDetails';
 import httpServiceObj from '@Services/ApiHandler.service';
+import GuidanceStepper from './modals/GuidanceStepper';
 
 interface GuidanceTableProps {
   mentorID:string;
@@ -19,6 +20,10 @@ interface GuidanceTableProps {
 interface MentorMergedData {
   socialProfile: any | null;
   mentorDetails: any | null;
+}
+interface StepperProps{
+  jobUrl:string;
+  guidanceRequestDescription:string;
 }
 
 const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh}: GuidanceTableProps) => {
@@ -39,8 +44,16 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
   const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
+  const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
   const APP_API_URI= import.meta.env.APP_API_URI
+
+  const toggleExpand = (id: string) => {
+  setExpandedRows(prev =>
+    prev.includes(id) ? prev.filter(rowId => rowId !== id) : [...prev, id]
+  );
+};
+
 
   const formatGuidanceType = (type: string) => {
     const typeMap: {[key: string]: string} = {
@@ -122,70 +135,65 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
     console.log(request)
   }, [openModal]);
 
-  const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
-    if (!user?.email) return;
-    openModal(request, 'mentorDetails');
-  }, [openModal, user?.email]);
-
-  const handleModalAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
-    setProcessingRequestId(request.id);
-    try {
-      console.log("Accept and pay for request:", request.id);
-      onRefresh();
-      closeModal();
-    } catch (error) {
-      console.error("Error accepting guidance request:", error);
-    } finally {
-      setProcessingRequestId(null);
-    }
-  }, [onRefresh, closeModal]);
 
   const columns = [
+        {
+      key: "candidateName",
+      label: 'Candidate Name',
+      sortable: true,
+      render: (row: GuidanceRequest) => <div className="text-center">{row.candidateName ?? "-"}</div>
+    },
+    {
+      key: "aboutCandidate",
+      label: 'About Candidate',
+      sortable: true,
+      render: (row: GuidanceRequest) => <div className="text-center">{row.aboutCandidate ?? "-"}</div>
+    },
     {
       key: "guidanceRequestType",
       label: 'Guidance Type',
       sortable: true,
       render: (row: GuidanceRequest) => <div>{formatGuidanceType(row.guidanceRequestType)}</div>
     },
-    {
-      key: "companyName",
-      label: 'Company',
-      sortable: true,
-      render: (row: GuidanceRequest) => <div className="text-center">{row.companyName}</div>
-    },
+    // {
+    //   key: "companyName",
+    //   label: 'Company',
+    //   sortable: true,
+    //   render: (row: GuidanceRequest) => <div className="text-center">{row.companyName}</div>
+    // },
     {
       key: "dateNeeded",
       label: 'Date needed by',
       sortable: true,
       render: (row: GuidanceRequest) => row.dateNeeded
     },
-    {
-      key: "jobUrl",
-      label: 'Job URL',
-      sortable: true,
-      render: (row: GuidanceRequest) => (
-        <a 
-          href={row.jobUrl} 
-          target="_blank" 
-          rel="noopener noreferrer" 
-          className="tracking-wide leading-6 font-semibold text-blue-600 cursor-pointer"
-        >
-          Link
-        </a>
-      )
-    },
-    {
-      key: "guidanceRequestDescription",
-      label: 'Requirement detail',
-      sortable: true,
-      render: (row: GuidanceRequest) => (
-        <div className="flex justify-center">
-          <p className="tracking-wide truncate leading-6 max-w-xs">
-            {row.guidanceRequestDescription}
-          </p>
-        </div>
-      )
-    },
+    // {
+    //   key: "jobUrl",
+    //   label: 'Job URL',
+    //   sortable: true,
+    //   render: (row: GuidanceRequest) => (
+    //     <a 
+    //       href={row.jobUrl} 
+    //       target="_blank" 
+    //       rel="noopener no`referr`er" 
+    //       className="tracking-wide leading-6 font-semibold text-blue-600 cursor-pointer"
+    //     >
+    //       Link
+    //     </a>
+    //   )
+    // },
+    // {
+    //   key: "guidanceRequestDescription",
+    //   label: 'Requirement detail',
+    //   sortable: true,
+    //   render: (row: GuidanceRequest) => (
+    //     <div className="flex justify-center">
+    //       <p className="tracking-wide truncate leading-6 max-w-xs">
+    //         {row.guidanceRequestDescription}
+    //       </p>
+    //     </div>
+    //   )
+    // },
 {
   key: "status",
   label: 'Status',
@@ -226,7 +234,34 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
           // </div>
   )
 },
+    {
+      key: "dateAndTime",
+      label: 'Date & Time',
+      sortable: true,
+      render: (row: GuidanceRequest) => {
+        if (!row.createdAt) return 'N/A';
 
+        const date = new Date(row.createdAt);
+
+        const day = String(date.getDate()).padStart(2, '0');
+        const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+        const year = date.getFullYear();
+
+        const datePart = `${day}-${month}-${year}`;
+
+        const timePart = date.toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        });
+
+        return (
+          <>
+            {datePart}<br />
+            {timePart}
+          </>
+        );
+      }
+    },
     {
       key: "mentorDetails",
       label: "Action",
@@ -316,6 +351,12 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
           sortOrder={sortOrder}
           enableSelect={false}
           keyExtractor={keyExtractor}
+          expandedRows={expandedRows}
+          toggleExpand={toggleExpand}
+          renderExpandedDetails={(row) => <GuidanceStepper 
+            jobUrl={row.jobUrl} 
+            guidanceRequestDescription={row.guidanceRequestDescription} 
+          />}
         />
       </div>
 

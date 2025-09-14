@@ -262,8 +262,8 @@ useEffect(() => {
                   {suggestions.map((company, idx) => (
                     <li
                       key={idx}
-                      className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => handleSuggestionClick(company)}
+                      className="block w-full px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                      onMouseDown={() => handleSuggestionClick(company)}
                     >
                       {company.name}
                     </li>

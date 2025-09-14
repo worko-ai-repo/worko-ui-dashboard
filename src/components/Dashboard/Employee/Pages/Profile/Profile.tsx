@@ -357,7 +357,7 @@ const Profile = () => {
 
 
   // handle current company
-  const handleEditCurrentCompany = (e) => {
+  const handleEditCurrentCompany = (e:any) => {
     if(e.target.innerText === "Verify"){
       setOnlyVerifyClicked(true)
     }

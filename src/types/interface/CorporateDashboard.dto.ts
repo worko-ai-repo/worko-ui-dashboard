@@ -183,7 +183,7 @@ export interface JobApplicationDetailsDto {
   jobUrl: string;
   status: JobApplicationStatusType;
   rejectionAwsScheduleId?: string;
-  rejectedByUserId?: {
+  rejectedByUserId: {
     actionDate: string;
     reason: string;
     userType: UserRole;

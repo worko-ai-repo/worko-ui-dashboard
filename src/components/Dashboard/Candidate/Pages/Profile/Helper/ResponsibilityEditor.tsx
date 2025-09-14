@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastOptions } from "lib-worko-ui";
+import ResponsibilityForm from "./ResponsibilityForm";
 
 export interface Responsibility {
   companyName: string;
@@ -13,12 +14,14 @@ export interface Responsibility {
 }
 
 interface ResponsibilityEditorProps {
+  title: string,
   items: Responsibility[];
   onSave: (items: Responsibility[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
 const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
+  title,
   items,
   onSave,
   onCancel,
@@ -33,6 +36,7 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formModal, setFormModal] = useState<boolean>(false);
 
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
@@ -41,13 +45,14 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
     setStartDate(item.date.startDate);
     setEndDate(item.date.endDate || "");
     setDescription(item.description);
+    setFormModal(true)
   };
 
   const handleRemoveItem = (index: number) => {
     setEditedItems(editedItems.filter((_, i) => i !== index));
     if (editingIndex === index) clearForm();
   };
-
+console.log(items)
   const clearForm = () => {
     setEditingIndex(null);
     setCompanyName("");
@@ -86,9 +91,11 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
       updated[editingIndex] = newItem;
       setEditedItems(updated);
       clearForm();
+      setFormModal(false)
     } else {
       setEditedItems([...editedItems, newItem]);
       clearForm();
+      setFormModal(false)
     }
   };
 
@@ -122,6 +129,20 @@ return (
         >
           Cancel
         </button>
+          <button
+            onClick={() => {
+              setEditingIndex(null);
+              setCompanyName('');
+              setStartDate('');
+              setEndDate('');
+              setDescription('');
+              setFormModal(true);
+            }}
+            disabled={isSubmitting}
+            className="text-xs font-semibold text-blue-600"
+          >
+            Add
+          </button>
         <button
           onClick={handleSubmit}
           disabled={isSubmitting}
@@ -192,7 +213,7 @@ return (
 
 
     {/* Form */}
-    <div className="flex flex-wrap items-center gap-3 mt-6 max-w-full">
+    {/* <div className="flex flex-wrap items-center gap-3 mt-6 max-w-full">
       <input
         type="text"
         placeholder="Company Name"
@@ -250,7 +271,26 @@ return (
         )}
       </button>
       </div>
-    </div>
+    </div> */}
+          {formModal && (
+        <ResponsibilityForm
+          title={title}
+          isOpen={formModal}
+          onClose={() => {
+            setFormModal(false);
+            setEditingIndex(null);
+          }}
+          companyName={companyName}
+          setCompanyName={setCompanyName}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          description={description}
+          setDescription={setDescription}
+          onSubmit={handleAddOrUpdate}
+        />
+      )}
   </div>
 );
 

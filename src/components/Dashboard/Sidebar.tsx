@@ -120,7 +120,9 @@ const Sidebar: React.FC<SidebarProps> = ({
    * - Other users: name field
    */
   useEffect(() => {
-    setUserName(finalUserDetails?.fullName || "User");
+    const fullNameStr = finalUserDetails?.fullName;
+    const fullName = fullNameStr ? fullNameStr.split(" ") : [];
+    setUserName(fullName.length > 0 ? fullName[0] : "User");
   }, [finalUserDetails]);
 
   /**
@@ -129,7 +131,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const Avatar = (
     <div className="w-full h-full">
       <img
-        src={finalUserDetails?.profileImageUrl || User}
+        src={finalUserDetails?.profileImageAwsS3SignedUrl || User}
         alt="User Avatar"
         className={`w-10 h-10 rounded-full`}
       />
@@ -147,10 +149,13 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex  justify-between items-center mb-6 ">
           {!collapsed ? (
             <div className="flex items-center justify-between w-full">
-              <div className="flex items-center gap-2 overflow-hidden">
-                {Avatar}
-                <span className="text-base text-start font-bold capitalize">{userName}</span>
-              </div>
+            <div className="flex items-center gap-2 overflow-hidden">
+              {Avatar}
+              <span className="text-base text-start font-bold capitalize truncate min-w-[100px] max-w-[100px]"
+              title={userName}>
+                {userName}
+              </span>
+            </div>
               <button
                 onClick={() => setCollapsed(true)}
                 className="hidden sm:flex focus:outline-none"

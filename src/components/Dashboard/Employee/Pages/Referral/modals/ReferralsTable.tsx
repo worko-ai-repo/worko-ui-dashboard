@@ -164,7 +164,8 @@ const ReferralsTable = memo(
             <MatchingScoreCircle 
               score={row.matchingScore ?? 0}
               scoreDetails={row}
-              status={row.status}  />
+              status={row.status}  
+              />
           </div>
           ),
       },

@@ -1,13 +1,14 @@
 import { Group } from "@Assets";
+import { toTitleCase } from "@Utils/Titlecase.utils";
 import { Briefcase, Edit, Pencil,Link } from "lucide-react";
 import React, { MouseEventHandler } from "react";
 
 function formatDate(isoDate?: string) {
-  if (!isoDate) return "N/A";
+  if (!isoDate) return "present";
   const date = new Date(isoDate);
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // months are zero-indexed
-  const year = String(date.getFullYear()); // last two digits
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
   return `${month}-${year}`;
 }
 interface RenderCardProps {
@@ -197,12 +198,12 @@ export const renderListSection = ({
           ))}
         </div>
       ) : variant === "responsibilities" ? (
-        (items as ResponsibilityItem[]).map((item, index) => (
+        (items as unknown as ResponsibilityItem[]).map((item, index) => (
           <React.Fragment key={index}>
             <div className="flex justify-between items-start mb-1 gap-4">
               <div className="flex-1 min-w-0">
                 <span className="font-medium text-black block truncate">
-                  Company - {item.companyName}
+                  {toTitleCase(item.companyName)}
                 </span>
                 {item.description && (
                   <p className="mt-1 text-sm text-gray-700 max-w-4xl">
@@ -223,7 +224,7 @@ export const renderListSection = ({
           </React.Fragment>
         ))
       ) : variant === "experience" ? (
-        (items as ExperienceItem[]).map((item, index) => (
+        (items as unknown as ExperienceItem[]).map((item, index) => (
           <React.Fragment key={index}>
             <div className="flex justify-between items-start mb-1 gap-4">
               <div className="flex-1 min-w-0">

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import { getToastOptions } from "lib-worko-ui"; // Or your custom toast util
+import { getToastOptions } from "lib-worko-ui";
+import ExperienceForm from "@Components/Dashboard/Candidate/Pages/Profile/Helper/ExperienceForm";
 
 export interface Experience {
   companyName: string;
@@ -13,12 +14,14 @@ export interface Experience {
 }
 
 interface ExperienceEditorProps {
+  title:string;
   items: Experience[];
   onSave: (items: Experience[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
 const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
+  title,
   items,
   onSave,
   onCancel
@@ -29,12 +32,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const [companyName, setCompanyName] = useState("");
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
-  const [yoe, setYOE] = useState<number | string>("");
+  const [yoe, setYOE] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [formModal,setFormModal] = useState<boolean>(false)
   const today = new Date().toISOString().split("T")[0];
 
   const clearForm = () => {
@@ -62,9 +66,10 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     setCompanyName(item.companyName);
     setDesignation(item.designation);
     setDepartment(item.department);
-    setYOE(item.YOE);
+    setYOE(String(item.YOE));
     setStartDate(item.startDate);
     setEndDate(item.endDate);
+    setFormModal(true)
   };
 
   const handleRemoveItem = (index: number) => {
@@ -106,6 +111,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     }
 
     clearForm();
+    setFormModal(false)
   };
 
   const handleSubmit = async () => {
@@ -137,6 +143,22 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
             className="text-xs font-semibold text-blue-600"
           >
             Cancel
+          </button>
+          <button
+            onClick={() => {
+              setEditingIndex(null);
+              setCompanyName('');
+              setDesignation('');
+              setDepartment('');
+              setYOE('');
+              setStartDate('');
+              setEndDate('');
+              setFormModal(true);
+            }}
+            disabled={isSubmitting}
+            className="text-xs font-semibold text-blue-600"
+          >
+            Add
           </button>
           <button
             onClick={handleSubmit}
@@ -203,90 +225,29 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           </div>
         ))
       )}
-
-      {/* Form */}
-<div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-  <div className="flex flex-col">
-    <label className="block text-xs font-semibold mb-1">Designation</label>
-    <input
-      type="text"
-      placeholder="Designation"
-      value={designation}
-      onChange={(e) => setDesignation(e.target.value)}
-      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-    />
-  </div>
-
-  <div className="flex flex-col">
-    <label className="block text-xs font-semibold mb-1">Company Name</label>
-    <input
-      type="text"
-      placeholder="Company Name"
-      value={companyName}
-      onChange={(e) => setCompanyName(e.target.value)}
-      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-    />
-  </div>
-
-  <div className="flex flex-col">
-    <label className="block text-xs font-semibold mb-1">Department</label>
-    <input
-      type="text"
-      placeholder="Department"
-      value={department}
-      onChange={(e) => setDepartment(e.target.value)}
-      className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-    />
-  </div>
-
-  {/* YOE, Start Date, End Date, Add button */}
-  <div className="flex items-end gap-3">
-    <div className="flex flex-col flex-grow">
-      <label className="block text-xs font-semibold mb-1">YOE</label>
-      <input
-        type="number"
-        min={0}
-        placeholder="Years of Experience"
-        value={yoe}
-        onChange={(e) => setYOE(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-      />
-    </div>
-
-    <div className="flex flex-col flex-grow">
-      <label className="block text-xs font-semibold mb-1">Start Date</label>
-      <input
-        type="date"
-        max={today}
-        value={startDate}
-        onChange={(e) => setStartDate(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-      />
-    </div>
-
-    <div className="flex flex-col flex-grow">
-      <label className="block text-xs font-semibold mb-1">End Date</label>
-      <input
-        type="date"
-        max={today}
-        value={endDate}
-        onChange={(e) => setEndDate(e.target.value)}
-        className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
-      />
-    </div>
-
-    <button
-      onClick={handleAddOrUpdate}
-      disabled={!designation.trim() || !companyName.trim()}
-      className="flex items-center justify-center rounded-md bg-blue-600 p-2 text-white disabled:bg-blue-300"
-      aria-label="Add experience"
-    >
-      <Plus size={16} />
-    </button>
-  </div>
-</div>
-
-
+        {formModal && (
+        <ExperienceForm
+          title={title}
+          isOpen={formModal}
+          onClose={() => {
+            setFormModal(false);
+            setEditingIndex(null);
+          }}
+          designation={designation}
+          setDesignation={setDesignation}
+          companyName={companyName}
+          setCompanyName={setCompanyName}
+          department={department}
+          setDepartment={setDepartment}
+          yoe={yoe}
+          setYOE={setYOE}
+          startDate={startDate}
+          setStartDate={setStartDate}
+          endDate={endDate}
+          setEndDate={setEndDate}
+          onSubmit={handleAddOrUpdate}
+        />
+      )}
     </div>
   );
 };

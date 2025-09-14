@@ -9,12 +9,14 @@ import { toast } from "react-toastify";
 
 interface ViewDetailsModalProps {
   show: boolean;
+  jobTitle?:string;
   viewDetailsContent:any;
   onClose: () => void;
 }
 
 const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
   show,
+  jobTitle,
   viewDetailsContent,
   onClose,
 }) => {
@@ -35,7 +37,7 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
         //     return;
         // }
         const raw = viewDetailsContent.scoreDetails;
-        console.log(raw)
+        // console.log(raw)
         if (typeof raw === 'string' && raw.trim() !== '') {
             try {
             const parsed = JSON.parse(raw);
@@ -87,9 +89,9 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
   <div style={{ flexBasis: '70%',minHeight: "180px" }} className="flex-shrink-0">
     <h1 className="text-lg font-semibold mb-4 text-left">
       Feedback summary for :{" "}
-      <span className="text-blue-600">{viewDetailsContent?.name || "NA"}</span>
+      <span className="text-blue-600">{jobTitle || "NA"}</span>
     </h1>
-    <p className="border rounded-xl bg-gray-200 text-sm p-4 text-left overflow-y-auto max-h-[180px]">{strengths}</p>
+    <p className="border rounded-xl bg-gray-200 text-sm p-4 text-left overflow-y-auto max-h-[180px]">{strengths.length? strengths : "N/A"}</p>
   </div>
 
     <div style={{ flexBasis: '30%',minHeight: "180px" }} className="border rounded-xl bg-blue-600 text-white p-4 flex flex-col justify-between">

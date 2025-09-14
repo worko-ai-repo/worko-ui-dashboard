@@ -160,7 +160,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) =>
         row.status === "ACCEPTED" ? (
           <div className="flex justify-center m-auto w-[150px]">
-            <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline">
+            <a className="text-blue-600 hover:underline">
               <img src={chat} alt="" />
             </a>
           </div>
@@ -189,8 +189,11 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => (
         <div className='flex justify-center m-auto w-[150px]'>
         <span 
-        className="truncate block w-full"
-        title={row.refereeName}>{row.refereeName ?? "N/A"}</span>
+          className="truncate block w-full"
+          title={row.refereeName ? row.refereeName.toString() : "N/A"}
+          >
+          {row.refereeName ?? "N/A"}
+          </span>
         </div>
       ),
       },

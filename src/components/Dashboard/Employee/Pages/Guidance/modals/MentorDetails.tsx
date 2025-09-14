@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { GuidanceRequest } from "../Guidance";
 import httpServiceObj from '@Services/ApiHandler.service';
 import { toast } from 'react-toastify';
@@ -28,8 +28,21 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleError, setRescheduleError] = useState('');
+  const [linkedin,setLinkedin] = useState("")
   const social = mentorDetails?.socialProfile || {};
   const about = mentorDetails?.about || '';
+
+useEffect(() => {
+  Object.entries(social).forEach(([platform, links]) => {
+    if (platform.toLowerCase() === "linkedin" && Array.isArray(links) && links.length > 0) {
+      const rawLink = links[0];
+      const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+      setLinkedin(validLink);
+    }
+  });
+}, [social]);
+
+
 
   const handleJoinClick = () => {
     window.open(figmaUrl, '_blank');
@@ -136,36 +149,40 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   return (
     <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
       <div className="flex justify-between items-center p-6 pb-4">
-        <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Mentor details</h2>
+        <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Candidate details</h2>
+        {linkedin !== "" &&
         <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
           <div className="w-5 h-5 bg-[#316bff] rounded-sm flex items-center justify-center">
             <span className="text-white text-xs">in</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="underline font-medium cursor-pointer hover:text-[#316bff]">Linkedin</span>
+            <a href={linkedin} rel="noopener noreferrer" target='_blank'>
+                <span className="underline font-medium cursor-pointer hover:text-[#316bff]">Linkedin</span>
+            </a>         
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M14 3v2h3.59l-9.83 9.83 1.41 1.41L19 6.41V10h2V3h-7z" />
             </svg>
           </div>
         </div>
+        }
       </div>
 
       <div className="px-6 pb-4 space-y-4 font-['Inter']">
         {/* Mentor Name */}
         <div className="flex items-start gap-3 text-xs">
-          <span className="text-[#94a3b8] font-medium whitespace-nowrap">Mentor name</span>
+          <span className="text-[#94a3b8] font-medium whitespace-nowrap">Candidate name</span>
           <span className="text-[#0f172a] font-medium font-['Poppins']">{request?.mentorDetails?.name || 'N/A'}</span>
         </div>
 
         {/* Mentor Email */}
         <div className="flex gap-3 text-xs">
-            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Mentor email</span>
+            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Candidate email</span>
             <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">{request?.mentorDetails?.userEmail || 'N/A'}</p>
         </div>
 
         {/* About */}
         <div className="flex items-start gap-3 text-xs">
-          <span className="text-[#94a3b8] font-medium whitespace-nowrap">About Mentor</span>
+          <span className="text-[#94a3b8] font-medium whitespace-nowrap">About Candidate</span>
           <p className="text-[#0f172a] font-['Poppins'] leading-tight text-xs">
             {mentorDetails?.about || 'NA'}
           </p>
@@ -176,7 +193,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
           {social && (
             <div className="flex items-start gap-2">
               <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
-                Mentor Socials
+                Candidate Socials
               </span>
               <div className="flex flex-wrap gap-2 text-[#0f172a]">
                 {Object.entries(social).flatMap(([platform, links]) => {
@@ -232,10 +249,11 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
         request?.status === "MEETING_RESCHEDULE_CONFIRMED")  && (
           <>
             <div className="flex flex-row gap-3">
+              <div className='relative group flex-1 min-w-0'>
               <button
                 onClick={handleJoinClick}
                 disabled={!isMeetingSoon}
-                className={`flex-1 rounded-lg h-11 flex items-center justify-center gap-2 transition-colors 
+                className={`w-full flex-1 rounded-lg h-11 flex items-center justify-center gap-2 transition-colors 
                   ${isMeetingSoon 
                     ? 'bg-[#316bff] text-white hover:bg-[#2556e6] cursor-pointer' 
                     : 'bg-gray-300 text-gray-600 cursor-not-allowed'}`}
@@ -245,17 +263,31 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
                 </svg>
                 <span className="font-semibold text-xs font-['Poppins']">Join meeting</span>
               </button>
-
-              <button
-                onClick={handleRequestReschedule}
-                disabled={!isRescheduleSoon}
-                className={`flex-1 rounded-lg h-11 font-semibold text-xs flex items-center justify-center transition-colors
-              ${isRescheduleSoon 
-                ? 'border border-[#316bff] text-[#316bff] hover:text-[#2556e6] hover:border-[#2556e6] cursor-pointer' 
-                : 'border border-gray-300 text-gray-400 cursor-not-allowed'}`}
-              >
-                Request reschedule
-              </button>
+              {/* Tooltip for hover*/}
+                {!isMeetingSoon && (
+                  <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                    You can join 15 mins before the meeting
+                  </div>
+                )}
+              </div>
+              <div className='relative group flex-1 min-w-0'>
+          <button
+            onClick={handleRequestReschedule}
+            disabled={!isRescheduleSoon}
+            className={`w-full flex-1 rounded-lg h-11 font-semibold text-xs flex items-center justify-center transition-colors
+          ${isRescheduleSoon 
+            ? 'border border-[#316bff] text-[#316bff] hover:text-[#2556e6] hover:border-[#2556e6] cursor-pointer' 
+            : 'border border-gray-300 text-gray-400 cursor-not-allowed'}`}
+          >
+            Request reschedule
+          </button>
+          {/* Tooltip for hover*/}
+          {!isRescheduleSoon && (
+              <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 whitespace-nowrap">
+                You can reschedule 30 mins before the meeting
+              </div>
+            )}
+              </div>
             </div>
 
             {showRescheduleForm && (

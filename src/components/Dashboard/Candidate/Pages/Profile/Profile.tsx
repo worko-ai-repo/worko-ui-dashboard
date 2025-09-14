@@ -21,6 +21,7 @@ import { verify } from 'crypto';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
 import ExperienceEditor from './Helper/ExperienceEditor';
+import AchievementsEditor from './Helper/AchievementsEditor';
 
 interface ProfileSectionProps {
   title: string;
@@ -325,7 +326,7 @@ const Profile = () => {
       setShowPhoneOtpInput(true);
       setResendCooldown(true);
       setCountdown(30);
-    } catch (err) {
+    } catch (err:any) {
       console.error("Failed to send OTP:", err.message);
     }
   };
@@ -387,7 +388,7 @@ const Profile = () => {
         toast.error("Invalid OTP. Please try again.", getToastOptions({}));
       }
 
-    } catch (err) {
+    } catch (err:any) {
       console.error("OTP verification error:", err.message);
     }
   };
@@ -1517,7 +1518,7 @@ const handleSaveSalary = async (data:any) => {
           {/* Achievements */}
           <div id="achievements">
             {editMode.achievements ? (
-              <ListEditor
+              <AchievementsEditor
                 title="Achievements"
                 items={(achievementData && achievementData[0]?.achievements?.map(
                   (achievement: any) =>
@@ -1546,6 +1547,7 @@ const handleSaveSalary = async (data:any) => {
             <div id="responsibilities">
               {editMode.responsibilities ? (
                 <ResponsibilityEditor
+                  title= "Responsibilities"
                   items={(detailsData && detailsData[0]?.responsibilities) || []}
                   onSave={handleSaveResponsibilities}
                   onCancel={handleCancelResponsibilities}
@@ -1612,7 +1614,7 @@ const handleSaveSalary = async (data:any) => {
                 >
                   <Link strokeWidth={1.5} />
                   {(() => {
-                    const validLinks = (socialLinks || []).flatMap((item, index) => {
+                    const validLinks = (socialLinks || []).flatMap((item: Record<string, string[]>, index:number) => {
                       const links = Object.entries(item)
                         .filter(
                           ([key, value]) =>

@@ -45,16 +45,16 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
   }, [isOpen]);
 
   return (
-        <div
-          className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
-            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-          } ${visible ? "visible" : "invisible"}`}
-        >
-        <div
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[75vh] ${
-            isAnimatingIn ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
+    <div
+      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+        isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+      } ${visible ? "visible" : "invisible"}`}
+    >
+      <div
+        className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
+          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"

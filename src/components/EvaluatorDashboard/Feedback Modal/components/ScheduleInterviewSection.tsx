@@ -105,11 +105,30 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
             <span className="text-start align-middle block text-sm font-medium text-gray-900">for interview</span>
           </div>
           &nbsp; &nbsp; &nbsp;
-          {[1, 2, 3].map((i) => (
-            <button key={i} onClick={() => setAvailabilityIndex(i as 1 | 2 | 3)} className={`w-auto px-3 h-9 rounded border text-lg font-semibold transition-colors ${availabilityIndex === i ? "bg-indigo-600 text-white border-indigo-600" : "bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-100"}`}>
-              Slot {i}
-            </button>
-          ))}
+          {[1, 2, 3].map((i) => {
+            const slot = scheduledSlots[i - 1];
+            const isAssigned = slot.timeSlot !== ""
+            let variantClasses = "";
+
+            if (availabilityIndex === i) {
+              variantClasses = "bg-indigo-600 text-white border-indigo-600";
+            } else if (isAssigned) {
+              variantClasses = "bg-green-600 text-white border-green-600";
+            } else {
+              variantClasses = "bg-white text-indigo-600 border-indigo-300 hover:bg-indigo-100";
+            }
+
+            return (
+              <button
+                key={i}
+                onClick={() => setAvailabilityIndex(i as 1 | 2 | 3)}
+                className={`w-auto px-3 h-9 rounded border text-lg font-semibold transition-colors ${variantClasses}`}
+              >
+                Slot {i}
+              </button>
+            );
+          })}
+
         </div>
       </div>
 

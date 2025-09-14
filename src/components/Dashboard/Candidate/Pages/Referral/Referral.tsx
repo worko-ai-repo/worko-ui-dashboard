@@ -6,6 +6,7 @@ import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { ChevronDown } from "lucide-react";
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -39,77 +40,7 @@ const Referrals = () => {
 
   const { user, isLoadingUser } = useDashboardContext();
 
-    const APP_API_URI = import.meta.env.APP_API_URI
-
-//below is calling api by using map
-//     const fetchReferrals = useCallback(
-//   async (
-//     page = currentPage,
-//     size = pageSize,
-//     lastKey = "",
-//     searchFilters = filters,
-//     isSearch = false
-//   ) => {
-//     if (!user?.email) return;
-
-//     setIsLoading(true);
-//     const statuses = ["AWAITING", "ACCEPTED", "REJECTED", "CANCELLED", "WITHDRAWN", "DONE"];
-
-//     try {
-//       console.log("Fetching referrals for statuses:", statuses);
-
-//       const allResponses = await Promise.all(
-//         statuses.map(async (status) => {
-//           const url = `${APP_API_URI}/user/${user.email}/referral?status=${status}`;
-//           console.log(`[REQUEST] GET ${url}`);
-
-//           const { response, error } = await httpServiceObj.get(url, true, {}, true);
-
-//           if (error) {
-//             console.error(`[ERROR] Status: ${status}`, error);
-//             return null;
-//           }
-
-//           console.log(`[RESPONSE] Status: ${status}`, response);
-
-//           return {
-//             status,
-//             data: response,
-//           };
-//         })
-//       );
-
-//       const validResponses = allResponses.filter(Boolean);
-//       console.log("Valid responses received:", validResponses.map((r) => r.status));
-
-//       const combinedData = validResponses.flatMap((res) => res.data?.data || []);
-//       console.log("Combined referral data:", combinedData);
-
-//       setData(combinedData);
-
-//       // Use pagination only from "AWAITING" status (as per original logic)
-//       const firstResponse = validResponses.find((res) => res.status === "AWAITING");
-//       if (firstResponse?.data?.pagination) {
-//         console.log("Pagination info (from AWAITING):", firstResponse.data.pagination);
-
-//         setPaginationInfo(firstResponse.data.pagination);
-//         if (isSearch || page === 1) {
-//           paginationKeysRef.current = { 1: "" };
-//           if (firstResponse.data.pagination.lastKey) {
-//             paginationKeysRef.current[2] = firstResponse.data.pagination.lastKey;
-//           }
-//         } else if (firstResponse.data.pagination.lastKey) {
-//           paginationKeysRef.current[page + 1] = firstResponse.data.pagination.lastKey;
-//         }
-//       }
-//     } catch (err) {
-//       console.error("Exception in fetchReferrals:", err);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   },
-//   [user, pageSize, searchBarText, filters, currentPage]
-// );
+  const APP_API_URI = import.meta.env.APP_API_URI
 
 const fetchReferrals = useCallback(
   async (
@@ -276,8 +207,9 @@ const fetchReferrals = useCallback(
 
             </div>
               <div className="relative">
+                <div className="relative w-[140px]">
                 <select
-className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -289,6 +221,11 @@ className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-
                   <option value="WITHDRAWN">Withdrawn</option>
                   <option value="DONE">Done</option>
                 </select>
+                {/* Lucide ChevronDown icon */}
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </div>
+                </div>
               </div>
             </div>
             {/* Get New Referral Button */}

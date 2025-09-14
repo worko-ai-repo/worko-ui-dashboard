@@ -118,7 +118,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     comment,
                     htmlComment,
                 } as SubmitEvaluationPayload);
-                toast.success('Rejection submitted successfully!',getToastOptions({}));
+                toast.success('Feedback submitted successfully!',getToastOptions({}));
             } else if (nextStep === 'hold') {
                 await submitEvaluationResponse({
                     ...basePayload,
@@ -127,7 +127,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     comment,
                     htmlComment,
                 } as SubmitEvaluationPayload);
-                toast.success('Candidate put on hold successfully!',getToastOptions({}));
+                toast.success('Feedback submitted successfully!',getToastOptions({}));
             }
             else if (nextStep === 'schedule') {
                 const scheduledInterviewDetails = scheduledSlots
@@ -147,7 +147,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     scheduledInterviewDetails,
                 } as SubmitEvaluationPayload);
 
-                toast.success('Interview scheduled successfully!',getToastOptions({}));
+                toast.success('Feedback submitted successfully!',getToastOptions({}));
             }
 
             if (onSubmitComplete) {

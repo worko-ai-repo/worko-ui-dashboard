@@ -8,6 +8,7 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import VerifyCompanymodal from "./modals/VerifyCompanymodal";
+import { ChevronDown } from "lucide-react";
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -33,7 +34,7 @@ interface UserDetails {
 
 const Referrals = () => {
   const [searchBarText, setSearchBarText] = useState("");
-  const [data, setData] = useState<ReferralApiResponse | null>(null);
+  const [data, setData] = useState<any>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -59,7 +60,7 @@ const fetchReferrals = useCallback(
     isSearch = false
   ) => {
     if (!user?.email) return;
-    console.log(user,isLoadingUser)
+    console.log(user)
     setIsLoading(true);
       const url = `${APP_API_URI}/user/${user.email}/experience`;
         let companyId = "";
@@ -81,9 +82,23 @@ const fetchReferrals = useCallback(
       // const url = `${APP_API_URI}/user/${user.email}/referral?lastKey=${lastKey}&pageSize=${size}`;
       const url = `/emp/referral/${user.email}?companyId=${companyId}&pageSize=${size}&lastKey=${lastKey}`;
       const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true,);
+      const apiData = response?.data
+      console.log(apiData)
       if (response) {
-        setData(response);
-        console.log(response)
+        console.log(apiData,"apiData")
+      const filterByStatusData1 = apiData?.filter(referral =>
+          !referral.acceptedByUserId || referral.acceptedByUserId === user.sub
+        );
+      const filterByStatusData2 = filterByStatusData1?.filter(referral => {
+        if (!referral.rejectedByUserIds) return true;
+        const hasRejectedUser = referral.rejectedByUserIds.some((ref:{userId:String}) => ref.userId === user.sub);
+        return !hasRejectedUser;
+      });
+
+        const pagination = response.pagination
+        const obj = {data:filterByStatusData2,pagination}       
+        console.log(obj)
+        setData(obj);      
         if (response.pagination) {
           setPaginationInfo(response.pagination);
 
@@ -155,7 +170,7 @@ const fetchReferrals = useCallback(
 
   return {
     ...data,
-    data: data.data.filter(item => item.status === statusFilter)
+    data: data.data.filter((item:{status:string}) => item.status === statusFilter)
   };
 }, [data, statusFilter]);
 
@@ -165,6 +180,7 @@ const fetchReferrals = useCallback(
 
   useEffect(() => {
     if (user?.email) {
+      console.log("user",user)
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
@@ -230,8 +246,9 @@ const fetchReferrals = useCallback(
                 </button>
             </div>
             <div className="relative">
+                 <div className="relative w-[140px]">
                 <select
-className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -239,10 +256,14 @@ className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-
                   <option value="ACCEPTED">Accepted</option>
                   <option value="REJECTED">Rejected</option>
                   <option value="AWAITING">Awaiting</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="WITHDRAWN">Withdrawn</option>
                   <option value="DONE">Done</option>
                 </select>
+
+                {/* Lucide ChevronDown icon */}
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </div>
+              </div>
               </div>
 
             {/* Get New Referral Button */}

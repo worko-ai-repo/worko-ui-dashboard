@@ -142,7 +142,7 @@ const RejectRefferralModal: FC<RejectRefferralModalProps> = ({
                 }`}
                 >
                 <SendIcon className="w-4 h-4" />
-                {isLoading ? 'Accepting...' : 'Accept'}
+                {isLoading ? 'Rejecting...' : 'Reject'}
                 </button>
             <button
                 onClick={onClose}

@@ -79,7 +79,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode; initialDa
   const breadcrumb = useMemo(
     () => (
       <div className="flex items-center text-sm text-gray-500 space-x-2 truncate">
-        <Star className="text-[#316bff] w-4 h-4 sm:w-5 sm:h-5 shrink-0" />
+        {/* <Star className="text-[#316bff] w-4 h-4 sm:w-5 sm:h-5 shrink-0" /> */}
         <span>Dashboards</span>
         <span>/</span>
         <span className="capitalize">{dashboardType.toLowerCase()}</span>

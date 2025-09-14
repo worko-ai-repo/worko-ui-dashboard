@@ -44,6 +44,7 @@ const JobsTable = memo(({
   const [showJoinedModal, setShowJoinedModal] = useState<boolean>(false);
   const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
   const [viewDetailsContent, setViewDetailsContent] = useState<string>('');
+  const [jobTitle, setjobTitle] = useState<string>('');
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [sortField, setSortField] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
@@ -112,23 +113,21 @@ const JobsTable = memo(({
 
 const jobs = processedJobs || [];
 
-// fake dummy fields for upload
-// const requestedDocumentNamesDummy = [
-//   "Adhaar Card",
-//   "PAN Card",
-//   "Birth Certificate",
-//   "Graduation Certificate",
-// ];
-
   // Function to handle opening the feedback modal
-  const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
-    if (job.rejectionFeedbackBySystem) {
-      setFeedbackContent(job.rejectionFeedbackBySystem);
-      setShowFeedbackModal(true);
-    }else{
-      toast.error("No feedback Found",getToastOptions({}))
-    }
-  }, []);
+const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
+  if (job.rejectionFeedbackBySystem) {
+    setFeedbackContent(job.rejectionFeedbackBySystem);
+    setjobTitle(job.jobTitle);
+    setShowFeedbackModal(true);
+  } else if (job.rejectedByUserId.userComment) {
+    setFeedbackContent(job.rejectedByUserId.userComment);
+    setjobTitle(job.jobTitle);
+    setShowFeedbackModal(true);
+  } else {
+    toast.error("No feedback Found", getToastOptions({}));
+  }
+}, []);
+
   
   //handling requestfollowup and modal
   const requestFollowup = async (id: string) => {
@@ -151,7 +150,7 @@ const jobs = processedJobs || [];
           open: true,
         });
       }
-    } catch (err) {
+    } catch (err:any) {
       setModalMessage({
         message: `Error: ${err.message}`,
         isError: true,
@@ -278,7 +277,7 @@ const jobs = processedJobs || [];
 
 
   const MatchingScoreCircle = memo((
-      { score, scoreDetails, status }: { score: number; scoreDetails?: any,status?: string }
+      { score, scoreDetails, status,jobTitle }: { score: number; scoreDetails?: any,status?: string,jobTitle:string }
     ) => (
     <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
       <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
@@ -298,55 +297,64 @@ const jobs = processedJobs || [];
         <div className="absolute font-semibold text-xs">{score}%</div>
         {status !== "REJECTED" &&
         <button 
-          onClick={()=>{        
+          onClick={()=>{    
+            console.log(scoreDetails)    
             setShowViewDetails(true)
-            setViewDetailsContent(scoreDetails)}}
+            setViewDetailsContent(scoreDetails)
+            setjobTitle(jobTitle)}}          
           className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details
         </button>}
       </div>
     </div>
   ));
 
-  const StatusBadge = memo(({ status }: { status: string }) => {
-    const statusConfigs: Record<JobApplicationStatusType, { bg: string, text: string, label: string }> = {
+const StatusBadge = memo(({ status }: { status: string }) => {
+  const statusConfigs: Record<JobApplicationStatusType, { bg: string, text: string, label: string, showDot?: boolean }> = {
     APPLIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Applied" },
     CV_DOWNLOADED: { bg: "bg-blue-100", text: "text-blue-500", label: "CV downloaded" },
     UNDER_EVALUATION: { bg: "bg-blue-100", text: "text-blue-500", label: "Under evaluation" },
     PROCESSING_INTERVIEW: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview Process" },
     INTERVIEW_DONE: { bg: "bg-blue-100", text: "text-blue-500", label: "Interview done" },
     HIRING_IN_PROCESS: { bg: "bg-blue-100", text: "text-blue-500", label: "Hiring in process" },
-    DOCUMENT_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Document requested" },
-    DOCUMENT_ADDITIONAL_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Additional document requested" },
-    DOCUMENT_REVISION_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Revision document requested" },
+    DOCUMENT_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Document requested", showDot: true },
+    DOCUMENT_ADDITIONAL_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Additional document requested", showDot: true },
+    DOCUMENT_REVISION_REQUESTED: { bg: "bg-red-100", text: "text-red-500", label: "Revision document requested", showDot: true },
     DOCUMENT_SUBMITTED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document submitted" },
-    DOCUMENT_REVISION_REQUEST_SUBMITTED: { bg: "bg-purple-100", text: "text-purple-500", label: "Revision document submission" },
-    DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: { bg: "bg-orange-100", text: "text-orange-500", label: "Revision document requested" },
-    OFFER_SENT: {bg: "bg-yellow-100", text: "text-yellow-600", label: "Offer letter received" },
-    REVISED_OFFER_SENT:{ bg: "bg-yellow-100", text: "text-yellow-600", label: "Revised letter received" },
-    REVISED_LETTER: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Revised letter received" },
+    DOCUMENT_REVISION_REQUEST_SUBMITTED: { bg: "bg-purple-100", text: "text-purple-500", label: "Revision document submitted" },
+    DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: { bg: "bg-orange-100", text: "text-orange-500", label: "Additional document submitted" },
+    OFFER_SENT: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Offer letter received", showDot: true},
+    REVISED_OFFER_SENT:{ bg: "bg-yellow-100", text: "text-yellow-600", label: "Revised letter received",showDot: true },
+    REVISED_LETTER: { bg: "bg-yellow-100", text: "text-yellow-600", label: "Revised letter received", showDot: true},
     HIRED: { bg: "bg-green-100", text: "text-green-500", label: "Hired" },
     JOINED: { bg: "bg-green-100", text: "text-green-500", label: "Joined" },
-    OFFER_ACCEPTED: { bg: "bg-green-100", text: "text-green-500", label: "Offer accepted/Hired" },
+    OFFER_ACCEPTED: { bg: "bg-green-100", text: "text-green-500", label: "Offer accepted" },
+    OFFER_ISSUE_RAISED: { bg: "bg-blue-100", text: "text-blue-500", label: "Offer issue Raised" },
     REJECTED: { bg: "bg-red-400", text: "text-white", label: "Rejected" },
     ON_HOLD: { bg: "bg-red-400", text: "text-white", label: "On hold" },
     DOCUMENT_VERIFIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document verified" },
-    OFFER_ISSUE_RAISED: { bg: "bg-blue-100", text: "text-blue-500", label: "Offer issue Raised" },
-    };
-    
-    const config = statusConfigs[status] || statusConfigs.UNDER_EVALUATION;
-    
+  };
+  
+  const config = statusConfigs[status] || statusConfigs.UNDER_EVALUATION;
+
   return (
     <div
-      className={`rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center max-w-[160px]`}
+      className={`relative rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center max-w-[160px]`}
     >
       <div 
-      className="tracking-wide leading-snug text-xs truncate whitespace-nowrap overflow-hidden"
-      title={config.label}>
+        className="tracking-wide leading-snug text-xs truncate whitespace-nowrap overflow-hidden"
+        title={config.label}
+      >
         {config.label}
       </div>
+
+      {/*Red Dot */}
+      {config.showDot && (
+        <span className="absolute -top-1 right-1 w-3 h-3 bg-red-500 rounded-full bc"></span>
+      )}
     </div>
   );
 });
+
 
   const ActionButton = memo(({ type, job }: { type: string, job: JobApplicationDetailsDto }) => {
     console.log(job)
@@ -445,10 +453,12 @@ const jobs = processedJobs || [];
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex justify-center m-auto w-[150px]">
-            <MatchingScoreCircle 
+            <MatchingScoreCircle               
               score={row.matchingScore ?? 0}
               scoreDetails={row}
-              status={row.status}  />
+              status={row.status}  
+              jobTitle={row.jobTitle}
+              />
        </div>
       )
     },
@@ -480,7 +490,8 @@ const jobs = processedJobs || [];
     return (
       <div className="flex justify-center m-auto w-[150px]">
       <div className="relative group">
-        <button
+        {row.status !== "JOINED" 
+        ? <button
           onClick={() => !isDisabled && requestFollowup(row.id)}
           disabled={isDisabled}
           className={`w-14 h-11 rounded-xl flex items-center justify-center transition-all
@@ -494,28 +505,20 @@ const jobs = processedJobs || [];
             className={`transition-all ${isDisabled ? "opacity-60" : ""}`}
           />
         </button>
+        : null }
 
-        {/* Hover Cross Icon for Disabled Button */}
+
+        {/* Hover on disabled feedback */}
         {isDisabled && (
-<div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity bg-white/80 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md px-4 py-2">
-  Follow up already sent
-</div>
-
-
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity bg-white/80 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md px-4 py-2">
+            Follow up already sent
+          </div>
         )}
       </div>
       </div>
     );
   }
-},
-    // dont need job type for now maybe required in future
-    // {
-    //   key: "jobType",
-    //   label: "Job Type",
-    //   sortable: true,
-    //   render:() => <p>Internal</p>
-    //   // render: (row: JobApplicationDetailsDto) => <StatusBadge status={row.jobType} />
-    // }
+}
   ];
 
   const handlePageSizeChange = (newPageSize: number) => {
@@ -631,12 +634,14 @@ console.log({
 
       <RejectionFeedbackModal 
         show={showFeedbackModal} 
+        jobTitle={jobTitle}
         feedbackContent={feedbackContent} 
         onClose={() => setShowFeedbackModal(false)} 
       />
 
       <ViewDetailsModal 
         show={showViewDetails} 
+        jobTitle={jobTitle}
         viewDetailsContent={viewDetailsContent} 
         onClose={() => setShowViewDetails(false)} 
       />

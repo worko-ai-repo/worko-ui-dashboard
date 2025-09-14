@@ -19,7 +19,8 @@ export type ReferralStatus =
   | "PENDING"
   | "ACCEPTED"
   | "REJECTED"
-  | "AWAITING";
+  | "AWAITING"
+  | "DONE";
 
 export interface PaginationInfo {
   count: number;

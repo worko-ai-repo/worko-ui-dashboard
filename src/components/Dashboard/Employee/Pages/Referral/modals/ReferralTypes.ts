@@ -1,5 +1,12 @@
 // src/components/Referrals/ReferralTypes.ts
 
+export interface RejectedUser {
+actionDate: String;
+reason: String;
+userComment: String;
+userId: String;
+}
+
 export interface ReferralDetailsDto {
   id: string;
   candidateName: string;
@@ -15,6 +22,8 @@ export interface ReferralDetailsDto {
   jobUrl:string;
   PK:string;
   chatId:String;
+  acceptedByUserId?:String;
+  rejectedByUserIds?: RejectedUser[];
   userDetails:{
     name:string,
   }

@@ -24,6 +24,7 @@ export interface GuidanceRequest {
   statusColor?: {
     bg: string;
     text: string;
+    label:string;
   };
   dateNeeded?: string;
   mentorName?: string;
@@ -112,7 +113,7 @@ const Guidance = () => {
 
   useEffect(() => {
     const fetchUserData = async () =>{
-        const url = `${APP_API_URI}/user/${currentUser.email}/details`;
+        const url = `${APP_API_URI}/user/${currentUser?.email}/details`;
         let localUserId = "";
         try {
           const { response } = await httpServiceObj.get(url, true, {}, true);
@@ -169,7 +170,7 @@ const Guidance = () => {
               "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
               "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
               "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
-              "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Completed" }, 
+              "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Project Completed" }, 
               "REJECTED": { bg: "bg-red-100", text: "text-red-600", label: "Rejected" }, 
             };
 

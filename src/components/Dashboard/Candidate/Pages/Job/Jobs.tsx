@@ -8,6 +8,7 @@ import httpServiceObj from '@Services/ApiHandler.service';
 import secureStorage from '@Utils/SecureStorage.utils';
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { toTitleCase } from '@Utils/Titlecase.utils';
+import { ChevronDown } from 'lucide-react';
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -346,8 +347,9 @@ const Jobs = () => {
             </button>
           </div>
             <div className="relative">
+               <div className="relative w-[140px]">
                 <select
-                  className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl w-[180px] truncate"
+                  className="h-full w-[140px] pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer truncate"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -365,7 +367,12 @@ const Jobs = () => {
                   <option value="JOINED">Joined</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
+                {/* Lucide ChevronDown icon */}
+                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ChevronDown className="w-4 h-4 text-gray-500" />
+                </div>
               </div>
+            </div>
               </div>
         </div>
 

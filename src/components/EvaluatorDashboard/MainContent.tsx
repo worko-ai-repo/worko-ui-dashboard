@@ -21,6 +21,8 @@ interface MainContentProps {
   onViewFeedback: () => void;
   onViewVideo: () => void
   requests:any[]
+  isLoadingData:boolean
+  hasAttemptedLoad: boolean;
 }
   
   const handleLogout = async () => {
@@ -40,7 +42,9 @@ const MainContent: React.FC<MainContentProps> = ({
   onViewCV,
   onViewFeedback,
   onViewVideo,
-  requests
+  requests,
+  isLoadingData,
+  hasAttemptedLoad,
 }) => {
 
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
@@ -50,6 +54,7 @@ const MainContent: React.FC<MainContentProps> = ({
   const jobApplicationId = searchParams.get('jobApplicationId') || '';
   const evaluationRequestId = searchParams.get('evaluationRequestId') || '';
 
+  
   useEffect(() => {
     const fetchSocialLinks = async () => {
     // const {isLoggedIn} = useAppContext()
@@ -142,10 +147,7 @@ const MainContent: React.FC<MainContentProps> = ({
   checkSession();
 }, [evaluatorEmail, jobApplicationId, evaluationRequestId]);
 
-if (
-  (!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) &&
-  requests.length > 0
-) {
+if (isLoadingData ) {
   return (
     <div className="flex flex-col items-center justify-center w-full min-h-[200px] text-slate-600 text-base sm:text-lg font-semibold">
       <span className="mb-3">Please wait, loading data</span>
@@ -158,71 +160,8 @@ if (
   );
 }
 
-if ((!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) && requests.length === 0) {
-  return (
-    <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-8 sm:py-12 bg-gradient-to-br from-white-50 to-indigo-100 rounded-2xl relative overflow-hidden w-full h-screen bg-gray-100">
-      {/* Main Message */}
-<div className="flex flex-col justify-center items-center text-center w-full max-w-3xl min-h-[600px] p-8 bg-white shadow-lg rounded-xl">
-      <div className="text-center max-w-sm sm:max-w-lg mb-8 sm:mb-12">
-        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
-          You're all caught up!
-        </h2>
-        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
-          Right now you have no CVs to evaluate, or you've already evaluated all pending applications.
-        </p>
-      </div>
-
-      {/* Status Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 w-full max-w-xs sm:max-w-lg">
-        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-800">All Evaluated</p>
-              <p className="text-xs text-gray-500">Great job!</p>
-            </div>
-          </div>
-        </div>
-        
-        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
-          <div className="flex items-center space-x-2 sm:space-x-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-            </div>
-            <div>
-              <p className="text-xs sm:text-sm font-medium text-gray-800">Queue Empty</p>
-              <p className="text-xs text-gray-500">No pending CV to review</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Call to Action */}
-      <div className="text-center">
-        <div className="flex items-center justify-center space-x-2 text-gray-500 mb-3 sm:mb-4">
-          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
-          </svg>
-          <span className="text-xs sm:text-sm">Perfect time for a coffee break!</span>
-        </div>
-        
-        <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
-          New applications will appear here automatically when they're ready for review.
-        </p>
-        
-      </div>
-    </div>
-    </div>
-  );
-}
-
-  return (
+if(requests.length > 0 && !isLoadingData){
+    return (
     <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
       {/* Header */}
       <div className="flex items-center justify-end mb-6">
@@ -474,6 +413,71 @@ if ((!EvaluationRequestDetails?.id || !EvaluationRequestDetails?.email) && reque
       </div>
     </div>
   );
+}
+
+if (!isLoadingData && hasAttemptedLoad && requests.length === 0) {
+  return (
+    <div className="flex flex-col items-center justify-center px-4 sm:px-8 py-8 sm:py-12 bg-gradient-to-br from-white-50 to-indigo-100 rounded-2xl relative overflow-hidden w-full h-screen bg-gray-100">
+      {/* Main Message */}
+    <div className="flex flex-col justify-center items-center text-center w-full max-w-3xl min-h-[600px] p-8 bg-white shadow-lg rounded-xl">
+      <div className="text-center max-w-sm sm:max-w-lg mb-8 sm:mb-12">
+        <h2 className="text-xl sm:text-2xl font-semibold text-gray-800 mb-3 sm:mb-4">
+          You're all caught up!
+        </h2>
+        <p className="text-sm sm:text-base text-gray-600 leading-relaxed">
+          Right now you have no CVs to evaluate, or you've already evaluated all pending applications.
+        </p>
+      </div>
+
+      {/* Status Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mb-6 sm:mb-8 w-full max-w-xs sm:max-w-lg">
+        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-gray-800">All Evaluated</p>
+              <p className="text-xs text-gray-500">Great job!</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-lg p-3 sm:p-4 shadow-sm border border-gray-100">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-xs sm:text-sm font-medium text-gray-800">Queue Empty</p>
+              <p className="text-xs text-gray-500">No pending CV to review</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Call to Action */}
+      <div className="text-center">
+        <div className="flex items-center justify-center space-x-2 text-gray-500 mb-3 sm:mb-4">
+          <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+          </svg>
+          <span className="text-xs sm:text-sm">Perfect time for a coffee break!</span>
+        </div>
+        
+        <p className="text-xs sm:text-sm text-gray-500 mb-4 sm:mb-6">
+          New applications will appear here automatically when they're ready for review.
+        </p>
+        
+      </div>
+    </div>
+    </div>
+  );
+}
 };
 
 export default MainContent;

@@ -1,16 +1,23 @@
+import { useDashboardContext } from "@Context/Dashboard.context";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { toTitleCase } from "@Utils/Titlecase.utils";
 import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 
+
 interface FeedbackModalProps {
   show: boolean;
-  feedbackContent: string;
+  jobTitle:string;
+  feedbackContent: any;
   onClose: () => void;
 }
 
-const RejectionFeedbackModal = ({ show, feedbackContent, onClose }: FeedbackModalProps) => {
+
+const RejectionFeedbackModal = ({ show, jobTitle,feedbackContent, onClose }: FeedbackModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-
   useEffect(() => {
     if (show) {
       setIsVisible(true);
@@ -22,68 +29,58 @@ const RejectionFeedbackModal = ({ show, feedbackContent, onClose }: FeedbackModa
       setIsAnimatingIn(false);
       const timer = setTimeout(() => {
         setIsVisible(false);
-      }, 300); // Match the transition duration
+      }, 300);
       return () => clearTimeout(timer);
     }
   }, [show]);
 
   if (!isVisible && !show) return null;
-
   return (
-    <div className={`fixed inset-0 flex justify-end z-50 transition-opacity duration-300 ease-in-out ${
-      isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-    } ${isVisible ? "visible" : "invisible"}`}>
-      <div 
-        className={`bg-white min-h-screen w-full max-w-2xl flex flex-col transform transition-transform duration-300 ease-in-out ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
-        }`}
-      >
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h3 className="text-lg font-semibold">Application Feedback</h3>
-          <button
-            onClick={onClose}
-            className="p-1 rounded-full hover:bg-gray-100"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
-
-        {/* Scrollable content */}
-
-        <div className="p-6 overflow-y-auto text-gray-700 text-left flex-1">
-          {(() => {
-            try {
-              const feedbackItems = JSON.parse(feedbackContent);
-              if (Array.isArray(feedbackItems)) {
-                return feedbackItems.map(({ heading, detail }: { heading: string; detail: string }, idx: number) => (
-                  <div key={idx} className="mb-4">
-                    <h4 className="font-semibold text-black">{heading}</h4>
-                    <p className="mt-1 text-gray-400">{detail}</p>
-                  </div>
-                ));
-              }
-              // fallback if parsed but not array
-              return <p>{feedbackContent}</p>;
-            } catch {
-              // fallback if invalid JSON
-              return <p>{feedbackContent}</p>;
-            }
-          })()}
-        </div>
-
-
-        {/* Footer */}
-        <div className="p-6 border-t flex justify-end">
-          <button
-            onClick={onClose}
-            className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
-          >
-            Close
-          </button>
+      <div
+        className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+            isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+        } ${isVisible ? "visible" : "invisible"}`}
+        >
+        <div
+            className={`bg-white rounded-l-lg p-6 w-full max-w-xl relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
+            isAnimatingIn ? "translate-x-0" : "translate-x-full"
+            }`}
+        >
+        <button
+          onClick={onClose}
+          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+        >
+          ×
+        </button>
+            
+        <div className="flex justify-start gap-3">
+          <div className="w-full">
+            <h1 className="text-lg font-semibold mb-4 text-left">
+              Feedback summary for :{" "}
+              <span className="text-blue-600">{toTitleCase(jobTitle) || "NA"}</span>
+            </h1>
+            <div className="border rounded-xl bg-gray-200 text-sm p-4 text-left overflow-y-auto max-h-[180px]">
+              {(() => {
+                    try {
+                      const feedbackItems = JSON.parse(feedbackContent);
+                      if (Array.isArray(feedbackItems)) {
+                        return feedbackItems.map(({ heading, detail }: { heading: string; detail: string }, idx: number) => (
+                          <div key={idx} className="mb-4">
+                            <h4 className="font-semibold text-black">{heading.length? heading : "N/A"}</h4>
+                            <p className="mt-1 text-gray-400">{detail.length?detail:"N/A"}</p>
+                          </div>
+                        ));
+                      }
+                      return <p>{feedbackContent}</p>;
+                    } catch {
+                      return <p>{feedbackContent}</p>;
+                    }
+                  })()}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+      </div>
   );
 };
 

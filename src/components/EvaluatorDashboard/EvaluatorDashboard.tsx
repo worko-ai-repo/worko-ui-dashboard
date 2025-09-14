@@ -11,6 +11,7 @@ import ViewFeedbackModal from './ViewFeedbackModal';
 import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import { useQuery } from '@tanstack/react-query';
+import { ExternalLink } from 'lucide-react';
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -34,6 +35,8 @@ const EvaluatorView: React.FC = () => {
   //View Feedback Modal states
   const [viewFeedbackData, setViewFeedbackData] = useState<EvaluationResponse | null>(null);
   const [isViewFeedbackOpen, setIsViewFeedbackOpen] = useState(false);
+  const [isLoadingData,setIsLoadingData] = useState<boolean>(false)
+  const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
   //View CV state
 
@@ -53,53 +56,6 @@ const EvaluatorView: React.FC = () => {
     queryFn: getEvaluationDetails,
     enabled: !!jobApplicationId && !!evaluationRequestId,
   });
-
-  // Dummy candidate list
-  // const candidates: Candidate[] = [
-  //   {
-  //     id: '1',
-  //     name: 'Avijit Dutta Gupta',
-  //     fileName: 'Avijitduttagupta cv.pdf',
-  //     sentTime: 'Sent about 24 mins ago',
-  //     isNew: true
-  //   },
-  //   {
-  //     id: '2',
-  //     name: 'John Smith',
-  //     fileName: 'JohnSmith cv.pdf',
-  //     sentTime: 'Sent about 1 hour ago',
-  //     isNew: false
-  //   },
-  //   {
-  //     id: '3',
-  //     name: 'Sarah Johnson',
-  //     fileName: 'SarahJohnson cv.pdf',
-  //     sentTime: 'Sent about 2 hours ago',
-  //     isNew: false
-  //   }
-  // ];
-
-  // const candidateDetails: CandidateDetails = {
-  //   id: selectedCandidateId,
-  //   name: 'Avijit Dutta Gupta',
-  //   role: 'Associate UX Designer',
-  //   description:
-  //     'Experienced UX designer with a passion for creating intuitive and user-centered digital experiences...',
-  //   overallScore: 85,
-  //   workoFeedback: 'Strong candidate with excellent design thinking skills...',
-  //   videoInterview: {
-  //     confidence: 71,
-  //     attitude: 60,
-  //     domainKnowledge: 86,
-  //     commSkills: 70
-  //   },
-  //   profileSentDate: '12/02/2025 at 7:30AM',
-  //   recruiterName: 'Avijit Dutta Gupta'
-  // };
-
-  // const handleCandidateSelect = (candidateId: string) => {
-  //   setSelectedCandidateId(candidateId);
-  // };
 
   const handleSubmitFeedback = () => {
     const candidate = requests.find(c => c.id === selectedRequest?.id);
@@ -152,6 +108,7 @@ const EvaluatorView: React.FC = () => {
 
 
 const refreshRequests = useCallback(async () => {
+  setIsLoadingData(true)
   try {
     if (!evaluatorEmail) return;
     const rawData = await fetchEvaluationRequests(evaluatorEmail);
@@ -182,7 +139,8 @@ const refreshRequests = useCallback(async () => {
     if (filteredRequests.length > 0) {
       setSelectedRequest(filteredRequests[0]);
     }
-
+    setIsLoadingData(false)
+    setHasAttemptedLoad(true);
   } catch (err) {
     console.error("Failed to fetch requests:", err);
   }
@@ -196,23 +154,23 @@ const refreshRequests = useCallback(async () => {
     refreshRequests();
   }, [evaluatorEmail]);
 
-  // useEffect(() => {
-  //   if (!evaluatorEmail) return;
+  useEffect(() => {
+    if (!evaluatorEmail) return;
 
-  //   const init = async () => {
-  //     try {
-  //       const data = await fetchEvaluationRequests(evaluatorEmail);
-  //       setRequests(data);
-  //       if (data.length > 0) {
-  //         setSelectedRequest(data[0]);
-  //       }
-  //     } catch (err) {
-  //       console.error('Failed to fetch requests:', err);
-  //     }
-  //   };
+    const init = async () => {
+      try {
+        const data = await fetchEvaluationRequests(evaluatorEmail);
+        setRequests(data);
+        if (data.length > 0) {
+          setSelectedRequest(data[0]);
+        }
+      } catch (err) {
+        console.error('Failed to fetch requests:', err);
+      }
+    };
 
-  //   init();
-  // }, [evaluatorEmail]);
+    init();
+  }, [evaluatorEmail]);
 
   useEffect(() => {
     if (!selectedRequest) return;
@@ -338,6 +296,8 @@ const refreshRequests = useCallback(async () => {
         onViewCV={handleViewCV}
         onViewVideo={handleViewVideo}
         requests = {requests}
+        isLoadingData={isLoadingData}
+        hasAttemptedLoad={hasAttemptedLoad}
       />
 
       {/*Feedback Modal*/}
@@ -381,6 +341,15 @@ const refreshRequests = useCallback(async () => {
       >
         Close
       </button> */}
+        <button
+    onClick={() => window.open(selectedCandidateDetails?.cvAwsS3SignedUrl, '_blank')}
+    aria-label="Open CV in new tab"
+    title="Open CV in new tab"
+    disabled={!selectedCandidateDetails?.cvAwsS3SignedUrl}
+    className="p-2 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+  >
+          <ExternalLink size={30} className="text-blue-600" />
+        </button>
     </div>
 
     {/* CV Viewer */}
