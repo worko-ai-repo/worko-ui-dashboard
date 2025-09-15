@@ -343,7 +343,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 
   return (
     <div
-      className={`relative rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center max-w-[160px]`}
+      className={`relative rounded-full ${config.bg} px-3 py-2 flex items-center justify-center ${config.text} text-center max-w-[160px] m-4`}
     >
       <div 
         className="tracking-wide leading-snug text-xs truncate whitespace-nowrap overflow-hidden"
@@ -526,10 +526,18 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 }
   ];
 
-    const handlePageSizeChange = (newPageSize: number) => {
-      setPageSize(newPageSize);
-      onPageSizeChange(newPageSize);
-    };
+const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+  if (typeof value === "number") {
+    setPageSize(value);
+    onPageSizeChange(value);
+  } else {
+    setPageSize((prev) => {
+      const newValue = value(prev);
+      onPageSizeChange(newValue);
+      return newValue;
+    });
+  }
+};
 
     const sortData = (
       data: JobApplicationDetailsDto[],

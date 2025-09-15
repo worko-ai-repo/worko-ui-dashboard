@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import profileService from '../../Service/ProfileService';
 import { Group, eyeIcon, verified, gender, salary,cancel } from "@Assets";
-import {AtSign, Briefcase, Link, MapPin, PhoneCall, Plus, Video, X} from "lucide-react";
+import {AtSign, Briefcase, Link, Linkedin, MapPin, PhoneCall, Plus, Video, X} from "lucide-react";
 import QuickLinks from "./QuickLinks";
 import { renderCard, renderSkillsSection, renderListSection } from "./Helper/ProfileHelper";
 import EditForm from './Helper/EditForm';
@@ -22,6 +22,7 @@ import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
 import ExperienceEditor from './Helper/ExperienceEditor';
 import AchievementsEditor from './Helper/AchievementsEditor';
+import SocialLinksEditor from './Helper/SocialLinksEditor';
 
 interface ProfileSectionProps {
   title: string;
@@ -317,7 +318,7 @@ const Profile = () => {
       const { response, error } = await httpServiceObj.get(
         `/user/${user.email}/request-otp`,
         true,
-        { id } 
+        // { id } 
       );
 
       if (error) throw new Error(error.message);
@@ -824,9 +825,11 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
     SK: socialLinks[0]?.SK,
     createdAt: socialLinks[0]?.createdAt || new Date().toLocaleString(),
     updatedAt: new Date().toLocaleString(),
+    linkedin:socialLinks[0]?.linkedin ? socialLinks[0].linkedin : []
   };
 
     console.log(updatedData,"updatedData")
+    
     const success = await profileService.updateSocialData(user.email, updatedData);
 
     if (success) {
@@ -1171,7 +1174,13 @@ const handleSaveSalary = async (data:any) => {
                             <input
                               type="text"
                               value={otpValue}
-                              onChange={(e) => setOtpValue(e.target.value)}
+                              maxLength={6} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (/^\d*$/.test(val)) {
+                                  setOtpValue(val);
+                                }
+                              }}
                               className="border px-2 py-1 rounded text-sm w-full sm:w-24"
                               placeholder="Enter OTP"
                             />
@@ -1231,8 +1240,7 @@ const handleSaveSalary = async (data:any) => {
                         <div key={index} className="flex items-center justify-center sm:justify-start">
                           {item.icon}
                           <span
-                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${item.isAction ? "font-medium text-blue-600" : ""
-                              }`}
+                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}
                           >
                             {item.text}
                           </span>
@@ -1565,39 +1573,38 @@ const handleSaveSalary = async (data:any) => {
           {/* Social Links */}
         <div id="social-links">
           {editMode.socials ? (
-            <ListEditor
+            <SocialLinksEditor
               title="Social Links"
               items={
                 socialLinks && socialLinks[0]
-                  ? Object.entries(socialLinks[0])
-                      .filter(
-                        ([key, value]) =>
-                          !["SK", "PK", "createdAt", "updatedAt"].includes(key) &&
-                          value &&
-                          Array.isArray(value) &&
-                          value.length > 0 &&
-                          value[0] &&
-                          value[0].trim() !== "" &&
-                          value[0] !== "undefined"
-                      )
-                      .flatMap(([key, value]) => {
-                        if (key === "otherSocialPlatForms") {
-                          return Object.entries(value || {})
+                  ? [
+                      // top-level socials
+                      ...Object.entries(socialLinks[0] as Record<string, unknown>)
+                        .filter(
+                          ([key, value]) =>
+                            !["SK", "PK", "createdAt", "updatedAt", "otherSocialPlatForms"].includes(key) &&
+                            Array.isArray(value) &&
+                            value.length > 0 &&
+                            typeof value[0] === "string" &&
+                            value[0].trim() !== "" &&
+                            value[0] !== "undefined"
+                        )
+                        .map(([key, value]) => `${key} - ${(value as string[])[0]}`),
+
+                      // nested socials
+                      ...(socialLinks[0].otherSocialPlatForms
+                        ? Object.entries(socialLinks[0].otherSocialPlatForms as Record<string, unknown>)
                             .filter(
-                              ([innerKey, innerValue]) =>
-                                innerValue &&
-                                Array.isArray(innerValue) &&
-                                innerValue.length > 0 &&
-                                innerValue[0] &&
-                                innerValue[0].trim() !== "" &&
-                                innerValue[0] !== "undefined"
+                              ([_, val]) =>
+                                Array.isArray(val) &&
+                                val.length > 0 &&
+                                typeof val[0] === "string" &&
+                                val[0].trim() !== "" &&
+                                val[0] !== "undefined"
                             )
-                            .map(
-                              ([innerKey, innerValue]) => `${innerKey} - ${innerValue[0]}`
-                            );
-                        }
-                        return [`${key} - ${value[0]}`];
-                      })
+                            .map(([innerKey, innerVal]) => `${innerKey} - ${(innerVal as string[])[0]}`)
+                        : []),
+                    ]
                   : []
               }
               onSave={handleSaveSocials}

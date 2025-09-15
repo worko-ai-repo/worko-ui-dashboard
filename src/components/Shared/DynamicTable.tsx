@@ -34,6 +34,8 @@ interface DynamicTableProps<T extends { id: string }> {
   emptyStateMessage?: string;
   emptyStateSubMessage?: string;
   onSortChange?: (columnKey: string) => void;
+  sortField?: string;
+  sortOrder?: "asc" | "desc";
 }
 
 export function DynamicTable<T extends { id: string }>({

@@ -52,7 +52,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   };
 
   function formatDate(isoDate?: string) {
-    if (!isoDate) return "N/A";
+    if (!isoDate) return "present";
     const date = new Date(isoDate);
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -93,13 +93,15 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
       return;
     }
 
+
+    
     const newItem: Experience = {
       companyName: companyName.trim(),
       designation: designation.trim(),
       department: department.trim(),
       YOE: Number(yoe) || 0,
       startDate: startDate.trim(),
-      endDate: endDate.trim(),
+      endDate: endDate === today ? "" : endDate.trim(),
     };
 
     if (editingIndex !== null) {
@@ -141,22 +143,6 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
             onClick={onCancel}
             disabled={isSubmitting}
             className="text-xs font-semibold text-blue-600">
-            Cancel
-          </button>
-          <button
-            onClick={() => {
-              setEditingIndex(null);
-              setCompanyName('');
-              setDesignation('');
-              setDepartment('');
-              setYOE('');
-              setStartDate('');
-              setEndDate('');
-              setFormModal(true);
-            }}
-            disabled={isSubmitting}
-            className="text-xs font-semibold text-blue-600"
-          >
             Cancel
           </button>
           <button

@@ -317,12 +317,20 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
     [guidanceRequests, sortField, sortOrder]
   );
 
-  const handlePageSizeChange = (newPageSize: number) => {
-    setPageSize(newPageSize);
-    onPageSizeChange(newPageSize);
-  };
+const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+  if (typeof value === "number") {
+    setPageSize(value);
+    onPageSizeChange(value);
+  } else {
+    setPageSize((prev) => {
+      const newValue = value(prev);
+      onPageSizeChange(newValue);
+      return newValue;
+    });
+  }
+};
 
-  const keyExtractor = (item: GuidanceRequest) => item.id;
+  // const keyExtractor = (item: GuidanceRequest) => item.id;
 
   // Get merged mentor data from cache for modal
   const currentMentorData: MentorMergedData | undefined = modalState.selectedRequest
@@ -347,7 +355,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
           sortField={sortField}
           sortOrder={sortOrder}
           enableSelect={false}
-          keyExtractor={keyExtractor}
+          // keyExtractor={keyExtractor}
         />
       </div>
 

@@ -242,7 +242,7 @@ const Profile = () => {
       const { response, error } = await httpServiceObj.get(
         `/user/${user.email}/request-otp`,
         true,
-        { id } 
+        // { id } 
       );
 
       if (error) throw new Error(error.message);
@@ -573,10 +573,17 @@ const Profile = () => {
                             <input
                               type="text"
                               value={otpValue}
-                              onChange={(e) => setOtpValue(e.target.value)}
+                              maxLength={6} 
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                if (/^\d*$/.test(val)) {
+                                  setOtpValue(val);
+                                }
+                              }}
                               className="border px-2 py-1 rounded text-sm w-full sm:w-24"
                               placeholder="Enter OTP"
                             />
+
                             <button
                               className="text-xs font-medium text-green-600"
                               onClick={handleVerifyPhoneOtp}
@@ -633,8 +640,7 @@ const Profile = () => {
                         <div key={index} className="flex items-center justify-center sm:justify-start">
                           {item.icon}
                           <span
-                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap ${item.isAction ? "font-medium text-blue-600" : ""
-                              }`}
+                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}
                           >
                             {item.text}
                           </span>

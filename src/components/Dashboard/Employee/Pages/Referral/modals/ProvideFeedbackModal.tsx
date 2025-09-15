@@ -7,12 +7,34 @@ import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
+interface Feedback {
+  GSI1PK: string;
+  GSI1SK: string;
+  PK: string;
+  SK: string;
+  createdAt: string;
+  createdByUserId: string;
+  id: string;
+  rating: number;
+  ratingByUserId: string;
+  ratingForUserId: string;
+  ratingForUserType: string;
+  referalId: string;
+  reviewContext: string;
+  reviewText: string;
+  updatedAt: string;
+}
+
 interface ProvideFeedbackModalProps {
   onClose: () => void;
   isOpen: boolean;
   referralData: any;
   onRefresh: () => void;
   isCandidate?: boolean;
+}
+
+interface UserDetails {
+  id: string;
 }
 
 const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
@@ -119,10 +141,10 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
 
       const url = `/user/${id}/review/received?referalId=${referralData.id}`;
       const { response } = await httpServiceObj.get(url, true);
-
-      if (response.length > 0) {
+      const data = response as Feedback[]
+      if (data.length > 0) {
         setAlreadySubmitted(true);
-        setFeedback(response[0]);
+        setFeedback(data[0]);
       } else {
         setAlreadySubmitted(false);
       }

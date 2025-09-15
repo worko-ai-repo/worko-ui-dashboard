@@ -55,8 +55,7 @@ const ReferralsTable = memo(
 
     const referrals = data?.data || [];
 
-    const keyExtractor = (item: ReferralDetailsDto) =>
-      item.id?.toString() ?? Math.random().toString();
+    // const keyExtractor = (item: ReferralDetailsDto) => item.id?.toString() ?? Math.random().toString();
 
     const handleWithdrawReferral = async () => {
       if (!withdrawReason || !withdrawComments) {
@@ -253,10 +252,19 @@ const ReferralsTable = memo(
       },
     ];
 
-    const handlePageSizeChange = (newPageSize: number) => {
-      setPageSize(newPageSize);
-      onPageSizeChange(newPageSize);
-    };
+const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+  if (typeof value === "number") {
+    setPageSize(value);
+    onPageSizeChange(value);
+  } else {
+    setPageSize((prev) => {
+      const newValue = value(prev);
+      onPageSizeChange(newValue);
+      return newValue;
+    });
+  }
+};
+
 
     const sortData = (rows: ReferralDetailsDto[], field: string): ReferralDetailsDto[] => {
       if (!field) return rows;
@@ -383,7 +391,7 @@ const ReferralsTable = memo(
             sortField={sortField}
             sortOrder={sortOrder}
             enableSelect={false}
-            keyExtractor={keyExtractor}
+            // keyExtractor={keyExtractor}
             renderExpandedDetails={renderExpandedDetails}
             toggleExpand={toggleExpand}
             expandedRows={expandedRows}

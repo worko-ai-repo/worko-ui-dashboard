@@ -5,6 +5,10 @@ import { getToastOptions } from 'lib-worko-ui';
 import { Plus, Send } from 'lucide-react';
 import AddNewCompany from './AddNewCompany'
 
+interface ApiDetails {
+  verificationStatus: boolean;
+}
+
 type CurrentCompanyEditorProps = {
   items: any;
   onSave: (updatedData: any) => void;
@@ -207,9 +211,11 @@ useEffect(() => {
 
     try {
       setLoading(true);
-      const res = await httpServiceObj.post(`/user/${userDetails[0].email}/experience/${hashed}/verify-otp`,{otp:otp},true);
-      console.log(res)
-      if (res.response.verificationStatus) {
+      const {response} = await httpServiceObj.post(`/user/${userDetails[0].email}/experience/${hashed}/verify-otp`,{otp:otp},true);
+      
+      const data = response as ApiDetails; 
+      // console.log(data,"data")
+      if (data?.verificationStatus) {
         setEmailVerified(true);
         toast.success('Email verified!',getToastOptions({}));
         console.log([formData])

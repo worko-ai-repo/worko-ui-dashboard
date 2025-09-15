@@ -48,6 +48,15 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
     setFormModal(true)
   };
 
+    function formatDate(isoDate?: string) {
+    if (!isoDate) return "present";
+    const date = new Date(isoDate);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear());
+    return `${month}-${year}`;
+  }
+  
   const handleRemoveItem = (index: number) => {
     setEditedItems(editedItems.filter((_, i) => i !== index));
     if (editingIndex === index) clearForm();
@@ -172,8 +181,7 @@ return (
             <div className="text-sm text-gray-700 truncate">{item.description}</div>
           </div>
           <div className="text-xs text-gray-600 whitespace-nowrap min-w-[140px] text-right">
-            {new Date(item.date.startDate).toLocaleDateString()} -{" "}
-            {item.date.endDate ? new Date(item.date.endDate).toLocaleDateString() : "Present"}
+            {formatDate(item.date.startDate)} - {formatDate(item.date.endDate)}
           </div>
           <div className="flex space-x-2 ml-4">
             <button

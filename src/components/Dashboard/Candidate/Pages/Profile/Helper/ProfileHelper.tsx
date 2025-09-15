@@ -212,10 +212,11 @@ export const renderListSection = ({
                 )}
               </div>
               <div className="text-xs text-gray-500 whitespace-nowrap min-w-[140px] text-right flex-shrink-0">
-                {new Date(item.date.startDate).toLocaleDateString()} -{" "}
+                {formatDate(item.date.startDate)} - {formatDate(item.date.endDate)}
+                {/* {new Date(item.date.startDate).toLocaleDateString()} -{" "}
                 {item.date.endDate
                   ? new Date(item.date.endDate).toLocaleDateString()
-                  : "Present"}
+                  : "Present"} */}
               </div>
             </div>
             {index < items.length - 1 && (
