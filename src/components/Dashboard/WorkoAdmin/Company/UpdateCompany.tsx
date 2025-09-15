@@ -455,7 +455,6 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
                           hover:file:bg-blue-100
                       "
                   id="logo-upload-input"
-                  style={{ display: "none" }} // Hide the input field
                 />
                 <div
                   className="relative w-full cursor-pointer"

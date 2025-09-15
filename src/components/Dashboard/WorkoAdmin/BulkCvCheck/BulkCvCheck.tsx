@@ -41,6 +41,7 @@ const BulkCVCheck: React.FC = () => {
   const [data, setData] = useState<any>(null);
   const [loader, setLoader] = useState(false);
   const [dropDownData, setDropDownData] = useState<DropDownSelectedJobData | null>(null);
+  const [jobdescription, setJobDescription] = useState<string>("");
   const [isbulkCvFormOpen, setIsBulkCvFormOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
@@ -127,6 +128,7 @@ const BulkCVCheck: React.FC = () => {
             <JobListDropdown
               dashboard="ADMIN"
               onSelect={(job) => {
+                setJobDescription(job.jobDescription);
                 handleParseJd(job.jobDescription);
                 setDropDownData(job);
               }}
@@ -144,6 +146,7 @@ const BulkCVCheck: React.FC = () => {
             <div className="relative">
               <textarea
                 onChange={(e) => {
+                  setJobDescription(e.target.value);
                   handleParseJd(e.target.value);
                   setDropDownData(null);
                 }}
@@ -171,7 +174,7 @@ const BulkCVCheck: React.FC = () => {
             <BulkCvForm
               isOpen={isbulkCvFormOpen}
               jobData={data}
-              dropDownData={dropDownData}
+              dropDownData={jobdescription}
               onClose={() => setIsBulkCvFormOpen(false)}
             />
           </Suspense>

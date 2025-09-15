@@ -97,6 +97,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth: "max-w-none w-32",
       render: (row: GuidanceRequestDto) => {
         const status = row.status as keyof typeof CommonDashboardServicesObj.getGuidanceStatusAlias;
         return (

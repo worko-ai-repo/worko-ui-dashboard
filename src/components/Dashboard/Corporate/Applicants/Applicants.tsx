@@ -28,6 +28,7 @@ import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -89,8 +90,7 @@ const Applicants = () => {
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
-  const userType = userCognitoDetails?.["cognito:groups"]?.[0];
-
+  const userType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
   const [pageSize, setPageSize] = useState(25);
@@ -118,7 +118,7 @@ const Applicants = () => {
   const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
-    userType: userType,
+    userType: userType ?? undefined,
     jobId: jobId,
     pageSize: pageSize,
     sortOrder: "descending",
@@ -144,7 +144,7 @@ const Applicants = () => {
     ],
     queryFn: CorporateServiceObj.fetchApplications,
     baseParams: params,
-    enabled: !!jobId && !!userDetails?.companyId, // Ensure all dependencies are ready
+    enabled: !!jobId && !!userDetails?.companyId && !!userType, // Ensure all dependencies are ready
   });
 
   /**
@@ -247,24 +247,8 @@ const Applicants = () => {
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
-        <div className="flex  flex-col ">
-          <div className="flex flex-wrap  gap-4">
-            <HeaderDetails />
-            <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
-              <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
-              <InteractiveInput
-                data={data && data.length > 0 ? data[0].jobUrl : ""}
-                isLoading={queryIsJobsLoading}
-                variant="copy"
-                placeholder="No job URL available"
-                width="w-auto"
-              />
-            </div>
-            {/*       <div className="flex flex-col gap-2 h-min mt-4 bg-white rounded-xl px-7 py-3  shadow-md">
-              <span className="text-sm text-[#64748B] font-semibold  text-nowrap bc">Job Status</span>
-              <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
-            </div> */}
-          </div>
+        <div className="flex  flex-col mt-2">
+         
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
@@ -347,9 +331,7 @@ const Applicants = () => {
               pageSize,
               setPageSize,
             }}
-            refetch={
-              refetch
-            }
+            refetch={refetch}
             EvaluatorFormProps={EvaluatorFormProps}
             setEvaluatorFormProps={setEvaluatorFormProps}
             isAddEvaluatorModalOpen={isAddEvaluatorModalOpen}

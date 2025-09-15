@@ -14,6 +14,7 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import Input from "@Components/Shared/PostJob/Input";
 
 interface GuidanceUpdateModalProps {
   data: GuidanceRequestDto;
@@ -189,14 +190,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
     };
   };
 
-  // Handle datetime-local input change
+  // Handle datetime-local Input change
   const handleDateTimeChange = (datetimeValue: string) => {
     const { date, time } = splitDateTime(datetimeValue);
     setValue("date", date);
     setValue("time", time);
   };
 
-  // Get current datetime-local value for the input
+  // Get current datetime-local value for the Input
   const getCurrentDateTime = (): string => {
     return combineDateTime(date || "", time || "");
   };
@@ -339,8 +340,10 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
           <div className="space-y-6">
             {/* New DateTime Input */}
             <div>
-              <label className="block text-sm font-medium mb-2">*New Date & Time</label>
-              <input
+              <Input
+                name="dateTime"
+                label="New Date & Time"
+                required={true}
                 type="datetime-local"
                 value={getCurrentDateTime()}
                 onChange={(e) => handleDateTimeChange(e.target.value)}
@@ -356,7 +359,9 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Duration</label>
+              <label className="block text-sm font-medium mb-2">
+                Duration<span className="text-red-500"> *</span>
+              </label>
               <Controller
                 name="duration"
                 control={control}
@@ -384,13 +389,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Meeting Link */}
             <div>
-              <label className="block text-sm font-medium mb-2">*New Meeting Link</label>
               <Controller
                 name="meetingLink"
                 control={control}
                 rules={validationRules.url}
                 render={({ field }) => (
-                  <input
+                  <Input
+                    label="New Meeting Link"
+                    required={true}
                     {...field}
                     type="url"
                     placeholder="https://meet.google.com/xyz-abc-def"
@@ -434,13 +440,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
           <div className="space-y-6">
             {/* Choose Mentor */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Choose Mentor</label>
               <Controller
                 name="mentorEmail"
                 control={control}
                 rules={validationRules.email}
                 render={({ field }) => (
-                  <input
+                  <Input
+                    label="Search & Select Mentor by Email"
+                    required={true}
                     {...field}
                     type="email"
                     placeholder="Search by employee email"
@@ -483,8 +490,10 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Single DateTime Input */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Choose Date & Time </label>
-              <input
+              <Input
+                label="Choose Date & Time"
+                required={true}
+                name="dateTime"
                 type="datetime-local"
                 value={getCurrentDateTime()}
                 onChange={(e) => handleDateTimeChange(e.target.value)}
@@ -499,7 +508,9 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
             </div>
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Duration</label>
+              <label className="block text-sm font-medium mb-2">
+                Duration<span className="text-red-500"> *</span>
+              </label>
               <Controller
                 name="duration"
                 control={control}
@@ -552,7 +563,6 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Payment Amount */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Payment Amount (INR)</label>
               <Controller
                 name="totalAmount"
                 control={control}
@@ -561,9 +571,11 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
                   min: { value: 1, message: "Amount must be greater than 0" },
                 }}
                 render={({ field }) => (
-                  <input
+                  <Input
                     {...field}
                     type="number"
+                    required={true}
+                    label="Total Amount (INR)"
                     placeholder="5000"
                     className={`w-full p-3 border rounded-lg ${
                       errors.totalAmount ? "border-red-500" : ""
@@ -585,13 +597,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Payment Link */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Link for Payment</label>
               <Controller
                 name="linkForPayment"
                 control={control}
                 rules={validationRules.url}
                 render={({ field }) => (
-                  <input
+                  <Input
+                    label="Link for Payment"
+                    required={true}
                     {...field}
                     type="url"
                     placeholder="https://payment-link.com"
@@ -608,7 +621,9 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Remarks */}
             <div>
-              <label className="block text-sm font-medium mb-2">Remarks</label>
+              <label className="block text-sm font-medium mb-2">
+                Remarks<span className="text-red-500"> *</span>
+              </label>
               <Controller
                 name="remarks"
                 control={control}
@@ -627,14 +642,15 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
         {/* Payment Confirmation Form */}
         {selectedAction === "PAYMENT_CONFIRMATION_DONE" && (
           <div>
-            <label className="block text-sm font-medium mb-2">*UTR Number</label>
             <Controller
               name="utrNumber"
               control={control}
               rules={validationRules.default}
               render={({ field }) => (
-                <input
+                <Input
+                  label="UTR Number"
                   {...field}
+                  required={true}
                   type="text"
                   placeholder="N1234567***23456"
                   className={`w-full p-3 border rounded-lg ${
@@ -651,13 +667,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
         {/* Meeting Confirmation Form */}
         {selectedAction === "MEETING_CONFIRMED" && (
           <div>
-            <label className="block text-sm font-medium mb-2">*Meeting Link</label>
             <Controller
               name="meetingLink"
               control={control}
               rules={validationRules.url}
               render={({ field }) => (
-                <input
+                <Input
+                  label="Meeting Link"
+                  required={true}
                   {...field}
                   type="url"
                   placeholder="https://meet.google.com/xyz-abc-def"
@@ -677,8 +694,10 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
           <div className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium mb-2">*New Date & Time</label>
-                <input
+                <Input
+                  name="dateTime"
+                  label="*New Date & Time"
+                  required={true}
                   type="datetime-local"
                   value={getCurrentDateTime()}
                   onChange={(e) => handleDateTimeChange(e.target.value)}
@@ -693,7 +712,9 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-2">*Duration</label>
+                <label className="block text-sm font-medium mb-2">
+                  Duration<span className="text-red-500"> *</span>
+                </label>
                 <Controller
                   name="duration"
                   control={control}
@@ -738,13 +759,14 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
 
             {/* Meeting Link */}
             <div>
-              <label className="block text-sm font-medium mb-2">*Meeting Link</label>
               <Controller
                 name="meetingLink"
                 control={control}
                 rules={validationRules.url}
                 render={({ field }) => (
-                  <input
+                  <Input
+                    label="Meeting Link"
+                    required={true}
                     {...field}
                     type="url"
                     placeholder="https://meet.google.com/xyz-abc-def"

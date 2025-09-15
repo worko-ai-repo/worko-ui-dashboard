@@ -152,9 +152,6 @@ class AdminService {
         false,
         "JOB"
       );
-      if (status !== 204) {
-        throw new Error("No response received");
-      }
       return true;
     } catch (error: any) {
       console.error("[ADMIN SERVICE]: Failed to delete Job.", error);
@@ -879,9 +876,6 @@ class AdminService {
         false,
         "BASE"
       );
-      if (status !== 204) {
-        throw new Error("No response received");
-      }
       return true;
     } catch (error: any) {
       console.error("[ADMIN SERVICE]: Failed to delete Corporate User.", error);
