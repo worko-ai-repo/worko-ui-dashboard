@@ -67,7 +67,7 @@ const columns = [
 ];
 
 const SupportTable = () => {
-  return <DynamicTable columns={columns} rows={rowData} enableSelect={false} />;
+  // return <DynamicTable columns={columns} rows={rowData} enableSelect={false} />;
 };
 
 export default SupportTable;

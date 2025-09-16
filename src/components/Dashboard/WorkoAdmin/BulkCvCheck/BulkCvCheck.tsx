@@ -74,7 +74,7 @@ const BulkCVCheck: React.FC = () => {
   async function handleParseJd(jobDescription: string) {
     try {
       if (!jobDescription.trim()) {
-        toast.error("Please enter a valid job description.",getToastOptions());
+        toast.error("Please enter a valid job description.", getToastOptions());
         return;
       }
       setLoader(true);
@@ -86,6 +86,7 @@ const BulkCVCheck: React.FC = () => {
     } catch (error) {
       console.error("Error parsing job description:", error);
     } finally {
+      setJobDescription(jobDescription);
       setLoader(false);
       setIsBulkCvFormOpen(true);
     }

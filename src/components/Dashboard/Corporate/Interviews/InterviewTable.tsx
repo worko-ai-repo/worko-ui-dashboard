@@ -4,7 +4,8 @@ import { Calendar, Eye } from "lucide-react";
 import Modal from "../../../Shared/Modal";
 import DateTimePicker from "./DateTimePicker/DateTimePicker";
 import ProgressCircle from "../../../Shared/CircularBar";
-import CVPreview from "../Applicants/CVPreview";
+import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
+
 
 type Applicant = {
   id: string;
@@ -154,20 +155,12 @@ export default function InterviewTable() {
 
   return (
     <>
-      <DynamicTable columns={columns} rows={staticApplicants} selectedRows={selected} expandedRows={expanded} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selected.length === staticApplicants.length} renderExpandedDetails={renderExpandedDetails} />
+      {/* <DynamicTable columns={columns} rows={staticApplicants} selectedRows={selected} expandedRows={expanded} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selected.length === staticApplicants.length} renderExpandedDetails={renderExpandedDetails} /> */}
 
       <Modal isOpen={isScheduleModalOpen} onClose={() => setIsScheduleModalOpen(false)} className="w-[90vw] sm:w-[1000px] h-full">
         <DateTimePicker />
       </Modal>
-      <Modal isOpen={isViewCVModalOpen} onClose={() => setIsViewCVModalOpen(false)} className="w-[90vw] sm:w-[677px] h-full">
-        <CVPreview
-          onClose={() => setIsViewCVModalOpen(false)}
-          onSubmit={() => {}}
-          // setIsAddEvaluatorModal={setIsAddEvaluatorModalOpen}
-          // setIsRejectModalOpen={setIsRejectModalOpen}
-          // setIsHireNowModalOpen={setIsHireNowModalOpen}
-        />
-      </Modal>
+
     </>
   );
 }
