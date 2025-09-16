@@ -123,5 +123,5 @@ export default function InvoiceAndPayment() {
     },
   ];
 
-  return <DynamicTable columns={columns} rows={staticData} expandedRows={expandedRows} toggleExpand={toggleExpand} enableSelect={false} />;
+  // return <DynamicTable columns={columns} rows={staticData} expandedRows={expandedRows} toggleExpand={toggleExpand} enableSelect={false} />;
 }
