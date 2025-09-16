@@ -37,7 +37,7 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formModal, setFormModal] = useState<boolean>(false);
-
+  const today = new Date().toISOString().split("T")[0];
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
     setEditingIndex(index);
@@ -88,7 +88,9 @@ console.log(items)
 
     const newItem: Responsibility = {
       companyName: companyName.trim(),
-      date: { startDate: startDate.trim(), endDate: endDate.trim() || undefined },
+      date: { 
+        startDate: startDate.trim(), 
+        endDate: endDate.trim() === today ? "" : endDate.trim()},
       description: description.trim(),
     };
 

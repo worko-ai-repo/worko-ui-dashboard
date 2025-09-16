@@ -19,8 +19,10 @@ export interface GuidanceRequest {
   jobUrl: string;
   guidanceRequestDescription: string;
   status?: string;
-  candidateName?:string;
-  aboutCandidate?:string;
+  userDetails?:{
+    name?:string;
+    about?:string;
+  }
   createdAt?:string;
   statusColor?: {
     bg: string;
@@ -163,7 +165,7 @@ const Guidance = () => {
               "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
               "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
               "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
-              "MEETING_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Confirmed" },
+              "MEETING_CONFIRMED": { bg: "bg-orange-200", text: "text-orange-600", label: "Meeting Confirmed" },
               "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
               "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Project Completed" }, 
             };

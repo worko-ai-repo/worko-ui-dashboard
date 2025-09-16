@@ -239,7 +239,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
 
         return (
           <div
-            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
+            className={`m-auto w-[150px] rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
             onClick={() => !isProcessing && handleViewDetails(row)}
           >
             {isProcessing ? (

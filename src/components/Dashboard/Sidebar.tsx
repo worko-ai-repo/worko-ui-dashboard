@@ -141,15 +141,15 @@ const Sidebar: React.FC<SidebarProps> = ({
   /**
    * Avatar component - reusable user profile image/icon
    */
-  const Avatar = (
-    <div className="w-fit h-full">
-      <img
-        src={finalUserDetails?.profileImageAwsS3SignedUrl || User}
-        alt="User Avatar"
-        className={`w-10 h-10 rounded-full`}
-      />
-    </div>
-  );
+const Avatar = (
+  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
+    <img
+      src={finalUserDetails?.profileImageAwsS3SignedUrl || User}
+      alt="User Avatar"
+      className="w-full h-full object-cover"
+    />
+  </div>
+);
 
   return (
     <aside
@@ -162,10 +162,12 @@ const Sidebar: React.FC<SidebarProps> = ({
         <div className="flex  justify-between items-center mb-6 ">
           {!collapsed ? (
             <div className="flex  items-center  w-full">
-              <div className="flex w-full gap-1  items-center overflow-hidden">
-                {Avatar}
-                <span className=" w-full text-sm text-start font-bold capitalize">{userName}</span>
-              </div>
+            <div className="flex items-center gap-2 w-full overflow-hidden">
+              {Avatar}
+              <span className="text-sm font-bold capitalize truncate w-full text-start">
+                {userName}
+              </span>
+            </div>
               <button
                 onClick={() => setCollapsed(true)}
                 className="hidden sm:flex focus:outline-none"

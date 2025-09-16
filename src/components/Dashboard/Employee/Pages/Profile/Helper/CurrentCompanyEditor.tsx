@@ -130,6 +130,24 @@ useEffect(() => {
         const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailId);
         setEmailValid(isValid);
     };
+    const personalEmailDomains = [
+      'gmail.com',
+      'google.com',
+      'yahoo.com',
+      'hotmail.com',
+      'outlook.com',
+      'aol.com',
+      'icloud.com',
+      'mail.com',
+      'protonmail.com',
+      'live.com',
+      'msn.com',
+    ];
+
+    const isPersonalEmail = (emailId: string) => {
+      const domain = emailId.split('@')[1]?.toLowerCase();
+      return personalEmailDomains.includes(domain);
+    };
 
     const handleVerifyEmail = async () => {
     if (!formData.emailId || !emailValid) {
@@ -137,6 +155,10 @@ useEffect(() => {
         return;
     }
 
+    if (isPersonalEmail(formData.emailId)) {
+      toast.error('Personal emails are not allowed', getToastOptions({}));
+      return;
+    }
     // if (formData.emailId === items.emailId && emailVerified) {
     //     toast.error('Cannot re-verify same email.', getToastOptions({}));
     //     return;

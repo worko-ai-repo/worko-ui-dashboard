@@ -13,7 +13,7 @@ import { newDate } from "react-datepicker/dist/date_utils";
 interface SubmitDocumentModalProps {
   userDetails: any;
   show: boolean;
-  documents: JobApplicationDetailsDto;
+  documents?: JobApplicationDetailsDto;
   onClose: () => void;
   onSubmit: (submittedDocs: Record<string, File | null>) => void;
   onSuccess: () => void;
@@ -149,7 +149,7 @@ const SubmitDocumentModal = ({
 
   // Get all unique documents from the application data
   const getAllDocuments = (): DocumentItem[] => {
-    if (!documents.requestedDocumentDetails) {
+    if (!documents?.requestedDocumentDetails) {
       return [];
     }
 

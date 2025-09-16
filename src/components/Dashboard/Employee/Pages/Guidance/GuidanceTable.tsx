@@ -141,13 +141,23 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
       key: "candidateName",
       label: 'Candidate Name',
       sortable: true,
-      render: (row: GuidanceRequest) => <div className="text-center">{row.candidateName ?? "-"}</div>
+      render: (row: GuidanceRequest) => <div className="text-center">{row?.userDetails?.name ?? "-"}</div>
     },
     {
       key: "aboutCandidate",
-      label: 'About Candidate',
+      label: "About Candidate",
       sortable: true,
-      render: (row: GuidanceRequest) => <div className="text-center">{row.aboutCandidate ?? "-"}</div>
+      render: (row: GuidanceRequest) => {
+        const about = row?.userDetails?.about;
+        return (
+          <div
+            className="text-center max-w-[200px] truncate mx-auto"
+            title={about || undefined} 
+          >
+            {about ?? "-"}
+          </div>
+        );
+      }
     },
     {
       key: "guidanceRequestType",
@@ -272,7 +282,7 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
 
         return (
           <div
-            className={`rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
+            className={`m-auto w-[150px] rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${isProcessing ? "opacity-75" : ""}`}
             onClick={() => !isProcessing && handleViewDetails(row)}
           >
             {isProcessing ? (

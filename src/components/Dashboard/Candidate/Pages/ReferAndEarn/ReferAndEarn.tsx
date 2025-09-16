@@ -127,11 +127,21 @@ const stats = [
 
   const handlePageChange = (page: number) => setCurrentPage(page);
 
-  const handlePageSizeChange = (pageSize: number) => {
-    setPagination(prev => ({ ...prev, pageSize }));
+const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+  if (typeof value === "number") {
+    setPagination(prev => ({ ...prev, pageSize: value }));
     setCurrentPage(1);
     setLastKeyMap({});
-  };
+  } else {
+    setPagination(prev => {
+      const newPageSize = value(prev.pageSize);
+      setCurrentPage(1);
+      setLastKeyMap({});
+      return { ...prev, pageSize: newPageSize };
+    });
+  }
+};
+
 
 
     return (

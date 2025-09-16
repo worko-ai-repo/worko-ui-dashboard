@@ -99,26 +99,26 @@ const UploadImageButton2: React.FC<UploadImageButton2Props> = ({ onUploadSuccess
             payload.profileImage = cloudFileName;
 
             //below is code to make responsibility enddate as today cause it will not accept empty enddate or any other string
-            const today = new Date().toISOString().split("T")[0];
-            const updatedResponsibilities = payload.responsibilities.map((responsibility:any) =>{
-                    if (responsibility.date.endDate === "") {
-                    return {
-                        ...responsibility,
-                        date: {
-                            ...responsibility.date,
-                            endDate: today
-                        }
-                    };
-                }
-                return responsibility;
-            })
-            const updatedPayload = {
-                ...payload,
-                responsibilities:updatedResponsibilities
-            }
+            // const today = new Date().toISOString().split("T")[0];
+            // const updatedResponsibilities = payload.responsibilities.map((responsibility:any) =>{
+            //         if (responsibility.date.endDate === "") {
+            //         return {
+            //             ...responsibility,
+            //             date: {
+            //                 ...responsibility.date,
+            //                 endDate: today
+            //             }
+            //         };
+            //     }
+            //     return responsibility;
+            // })
+            // const updatedPayload = {
+            //     ...payload,
+            //     responsibilities:updatedResponsibilities
+            // }
 
             // Update user profile image record on backend (adjust endpoint accordingly)
-            const patchResult = await httpServiceObj.put(`/user/${email}/details`, updatedPayload, true);
+            const patchResult = await httpServiceObj.put(`/user/${email}/details`, payload, true);
             console.log("patchResult",payload,patchResult)
             if (patchResult.error) {
                 throw new Error("Failed to update user profile image");

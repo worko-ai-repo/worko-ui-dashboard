@@ -19,7 +19,7 @@ const ReferralsTable = ({
   isLoading: boolean;
   error: string | null;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (size: number) => void;
+  onPageSizeChange: React.Dispatch<React.SetStateAction<number>>;
 }) => {
   const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
   const [showDialog, setShowDialog] = useState(false);
@@ -302,7 +302,7 @@ const ReferralsTable = ({
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow p-4">
+        <div className="bg-white rounded-2xl shadow">
           <DynamicTable
             columns={columns}
             rows={sortedData}
@@ -314,12 +314,12 @@ const ReferralsTable = ({
             hasNextPage={!!pagination.lastKey}
             emptyStateMessage={error || "No referrals found"}
             emptyStateSubMessage={error ? "Please try again." : "Try adjusting your filters"}
-            isLoading={isLoading}
+            // isLoading={isLoading}
             onSortChange={handleSortChange}
             sortField={sortField}
             sortOrder={sortOrder}
             enableSelect={false}
-            keyExtractor={(row: any) => row.id}
+            // keyExtractor={(row: any) => row.id}
           />
         </div>
       )}

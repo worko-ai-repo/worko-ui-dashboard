@@ -284,11 +284,11 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
   const MatchingScoreCircle = memo((
       { score, scoreDetails, status,jobTitle }: { score: number; scoreDetails?: any,status?: string,jobTitle:string }
     ) => (
-    <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
-      <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
+    <div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
+      <div className="w-16 relative h-16 flex items-center justify-center">
         <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
           <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-          <circle 
+          <circle
             cx="32.5" 
             cy="32.5" 
             r="30" 
@@ -300,18 +300,22 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
           />
         </svg>
         <div className="absolute font-semibold text-xs">{score}%</div>
-        {status !== "REJECTED" &&
+      </div>
+        {status !== "REJECTED" &&(
         <button 
           onClick={()=>{    
             console.log(scoreDetails)    
             setShowViewDetails(true)
             setViewDetailsContent(scoreDetails)
             setjobTitle(jobTitle)}}          
-          className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">View details
-        </button>}
-      </div>
+            className="text-[9px] font-semibold text-gray-500 text-center leading-none"
+        >
+          View details
+        </button>
+      )}
     </div>
-  ));
+  )
+);
 
 const StatusBadge = memo(({ status }: { status: string }) => {
   const statusConfigs: Record<JobApplicationStatusType, { bg: string, text: string, label: string, showDot?: boolean }> = {

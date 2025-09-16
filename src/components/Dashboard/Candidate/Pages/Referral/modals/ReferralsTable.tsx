@@ -307,34 +307,35 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
 
     const MatchingScoreCircle = memo(
       ({ score, scoreDetails, status }: { score: number; scoreDetails?: any; status?: string }) => (
-        <div className="w-20 flex flex-col items-center justify-center gap-px text-base text-green-500">
-          <div className="w-16 relative h-16 cursor-pointer flex items-center justify-center">
-            <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
-              <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-              <circle
-                cx="32.5"
-                cy="32.5"
-                r="30"
-                fill="none"
-                stroke="#4cbc9a"
-                strokeWidth="5"
-                strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-                transform="rotate(-90 32.5 32.5)"
-              />
-            </svg>
-            <div className="absolute font-semibold text-xs">{score}%</div>
+<div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
+      <div className="w-16 relative h-16 flex items-center justify-center">
+        <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
+          <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
+          <circle
+            cx="32.5" 
+            cy="32.5" 
+            r="30" 
+            fill="none" 
+            stroke="#4cbc9a" 
+            strokeWidth="5"
+            strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+            transform="rotate(-90 32.5 32.5)"
+          />
+        </svg>
+        <div className="absolute font-semibold text-xs">{score}%</div>
+      </div>
             {status !== "REJECTED" && (
               <button
                 onClick={() => {
                   setShowViewDetails(true);
                   setViewDetailsContent(scoreDetails);
                 }}
-                className="absolute top-14 pt-1 text-[9px] font-semibold text-gray-500 text-center">
-                View details
-              </button>
-            )}
-          </div>
-        </div>
+               className="text-[9px] font-semibold text-gray-500 text-center leading-none"
+        >
+          View details
+        </button>
+      )}
+    </div>
       )
     );
 
