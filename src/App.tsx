@@ -7,19 +7,19 @@ import secureStorage from '@Utils/SecureStorage.utils';
 
 export default function App() {
 
-	useEffect(() => {
-		Object.keys(SecureStorageKeyEnum).forEach((key) => {
-		  const value = secureStorage.getItem(SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]);
+	// useEffect(() => {
+	// 	Object.keys(SecureStorageKeyEnum).forEach((key) => {
+	// 	  const value = secureStorage.getItem(SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]);
 	  
-		  //  Convert objects to JSON string before logging
-		  const formattedValue = typeof value === "object" ? JSON.stringify(value, null, 2) : value;
+	// 	  //  Convert objects to JSON string before logging
+	// 	  const formattedValue = typeof value === "object" ? JSON.stringify(value, null, 2) : value;
 	  
-		//   console.log(`Key: ${SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]} | Value: ${formattedValue}`);
-		});
-	  }, []);
-	  useEffect(() => {
-		console.info(import.meta.env.APP_NAME);
-	}, []);
+	// 	//   console.log(`Key: ${SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]} | Value: ${formattedValue}`);
+	// 	});
+	//   }, []);
+	//   useEffect(() => {
+	// 	console.info(import.meta.env.APP_NAME);
+	// }, []);
 	
 	
 	return (
