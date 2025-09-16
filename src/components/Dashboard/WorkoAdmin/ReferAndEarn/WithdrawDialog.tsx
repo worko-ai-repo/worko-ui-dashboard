@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import httpServiceObj from "@Services/ApiHandler.service";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [accountHolderName, setAccountHolderName] = useState("");
@@ -12,7 +14,7 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
 
   const handleSubmit = async () => {
     if (!accountHolderName || !accountNumber || !ifscCode || !branchName) {
-      alert("Please fill all the fields");
+      toast.warning("Please fill all the fields",getToastOptions());
       return;
     }
 
@@ -29,11 +31,11 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
       await httpServiceObj.patch(`${APP_JOBS_API_URI}/refer-and-earn/${statusData.id}/request-withdrawal
     `, payload, true);
 
-          alert("Withdrawal request submitted successfully!");
+          toast.success("Withdrawal request submitted successfully!",getToastOptions());
           onClose();
         } catch (error) {
           console.error("Withdrawal failed:", error);
-          alert("Something went wrong. Please try again.");
+          toast.error("Something went wrong. Please try again.",getToastOptions());
         } finally {
           setLoading(false);
         }

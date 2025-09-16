@@ -10,7 +10,7 @@ import SkeletonLoader from "../SkeletonLoader";
 import { CursorPaginationAdminBulkScreenedJobsParams } from "@Interfaces/AdminServices.dto";
 import { ResumeScreeningRecordDto } from "@Interfaces/CorporateServices.dto";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
@@ -64,7 +64,18 @@ const handleCVUrlGenerator = async (corporateBulkJdId: string, id: string, fileN
 
 export default function ApplicantScreeningTable() {
   const nav = useNavigate();
+  const location = useLocation();
   const { userDetails } = useAppContext();
+
+  //{ state: { jobTitle: row.jobTitle } } get this and set the job title
+  let jobTitle = "";
+  if(
+    location.state && (location.state as any).jobTitle
+  ){
+    jobTitle = (location.state as any).jobTitle;
+  }
+  
+
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
@@ -308,7 +319,7 @@ export default function ApplicantScreeningTable() {
             <div className="bg-white rounded-xl shadow-sm p-4 w-80">
               <div className="text-center">
                 <div className="text-sm text-gray-500 mb-1">Job profile</div>
-                <div className="text-lg font-bold text-blue-600">------</div>
+                <div className="text-lg font-bold text-blue-600">{jobTitle ?? "-----"}</div>
               </div>
             </div>
 

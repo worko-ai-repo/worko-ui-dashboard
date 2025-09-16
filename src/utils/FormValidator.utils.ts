@@ -398,6 +398,27 @@ export const validationRules = {
   }),
 
   /**
+   * FixedAndVariableRangeInput
+   * 
+   * @description - Validation rules for form fields for salary from entered.Handle min and max salary validation.
+   */
+  fixedAndVariableRangeInput: (watch: any, type: "salaryRange") => ({
+    required: "Field from is required",
+    validate: () => {
+      const raw = watch(`${type}`);
+      const fixedComponentPercentage = Number(raw.fixedComponentPercentage);
+      const variableComponentPercentage = Number(raw.variableComponentPercentage);
+      const totalPercentage = fixedComponentPercentage + variableComponentPercentage;
+      if (isNaN(fixedComponentPercentage) || isNaN(variableComponentPercentage)) return "Invalid input type, expected a number";
+      if (fixedComponentPercentage < 0) return "Fixed Component Percentage cannot be negative";
+      if (variableComponentPercentage < 0) return "Variable Component Percentage cannot be negative";
+      if (totalPercentage !== 100) return "The sum of Fixed and Variable Component Percentages must equal 100%";
+      if (fixedComponentPercentage < variableComponentPercentage) return "Fixed Component Percentage should be greater than or equal to Variable Component Percentage";
+      return true;
+    }
+  }),
+   
+  /**
    * experience
    *
    * @description - Validation rules for form fields for experience entered. Handle min and max experience validation.

@@ -99,7 +99,7 @@ const mapParsedToJobDetails = (parsed: JdParsedResponse): JobDetails => {
       ...(parsed.preferredRequirements || []),
     ].join(", "),
     typeofEmployment: parsed.typeOfEmployment as JobTypeofEmploymentType,
-    status: "DRAFT", // default until set
+    status: "PUBLISHED", // default until set
     noticePeriod: parsed.noticePeriod ? Number(parsed.noticePeriod) : 0,
     displaySalaryRange: !!parsed.salaryRange?.min || !!parsed.salaryRange?.max,
     miscellaneousSkills: null,

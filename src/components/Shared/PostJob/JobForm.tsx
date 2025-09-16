@@ -544,10 +544,12 @@ export default function JobForm({
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <input
                   type="number"
+                  step="0.01"
+                  min="0"
                   placeholder="From"
                   {...register("salaryRange.min", {
                     valueAsNumber: true,
-                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                    setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
                     ...validationRules.rangeInput(watch, "salary"),
                   })}
                   className="flex-1 rounded-xl w-full bg-gray-100 p-2 sm:p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -555,10 +557,12 @@ export default function JobForm({
                 <span className="text-sm text-gray-500">to</span>
                 <input
                   type="number"
+                  step="0.01"
+                  min="0"
                   placeholder="To"
                   {...register("salaryRange.max", {
                     valueAsNumber: true,
-                    setValueAs: (v) => (v === "" ? undefined : Number(v)),
+                    setValueAs: (v) => (v === "" ? undefined : parseFloat(v)),
                     ...validationRules.rangeInput(watch, "salary"),
                   })}
                   className="flex-1 rounded-xl w-full bg-gray-100 p-2 sm:p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -572,38 +576,44 @@ export default function JobForm({
 
             {/* Fixed & Variable Components */}
             <div className="col-span-1 sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Controller
-                name="salaryRange.fixedComponentPercentage"
-                control={control}
-                rules={validationRules.defaultNumberPositive}
-                render={({ field }) => (
-                  <Input
-                    required={true}
-                    label="Fixed Component (In %)"
-                    customClass="my-3.5"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                    }
-                  />
-                )}
-              />
-              <Controller
-                name="salaryRange.variableComponentPercentage"
-                control={control}
-                rules={validationRules.defaultNumberPositive}
-                render={({ field }) => (
-                  <Input
-                    required={true}
-                    label="Variable Component (In %)"
-                    customClass="my-3.5"
-                    {...field}
-                    onChange={(e) =>
-                      field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
-                    }
-                  />
-                )}
-              />
+              <div>
+                <Controller
+                  name="salaryRange.fixedComponentPercentage"
+                  control={control}
+                  rules={validationRules.fixedAndVariableRangeInput(watch, "salaryRange")}
+                  render={({ field }) => (
+                    <Input
+                      required={true}
+                      label="Fixed Component (In %)"
+                      customClass="my-3.5"
+                      {...field}
+                      error={errors.salaryRange?.fixedComponentPercentage?.message}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
+              </div>
+              <div>
+                <Controller
+                  name="salaryRange.variableComponentPercentage"
+                  control={control}
+                  rules={validationRules.fixedAndVariableRangeInput(watch, "salaryRange")}
+                  render={({ field }) => (
+                    <Input
+                      required={true}
+                      label="Variable Component (In %)"
+                      customClass="my-3.5"
+                      {...field}
+                      error={errors.salaryRange?.variableComponentPercentage?.message}
+                      onChange={(e) =>
+                        field.onChange(e.target.value === "" ? undefined : Number(e.target.value))
+                      }
+                    />
+                  )}
+                />
+              </div>
             </div>
           </div>
 
@@ -665,12 +675,13 @@ export default function JobForm({
               />
             </div>
 
-            {errors.experienceRange && errors.experienceRange.min && (
+            {(errors.experienceRange?.min || errors.experienceRange?.max) && (
               <span className="block text-sm text-red-500">
-                {errors.experienceRange.min.message}
+                {errors.experienceRange?.min?.message || errors.experienceRange?.max?.message}
               </span>
             )}
           </div>
+
           {/* Notice Period */}
           <div className="col-span-1  sm:col-span-1 space-y-2">
             <label className="block !mb-0  text-sm font-medium text-gray-700">

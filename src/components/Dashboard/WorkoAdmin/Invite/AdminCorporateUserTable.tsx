@@ -179,11 +179,11 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
         <span
           className="lowercase text-xs cursor-pointer select-all"
           onDoubleClick={(e) => {
-            const text = row?.corporateUserDetails?.id || row?.id || "No ID available";
+            const text = row?.corporateUserDetails?.id ?? row?.id ?? "No ID available";
             navigator.clipboard.writeText(text);
           }}
           title="Double click to copy">
-          {row?.corporateUserDetails?.id || row?.id || "No ID available"}
+          {row?.corporateUserDetails?.id ?? row?.id ?? "No ID available"}
         </span>
       ),
     },

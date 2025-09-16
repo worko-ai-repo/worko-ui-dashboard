@@ -1,6 +1,8 @@
 import { useForm } from "react-hook-form";
 import { ChevronDown, Minus } from "lucide-react";
 import httpServiceObj from "@Services/ApiHandler.service";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface RevokeFormProps {
   inviteId: string;
@@ -36,11 +38,12 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
       if (status === 204) {
         onClose();
       } else {
-        alert("Failed to revoke the invite. Please try again.");
+        toast.error("Failed to revoke the invite. Please try again.",getToastOptions());
       }
+      toast.success("Invite revoked successfully.",getToastOptions());
     } catch (error) {
       console.error("Error revoking invite:", error);
-      alert("An error occurred while revoking the invite. Please try again.");
+      toast.error("An error occurred while revoking the invite. Please try again.",getToastOptions());
     }
   };
 

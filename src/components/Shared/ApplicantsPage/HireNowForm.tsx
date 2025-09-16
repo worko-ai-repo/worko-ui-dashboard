@@ -269,7 +269,10 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
 
       {/* Offer Letter Upload */}
       <div>
-        <label className="block text-sm font-medium text-gray-700">Attach offer letter</label>
+        <label className="block text-sm font-medium text-gray-700">
+          <span className="text-red-500 mr-1">*</span>
+          Attach offer Letter
+        </label>
         <div className="relative">
           <ReusableInput
             className="capitalize"
@@ -300,7 +303,9 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       {/* Remarks */}
       <div className="flex flex-col gap-12">
         <div>
-          <label className="block text-sm font-medium text-gray-700">Remarks</label>
+          <label className="block text-sm font-medium text-gray-700">
+          <span className="text-red-500 mr-1">*</span>Remarks 
+          </label>
           <textarea
             placeholder="write here"
             {...register("remarks")}

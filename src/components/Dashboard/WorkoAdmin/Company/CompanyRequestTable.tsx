@@ -1,4 +1,3 @@
-
 import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
@@ -65,8 +64,8 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
-  const columns:Column<CompanyRequestDto>[] = [
-    { key: "userName", label: "Requested By", sortable: true, /* className: "w-40"  */},
+  const columns: Column<CompanyRequestDto>[] = [
+    { key: "userName", label: "Requested By", sortable: true /* className: "w-40"  */ },
     { key: "companyDetail_name", label: "Company Name", sortable: true },
 
     {
@@ -189,6 +188,17 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
           <label className="font-semibold text-gray-500 ">User Type</label>
           <p className="whitespace-pre-wrap text-center">
             {row.userType === "EMP" ? "Employee" : "Candidate"}
+          </p>
+        </span>
+        {/* Date */}
+        <span className="flex flex-col items-center mt-0 p-0">
+          <label className="font-semibold text-gray-500 ">Request Date</label>
+          <p className="whitespace-pre-wrap text-center">
+            {new Date(row.createdAt).toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+            })}
           </p>
         </span>
       </div>

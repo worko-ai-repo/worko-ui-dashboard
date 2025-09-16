@@ -9,8 +9,7 @@ import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationAdminBulkScreenedJobsParams } from "@Interfaces/AdminServices.dto";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
 import secureStorage from "@Utils/SecureStorage.utils";
-import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
+
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import { useNavigate } from "react-router-dom";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -99,7 +98,7 @@ const ScreeningListView: FunctionComponent = () => {
         <button
           onClick={(e) => {
             e.stopPropagation();
-            nav(`listing/${row.id}`);
+            nav(`listing/${row.id}`, { state: { jobTitle: row.jobTitle } });
           }}
           data-tooltip-id="my-tooltip"
           data-tooltip-content="View details"
