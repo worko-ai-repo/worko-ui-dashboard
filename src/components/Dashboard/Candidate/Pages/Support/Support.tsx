@@ -117,7 +117,7 @@ const Support = () => {
           <img className="w-5 h-5" alt="" src={customer_support} />
           <div className="relative tracking-[0.2px] leading-[114%] font-semibold">Help</div>
         </div>
-        <Button onClick={() => alert("hi")}>TEXTINMIDDLE</Button>
+        {/* <Button onClick={() => alert("hi")}>TEXTINMIDDLE</Button> */}
       </div>
       <div className="bg-white p-4 rounded-3xl shadow-md">
         {/* Table positioned below the help button */}

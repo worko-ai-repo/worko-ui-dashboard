@@ -42,12 +42,12 @@ const AddNewCompany: React.FC<{
     const { companyName, linkedInPage, careerPage } = formData;
 
     if (!companyName.trim() || !linkedInPage.trim() || !careerPage.trim()) {
-      alert("Please fill all required fields.");
+      toast.warn("Please fill all required fields.",getToastOptions());
       return;
     }
 
     if (!linkedInValid || !careerValid) {
-      alert("Please enter valid URLs.");
+      toast.warn("Please enter valid URLs.",getToastOptions());
       return;
     }
     const payload = {

@@ -298,16 +298,16 @@ const RequestDocumentModal: React.FC<
       .filter((name) => name !== "");
 
     if (documentNames.length === 0) {
-      alert("Please enter at least one document name");
+      toast.info("Please enter at least one document name",getToastOptions());
       return;
     }
 
     // Check max documents limit
     if (currentRequestedCount + documentNames.length > MAX_DOCUMENTS) {
-      alert(
+      toast.info(
         `Cannot request more than ${MAX_DOCUMENTS} documents total. You can request ${
           MAX_DOCUMENTS - currentRequestedCount
-        } more documents.`
+        } more documents.`,getToastOptions()
       );
       return;
     }
@@ -369,7 +369,7 @@ const RequestDocumentModal: React.FC<
 
   const handleAddDocument = () => {
     if (currentRequestedCount + fields.length >= MAX_DOCUMENTS) {
-      alert(`Cannot add more documents. Maximum ${MAX_DOCUMENTS} documents allowed.`);
+      toast.info(`Cannot add more documents. Maximum ${MAX_DOCUMENTS} documents allowed.`,getToastOptions());
       return;
     }
     append({ name: "" });

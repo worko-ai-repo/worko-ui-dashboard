@@ -17,6 +17,7 @@ import { View } from "@AssetsFolder/assets";
 import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewExtraReferrakDetailsModal";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import ScorePointsModal from "@Components/Shared/DetailedAnalysis";
+import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 
 interface ReferralTableProps {
   data: ReferralDetailsDto[];
@@ -163,7 +164,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
           }}
           className="btn-sky mx-auto grid grid-cols-[20px_auto] ">
           <img src={View} className="h-4 w-4" />
-          View more
+          View Cv
         </button>
       ),
     },
@@ -210,10 +211,11 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
           OpenExtraDetailsModal.isOpen &&
             setOpenExtraDetailsModal({ isOpen: false, details: null, key: undefined });
         }}
-        className="sm:max-w-4xl  py-8">
-        <ViewExtraReferralDetailsModal
+        className="w-[800px]  py-8">
+        {/* <ViewExtraReferralDetailsModal */}
+        <CVPreviewRaw
           key={OpenExtraDetailsModal.key}
-          details={OpenExtraDetailsModal.details}
+          pdfUrl={OpenExtraDetailsModal.details?.viewCvLink || ""}
           onClose={() => setIsViewCVModalOpen(false)}
         />
       </Modal>

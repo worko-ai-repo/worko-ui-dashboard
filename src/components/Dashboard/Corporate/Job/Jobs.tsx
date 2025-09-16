@@ -100,7 +100,9 @@ const Jobs = () => {
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
     resetSelection(); // Reset selected rows when active tab changes
+    refetch(); // Refetch data when active tab changes @TODO:Make sure to refetch only when necessary
   }, [activeTab, searchBarText, pageSize]);
+
 
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
     // update status of selectedRows element status with the params
