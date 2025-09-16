@@ -202,7 +202,7 @@ const ReferralsTable = memo(
         <div className='flex justify-center m-auto w-[150px]'>
         <span 
           className="truncate block w-full"
-          title={row.refereeName ? row.refereeName.toString() : "N/A"}
+          title={row.employeeDetails?.name ? row.employeeDetails?.name.toString() : "N/A"}
           >
           {row.refereeName ?? "N/A"}
           </span>

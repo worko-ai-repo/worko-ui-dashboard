@@ -1,5 +1,8 @@
 // src/components/Referrals/ReferralTypes.ts
 
+export interface EmployeeDetails {
+  name?: string;
+}
 export interface ReferralDetailsDto {
   id: string;
   candidateName: string;
@@ -13,6 +16,7 @@ export interface ReferralDetailsDto {
   matchingScore:number;
   refereeName:String;
   jobUrl:string;
+  employeeDetails?:EmployeeDetails
 }
 
 export type ReferralStatus = 
