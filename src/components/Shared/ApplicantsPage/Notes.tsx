@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Save, X, FileText, User, Building, Shield } from "lucide-react";
 import httpServiceObj from "@Services/ApiHandler.service";
-import { useAppContext } from "@Context/App.context";
-import secureStorage from "@Utils/SecureStorage.utils";
-import { UserRole } from "aws-sdk/clients/workmail";
-import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
+import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { getToastOptions } from "@Utils/Toast.utils";
+import { useAppContext } from "@Context/App.context";
 
 // Types
+type AuthorCognitoUserGroup = "corporate-admin" | "corporate-recruiter" | "ADMIN";
+
+// API request/response interfaces
+interface CreateJobApplicationNoteRequest {
+  jobApplicationId: string;
+  authorCognitoUserGroup: AuthorCognitoUserGroup | string;
+  noteDetails: NoteDetail[];
+}
+
+interface UpdateJobApplicationNoteRequest {
+  noteDetails: NoteDetail[];
+}
+
+type CreateJobApplicationNoteResponse = JobApplicationNote;
+type UpdateJobApplicationNoteResponse = JobApplicationNote;
+type GetJobApplicationNoteResponse = JobApplicationNote;
+
 interface NoteDetail {
   title: string;
   detailedDescription: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface JobApplicationNote {
   id: string;
   PK: string;
   SK: string;
+  jobApplicationId: string;
   authorCognitoUserGroup: "corporate-admin" | "corporate-recruiter" | "ADMIN";
+  authorId: string;
   createdByCorporateUserId?: string;
   createdByUserId?: string;
+  updatedByUserId?: string;
   noteDetails: NoteDetail[];
   createdAt?: string;
   updatedAt?: string;
@@ -31,17 +51,72 @@ interface NewNoteDetail {
   detailedDescription: string;
 }
 
-interface JobApplicationDetailsDto {
-  id: string;
-  companyId: string;
-  jobId: string;
-  jobTitle: string;
-  companyName: string;
-  // ... other properties as defined in your interface
+interface NotesAppProps {
+  jobApplication: JobApplicationDetailsDto | null;
 }
 
-interface NotesAppProps {
-  jobApplication: JobApplicationDetailsDto;
+// API Service Interface
+class JobApplicationNotesAPIService {
+  private httpService: typeof httpServiceObj;
+
+  constructor(httpService: typeof httpServiceObj) {
+    this.httpService = httpService;
+  }
+
+  async createNote(payload: CreateJobApplicationNoteRequest): Promise<{
+    response: CreateJobApplicationNoteResponse | null;
+    error: any;
+  }> {
+    return await this.httpService.post(
+      `/job-application-author-note/`,
+      payload,
+      true,
+      {},
+      false,
+      "JOB"
+    );
+  }
+
+  async updateNote(
+    jobApplicationId: string,
+    noteId: string,
+    payload: UpdateJobApplicationNoteRequest
+  ): Promise<{
+    response: UpdateJobApplicationNoteResponse | null;
+    error: any;
+  }> {
+    //sanitize payload by removing empty note details and removing createdAt/updatedAt if present
+    payload.noteDetails = payload.noteDetails
+      .filter((detail) => detail.title.trim() || detail.detailedDescription.trim())
+      .map((detail) => {
+        const { createdAt, updatedAt, ...rest } = detail;
+        return rest;
+      });
+    return await this.httpService.patch(
+      `/job-application-author-note/${jobApplicationId}/${noteId}`,
+      payload,
+      true,
+      {},
+      false,
+      "JOB"
+    );
+  }
+
+  async getNote(
+    jobApplicationId: string,
+    authorId: string
+  ): Promise<{
+    response: GetJobApplicationNoteResponse | null;
+    error: any;
+  }> {
+    return await this.httpService.get(
+      `/job-application-author-note/${jobApplicationId}/${authorId}`,
+      true,
+      {},
+      false,
+      "JOB"
+    );
+  }
 }
 
 const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => {
@@ -52,62 +127,55 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     { title: "", detailedDescription: "" },
   ]);
   const [loading, setLoading] = useState<boolean>(false);
+
   const { userDetails } = useAppContext();
+  const userId = userDetails?.id || "";
+  // Mock user group detection - in real app this would be based on actual routing/storage
+  const userGroup: AuthorCognitoUserGroup = "ADMIN"; // TODO: derive from context if available
 
-  const userGroup = window.location.href.includes("corporate")
-    ? secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE)
-    : "ADMIN";
+  // Initialize API service
+  const apiService = new JobApplicationNotesAPIService(httpServiceObj);
 
-  const createPayload = (noteDetails: NoteDetail[]) => {
-    const basePayload = {
+  const createPayload = (noteDetails: NoteDetail[]): CreateJobApplicationNoteRequest => {
+    return {
+      jobApplicationId: jobApplication?.id ?? "",
       authorCognitoUserGroup: userGroup,
       noteDetails,
     };
-
-    if (userGroup === "ADMIN") {
-      return {
-        ...basePayload,
-        createdByUserId: userDetails?.id,
-      };
-    } else {
-      return {
-        ...basePayload,
-        createdByCorporateUserId: userDetails?.id,
-      };
-    }
   };
 
-  // Fetch notes for the job application
+  // Fetch notes for current author and job application
   const fetchNotes = async () => {
     setLoading(true);
     try {
-      const { response, error } = await httpServiceObj.get(
-        `/job-application-author-note/${jobApplication?.id}`,
-
-        true,
-        {},
-        false,
-        "JOB"
-      );
-
-      if (error) {
-        // toast.error("Failed to fetch notes");
+      if (!jobApplication?.id || !userId) {
+        setNotes([]);
         return;
       }
 
-      if (response && Array.isArray(response)) {
-        setNotes(response);
+      const { response, error } = await apiService.getNote(jobApplication.id, userId);
+
+      if (error) {
+        // Silent error handling - no toast for fetch errors
+        console.error("Failed to fetch notes:", error);
+        setNotes([]);
+        return;
       }
+
+      setNotes(response ? [response] : []);
     } catch (err) {
-      toast.error("Something went wrong while fetching notes",getToastOptions({}));
+      console.error("Failed to fetch notes:", err);
+      setNotes([]);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchNotes();
-  }, [jobApplication?.id]);
+    if (jobApplication?.id && userId) {
+      fetchNotes();
+    }
+  }, [jobApplication?.id, userId]);
 
   // Add new note
   const handleAddNote = async (): Promise<void> => {
@@ -116,35 +184,54 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     );
 
     if (validNoteDetails.length === 0) {
-      toast.error("Please add at least one note with title or description",getToastOptions({}));
+      toast.error("Please add at least one note with title or description", getToastOptions({}));
+      return;
+    }
+
+    if (!jobApplication?.id) {
+      toast.error("Missing application id. Please refresh and try again.", getToastOptions({}));
       return;
     }
 
     setLoading(true);
 
     try {
-      const payload = createPayload(validNoteDetails);
+      const existingNote = notes && notes.length > 0 ? notes[0] : null;
 
-      const { response, error } = await httpServiceObj.post(
-        `/job-application-author-note/${jobApplication?.id}`,
-        payload,
-        true,
-        {},
-        false,
-        "JOB"
-      );
+      if (existingNote) {
+        // Merge existing non-empty note details with new details
+        const existingNonEmpty = (existingNote.noteDetails || []).filter(
+          (d) => d.title?.trim() || "" || d.detailedDescription?.trim() || ""
+        );
+        const combinedNoteDetails: NoteDetail[] = [...existingNonEmpty, ...validNoteDetails];
 
-      if (error) {
-        toast.error("Failed to create note. Please try again.",getToastOptions({}));
-        return;
+        const updatePayload: UpdateJobApplicationNoteRequest = { noteDetails: combinedNoteDetails };
+        const { error } = await apiService.updateNote(
+          jobApplication.id,
+          existingNote.id,
+          updatePayload
+        );
+
+        if (error) {
+          toast.error("Failed to update note. Please try again.", getToastOptions({}));
+          return;
+        }
+      } else {
+        // Create a new note
+        const payload = createPayload(validNoteDetails);
+        const { error } = await apiService.createNote(payload);
+        if (error) {
+          toast.error("Failed to create note. Please try again.", getToastOptions({}));
+          return;
+        }
       }
 
-      console.log("Note created successfully:", response);
+      // Silent success - just refresh and reset form
       setNewNoteDetails([{ title: "", detailedDescription: "" }]);
       setIsAddingNote(false);
-      await fetchNotes(); // Refresh notes list
+      await fetchNotes(); // Silent refetch
     } catch (err) {
-      toast.error("Something went wrong. Please try again.",getToastOptions({}));
+      toast.error("Failed to create note. Please try again.", getToastOptions({}));
     } finally {
       setLoading(false);
     }
@@ -158,63 +245,55 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     setLoading(true);
 
     try {
-      const payload = {
-        noteDetails: updatedNoteDetails,
-      };
-
-      const { response, error } = await httpServiceObj.patch(
-        `/job-application-author-note/${jobApplication?.id}/${noteId}`,
-        payload,
-        true,
-        {},
-        false,
-        "JOB"
-      );
-
-      if (error) {
-        toast.error("Failed to update note. Please try again.",getToastOptions({}));
+      if (!jobApplication?.id) {
+        toast.error("Missing application id. Please refresh and try again.", getToastOptions({}));
         return;
       }
 
-      console.log("Note updated successfully:", response);
+      const payload: UpdateJobApplicationNoteRequest = {
+        noteDetails: updatedNoteDetails,
+      };
+
+      const { response, error } = await apiService.updateNote(jobApplication.id, noteId, payload);
+
+      if (error) {
+        toast.error("Failed to update note. Please try again.", getToastOptions({}));
+        return;
+      }
+
+      // Silent success - just refresh and exit edit mode
       setEditingNoteId(null);
-      await fetchNotes(); // Refresh notes list
+      await fetchNotes(); // Silent refetch
     } catch (err) {
-      toast.error("Something went wrong. Please try again.",getToastOptions({}));
+      toast.error("Failed to update note. Please try again.", getToastOptions({}));
     } finally {
       setLoading(false);
     }
   };
 
-  // Delete note (if supported by your backend)
+  // "Delete" note by removing specific note detail
+  const handleDeleteNoteDetail = async (noteId: string, noteDetailIndex: number): Promise<void> => {
+    const currentNote = notes.find((note) => note.id === noteId);
+    if (!currentNote) return;
+
+    // Create updated note details without the deleted one
+    const updatedNoteDetails = currentNote.noteDetails.filter(
+      (_, index) => index !== noteDetailIndex
+    );
+
+    // If no note details left, we can't delete the entire note structure
+    // So we'll keep at least one empty note detail
+    const finalNoteDetails =
+      updatedNoteDetails.length === 0
+        ? [{ title: "", detailedDescription: "" }]
+        : updatedNoteDetails;
+
+    await handleUpdateNote(noteId, finalNoteDetails);
+  };
+
+  // Delete entire note by setting empty note details
   const handleDeleteNote = async (noteId: string): Promise<void> => {
-    if (!confirm("Are you sure you want to delete this note?")) {
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const { error } = await httpServiceObj.patch(
-        `//job-application-author-note/${jobApplication?.id}/${noteId}`,
-        { isDeleted: true },
-        true,
-        {},
-        false,
-        "JOB"
-      );
-
-      if (error) {
-        toast.error("Failed to delete note. Please try again.",getToastOptions({}));
-        return;
-      }
-
-      await fetchNotes(); // Refresh notes list
-    } catch (err) {
-      toast.error("Something went wrong. Please try again.",getToastOptions({}));
-    } finally {
-      setLoading(false);
-    }
+    await handleUpdateNote(noteId, [{ title: "", detailedDescription: "" }]);
   };
 
   const addNewNoteDetail = () => {
@@ -264,38 +343,38 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     }
   };
 
+  // Filter out notes with empty content
+  const displayNotes = notes.filter(
+    (note) =>
+      note.noteDetails &&
+      note.noteDetails.some((detail) => detail.title.trim() || detail.detailedDescription.trim())
+  );
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 sm:p-6 lg:p-8">
+    <div className="min-h-screen w-[800px] bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
         <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-start gap-4">
               <FileText size={24} className="text-blue-500 mt-1" />
-              <div className="text-left"> 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Application Notes</h1>
+              <div className="text-left">
+                <h1 className="text-2xl font-bold text-gray-900 mb-2 capitalize">
+                  {jobApplication?.applicantDetails?.name} Application Notes
+                </h1>
                 <div className="text-sm text-gray-600 space-y-1">
                   <p>
-                    <span className="font-medium">Job:</span> {jobApplication?.jobTitle}
+                    <span className="font-medium capitalize">Job:</span> {jobApplication?.jobTitle}
                   </p>
                   <p>
-                    <span className="font-medium">Company:</span> {jobApplication?.companyName}
+                    <span className="font-medium capitalize">Company:</span>{" "}
+                    {jobApplication?.companyName}
                   </p>
-                 {/*  <p>
-                    <span className="font-medium">Application ID:</span> {jobApplication?.id}
-                  </p> */}
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Error Message */}
- {/*        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-            <p className="text-red-700 text-sm">{error}</p>
-          </div>
-        )} */}
 
         {/* Add Note Button */}
         <div className="mb-6 text-left">
@@ -387,7 +466,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
         )}
 
         {/* Notes List */}
-        {!loading && notes.length === 0 ? (
+        {!loading && displayNotes.length === 0 ? (
           <div className="text-center py-12 bg-white rounded-lg shadow-sm border border-gray-200">
             <div className="text-gray-400 mb-4">
               <FileText size={48} className="mx-auto" />
@@ -397,20 +476,31 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
           </div>
         ) : (
           <div className="space-y-6">
-            {notes.map((note) => (
-              <NoteCard
-                key={note.id}
-                note={note}
-                isEditing={editingNoteId === note.id}
-                onEdit={() => setEditingNoteId(note.id)}
-                onSave={(updatedNoteDetails) => handleUpdateNote(note.id, updatedNoteDetails)}
-                onCancel={() => setEditingNoteId(null)}
-                onDelete={() => handleDeleteNote(note.id)}
-                getUserGroupIcon={getUserGroupIcon}
-                getUserGroupLabel={getUserGroupLabel}
-                loading={loading}
-              />
-            ))}
+            {displayNotes.map((note) =>
+              note.noteDetails
+                .filter((detail) => detail.title.trim() || detail.detailedDescription.trim())
+                .map((detail, index) => (
+                  <NoteDetailCard
+                    key={`${note.id}-${index}`}
+                    note={note}
+                    detailIndex={index}
+                    detail={detail}
+                    loading={loading}
+                    getUserGroupIcon={getUserGroupIcon}
+                    getUserGroupLabel={getUserGroupLabel}
+                    onSaveDetail={async (updatedDetail) => {
+                      const existing = notes.find((n) => n.id === note.id);
+                      if (!existing) return;
+                      const updatedDetails = [...existing.noteDetails];
+                      updatedDetails[index] = updatedDetail;
+                      await handleUpdateNote(note.id, updatedDetails);
+                    }}
+                    onDeleteDetail={async () => {
+                      await handleDeleteNoteDetail(note.id, index);
+                    }}
+                  />
+                ))
+            )}
           </div>
         )}
       </div>
@@ -426,182 +516,139 @@ interface NoteCardProps {
   onSave: (updatedNoteDetails: NoteDetail[]) => void;
   onCancel: () => void;
   onDelete: () => void;
+  onDeleteNoteDetail: (noteDetailIndex: number) => void;
   getUserGroupIcon: (group: string) => JSX.Element;
   getUserGroupLabel: (group: string) => string;
   loading: boolean;
 }
 
-const NoteCard: React.FC<NoteCardProps> = ({
+export default JobApplicationNotesApp;
+
+// Standalone card per single note detail
+interface NoteDetailCardProps {
+  note: JobApplicationNote;
+  detailIndex: number;
+  detail: NoteDetail;
+  loading: boolean;
+  getUserGroupIcon: (group: string) => JSX.Element;
+  getUserGroupLabel: (group: string) => string;
+  onSaveDetail: (updated: NoteDetail) => Promise<void> | void;
+  onDeleteDetail: () => Promise<void> | void;
+}
+
+const NoteDetailCard: React.FC<NoteDetailCardProps> = ({
   note,
-  isEditing,
-  onEdit,
-  onSave,
-  onCancel,
-  onDelete,
+  detailIndex,
+  detail,
+  loading,
   getUserGroupIcon,
   getUserGroupLabel,
-  loading,
+  onSaveDetail,
+  onDeleteDetail,
 }) => {
-  const [editedNoteDetails, setEditedNoteDetails] = useState<NoteDetail[]>([...note.noteDetails]);
+  const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [edited, setEdited] = useState<NoteDetail>({
+    title: detail.title || "",
+    detailedDescription: detail.detailedDescription || "",
+  });
 
-  const handleSave = (): void => {
-    const validDetails = editedNoteDetails.filter(
-      (detail) => detail.title.trim() || detail.detailedDescription.trim()
-    );
-
-    if (validDetails.length === 0) {
-      alert("Please add at least one note with title or description");
+  const handleSave = async () => {
+    const hasContent = edited.title.trim() || edited.detailedDescription.trim();
+    if (!hasContent) {
+      toast.error("Please add at least one note with title or description", getToastOptions({}));
       return;
     }
-
-    onSave(validDetails);
+    await onSaveDetail(edited);
+    setIsEditing(false);
   };
-
-  const handleCancel = (): void => {
-    setEditedNoteDetails([...note.noteDetails]);
-    onCancel();
-  };
-
-  const updateEditedNoteDetail = (index: number, field: keyof NoteDetail, value: string) => {
-    const updated = [...editedNoteDetails];
-    updated[index] = { ...updated[index], [field]: value };
-    setEditedNoteDetails(updated);
-  };
-
-  const addEditedNoteDetail = () => {
-    setEditedNoteDetails([...editedNoteDetails, { title: "", detailedDescription: "" }]);
-  };
-
-  const removeEditedNoteDetail = (index: number) => {
-    if (editedNoteDetails.length > 1) {
-      setEditedNoteDetails(editedNoteDetails.filter((_, i) => i !== index));
-    }
-  };
-
-  if (isEditing) {
-    return (
-      <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Edit Note</h3>
-
-        {editedNoteDetails.map((detail, index) => (
-          <div key={index} className="mb-6 p-4 border border-gray-200 rounded-lg">
-            <div className="flex justify-between items-center mb-3">
-              <h4 className="font-medium text-gray-700">Note {index + 1}</h4>
-              {editedNoteDetails.length > 1 && (
-                <button
-                  onClick={() => removeEditedNoteDetail(index)}
-                  className="text-red-500 hover:text-red-700"
-                  type="button">
-                  <X size={16} />
-                </button>
-              )}
-            </div>
-
-            <input
-              type="text"
-              value={detail.title}
-              onChange={(e) => updateEditedNoteDetail(index, "title", e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none font-medium"
-              placeholder="Note title..."
-            />
-
-            <textarea
-              value={detail.detailedDescription}
-              onChange={(e) => updateEditedNoteDetail(index, "detailedDescription", e.target.value)}
-              rows={3}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-vertical"
-              placeholder="Detailed description..."
-            />
-          </div>
-        ))}
-
-        <div className="flex flex-col sm:flex-row gap-2 mb-4">
-          <button
-            onClick={addEditedNoteDetail}
-            className="inline-flex items-center justify-center gap-2 bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-2 rounded-lg font-medium transition-colors duration-200"
-            type="button">
-            <Plus size={16} />
-            Add Another Note
-          </button>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2">
-          <button
-            onClick={handleSave}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-            type="button">
-            <Save size={14} />
-            {loading ? "Saving..." : "Save"}
-          </button>
-          <button
-            onClick={handleCancel}
-            disabled={loading}
-            className="inline-flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
-            type="button">
-            <X size={14} />
-            Cancel
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-2">
+      <div className="flex justify-end items-start mb-0">
+{/*         <div className="flex items-center gap-2">
           {getUserGroupIcon(note.authorCognitoUserGroup)}
           <span className="text-sm font-medium text-gray-600">
             {getUserGroupLabel(note.authorCognitoUserGroup)}
           </span>
-        </div>
-        <div className="flex gap-1">
+        </div> */}
+        <div className="flex justify-self-end gap-1">
+          {!isEditing && (
+            <button
+              onClick={() => setIsEditing(true)}
+              disabled={loading}
+              className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors duration-200 disabled:opacity-50"
+              title="Edit note detail"
+              type="button">
+              <Edit2 size={16} />
+            </button>
+          )}
           <button
-            onClick={onEdit}
-            disabled={loading}
-            className="p-2 text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors duration-200 disabled:opacity-50"
-            title="Edit note"
-            type="button">
-            <Edit2 size={16} />
-          </button>
-          <button
-            onClick={onDelete}
+            onClick={onDeleteDetail}
             disabled={loading}
             className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50 rounded transition-colors duration-200 disabled:opacity-50"
-            title="Delete note"
+            title="Delete this note detail"
             type="button">
             <Trash2 size={16} />
           </button>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {note.noteDetails.map((detail, index) => (
-          <div key={index} className="border-l-4 border-blue-200 pl-4">
-            {detail.title && (
-              <h4 className="font-semibold text-gray-900 text-lg mb-2">{detail.title}</h4>
-            )}
-            {detail.detailedDescription && (
-              <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-                {detail.detailedDescription}
-              </div>
+      {!isEditing ? (
+        <div className="space-y-2 text-left capitalize">
+          {detail.title && (
+            <h4 className="font-semibold text-gray-900 text-lg">{detail.title}</h4>
+          )}
+          {detail.detailedDescription && (
+            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
+              {detail.detailedDescription}
+            </div>
+          )}
+          <div className="text-xs text-gray-400 mt-2">
+            {detail.createdAt && <>Created: {new Date(detail.createdAt).toLocaleString()}</>}
+            {detail.updatedAt && detail.updatedAt !== detail.createdAt && (
+              <div>Updated: {new Date(detail.updatedAt).toLocaleString()}</div>
             )}
           </div>
-        ))}
-      </div>
-
-      <div className="text-xs text-gray-500 border-t pt-3 mt-4">
-        <span>Note ID: {note.id}</span>
-        {note.createdAt && (
-          <span className="ml-4">Created: {new Date(note.createdAt).toLocaleDateString()}</span>
-        )}
-        {note.updatedAt && note.updatedAt !== note.createdAt && (
-          <span className="ml-4">Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          <input
+            type="text"
+            value={edited.title}
+            onChange={(e) => setEdited((p) => ({ ...p, title: e.target.value }))}
+            className="w-full p-3 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            placeholder="Note title..."
+          />
+          <textarea
+            value={edited.detailedDescription}
+            onChange={(e) => setEdited((p) => ({ ...p, detailedDescription: e.target.value }))}
+            rows={3}
+            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-vertical"
+            placeholder="Detailed description..."
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={handleSave}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+              type="button">
+              <Save size={14} />
+              {loading ? "Saving..." : "Save"}
+            </button>
+            <button
+              onClick={() => {
+                setEdited({ title: detail.title || "", detailedDescription: detail.detailedDescription || "" });
+                setIsEditing(false);
+              }}
+              disabled={loading}
+              className="inline-flex items-center justify-center gap-2 bg-gray-500 hover:bg-gray-600 disabled:bg-gray-300 text-white px-3 py-2 rounded text-sm font-medium transition-colors duration-200"
+              type="button">
+              <X size={14} />
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
-
-export default JobApplicationNotesApp;

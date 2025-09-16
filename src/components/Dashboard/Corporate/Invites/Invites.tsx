@@ -10,13 +10,17 @@ import { CursorPaginationInviteDataParams } from "@Interfaces/CorporateServices.
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import CorporateServiceObj from "../Services/Corporate.service";
 import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 
 const Invites = () => {
   const { userDetails } = useAppContext();
 
   const [isSendInviteModalOpen, setIsSendInviteModalOpen] = useState(false);
   const [pageSize, setPageSize] = useState(10);
-
+  const userType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
+  
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
 
   const params: Omit<CursorPaginationInviteDataParams, "lastKey"> = {

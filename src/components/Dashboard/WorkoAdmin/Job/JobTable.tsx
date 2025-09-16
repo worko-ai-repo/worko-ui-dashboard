@@ -117,7 +117,16 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     },
     { key: "department", label: "Department", sortable: true },
     ...(activeTab === "PUBLISHED"
-      ? [{ key: "pending", label: "Pending" }]
+      ? [
+          {
+            key: "createdAt",
+            label: "Created At",
+            sortable: true,
+            render: (row: JobData) => (
+              <div>{new Date(row.createdAt).toLocaleDateString("en-GB")}</div>
+            ),
+          },
+        ]
       : [
           {
             key: "updatedAt",
@@ -289,14 +298,23 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               <div className="text-gray-400">Salary bucket</div>
               {`${row.salaryRange.min} - ${row.salaryRange.max}`}
             </div>
-            <div>
-              <div className="text-gray-400">Created at</div>
-              {new Date(row.createdAt).toLocaleDateString("en-GB")}
-            </div>
+
             <div>
               <div className="text-gray-400">Created by</div>
               <CreatedByDisplay row={row} mode="created" />
             </div>
+            {activeTab === "PUBLISHED" && (
+              <>
+                <div>
+                  <div className="text-gray-400">Update At</div>
+                  {new Date(row.updatedAt).toLocaleDateString("en-GB")}
+                </div>
+                <div>
+                  <div className="text-gray-400">Update By</div>
+                  <CreatedByDisplay row={row} mode="updated" />
+                </div>
+              </>
+            )}
             {activeTab !== "PUBLISHED" && (
               <div>
                 <div className="text-gray-400">

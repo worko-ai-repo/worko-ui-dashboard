@@ -19,6 +19,7 @@ import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationJobDataParams } from "src/types/interface/CorporateServices.dto";
 import { useListSelection } from "@Hooks/useListSelection.hook";
 import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 
 // Header Switch button constant to loop
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
@@ -38,7 +39,7 @@ const Jobs = () => {
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
-  const userType = userCognitoDetails?.["cognito:groups"];
+  const userType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
 
   const {
     selectedRows,
@@ -65,14 +66,14 @@ const Jobs = () => {
     pageSize: pageSize,
     sortOrder: "desc",
     dashboard: "CORPORATE",
-    userRole: userType,
+    userRole: userType ? [userType] : undefined,
     status: activeTab,
     companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     // Add corporateRecruiterUserId if user is not corporate-admin
     ...(userType && !userType.includes("corporate-admin") && userCognitoDetails?.sub
-      ? { corporateRecruiterUserId: userCognitoDetails.sub }
+      ? { corporateRecruiterUserId: userDetails?.id }
       : {}),
   };
 

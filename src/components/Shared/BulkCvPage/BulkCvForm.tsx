@@ -37,7 +37,7 @@ interface BulkCvFormProps {
   isOpen: boolean;
   onClose: () => void;
   jobData: BulkJdParsedData;
-  dropDownData: DropDownSelectedJobData | null;
+  dropDownData: string;
 }
 
 const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropDownData }) => {
@@ -256,7 +256,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
         },
         mustHaveSkills: data.mustHave,
         mustNotHaveSkills: data.mustNotHaveSkills,
-        jobDescription: dropDownData?.jobDescription || "",
+        jobDescription: dropDownData || "",
         goodToHaveSkills: data.goodToHave,
         jobLocation: data.jobLocation,
       };

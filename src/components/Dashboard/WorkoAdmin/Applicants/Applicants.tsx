@@ -94,7 +94,13 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     refetch,
     reset,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataAdminParams>({
-    queryKey: ["AdminJobsApplicationQuery", activeTab, !!searchBarText, params, isAllApplicants],
+    queryKey: [
+      "AdminJobsApplicationQuery",
+      activeTab,
+      !!searchBarText,
+      JSON.stringify(params),
+      isAllApplicants,
+    ],
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
     enabled: isAllApplicants ? true : !!jobId,
@@ -124,6 +130,9 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       }); //@TODO-Use the data somewhere atleast in both corporate and admin component
     } catch (error) {
       console.error("Error in bulk update:", error);
+    } finally {
+      refetch(); // Refetch the data to reflect the changes
+      ListSelection.reset(); // Reset the selection after bulk update
     }
   };
 

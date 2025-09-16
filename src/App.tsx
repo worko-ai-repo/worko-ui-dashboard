@@ -7,7 +7,7 @@ import secureStorage from '@Utils/SecureStorage.utils';
 
 export default function App() {
 
-/* 	useEffect(() => {
+	useEffect(() => {
 		Object.keys(SecureStorageKeyEnum).forEach((key) => {
 		  const value = secureStorage.getItem(SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]);
 	  
@@ -19,7 +19,7 @@ export default function App() {
 	  }, []);
 	  useEffect(() => {
 		console.info(import.meta.env.APP_NAME);
-	}, []); */
+	}, []);
 	
 	
 	return (

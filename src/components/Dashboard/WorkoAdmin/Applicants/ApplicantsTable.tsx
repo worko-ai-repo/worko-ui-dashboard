@@ -426,7 +426,7 @@ export default function ApplicationTable({
     actions: {
       key: "actions",
       label: "Actions",
-      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-96" : ""} `,
+      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-auto" : ""} `,
       render: (row: JobApplicationDetailsDto) => (
         <JobApplicationActions
           row={row}

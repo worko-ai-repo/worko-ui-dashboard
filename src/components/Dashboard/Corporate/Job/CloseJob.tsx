@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Dialog, DialogPanel } from '@headlessui/react';
-import { SendIcon, X } from 'lucide-react';
+import React, { useState } from "react";
+import { Dialog, DialogPanel } from "@headlessui/react";
+import { SendIcon, X } from "lucide-react";
 
 const reasons = [
-  'Hired from Worko',
-  'Hired from Other Platform',
-  'Hired Internally',
-  'Position Went on Hold/Dismissed',
+  "Hired from Worko",
+  "Hired from Other Platform",
+  "Hired Internally",
+  "Position Went on Hold/Dismissed",
 ];
 
 export default function CloseJob({
@@ -16,8 +16,8 @@ export default function CloseJob({
   onClose: () => void;
   onSubmit: (data: { reason: string; note: string }) => void;
 }) {
-  const [selectedReason, setSelectedReason] = useState<string>('');
-  const [note, setNote] = useState('');
+  const [selectedReason, setSelectedReason] = useState<string>("");
+  const [note, setNote] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,8 +55,7 @@ export default function CloseJob({
       <button
         type="submit"
         disabled={!selectedReason}
-        className="flex items-center gap-2 self-start bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50"
-      >
+        className="flex items-center gap-2 self-start bg-blue-500 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-600 transition disabled:opacity-50">
         <SendIcon className="w-4 h-4" />
         Submit
       </button>

@@ -38,7 +38,6 @@ const AdminJobs = () => {
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
-  const userType = userCognitoDetails?.["cognito:groups"];
 
   const {
     selectedRows,
