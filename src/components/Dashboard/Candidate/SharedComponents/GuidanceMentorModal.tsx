@@ -27,7 +27,7 @@ const GuidanceMentorModal: FunctionComponent<GuidanceMentorModalProps> = ({
 }) => {
   
   const onActionButtonClick = useCallback(() => {
-    console.log(variant,figmaUrl)
+    // console.log(variant,figmaUrl)
     if (variant === 'join') {
       window.open(figmaUrl);
     } else if (variant === 'book' && onAcceptAndPay) {

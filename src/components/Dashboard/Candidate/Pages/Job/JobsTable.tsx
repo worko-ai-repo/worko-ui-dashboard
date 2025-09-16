@@ -109,13 +109,13 @@ const JobsTable = memo(({
     };
 
     // Process data to add actions based on status
-    const processedJobs = data?.data?.map((job) => ({
+const processedJobs = data?.data?.map((job) => ({
       ...job,
       action: job.action || getActionFromStatus(job.status),
-    }));
+    })) as unknown as JobApplicationDetailsDto[];
 
 
-const jobs = processedJobs || [];
+  const jobs = processedJobs || [];
 
   // Function to handle opening the feedback modal
 const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
@@ -171,7 +171,7 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
 
 
     const handleSubmitDocs = (submittedFiles: Record<string, File | null>) => {
-      console.log("Submitted files:", submittedFiles);
+      // console.log("Submitted files:", submittedFiles);
       // TODO: handle file upload
     };
 
@@ -187,7 +187,7 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
           switch (type) {
             case "VIEW_FEEDBACK":
               handleViewFeedback(job);
-              console.log(job);
+              // console.log(job);
               break;
 
             case "CHECK_ACCEPT":
@@ -211,47 +211,47 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
 
             case "SUBMIT_DOCUMENT":
               setShowDocumentUploadModal(true);
-              console.log(`Submit document for job ID: ${job.id}`);
+              // console.log(`Submit document for job ID: ${job.id}`);
               if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-                console.log(job);
+                // console.log(job);
                 setRequestedDocumentsList(job);
                 setParsingJobId(job.id);
               }
               break;
 
             case "APPLIED":
-              console.log(`Already applied for job: ${job.id}`);
+              // console.log(`Already applied for job: ${job.id}`);
               break;
 
             case "CV_DOWNLOADED":
-              console.log(`CV downloaded for job: ${job.id}`);
+              // console.log(`CV downloaded for job: ${job.id}`);
               break;
 
             case "UNDER_EVALUATION":
-              console.log(`Job under evaluation: ${job.id}`);
+              // console.log(`Job under evaluation: ${job.id}`);
               break;
 
             case "PROCESSING_INTERVIEW":
-              console.log(`Processing interview for job: ${job.id}`);
+              // console.log(`Processing interview for job: ${job.id}`);
               break;
 
             case "INTERVIEW_DONE":
-              console.log(`Interview completed for job: ${job.id}`);
+              // console.log(`Interview completed for job: ${job.id}`);
               break;
 
             case "HIRING_IN_PROCESS":
-              console.log(`Hiring in process for job: ${job.id}`);
+              // console.log(`Hiring in process for job: ${job.id}`);
               break;
 
             case "DOCUMENT_REQUESTED":
-              console.log(`Document requested for job: ${job.id}`);
+              // console.log(`Document requested for job: ${job.id}`);
               break;
 
             case "DOCUMENT_REVISION_REQUESTED":
               setShowDocumentUploadModal(true);
-              console.log(`Submit document for job ID: ${job.id}`);
+              // console.log(`Submit document for job ID: ${job.id}`);
               if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-                console.log(job);
+                // console.log(job);
                 setRequestedDocumentsList(job);
                 setParsingJobId(job.id);
               }
@@ -259,9 +259,9 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
 
             case "DOCUMENT_ADDITIONAL_REQUESTED":
               setShowDocumentUploadModal(true);
-              console.log(`Submit document for job ID: ${job.id}`);
+              // console.log(`Submit document for job ID: ${job.id}`);
               if (job.requestedDocumentDetails && job.requestedDocumentDetails.length > 0) {
-                console.log(job);
+                // console.log(job);
                 setRequestedDocumentsList(job);
                 setParsingJobId(job.id);
               }
@@ -304,7 +304,7 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
         {status !== "REJECTED" &&(
         <button 
           onClick={()=>{    
-            console.log(scoreDetails)    
+            // console.log(scoreDetails)    
             setShowViewDetails(true)
             setViewDetailsContent(scoreDetails)
             setjobTitle(jobTitle)}}          
@@ -319,6 +319,8 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
 
 const StatusBadge = memo(({ status }: { status: string }) => {
   const statusConfigs: Record<JobApplicationStatusType, { bg: string, text: string, label: string, showDot?: boolean }> = {
+    ALL: { bg: "bg-blue-100", text: "text-blue-500", label: "All" },
+    ACCEPTED: { bg: "bg-blue-100", text: "text-blue-500", label: "Accepted" },
     APPLIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Applied" },
     CV_DOWNLOADED: { bg: "bg-blue-100", text: "text-blue-500", label: "CV downloaded" },
     UNDER_EVALUATION: { bg: "bg-blue-100", text: "text-blue-500", label: "Under evaluation" },
@@ -343,7 +345,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
     DOCUMENT_VERIFIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document verified" },
   };
   
-  const config = statusConfigs[status] || statusConfigs.UNDER_EVALUATION;
+  const config = statusConfigs[status as JobApplicationStatusType] || statusConfigs.UNDER_EVALUATION;
 
   return (
     <div
@@ -366,7 +368,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 
 
   const ActionButton = memo(({ type, job }: { type: string, job: JobApplicationDetailsDto }) => {
-    console.log(job)
+    // console.log(job)
     const isProcessing = processingJobId === job.id;
     
     const actionConfigs: Record<string, { color: string, icon: JSX.Element | null, label: string }> = {
@@ -499,7 +501,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
     return (
       <div className="flex justify-center m-auto w-[150px]">
       <div className="relative group">
-        {row.status !== "JOINED" 
+        {row.status !== "JOINED" && row.status !== "REJECTED"
         ? <button
           onClick={() => !isDisabled && requestFollowup(row.id)}
           disabled={isDisabled}
@@ -589,13 +591,13 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     }, [jobs, sortField, sortOrder]);
 
     const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
-      if (row.statusTracker[0].newStatus === "REJECTED") {
+      if (row.statusTracker && row.statusTracker.length > 0 && row.statusTracker[0].newStatus === "REJECTED") {
         return null;
       }
       if (row.statusTracker && row.statusTracker.length > 0) {
         return <Stepper statusTracker={row.statusTracker[row.statusTracker.length - 1]} />;
       }
-      return row.applicationSteps ? <Stepper steps={row.applicationSteps} /> : null;
+      return null;
     };
 
     //old toogle

@@ -20,7 +20,7 @@ const AddNewCompany: React.FC<{
   const [careerValid, setCareerValid] = useState(true);
 
   useEffect(() => {
-    console.log(userDetails);
+    // console.log(userDetails);
     const timer = setTimeout(() => setVisible(true), 10);
     return () => clearTimeout(timer);
   }, []);
@@ -65,16 +65,16 @@ const AddNewCompany: React.FC<{
       const { response } = await httpServiceObj.post(`/company/request`, payload, true, {});
 
       if (response) {
-        console.log(response);
+        // console.log(response);
         toast.success("Company added successfully", getToastOptions({}));
         onSubmit();
       }
     } catch (error) {
-      console.log(error);
+      // console.log(error);
       toast.error("Error adding company", getToastOptions({}));
     }
 
-    console.log("Submitting new company:", payload);
+    // console.log("Submitting new company:", payload);
     onSubmit();
   };
 

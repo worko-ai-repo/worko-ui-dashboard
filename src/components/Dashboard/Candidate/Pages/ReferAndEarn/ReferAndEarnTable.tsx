@@ -208,7 +208,7 @@ const ReferralsTable = ({
                     referralBonus: row.referralBonus,
                     status: row.status,
                   });
-                  console.log(row);
+                  // console.log(row);
                   setShowDialog(true);
                 }}>
                 Achieved

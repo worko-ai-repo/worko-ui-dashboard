@@ -16,7 +16,7 @@ const formatDate = (dateStr:string) => {
 
 const ViewFeedbackModal: React.FC<ViewFeedbackModalProps> = ({ data, onClose }) => {
     const latestFeedback = data.statusTracker?.[0];
-    console.log(data.scheduledInterviewDetails)
+    // console.log(data.scheduledInterviewDetails)
     return (
         <div className="bg-white rounded-xl p-4 space-y-6 max-h-[80vh] overflow-y-auto">
             {/* Header */}

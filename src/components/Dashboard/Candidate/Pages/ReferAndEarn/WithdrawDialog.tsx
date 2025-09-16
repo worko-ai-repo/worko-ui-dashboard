@@ -77,9 +77,9 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
 
   // if (!isOpen) return null;
 
-  useEffect(() => {
-    console.log("statusData", statusData);
-  }, []);
+  // useEffect(() => {
+  //   console.log("statusData", statusData);
+  // }, []);
 
   return (
     <div

@@ -79,7 +79,7 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleViewCV = () => {
-    console.log('Viewing CV for candidate:', selectedCandidateId);
+    // console.log('Viewing CV for candidate:', selectedCandidateId);
     setIsViewCVModalOpen(true);
   };
 
@@ -92,7 +92,7 @@ const EvaluatorView: React.FC = () => {
         selectedRequest.jobApplicationId,
         selectedRequest.evaluationResponseId
       );
-      console.log(feedback.status)
+      // console.log(feedback.status)
       setViewFeedbackData(feedback);
       setIsViewFeedbackOpen(true);
     } catch (err) {
@@ -103,7 +103,7 @@ const EvaluatorView: React.FC = () => {
 
 
   const handleViewVideo = () => {
-    console.log('Viewing video for candidate:', selectedCandidateId);
+    // console.log('Viewing video for candidate:', selectedCandidateId);
   };
 
 

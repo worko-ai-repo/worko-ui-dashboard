@@ -106,7 +106,7 @@ const Jobs = () => {
       );
 
       if (response) {
-        console.log(response)
+        // console.log(response)
         setData(response);
         if (response.pagination) {
           setPaginationInfo(response.pagination);

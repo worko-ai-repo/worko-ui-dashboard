@@ -14,7 +14,7 @@ export default function App() {
 		  //  Convert objects to JSON string before logging
 		  const formattedValue = typeof value === "object" ? JSON.stringify(value, null, 2) : value;
 	  
-		  console.log(`Key: ${SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]} | Value: ${formattedValue}`);
+		//   console.log(`Key: ${SecureStorageKeyEnum[key as keyof typeof SecureStorageKeyEnum]} | Value: ${formattedValue}`);
 		});
 	  }, []);
 	  useEffect(() => {

@@ -60,7 +60,7 @@ const fetchReferrals = useCallback(
     isSearch = false
   ) => {
     if (!user?.email) return;
-    console.log(user)
+    // console.log(user)
     setIsLoading(true);
       const url = `${APP_API_URI}/user/${user.email}/experience`;
         let companyId = "";
@@ -83,9 +83,9 @@ const fetchReferrals = useCallback(
       const url = `/emp/referral/${user.email}?companyId=${companyId}&pageSize=${size}&lastKey=${lastKey}`;
       const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true,);
       const apiData = response?.data
-      console.log(apiData)
+      // console.log(apiData)
       if (response) {
-        console.log(apiData,"apiData")
+        // console.log(apiData,"apiData")
       const filterByStatusData1 = apiData?.filter(referral =>
           !referral.acceptedByUserId || referral.acceptedByUserId === user.sub
         );
@@ -97,7 +97,7 @@ const fetchReferrals = useCallback(
 
         const pagination = response.pagination
         const obj = {data:filterByStatusData2,pagination}       
-        console.log(obj)
+        // console.log(obj)
         setData(obj);      
         if (response.pagination) {
           setPaginationInfo(response.pagination);
@@ -180,7 +180,7 @@ const fetchReferrals = useCallback(
 
   useEffect(() => {
     if (user?.email) {
-      console.log("user",user)
+      // console.log("user",user)
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };

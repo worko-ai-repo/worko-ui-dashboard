@@ -83,7 +83,7 @@ export default function InterviewTable() {
       label: "Matching Score",
       render: (row: Applicant) => (
         <div className="flex justify-center">
-          <ProgressCircle onClick={() => console.log("Clicked")} value={row.matchingScore} />
+          <ProgressCircle onClick={() => console.log("")} value={row.matchingScore} />
         </div>
       ),
     },

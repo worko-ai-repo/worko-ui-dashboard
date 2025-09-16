@@ -55,7 +55,7 @@ const UploadImageButton2: React.FC<UploadImageButton2Props> = ({ onUploadSuccess
             if (error || !response?.awsS3SignedUrl || !response?.cloudFileName) {
                 throw new Error("Could not get signed URL");
             }
-            console.log("response to get awssigned url",response)
+            // console.log("response to get awssigned url",response)
             const { awsS3SignedUrl, awsS3Tag, cloudFileName } = response;
 
             const uploadResult = await httpServiceObj.put(
@@ -65,7 +65,7 @@ const UploadImageButton2: React.FC<UploadImageButton2Props> = ({ onUploadSuccess
                 { awsS3Tag, fileType: file.type },
                 true
             );
-            console.log("uploadResult",uploadResult)
+            // console.log("uploadResult",uploadResult)
             if (uploadResult.error) {
                 throw new Error("Upload failed");
             }
@@ -120,7 +120,7 @@ const UploadImageButton2: React.FC<UploadImageButton2Props> = ({ onUploadSuccess
 
             // Update user profile image record on backend (adjust endpoint accordingly)
             const patchResult = await httpServiceObj.put(`/user/${email}/details`, payload, true);
-            console.log("patchResult",payload,patchResult)
+            // console.log("patchResult",payload,patchResult)
             if (patchResult.error) {
                 throw new Error("Failed to update user profile image");
             }

@@ -55,7 +55,7 @@ const QuickLinks: FunctionComponent = () => {
   // Handle click on a quick link
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
-    console.log(element,"element")
+    // console.log(element,"element")
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

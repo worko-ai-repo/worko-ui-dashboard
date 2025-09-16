@@ -16,7 +16,7 @@ const SupportForm = () => {
     } = useForm<FormData>();
 
     const onSubmit = (data: FormData) => {
-        console.log("Submitted support request:", data);
+        // console.log("Submitted support request:", data);
     };
 
     return (

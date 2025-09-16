@@ -97,7 +97,7 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
 
     setShowCancelReason(false);
     setSubmitError('');
-    console.log("Submitted cancel reason:", cancelReason);
+    // console.log("Submitted cancel reason:", cancelReason);
     toast.success("Guidance Cancelled", getToastOptions({}));
     closeModal()
     onRefresh()

@@ -20,7 +20,7 @@ const Form = () => {
     })
 
     const onSubmit = (data: FormData) => {
-        console.log("Submitted data:", data);
+        console.log("");
     }
 
     return (

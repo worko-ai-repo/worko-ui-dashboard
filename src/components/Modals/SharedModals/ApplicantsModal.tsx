@@ -19,7 +19,7 @@ const ApplicantsModal = () => {
         ]}
         showCloseButton={false}
         onClose={() => {
-          console.log("Modal closed");
+          // console.log("Modal closed");
         }}
       />
     </div>

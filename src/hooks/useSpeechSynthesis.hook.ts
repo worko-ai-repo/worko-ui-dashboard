@@ -38,7 +38,7 @@ export const useSpeechRecognition = (): SpeechRecognitionResult => {
     recognition.onstart = () => {
       setIsListening(true);
       setError(null);
-      console.log('[Speech] Recognition started');
+      // console.log('[Speech] Recognition started');
     };
 
     recognition.onresult = (event: SpeechRecognitionEvent) => { 
@@ -70,7 +70,7 @@ export const useSpeechRecognition = (): SpeechRecognitionResult => {
     recognition.onend = () => {
       setIsListening(false);
       setInterimTranscript('');
-      console.log('[Speech] Recognition ended');
+      // console.log('[Speech] Recognition ended');
     };
 
     return recognition;

@@ -59,7 +59,7 @@ const fetchReferrals = useCallback(
 
       if (response) {
         setData(response);
-        console.log(response)
+        // console.log(response)
         if (response.pagination) {
           setPaginationInfo(response.pagination);
 

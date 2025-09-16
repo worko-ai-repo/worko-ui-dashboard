@@ -79,7 +79,7 @@ const MainContent: React.FC<MainContentProps> = ({
             filteredSocialLinks[key] = value;
           }
         });
-    console.log(filteredSocialLinks)
+    // console.log(filteredSocialLinks)
     setSocialLinks(filteredSocialLinks);
       } catch (error) {
         console.error('Fetch error:', error);
@@ -140,7 +140,7 @@ const MainContent: React.FC<MainContentProps> = ({
         }
       }
     } catch (err) {
-      console.log(err);
+      // console.log(err);
     }
   };
 

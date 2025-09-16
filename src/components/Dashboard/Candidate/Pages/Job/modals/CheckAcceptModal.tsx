@@ -35,7 +35,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
     try {
       if (nextAction === 'accept') {
         setLoadingAccept(true);
-        console.log("Attempting to accept...");
+        // console.log("Attempting to accept...");
         const payload = {
           applicantName:userDetails.name,
           userId: userDetails?.sub,
@@ -57,7 +57,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           return;
         }
         toast.success("Offer Accepted Successfully",getToastOptions({}))
-        console.log('Accepted successfully:', response);
+        // console.log('Accepted successfully:', response);
       } else if (nextAction === 'raise') {
         if (!issueDetail.trim()) {
           setError('Please provide a valid issue before submitting.');
@@ -87,7 +87,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           return;
         }
         toast.success("Issue Raised Successfully",getToastOptions({}))
-        console.log('Issue raised successfully:', response);
+        // console.log('Issue raised successfully:', response);
       }
       onSuccess();
       onClose();
@@ -106,7 +106,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
       job.offerLetterDetails.length === 0 ||
       !userDetails?.sub
     ) {
-      console.log('Missing job or user details');
+      // console.log('Missing job or user details');
       return;
     }
     
@@ -134,7 +134,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
         if (response && 'objectUrl' in response) {
           setPdfUrl((response as any).objectUrl); // or update interface
-          console.log('POST response:', response);
+          // console.log('POST response:', response);
         }
       } catch (err) {
         console.error('Unexpected error:', err);

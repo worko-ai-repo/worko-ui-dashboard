@@ -61,7 +61,7 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
     setEditedItems(editedItems.filter((_, i) => i !== index));
     if (editingIndex === index) clearForm();
   };
-console.log(items)
+// console.log(items)
   const clearForm = () => {
     setEditingIndex(null);
     setCompanyName("");

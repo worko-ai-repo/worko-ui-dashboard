@@ -346,7 +346,7 @@ const updateDetailsData = useCallback(async (data: Partial<any>): Promise<boolea
         ];
       }
     }
-    console.log(updatedData);
+    // console.log(updatedData);
     
     return await updateUserData(user.email, 'achievement', updatedData);
   }, [user?.email, achievementData, updateUserData]);

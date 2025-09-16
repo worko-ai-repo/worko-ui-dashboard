@@ -54,7 +54,7 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<
         jobApplicationStatus: formData.status,
       };
 
-      console.log("Status update payload:", payload);
+      // console.log("Status update payload:", payload);
 
       const response = await AdminServiceObj.patchReferAndEarnStatus(data.id, payload);
       if (!response) {

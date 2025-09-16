@@ -132,7 +132,7 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
 
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
     openModal(request, 'acceptAndPay');
-    console.log(request)
+    // console.log(request)
   }, [openModal]);
 
 

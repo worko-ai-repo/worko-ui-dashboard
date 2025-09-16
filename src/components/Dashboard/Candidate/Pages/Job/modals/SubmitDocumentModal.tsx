@@ -278,7 +278,7 @@ const SubmitDocumentModal = ({
         fileDetails,
       };
 
-      console.log("Upload Payload:", payload);
+      // console.log("Upload Payload:", payload);
 
       // Step 1: Get signed URLs
       const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(

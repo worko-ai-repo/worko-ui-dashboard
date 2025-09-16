@@ -123,7 +123,7 @@ export default function JoinedModal({
         return;
       }
 
-      console.log("Submitted successfully:", response);
+      // console.log("Submitted successfully:", response);
       showSuccessAndClear();
     } catch (err) {
       setError("Something went wrong. Please try again.");

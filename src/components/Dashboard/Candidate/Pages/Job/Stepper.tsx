@@ -26,7 +26,7 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
     { key: "JOINED", label: "Joined" },
   ];
 
-  console.log(statusTracker)
+  // console.log(statusTracker)
   // Find the latest status from the tracker
   let latestStatus = statusTracker.newStatus; // Default to APPLIED
   let latestDate = "";

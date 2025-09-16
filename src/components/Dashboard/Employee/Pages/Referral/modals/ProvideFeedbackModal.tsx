@@ -111,10 +111,10 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
 
       if (error) {
         toast.error("Cannot submit feedback. Something went wrong.", getToastOptions({}));
-        console.log(error);
+        // console.log(error);
       }
     } catch (error: any) {
-      console.log(error);
+      // console.log(error);
       const errorMsg = error?.message || "Something went wrong";
       setIsError(errorMsg);
       toast.error(errorMsg, getToastOptions({}));

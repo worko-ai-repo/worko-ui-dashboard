@@ -101,7 +101,7 @@ useEffect(() => {
     }
 
     try {
-      console.log(request)
+      // console.log(request)
       const payload = {
         newStatus: "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR",
         actionByUserId: mentorID,
@@ -109,7 +109,7 @@ useEffect(() => {
         reScheduleRequestDate: new Date(rescheduleDate).toISOString(),
         reScheduleRequestTime: rescheduleTime,
       };
-      console.log(payload)
+      // console.log(payload)
       const { response, error } = await httpServiceObj.patch(`/user/guidance-request/${request.id}/MENTOR_ACTION`, payload, true, {});
 
       if (error) {

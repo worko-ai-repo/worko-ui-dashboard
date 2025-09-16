@@ -298,9 +298,9 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
 
       const payload = createPayload;
 
-      console.log(`Company ${mode} Payload:`, payload);
-      console.log("Company ID:", companyData?.id);
-      console.log("Logo Cloud File Name:", logoCloudFileName);
+      // console.log(`Company ${mode} Payload:`, payload);
+      // console.log("Company ID:", companyData?.id);
+      // console.log("Logo Cloud File Name:", logoCloudFileName);
 
       // TODO: Replace with actual API calls
       if (mode === "CREATE") {
@@ -329,7 +329,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
         if (!patchResult) {
           toast.error("Failed to update company logo. Please try again.", getToastOptions({}));
         }
-        console.log("Logo Update Payload:", logoPayload);
+        // console.log("Logo Update Payload:", logoPayload);
         toast.success("Company logo updated successfully!", getToastOptions());
       }
 

@@ -55,7 +55,7 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
             if (error || !response?.awsS3SignedUrl || !response?.cloudFileName) {
                 throw new Error("Could not get signed URL");
             }
-            console.log("response to get awssigned url",response)
+            // console.log("response to get awssigned url",response)
             const { awsS3SignedUrl, awsS3Tag, cloudFileName } = response;
 
             const uploadResult = await httpServiceObj.put(
@@ -65,7 +65,7 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
                 { awsS3Tag, fileType: file.type },
                 true
             );
-            console.log("uploadResult",uploadResult)
+            // console.log("uploadResult",uploadResult)
             if (uploadResult.error) {
                 throw new Error("Upload failed");
             }

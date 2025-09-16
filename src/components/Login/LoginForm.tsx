@@ -81,7 +81,7 @@ const LoginForm = () => {
 			// If the device is successfully remembered, refresh the session
 			await fetchAuthSession({ forceRefresh: isToggleEnabled });
 		} catch (error) {
-			console.log(error);
+			// console.log(error);
 		}
 	};
 

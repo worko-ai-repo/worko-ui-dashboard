@@ -46,7 +46,7 @@ const RejectRefferralModal: FC<RejectRefferralModalProps> = ({
       setIsLoading(false);
       return;
     }
-    console.log(reason, comments);
+    // console.log(reason, comments);
     try {
       const payload = {
         action: "REJECT",
@@ -55,10 +55,10 @@ const RejectRefferralModal: FC<RejectRefferralModalProps> = ({
         emailId: user.email,
         userId: user.sub,
       };
-      console.log(referralData, payload);
+      // console.log(referralData, payload);
       const url = `/emp/referral/${referralData.id}/action`;
       const { response } = await httpServiceObj.put(url, payload, true);
-      console.log(response);
+      // console.log(response);
       if (response) {
         toast.success("Referral rejected", getToastOptions({}));
         setIsError("");
@@ -66,7 +66,7 @@ const RejectRefferralModal: FC<RejectRefferralModalProps> = ({
         onClose();
       }
     } catch (error: any) {
-      console.log(error);
+      // console.log(error);
       const errorMsg = error?.message || "Something went wrong";
       setIsError(errorMsg);
       toast.error(errorMsg, getToastOptions({}));
@@ -76,7 +76,7 @@ const RejectRefferralModal: FC<RejectRefferralModalProps> = ({
   };
 
   useEffect(() => {
-    console.log(referralData);
+    // console.log(referralData);
     if (isOpen) {
       setVisible(true);
       const timer = setTimeout(() => setIsAnimatingIn(true), 10);

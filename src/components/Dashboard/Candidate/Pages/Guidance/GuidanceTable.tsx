@@ -121,7 +121,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
 
   const handleViewDetails = useCallback((request: GuidanceRequest) => {
     openModal(request, 'acceptAndPay');
-    console.log(request)
+    // console.log(request)
   }, [openModal]);
 
   const handleAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
@@ -132,7 +132,7 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
   const handleModalAcceptAndPay = useCallback(async (request: GuidanceRequest) => {
     setProcessingRequestId(request.id);
     try {
-      console.log("Accept and pay for request:", request.id);
+      // console.log("Accept and pay for request:", request.id);
       onRefresh();
       closeModal();
     } catch (error) {

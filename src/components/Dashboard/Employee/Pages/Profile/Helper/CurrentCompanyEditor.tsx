@@ -71,7 +71,7 @@ const CurrentCompanyEditor: React.FC<CurrentCompanyEditorProps> = ({ items, onSa
 
   
 useEffect(() => {
-  console.log(onlyVerifyClicked,items)
+  // console.log(onlyVerifyClicked,items)
   if (onlyVerifyClicked && items) {
     setFormData({
       companyName: items.companyName || '',
@@ -100,7 +100,7 @@ useEffect(() => {
     try {
       // const {response} = await httpServiceObj.get(`/company?companyName=${query}&isVerified=0`,true,{});
       const {response} = await httpServiceObj.get(`/company?companyName=${query}`,true,{});
-      console.log(response)
+      // console.log(response)
       const typedResponse = response as CompanyAPIResponse;
       setSuggestions(typedResponse.data);
     } catch (error) {
@@ -118,7 +118,7 @@ useEffect(() => {
     };
 
     const handleSuggestionClick = (company:Company) => {
-      console.log(company.name)
+      // console.log(company.name)
       setFormData({ ...formData, companyName: company.name });
       setSelectionMade(true); 
       setSelectedCompany(company)
@@ -171,7 +171,7 @@ useEffect(() => {
       setVerifyingEmail(false)
       return
     }
-    console.log(items)
+    // console.log(items)
     try {
           const payload = [{
           PK: items?.PK? items.PK : "",
@@ -184,14 +184,14 @@ useEffect(() => {
           experienceInMonths: formData.experienceInMonths,
           isCurrent: true
         }]
-        console.log(payload)
+        // console.log(payload)
         await httpServiceObj.post(`/user/${userDetails[0].email}/experience`,payload,true)
 
         // below i added settimeout so that post gets enough time just an extra step so that post doesnt fail
         await new Promise(res => setTimeout(res, 400));
           
         const { response } = await httpServiceObj.get(`/user/${userDetails[0].email}/experience`, true);
-        console.log(response)
+        // console.log(response)
         if (!Array.isArray(response) || response.length === 0) {
           toast.error("No experience data returned.", getToastOptions({}));
           setVerifyingEmail(false);
@@ -240,7 +240,7 @@ useEffect(() => {
       if (data?.verificationStatus) {
         setEmailVerified(true);
         toast.success('Email verified!',getToastOptions({}));
-        console.log([formData])
+        // console.log([formData])
         onSave([{ ...formData, isEmailVerified: true }]);
       }else{
         toast.error('OTP Verification failed',getToastOptions({}));

@@ -120,7 +120,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         return;
       }
     } else {
-      console.log("Navigating to tab:", NavItem.label);
+      // console.log("Navigating to tab:", NavItem.label);
       setActiveTab(NavItem.label);
       onNavigate(dashboardType, NavItem.id);
       setSidebarOpen(false); // Close sidebar on mobile after navigation

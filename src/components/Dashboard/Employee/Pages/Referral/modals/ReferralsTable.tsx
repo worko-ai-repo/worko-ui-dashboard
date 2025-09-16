@@ -100,7 +100,7 @@ const ReferralsTable = memo(
         if (!userEmail) {
           throw new Error("User not found");
         }
-        console.log(userEmail);
+        // console.log(userEmail);
         const { response } = await httpServiceObj.get<UserDetails[]>(
           `/user/${userEmail}/details`,
           true

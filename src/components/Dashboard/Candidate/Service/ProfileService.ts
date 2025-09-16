@@ -178,7 +178,7 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
       // ? `${APP_API_URI}/user/${endpoint}/${email}`   
       // : `${APP_API_URI}/user/${email}/${endpoint}`;
 
-      console.log(email, entity,data,method,url)
+      // console.log(email, entity,data,method,url)
       if(entity === 'preference' && method === "POST"){
         const { response, error } = await httpServiceObj[method.toLowerCase() as 'post'](
           `${APP_API_URI}/user/${endpoint}/`, 
@@ -214,7 +214,7 @@ async fetchAllUserData(email: string): Promise<Record<DataEntity, any>> {
 
   // Update details data
   async updateDetailsData(email: string, currentData: any, newData: Partial<any>): Promise<boolean> {
-    console.log(currentData)
+    // console.log(currentData)
     if (!currentData) {
       console.error("Details data is null or undefined");
       return false;
@@ -281,7 +281,7 @@ const hasCandidateExperience =
   } else if (!hasMultipleCandidateExperience && hasCandidateExperience) {
     payload.isCandidateFresher = false;
   }
-    console.log(payload,"payload 297")
+    // console.log(payload,"payload 297")
     return await this.updateUserData(email, 'details', payload, 'PUT');
   }
 
@@ -328,7 +328,7 @@ const hasCandidateExperience =
       payload.isCandidateFresher = false;
     }
 
-  console.log(payload,"payload 356")
+  // console.log(payload,"payload 356")
   return await this.updateUserData(email, 'details', payload, 'PUT');
 }
 
@@ -340,7 +340,7 @@ const hasCandidateExperience =
       const updatedData = {
         ...data
       };
-      console.log("updateddata",updatedData)
+      // console.log("updateddata",updatedData)
       return await this.updateUserData(email, 'education', [updatedData], 'POST');
     // } 
     // Otherwise add new education entry
@@ -376,7 +376,7 @@ const hasCandidateExperience =
       ...updatedSkills[0],             // Keep all existing data
       [skillType]: data[skillType],    // Update only the specific skill type
     };
-    console.log(updatedSkills,"updated skills")
+    // console.log(updatedSkills,"updated skills")
     return await this.updateUserData(email, 'skills', updatedSkills[0]);
   }
 
@@ -388,8 +388,8 @@ const hasCandidateExperience =
         [preferenceType]: data[preferenceType], 
     };
       const {userPreferredRoles, userPreferredIndustries, userPreferredDepartments, userPreferredlocations} = updatedPreference
-      console.log(userPreferredRoles, userPreferredIndustries, userPreferredDepartments, userPreferredlocations,"updated skills")
-      console.log(updatedPreference,"updatedPreference")
+      // console.log(userPreferredRoles, userPreferredIndustries, userPreferredDepartments, userPreferredlocations,"updated skills")
+      // console.log(updatedPreference,"updatedPreference")
       return await this.updateUserData(email, 'preference', {
       email,
       userPreferredRoles: userPreferredRoles,
@@ -449,7 +449,7 @@ const hasCandidateExperience =
         ];
       }
     }
-    console.log("currentData",updatedData)
+    // console.log("currentData",updatedData)
     return await this.updateUserData(email, 'achievement', updatedData);
   }
 
@@ -457,9 +457,9 @@ const hasCandidateExperience =
 
     if (!currentData) return false;
 
-    console.log(currentData,"currentdata")
+    // console.log(currentData,"currentdata")
     const updatedSocials = currentData
-    console.log(updatedSocials)
+    // console.log(updatedSocials)
     return await this.updateUserData(email, 'socialprofile', updatedSocials);
   }
 
@@ -499,13 +499,13 @@ const hasCandidateExperience =
 
   // Get subscription plan
   async getSubscriptionPlan(email: string): Promise<any> {
-    console.log(email);
+    // console.log(email);
     if (!email) {
       return null;
     }
     
     try {
-        console.log('In get subscription plan');
+        // console.log('In get subscription plan');
       return await this.fetchUserData(email, 'subscription');
     } catch (error) {
       console.error("Error fetching subscription plan:", error);

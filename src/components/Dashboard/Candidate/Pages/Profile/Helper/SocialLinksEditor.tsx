@@ -18,9 +18,9 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ items, onSave, on
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(()=>{
-    console.log(items)
-  },[])
+  // useEffect(()=>{
+  //   console.log(items)
+  // },[])
   const handleAddItem = () => {
     const label = socialLabel.trim();
     const url = socialLink.trim();

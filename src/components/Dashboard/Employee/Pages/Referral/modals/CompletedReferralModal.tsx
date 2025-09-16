@@ -57,10 +57,10 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
           emailId: user.email,
           userId: user.sub,
         };
-        console.log(referralData, payload);
+        // console.log(referralData, payload);
         const url = `/emp/referral/${referralData.id}/action`;
         const { response } = await httpServiceObj.put(url, payload, true);
-        console.log(response);
+        // console.log(response);
         if (response) {
           toast.success("Referral request marked as done", getToastOptions({}));
           setIsError("");
@@ -68,7 +68,7 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
           onClose();
         }
       } catch (error: any) {
-        console.log(error);
+        // console.log(error);
         const errorMsg = error?.message || "Something went wrong";
         setIsError(errorMsg);
         toast.error(errorMsg, getToastOptions({}));
@@ -77,10 +77,10 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
       }
     } else {
       try {
-        console.log(referralData);
+        // console.log(referralData);
         const url = `/user/${user.email}/referral/${referralData.id}/DONE`;
         const { response } = await httpServiceObj.put(url, {}, true);
-        console.log(response);
+        // console.log(response);
         if (response) {
           toast.success("Referral request marked as done", getToastOptions({}));
           setIsError("");
@@ -88,7 +88,7 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
           onClose();
         }
       } catch (error: any) {
-        console.log(error);
+        // console.log(error);
         const errorMsg = error?.message || "Something went wrong";
         setIsError(errorMsg);
         toast.error(errorMsg, getToastOptions({}));

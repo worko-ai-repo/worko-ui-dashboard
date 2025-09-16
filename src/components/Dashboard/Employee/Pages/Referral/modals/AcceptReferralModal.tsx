@@ -54,10 +54,10 @@ const AcceptReferralModal: FC<AcceptReferralModalProps> = ({
         emailId: user.email,
         userId: user.sub,
       };
-      console.log(referralData, payload);
+      // console.log(referralData, payload);
       const url = `/emp/referral/${referralData.id}/action`;
       const { response } = await httpServiceObj.put(url, payload, true);
-      console.log(response);
+      // console.log(response);
       if (response) {
         toast.success("Referral accepted", getToastOptions({}));
         setIsError("");
@@ -65,7 +65,7 @@ const AcceptReferralModal: FC<AcceptReferralModalProps> = ({
         onClose();
       }
     } catch (error: any) {
-      console.log(error);
+      // console.log(error);
       const errorMsg = error?.message || "Something went wrong";
       setIsError(errorMsg);
       toast.error(errorMsg, getToastOptions({}));

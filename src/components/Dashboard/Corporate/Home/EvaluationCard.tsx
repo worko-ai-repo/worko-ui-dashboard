@@ -55,7 +55,8 @@ export const EvaluationCard: React.FC<EvaluationCardProps> = ({ evaluation }) =>
               }}></div> */}
             <ProgressCircle 
               value={evaluation.score} 
-              onClick={() => console.log("ProgressCircle clicked")} 
+              onClick={() => console.log("")
+              } 
             />
           </div>
           {/* <div className="text-zinc-500 text-[8px] font-semibold">View details</div>

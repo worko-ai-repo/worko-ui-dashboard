@@ -168,7 +168,7 @@ const Profile = () => {
       setAchievementData(userData.achievement);
       setSocialLinks(userData.socialprofile)
       setPreferenceData(userData.preference || {})
-      console.log(userData)
+      // console.log(userData)
     } catch (err: any) {
       console.error("Error fetching profile data:", err);
       setError(err.message || "Failed to load profile data");
@@ -199,7 +199,7 @@ const Profile = () => {
         detailsData,
         { about: data.about }
       );
-      console.log(data.about)
+      // console.log(data.about)
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
@@ -257,14 +257,14 @@ const Profile = () => {
 
   const handleSaveEducation = async () => {
     if (!user) return;
-    console.log(user.email, educationData, editedEducation);
+    // console.log(user.email, educationData, editedEducation);
 
     let success;
     try {
       const timestamp = new Date().toISOString();
 
       if (educationData[0]?.PK && educationData[0]?.SK) {
-        console.log("existing")
+        // console.log("existing")
         success = await profileService.updateEducationData(
           user.email,
           {
@@ -278,7 +278,7 @@ const Profile = () => {
           0                
         );
       } else {
-        console.log("new")
+        // console.log("new")
         success = await profileService.updateEducationData(
           user.email,
           {
@@ -323,7 +323,7 @@ const Profile = () => {
 
       if (error) throw new Error(error.message);
 
-      console.log("OTP sent successfully to",number);
+      // console.log("OTP sent successfully to",number);
       setShowPhoneOtpInput(true);
       setResendCooldown(true);
       setCountdown(30);
@@ -410,7 +410,7 @@ const Profile = () => {
       const updateData = {
       multipleCandidateExperience: data,
     };
-      console.log(updateData)
+      // console.log(updateData)
 
       const success = await profileService.updateDetailsData(
         user.email,
@@ -449,7 +449,7 @@ const Profile = () => {
         { coreSkills: skills },
         'coreSkills'
       );
-      console.log("handlesavecoreskills function", user.email,skillsData,skills,)
+      // console.log("handlesavecoreskills function", user.email,skillsData,skills,)
       if (success) {
         // Update local state to reflect changes
         setSkillsData((prevData: any) => {
@@ -749,7 +749,7 @@ const Profile = () => {
   };
 
 const handleSaveResponsibilities = async (items: Responsibility[]) => {
-  console.log(items)
+  // console.log(items)
   try {
     if (!user) return false;
 
@@ -828,7 +828,7 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
     linkedin:socialLinks[0]?.linkedin ? socialLinks[0].linkedin : []
   };
 
-    console.log(updatedData,"updatedData")
+    // console.log(updatedData,"updatedData")
     
     const success = await profileService.updateSocialData(user.email, updatedData);
 
@@ -1008,7 +1008,7 @@ const handleSaveSalary = async (data:any) => {
                 <UploadImageButton 
                 detailsData={detailsData[0]}
                 onUploadSuccess={(url) => {
-                  console.log("New image uploaded:", url);
+                  // console.log("New image uploaded:", url);
                   fetchData()
                   setEditMode('profilePic', false)
                 }} />
@@ -1293,7 +1293,7 @@ const handleSaveSalary = async (data:any) => {
 
                   <UploadCVButton
                     onUploadSuccess={(cvUrl) => {
-                      console.log("Uploaded CV URL:", cvUrl);
+                      // console.log("Uploaded CV URL:", cvUrl);
                       fetchData();
                     }}
                   />

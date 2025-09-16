@@ -332,7 +332,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
               handleSendToRecruiter(applicationId, refetch)
             }
             showRejectReason={(applicationId) =>
-              console.log(`Show reject reason for application ${applicationId}`)
+              console.log(``)
             }
             isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
             onBulkUpdate={onBulkUpdate}

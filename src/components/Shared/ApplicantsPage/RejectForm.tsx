@@ -21,7 +21,7 @@ const onSubmit = async (data: RejectionFormData, onSuccessCallback: () => void) 
   try {
     const { jobId, ...dataWithoutJobId } = data;
     dataWithoutJobId.status = "REJECTED";
-    console.log("[Submit] Payload being sent:", dataWithoutJobId);
+    // console.log("[Submit] Payload being sent:", dataWithoutJobId);
 
     const response = await CorporateServiceObj.updateApplicationStatus(dataWithoutJobId, jobId);
     if (!response) throw new Error("Failed to update application status");

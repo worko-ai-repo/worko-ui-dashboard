@@ -116,7 +116,7 @@ const Guidance = () => {
         try {
           const { response } = await httpServiceObj.get(url, true, {}, true);
           const data = response as UserDetails[]; 
-          console.log(data[0].id)
+          // console.log(data[0].id)
           // if (Array.isArray(data) && data[0]?.id) {
           //   localUserId = data[0].id;
             setUserID(data[0].id);
@@ -152,7 +152,7 @@ const Guidance = () => {
       try {
         const uri = `${APP_API_URI}/user/guidance-request?email=${encodeURIComponent(user.email)}&actionByUserType=CAND&pageSize=${pageSize}&lastKey=${lastKey}`;
         const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
-        console.log(response)
+        // console.log(response)
         if (response) {
           // Process the data to include status formatting
           if (Array.isArray(response.data)) {

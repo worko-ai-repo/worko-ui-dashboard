@@ -30,7 +30,7 @@ const handleActiveFrame = async (frame: SignupMode) => {
     if (!currentUser) {
         throw new Error("User not found");
     }
-    console.log(frame)
+    // console.log(frame)
     const payload = { lastAccessedDash: frame };
   
   const currentPath = window.location.pathname;
@@ -56,7 +56,7 @@ const handleActiveFrame = async (frame: SignupMode) => {
       payload,
       true
     );
-    console.log(response)
+    // console.log(response)
     if (error) {
       console.error("API error while updating dashboard preference:", error);
     }

@@ -65,14 +65,14 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
   const currentTime = Date.now() / 1000;
 
   const refetchUserType = async () => {
-    console.log("Refetching user type...");
+    // console.log("Refetching user type...");
     await CognitoServiceObj.setAccessToken();
     const userRevised = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE);
     if (!userRevised && tokenRequired) {
       return <Navigate to="/auth/login" />;
     } else {
       userType = userRevised;
-      console.log("Updated user type:", userType);
+      // console.log("Updated user type:", userType);
       secureStorage.setItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE, userType || []);
     }
   };

@@ -82,11 +82,11 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
       }
       if (error) {
         toast.error("Cannot raise issue not something went wrong", getToastOptions({}));
-        console.log(error);
+        // console.log(error);
         setIsLoading(false);
       }
     } catch (error: any) {
-      console.log(error);
+      // console.log(error);
       const errorMsg = error?.message || "Something went wrong";
       setIsError(errorMsg);
       toast.error(errorMsg, getToastOptions({}));

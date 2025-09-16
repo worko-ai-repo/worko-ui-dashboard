@@ -157,10 +157,10 @@ const CVPreview = ({
   useEffect(() => {
     const btns: JobApplicationActionType[] = ["ACCEPT", "HIRE_NOW", "REJECT"];
     btns.forEach((btn) => {
-      console.log(
-        `shouldShowAction(${btn}, ${jobApplicationData.status}, ${activeTab}):`,
-        shouldShowAction(btn, jobApplicationData, activeTab)
-      );
+      // console.log(
+      //   `shouldShowAction(${btn}, ${jobApplicationData.status}, ${activeTab}):`,
+      //   shouldShowAction(btn, jobApplicationData, activeTab)
+      // );
     });
   }, [jobApplicationData, activeTab]);
   return (

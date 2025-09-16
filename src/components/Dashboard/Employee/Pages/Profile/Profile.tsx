@@ -124,7 +124,7 @@ const Profile = () => {
 
       // Fetch all user data using the email from the current user
       const userData = await profileService.fetchAllUserData(currentUser.email);
-      console.log(userData)
+      // console.log(userData)
       //combining both experience object and multiple experience array into one
         const combinedExperience = [
           // ...(userData.details[0].candidateExperience
@@ -143,7 +143,7 @@ const Profile = () => {
       setExperienceData(userData.experience);
       setAllCandidateExperience(combinedExperience)
       setSocialLinks(userData.socialprofile)
-      console.log(userData)
+      // console.log(userData)
     } catch (err: any) {
       console.error("Error fetching profile data:", err);
       setError(err.message || "Failed to load profile data");
@@ -174,7 +174,7 @@ const Profile = () => {
         detailsData,
         { about: data.about }
       );
-      console.log(data.about)
+      // console.log(data.about)
       if (success) {
         // Update local state to reflect changes
         setDetailsData((prevData: any) => {
@@ -247,7 +247,7 @@ const Profile = () => {
 
       if (error) throw new Error(error.message);
 
-      console.log("OTP sent successfully to",number);
+      // console.log("OTP sent successfully to",number);
       setShowPhoneOtpInput(true);
       setResendCooldown(true);
       setCountdown(30);
@@ -334,7 +334,7 @@ const Profile = () => {
       const updateData = {
       multipleCandidateExperience: data,
     };
-      console.log(updateData)
+      // console.log(updateData)
 
       const success = await profileService.updateDetailsData(
         user.email,
@@ -492,7 +492,7 @@ const Profile = () => {
                   <UploadImageButton2
                   detailsData={detailsData[0]}
                   onUploadSuccess={(url) => {
-                    console.log("New image uploaded:", url);
+                    // console.log("New image uploaded:", url);
                     fetchData()
                     setEditMode('profilePic', false)
                   }} />

@@ -151,7 +151,7 @@ const Guidance = () => {
       try {
         const uri = `${APP_API_URI}/user/guidance-request?mentorId=${localUserId}&actionByUserType=EMP&pageSize=${pageSize}&lastKey=${lastKey}`;
         const { response, error }: { response: GuidanceApiResponse | null; error: Error | null } = await httpServiceObj.get(uri,true,{},true);
-        console.log(response)
+        // console.log(response)
         if (response) {
           // Process the data to include status formatting
           if (Array.isArray(response.data)) {

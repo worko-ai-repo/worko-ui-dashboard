@@ -154,7 +154,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
             })),
           };
           if (isBulk) {
-            console.log("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
+            // console.log("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
             if (isAdmin) {
               return AdminServiceObj.postBulkEvaluatorFeedbackRequest(payload);
             } else {

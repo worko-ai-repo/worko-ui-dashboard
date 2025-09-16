@@ -56,7 +56,7 @@ const ReferNearnProcessPayment: React.FC<ReferNearnProcessPaymentProps> = ({
   const onSubmit = async (formData: ReferAndEarnPaymentDoneDetailsDto) => {
     setIsSubmitting(true);
     try {
-      console.log("Payment processing payload:", formData);
+      // console.log("Payment processing payload:", formData);
 
       const response = await AdminServiceObj.patchReferAndEarnStatus(data.id, {
         paymentDoneDetails: formData,

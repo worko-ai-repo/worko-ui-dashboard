@@ -47,7 +47,7 @@ const UploadDocument: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
                 resumeUserFileName: file.name,
                 resumeFileMimeType: file.type,
             };
-            console.log(userId,email,file.name,file.type)
+            // console.log(userId,email,file.name,file.type)
             const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>("/file/gsu2u/USER_RESUME", metadata, true);
 
             if (error || !response?.awsS3SignedUrl || !response?.cloudFileName) {
