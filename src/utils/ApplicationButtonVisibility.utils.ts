@@ -3,6 +3,7 @@ import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import jobApplicationServiceObj from "./ApplicationPage.utils";
 import { RBAC } from "./RoleBaseAccessControll.utils";
+import { useAppContext } from "@Context/App.context";
 
 // Extended action types to cover all buttons
 export type JobApplicationActionType =
@@ -48,6 +49,12 @@ export const CONDITIONS = {
   canAccept: (app: JobApplicationDetailsDto): boolean => {
     return RBAC.can("manage_users");
   },
+  canShowMarkDuplicate: (app: JobApplicationDetailsDto): boolean => {
+    const {userDetails} = useAppContext();
+    if(!userDetails) return false;
+    if(!userDetails.cvDuplicacyAccess) return false;
+    return userDetails?.cvDuplicacyAccess;
+  },
   hasOfferLetterIssue: (app: JobApplicationDetailsDto): boolean => {
     return Boolean(app?.status === JobApplicationStatusEnum.OFFER_ISSUE_RAISED);
   },
@@ -56,7 +63,9 @@ export const CONDITIONS = {
   },
   isStale: (app: JobApplicationDetailsDto) =>
     isApplicationStatusStale(app.status, app.statusTracker),
-  shouldShowPushToRecruiter: (app: JobApplicationDetailsDto) =>{ return jobApplicationServiceObj.showPushToRecruiterButton(app)},
+  shouldShowPushToRecruiter: (app: JobApplicationDetailsDto) => {
+    return jobApplicationServiceObj.showPushToRecruiterButton(app);
+  },
   hasDuplicacyInfo: (app: JobApplicationDetailsDto) =>
     Boolean(app?.hiredFromOtherPortal?.portal && app?.hiredFromOtherPortal?.date),
   canMarkDuplicate: (app: JobApplicationDetailsDto) =>
@@ -132,7 +141,7 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         PUSH_TO_RECRUITER: {
-          visible: true && RBAC.can("push_to_recruiter"),
+          visible: true && RBAC.can("push_to_recruiter") && !isWorkoJob,
           // condition: CONDITIONS.shouldShowPushToRecruiter,
         },
         ACCEPT: { visible: true, condition: CONDITIONS.canAccept },
@@ -148,17 +157,18 @@ export function getActionVisibilityConfig(
         SEND_TO_EVALUATOR: { visible: true },
         NOTES: { visible: true },
         MARK_DUPLICATE: {
-          visible: false,
+          visible: true,
           condition: (application) =>
-            CONDITIONS.canMarkDuplicate(application) && RBAC.can("play_corporate"),
+            CONDITIONS.canShowMarkDuplicate(application) && CONDITIONS.canMarkDuplicate(application) && RBAC.can("play_corporate"),
         },
         VIEW_DUPLICACY: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasDuplicacyInfo,
         },
         HIRE: {
           visible: true,
         },
+        PROCESS_INTERVIEW: { visible: true },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
       };
@@ -190,8 +200,9 @@ export function getActionVisibilityConfig(
         ONHOLD: { visible: true },
         NOTES: { visible: true },
         INTERVIEW_DONE: { visible: true /* ,condition: CONDITIONS.hasEvaluatorResponse */ },
+        SEND_TO_EVALUATOR: { visible: true },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
         },
       };
@@ -203,8 +214,9 @@ export function getActionVisibilityConfig(
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
         NOTES: { visible: true },
+        SEND_TO_EVALUATOR: { visible: true },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
         },
         REJECT: { visible: true },
@@ -221,7 +233,7 @@ export function getActionVisibilityConfig(
         REJECT: { visible: true },
         ONHOLD: { visible: true },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -255,7 +267,7 @@ export function getActionVisibilityConfig(
           condition: CONDITIONS.hasDocRequested,
         },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -274,7 +286,7 @@ export function getActionVisibilityConfig(
         VIEW_CV: { visible: true },
         NOTES: { visible: true },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -314,11 +326,11 @@ export function getActionVisibilityConfig(
         },
         VIEW_DOCUMENT_READ: {
           visible: true,
-          tabOverrides: { All: false, Hired: true }, 
+          tabOverrides: { All: false, Hired: true },
           condition: CONDITIONS.hasDocRequested,
         },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -345,7 +357,7 @@ export function getActionVisibilityConfig(
           tabOverrides: { All: true, Hired: true },
         },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -374,7 +386,7 @@ export function getActionVisibilityConfig(
           tabOverrides: { All: false, Hired: true, Joined: true },
         },
         VIEW_EVALUATION: {
-          visible: false,
+          visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
           tabOverrides: {
             All: false,
@@ -384,7 +396,7 @@ export function getActionVisibilityConfig(
         },
         VIEW_DOCUMENT_READ: {
           visible: true,
-          tabOverrides: { All: false, Hired: true }, 
+          tabOverrides: { All: false, Hired: true },
           condition: CONDITIONS.hasDocRequested,
         },
         VIEW_CV: { visible: true },
