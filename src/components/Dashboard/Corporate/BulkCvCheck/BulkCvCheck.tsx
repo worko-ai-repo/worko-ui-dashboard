@@ -63,6 +63,7 @@ const BulkCVCheck: React.FC = () => {
     } catch (error) {
       console.error("Error parsing job description:", error);
     } finally {
+      setJobDescription(jobDescription);
       setLoader(false);
       setIsBulkCvFormOpen(true);
     }
