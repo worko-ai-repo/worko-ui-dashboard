@@ -1275,7 +1275,7 @@ const handleSaveSalary = async (data:any) => {
                 <div className="w-full lg:w-40 xl:w-64 mt-6 lg:mt-0 bg-gray-100 rounded-lg p-4 sm:p-6 flex flex-col gap-4 sm:gap-6">
                   <div className="flex items-center justify-between">
                     <div className="text-sm overflow-hidden text-ellipsis whitespace-nowrap flex-1 mr-2">
-                      {detailsData[0]?.CV || "Resume.pdf"}
+                      {detailsData[0]?.userCvFileName || detailsData[0]?.CV || "Resume.pdf"}
                     </div>
                     <a
                       href={detailsData[0]?.cvAwsS3SignedUrl || "#"}

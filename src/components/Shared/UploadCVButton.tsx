@@ -6,6 +6,7 @@ import { AwsS3FileUploadResponse, FileUpload } from "@Interfaces/Auth.dto";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { useAppContext } from "@Context/App.context";
 
 interface UploadCVButtonProps {
     onUploadSuccess?: (cvUrl: string) => void;
@@ -15,7 +16,7 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const {userDetails} = useAppContext()
     const handleClick = () => {
         fileInputRef.current?.click();
     };
@@ -38,8 +39,8 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             setUploading(true);
             setError(null);
 
-            const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
-            const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
+            const userId = userDetails?.id
+            const email = userDetails?.email
 
             const metadata = {
                 userId,
@@ -67,7 +68,7 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
                 throw new Error("Upload failed");
             }
 
-            const patchResult = await httpServiceObj.patch(`/user/${email}/cv`, { resume: cloudFileName }, true);
+            const patchResult = await httpServiceObj.patch(`/user/${email}/cv`, { userCvFileName:file.name,resume: cloudFileName }, true);
 
             if (patchResult.status !== 200) {
                 throw new Error("Failed to update user record with CV");

@@ -6,6 +6,7 @@ import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { useAppContext } from "@Context/App.context";
 
 interface UploadImageButtonProps {
     detailsData?:any,
@@ -16,7 +17,7 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
+    const {userDetails} = useAppContext()
     const handleClick = () => {
         fileInputRef.current?.click();
     };
@@ -40,9 +41,9 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
             setUploading(true);
             setError(null);
 
-            const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
-            const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
-            console.log(userId)
+            const userId = userDetails?.id
+            const email = userDetails?.email
+
             const metadata = {
                 userId,
                 profileUserFileName: file.name,
