@@ -50,9 +50,9 @@ export const CONDITIONS = {
     return RBAC.can("manage_users");
   },
   canShowMarkDuplicate: (app: JobApplicationDetailsDto): boolean => {
-    const {userDetails} = useAppContext();
-    if(!userDetails) return false;
-    if(!userDetails.cvDuplicacyAccess) return false;
+    const { userDetails } = useAppContext();
+    if (!userDetails) return false;
+    if (!userDetails.cvDuplicacyAccess) return false;
     return userDetails?.cvDuplicacyAccess;
   },
   hasOfferLetterIssue: (app: JobApplicationDetailsDto): boolean => {
@@ -141,8 +141,9 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         PUSH_TO_RECRUITER: {
-          visible: true && RBAC.can("push_to_recruiter") && !isWorkoJob,
-          // condition: CONDITIONS.shouldShowPushToRecruiter,
+          visible: true ,
+          condition: (application) =>{
+            return RBAC.can("push_to_recruiter") && !isWorkoJob(application) && CONDITIONS.shouldShowPushToRecruiter(application)},
         },
         ACCEPT: { visible: true, condition: CONDITIONS.canAccept },
         REJECT: { visible: true },
@@ -159,7 +160,9 @@ export function getActionVisibilityConfig(
         MARK_DUPLICATE: {
           visible: true,
           condition: (application) =>
-            CONDITIONS.canShowMarkDuplicate(application) && CONDITIONS.canMarkDuplicate(application) && RBAC.can("play_corporate"),
+            CONDITIONS.canShowMarkDuplicate(application) &&
+            CONDITIONS.canMarkDuplicate(application) &&
+            RBAC.can("play_corporate"),
         },
         VIEW_DUPLICACY: {
           visible: true,

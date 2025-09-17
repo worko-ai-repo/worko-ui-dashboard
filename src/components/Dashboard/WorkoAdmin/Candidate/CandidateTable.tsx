@@ -81,7 +81,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
     { key: "candidateExperience_designation", label: "Designation",sortable: true  },
     {
       key: "Cv link",
-      label: "Link",
+      label: "Cv link",
       render: (row: ApplicantDetails) => (
         <button
           key="view-cv"
@@ -89,7 +89,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
           onClick={async () => {
             await handleFetchAndOpenCV(row);
           }}
-          className="flex gap-2 items-center btn-info">
+          className="flex gap-2 items-center btn-info mx-auto">
           <Eye size={16} />
         </button>
       ),

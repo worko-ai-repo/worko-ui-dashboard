@@ -8,6 +8,7 @@ export interface NewScoreFormat {
   RecruiterNote?: string;
   Strengths?: string[];
   "Areas of Concern"?: string[];
+  AreasOfConcern?: string[]; // Added support for camelCase version
 }
 
 /**
@@ -37,7 +38,7 @@ export function parseScorePoints(
 
   // Handle new format with RecruiterNote, Strengths, Areas of Concern
   if (data && typeof data === 'object' && !Array.isArray(data) && 
-      (data.RecruiterNote || data.Strengths || data["Areas of Concern"])) {
+      (data.RecruiterNote || data.Strengths || data["Areas of Concern"] || data.AreasOfConcern)) {
     const points: ScorePoint[] = [];
     const recruiterNote = data.RecruiterNote;
     
@@ -52,9 +53,10 @@ export function parseScorePoints(
       });
     }
     
-    // Add areas of concern as negative points
-    if (data["Areas of Concern"] && Array.isArray(data["Areas of Concern"])) {
-      data["Areas of Concern"].forEach((concern: string, index: number) => {
+    // Add areas of concern as negative points - check both property names
+    const areasOfConcern = data["Areas of Concern"] || data.AreasOfConcern;
+    if (areasOfConcern && Array.isArray(areasOfConcern)) {
+      areasOfConcern.forEach((concern: string, index: number) => {
         points.push({
           heading: `Area of Concern ${index + 1}`,
           detail: concern.trim(),

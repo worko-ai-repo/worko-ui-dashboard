@@ -319,13 +319,13 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     PUSH_TO_RECRUITER: (
       <button
         disabled={
-          jobApplicationServiceObj.showPushToRecruiterButton(row) === false || !row.displayToCorporate
+          jobApplicationServiceObj.showPushToRecruiterButton(row) === false
         }
         key="push-recruiter"
         title={
           row.displayToCorporate === true
             ? "Already sent to recruiter"
-            : jobApplicationServiceObj.showPushToRecruiterButton(row) || !row.displayToCorporate
+            : jobApplicationServiceObj.showPushToRecruiterButton(row) 
             ? "Cannot send to recruiter"
             : "Send to Recruiter"
         }

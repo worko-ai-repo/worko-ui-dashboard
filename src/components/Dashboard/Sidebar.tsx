@@ -1,8 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { XMarkIcon, ChevronLeftIcon } from "@heroicons/react/24/outline";
 import { User } from "@Assets";
 import { CorporateUserDetail, useAppContext } from "@Context/App.context";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Building2, User2 } from "lucide-react";
 
 import navigationItems from "./navigation";
 import SidebarItem from "./SidebarItem";
@@ -43,6 +44,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   // Extract user context and dashboard context
   const navigate = useNavigate();
   const location = useLocation();
+  const [imgError, setImgError] = useState(false);
   const { activeTab, setActiveTab, dashboardType } = useDashboardContext();
   const {
     userDetails,
@@ -138,18 +140,27 @@ const Sidebar: React.FC<SidebarProps> = ({
     setUserName(fullName.length > 0 ? fullName[0] : "User");
   }, [finalUserDetails]);
 
+  const finalLogoUrl = `${import.meta.env.APP_WORKO_BASE_URL}/images/${
+    finalUserDetails?.profileImageAwsS3SignedUrl
+  }`;
+
   /**
    * Avatar component - reusable user profile image/icon
    */
-const Avatar = (
-  <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0">
-    <img
-      src={finalUserDetails?.profileImageAwsS3SignedUrl || User}
-      alt="User Avatar"
-      className="w-full h-full object-cover"
-    />
-  </div>
-);
+  const Avatar =
+    finalLogoUrl && !imgError ? (
+      <img
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={userName}
+        src={finalUserDetails?.profileImageAwsS3SignedUrl}
+        alt={userName}
+        loading="lazy"
+        className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 object-cover border"
+        onError={() => setImgError(true)} // This only affects the current component
+      />
+    ) : (
+      <User2 className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border" />
+    );
 
   return (
     <aside
@@ -162,12 +173,12 @@ const Avatar = (
         <div className="flex  justify-between items-center mb-6 ">
           {!collapsed ? (
             <div className="flex  items-center  w-full">
-            <div className="flex items-center gap-2 w-full overflow-hidden">
-              {Avatar}
-              <span className="text-sm font-bold capitalize truncate w-full text-start">
-                {userName}
-              </span>
-            </div>
+              <div className="flex items-center gap-2 w-full overflow-hidden">
+                {Avatar}
+                <span className="text-sm font-bold capitalize truncate w-full text-start">
+                  {userName}
+                </span>
+              </div>
               <button
                 onClick={() => setCollapsed(true)}
                 className="hidden sm:flex focus:outline-none"

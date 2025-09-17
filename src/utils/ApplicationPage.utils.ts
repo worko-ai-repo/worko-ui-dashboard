@@ -87,7 +87,8 @@ class JobApplicationService {
       isWithin24Hours &&
         jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
         jobApplication.status !== this.STATUS_REJECTED &&
-        scoreIsValid &&  jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID // this make sure that worko jobs don't show this button
+        scoreIsValid &&
+        jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID // this make sure that worko jobs don't show this button
     ); */
     return (
       isWithin24Hours &&
