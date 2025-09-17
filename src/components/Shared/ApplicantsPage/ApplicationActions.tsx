@@ -64,10 +64,12 @@ type Props = {
       jobData: JobApplicationDetailsDto;
     }>
   >;
-  setIsNoteModalOpen: React.Dispatch<React.SetStateAction<{
-    isOpen: boolean;
-    jobApplication: JobApplicationDetailsDto | null;
-  }>>;
+  setIsNoteModalOpen: React.Dispatch<
+    React.SetStateAction<{
+      isOpen: boolean;
+      jobApplication: JobApplicationDetailsDto | null;
+    }>
+  >;
   setIsRejectModalOpen: React.Dispatch<React.SetStateAction<any>>;
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   setEvaluatorFormProps: React.Dispatch<React.SetStateAction<EvaluatorFormProps | null>>;
@@ -205,10 +207,12 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
         key="notes"
         title="Notes"
         className="flex gap-2 items-center btn-info"
-        onClick={() => setIsNoteModalOpen({
-          isOpen: true,
-          jobApplication: row,
-        })}>
+        onClick={() =>
+          setIsNoteModalOpen({
+            isOpen: true,
+            jobApplication: row,
+          })
+        }>
         <NotebookIcon size={16} />
       </button>
     ),
@@ -299,33 +303,36 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     ),
 
     MARK_DUPLICATE: (
-      <div
+      <button
+        disabled={!row?.hiredFromOtherPortal?.portal || !row?.hiredFromOtherPortal?.date}
         key="mark-dup"
         onClick={() => handleMarkAsDuplicateJob("EDIT")}
-        className="btn-outline cursor-pointer w-fit h-11 pl-3.5 pr-4 py-2 inline-flex justify-center items-center gap-0.5">
+        className={`btn-outline btn_disabled ${
+          row?.hiredFromOtherPortal && row?.hiredFromOtherPortal?.portal === "exist"
+            ? "cursor-not-allowed opacity-50"
+            : "cursor-pointer"
+        }`}>
         <Flag size={16} />
-      </div>
+      </button>
     ),
 
     VIEW_DUPLICACY: (
       <div
         key="view-dup"
         onClick={() => handleMarkAsDuplicateJob("VIEW")}
-        className="btn-outline cursor-pointer w-fit h-11 pl-3.5 pr-4 py-2 inline-flex justify-center items-center gap-0.5">
+        className="btn-outline cursor-pointer ">
         <Eye size={16} />
       </div>
     ),
 
     PUSH_TO_RECRUITER: (
       <button
-        disabled={
-          jobApplicationServiceObj.showPushToRecruiterButton(row) === false
-        }
+        disabled={jobApplicationServiceObj.showPushToRecruiterButton(row) === false}
         key="push-recruiter"
         title={
           row.displayToCorporate === true
             ? "Already sent to recruiter"
-            : jobApplicationServiceObj.showPushToRecruiterButton(row) 
+            : jobApplicationServiceObj.showPushToRecruiterButton(row)
             ? "Cannot send to recruiter"
             : "Send to Recruiter"
         }
@@ -463,5 +470,5 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     return null;
   }
 
-  return <div className="flex gap-2 justify-center">{visibleActions}</div>;
+  return <div className="flex gap-2 justify-center h-fit py-1">{visibleActions}</div>;
 };

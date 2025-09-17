@@ -8,9 +8,11 @@ import { toast } from "react-toastify";
 const submitDuplicacyDetailsAPI = async ({
   applicantId,
   data,
+  callbackfn = () => {},
 }: {
   applicantId: string;
   data: { portal: string; date: string };
+  callbackfn?: () => void;
 }) => {
   const hiredFromOtherPortal = {
     hiredFromOtherPortal: {
@@ -28,15 +30,17 @@ const submitDuplicacyDetailsAPI = async ({
   );
   if (!response) throw new Error("Failed to submit duplicacy details");
   toast.success("Duplicacy details submitted successfully!", getToastOptions({}));
+  callbackfn();
   return response;
 };
 
 interface DuplicacyProps {
   action: "EDIT" | "VIEW";
   applicant: JobApplicationDetailsDto;
+  onClose: () => void;
 }
 
-export const Duplicacy: React.FC<DuplicacyProps> = ({ action, applicant }) => {
+export const Duplicacy: React.FC<DuplicacyProps> = ({ action, applicant, onClose }) => {
   const queryClient = useQueryClient();
 
   // Form state for edit
@@ -48,6 +52,7 @@ export const Duplicacy: React.FC<DuplicacyProps> = ({ action, applicant }) => {
     mutationFn: (payload: { portal: string; date: string }) =>
       submitDuplicacyDetailsAPI({ applicantId: applicant.id, data: payload }),
     onSuccess: () => {
+      onClose();
       queryClient.invalidateQueries({ queryKey: ["duplicacy", applicant.id] });
     },
   });

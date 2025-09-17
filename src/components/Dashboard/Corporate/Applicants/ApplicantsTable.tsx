@@ -315,7 +315,7 @@ export default function ApplicationTable({
     actions: {
       key: "actions",
       label: "Actions",
-      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-auto" : ""} `,
+      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-auto h-8" : ""} `,
       render: (row: JobApplicationDetailsDto) => (
         <JobApplicationActions
           row={row}
@@ -768,7 +768,18 @@ export default function ApplicationTable({
           })
         }
         className="w-fit p-5 sm:max-w-2xl h-auto">
-        <Duplicacy action={duplicateModalOpen.action} applicant={duplicateModalOpen.applicant} />
+        <Duplicacy
+          action={duplicateModalOpen.action}
+          applicant={duplicateModalOpen.applicant}
+          onClose={() => {
+            refetch();
+            setDuplicateModalOpen({
+              isOpen: false,
+              applicant: {} as JobApplicationDetailsDto,
+              action: "EDIT",
+            });
+          }}
+        />
       </Modal>
 
       <Modal
