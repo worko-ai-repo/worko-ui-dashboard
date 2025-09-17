@@ -32,28 +32,34 @@ const ViewDetailsModal: FC<ViewDetailsModalProps> = ({
     const [strengths, setStrengths] = useState<string[]>([]);
 
   useEffect(() => {
-        // if (!show) {
-        //     setStrengths([]);
-        //     return;
-        // }
-        const raw = viewDetailsContent.scoreDetails;
-        // console.log(raw)
-        if (typeof raw === 'string' && raw.trim() !== '') {
-            try {
-            const parsed = JSON.parse(raw);
-            if (parsed.RecruiterNote) {
-            // if (parsed && Array.isArray(parsed.Strengths)) {
-                setStrengths(parsed.RecruiterNote);
-            } else {
-                setStrengths([]);
-            }
-            } catch (e) {
-            console.error('Failed to parse scoreDetails:', e);
-            setStrengths([]);
-            }
-        } else {
-            setStrengths([]);
+    let strengths = [];
+    const applicantRaw = viewDetailsContent.scoreDetailsForApplicant;
+    if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
+      try {
+        const parsed = JSON.parse(applicantRaw);
+        if (parsed.CandidateNote) {
+          strengths = parsed.CandidateNote;
         }
+      } catch (e) {
+        console.error('Failed to parse scoreDetailsForApplicant:', e);
+      }
+    }
+
+    if (strengths.length === 0) {
+      const recruiterRaw = viewDetailsContent.scoreDetails;
+      if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
+        try {
+          const parsed = JSON.parse(recruiterRaw);
+          if (parsed.RecruiterNote) {
+            strengths = parsed.RecruiterNote;
+          }
+        } catch (e) {
+          console.error('Failed to parse scoreDetails:', e);
+        }
+      }
+    }
+    setStrengths(strengths);
+
       if (show) {
         setVisible(true);
         const timer = setTimeout(() => setIsAnimatingIn(true), 10);

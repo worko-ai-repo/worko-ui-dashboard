@@ -168,7 +168,7 @@ const Guidance = () => {
               "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
               "MEETING_CONFIRMED": { bg: "bg-orange-200", text: "text-orange-600", label: "Meeting Confirmed" },
               "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
-              "PROJECT_COMPLETED": { bg: "bg-teal-100", text: "text-teal-600", label: "Project Completed" }, 
+              "PROJECT_COMPLETED": { bg: "bg-teal-400", text: "text-teal-800", label: "Project Completed" }, 
               "REJECTED": { bg: "bg-red-100", text: "text-red-600", label: "Rejected" }, 
             };
 
