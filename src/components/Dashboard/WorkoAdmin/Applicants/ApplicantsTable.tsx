@@ -123,12 +123,10 @@ export default function ApplicationTable({
   });
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [evaluatorFormCount, setEvaluatorFormCount] = useState(10);
-  const [isNoteModalOpen, setIsNoteModalOpen] = useState(
-    {
-      isOpen: false,
-      jobApplication: null as JobApplicationDetailsDto | null,
-    }
-  );
+  const [isNoteModalOpen, setIsNoteModalOpen] = useState({
+    isOpen: false,
+    jobApplication: null as JobApplicationDetailsDto | null,
+  });
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({
@@ -614,7 +612,9 @@ export default function ApplicationTable({
               <>
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
-                  <p><CreatedByDisplay row={row} mode="updated" /></p>
+                  <p>
+                    <CreatedByDisplay row={row} mode="updated" />
+                  </p>
                 </div>
 
                 <div className="text-center">
@@ -797,7 +797,11 @@ export default function ApplicationTable({
           })
         }
         className="w-[90vw] sm:w-[455px] h-[500px] ">
-        <RequestDocumentModal {...isRequestDocModalOpen} handleStatusUpdate={handleStatusUpdate} refetch={refetch} />
+        <RequestDocumentModal
+          {...isRequestDocModalOpen}
+          handleStatusUpdate={handleStatusUpdate}
+          refetch={refetch}
+        />
       </Modal>
 
       <Modal
@@ -811,7 +815,9 @@ export default function ApplicationTable({
         isOpen={isNoteModalOpen.isOpen}
         onClose={() => setIsNoteModalOpen({ isOpen: false, jobApplication: null })}
         className="w-full sm:max-w-4xl h-auto">
-        {isNoteModalOpen.jobApplication && <NotesApp jobApplication={isNoteModalOpen.jobApplication}/>}
+        {isNoteModalOpen.jobApplication && (
+          <NotesApp jobApplication={isNoteModalOpen.jobApplication} />
+        )}
       </Modal>
 
       <Modal
@@ -874,7 +880,18 @@ export default function ApplicationTable({
           })
         }
         className="w-fit p-5 sm:max-w-2xl h-auto">
-        <Duplicacy action={duplicateModalOpen.action} applicant={duplicateModalOpen.applicant} />
+        <Duplicacy
+          action={duplicateModalOpen.action}
+          applicant={duplicateModalOpen.applicant}
+          onClose={() => {
+            refetch();
+            setDuplicateModalOpen({
+              isOpen: false,
+              applicant: {} as JobApplicationDetailsDto,
+              action: "EDIT",
+            });
+          }}
+        />
       </Modal>
       <Modal
         isOpen={joinedModalOpen.isOpen}
