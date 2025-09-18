@@ -1155,7 +1155,7 @@ const handleSaveSalary = async (data:any) => {
                               type="text"
                               value={editedLocation}
                               onChange={(e) => setEditedLocation(e.target.value)}
-                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto"
+                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto font-semibold text-black"
                               placeholder="Location"
                             />
                           ) : (

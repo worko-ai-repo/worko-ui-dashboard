@@ -105,7 +105,10 @@ const PreferenceEditor: React.FC<PreferenceEditorProps> = ({
       <div className="flex items-end gap-2 mt-4">
         <div className="flex-1">
           <label htmlFor="newPreference" className="block text-xs font-medium text-gray-700 mb-1">
-            Add a new role
+            {title === "Roles I am looking for" ? "Add a new role"
+            :title === "Industry preference" ? "Add a new industry"
+            :title === "Department preference" ? "Add a new department"
+            :"Add a new location"}
           </label>
           <input
             type="text"

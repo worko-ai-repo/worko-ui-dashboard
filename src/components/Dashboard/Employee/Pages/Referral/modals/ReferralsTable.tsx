@@ -14,6 +14,7 @@ import RaiseIssueModal from "./RaiseIssueModal";
 import CompletedReferralModal from "./CompletedReferralModal";
 import ProvideFeedbackModal from "./ProvideFeedbackModal";
 import ViewDetailsModal from "@Components/Dashboard/Candidate/Pages/Job/modals/ViewDetailsModal";
+import ChatWindow from "@Components/Dashboard/Candidate/Pages/Referral/modals/ChatWindow";
 
 interface UserDetails {
   cvAwsS3SignedUrl?: string;
@@ -57,6 +58,7 @@ const ReferralsTable = memo(
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
     const [viewDetailsContent, setViewDetailsContent] = useState<string>("");
+    const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
 
     const APP_API_URI = import.meta.env.APP_API_URI;
     const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
@@ -230,21 +232,25 @@ const ReferralsTable = memo(
         key: "chat",
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
-          row.status !== "REJECTED" ? (
-            <div className="flex justify-center m-auto w-[150px]">
-              <a href={`/chat/${row.chatId ?? ""}`} className="text-blue-600 hover:underline ">
-                <img src={chat} alt="" />
-              </a>
-            </div>
-          ) : (
-            <div className="flex justify-center m-auto w-[150px]">
-              <a
-                href={""}
-                className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
-                        bg-gray-300 cursor-not-allowed grayscale">
-                <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
-              </a>
-            </div>
+          row.status !== "REJECTED" && row.status !== "AWAITING"? (
+            <button
+            onClick={() => {
+                  setReferralData(row);
+                  setShowChatWindow(true);
+                }}>
+            <a className="text-blue-600 hover:underline">
+              <img src={chat} alt="" />
+            </a>
+            </button>
+          ) : ( null
+            // <div className="flex justify-center m-auto w-[150px]">
+            //   <a
+            //     href={""}
+            //     className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
+            //             bg-gray-300 cursor-not-allowed grayscale">
+            //     <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
+            //   </a>
+            // </div>
           ),
       },
       {
@@ -482,6 +488,14 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               isCandidate={false}
             />
           )}
+            {/* {showChatWindow && (
+            <ChatWindow
+              onClose={()=>setShowChatWindow(false)}
+              show={showChatWindow}  
+              referralData={referralData}      
+              user={"employee"}   
+            />
+          )} */}
         </div>
       </div>
     );

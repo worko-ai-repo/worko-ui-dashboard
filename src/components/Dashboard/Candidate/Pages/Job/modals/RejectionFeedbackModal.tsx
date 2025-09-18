@@ -1,11 +1,5 @@
-import { useDashboardContext } from "@Context/Dashboard.context";
-import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
-import { NormalizedUser } from "@Utils/NormalizeUser";
-import secureStorage from "@Utils/SecureStorage.utils";
 import { toTitleCase } from "@Utils/Titlecase.utils";
-import { X } from "lucide-react";
 import { useEffect, useState } from "react";
-
 
 interface FeedbackModalProps {
   show: boolean;
@@ -60,22 +54,49 @@ const RejectionFeedbackModal = ({ show, jobTitle,feedbackContent, onClose }: Fee
               <span className="text-blue-600">{toTitleCase(jobTitle) || "NA"}</span>
             </h1>
             <div className="border rounded-xl bg-gray-200 text-sm p-4 text-left overflow-y-auto max-h-[180px]">
-              {(() => {
-                    try {
-                      const feedbackItems = JSON.parse(feedbackContent);
-                      if (Array.isArray(feedbackItems)) {
-                        return feedbackItems.map(({ heading, detail }: { heading: string; detail: string }, idx: number) => (
-                          <div key={idx} className="mb-4">
-                            <h4 className="font-semibold text-black">{heading.length? heading : "N/A"}</h4>
-                            <p className="mt-1 text-gray-400">{detail.length?detail:"N/A"}</p>
-                          </div>
-                        ));
-                      }
-                      return <p>{feedbackContent}</p>;
-                    } catch {
-                      return <p>{feedbackContent}</p>;
-                    }
-                  })()}
+          {(() => {
+            try {
+              const feedback = JSON.parse(feedbackContent);
+
+              const { CandidateNote, Strengths, AreasOfConcern } = feedback;
+
+              return (
+                <div className="space-y-4">
+                  {CandidateNote && (
+                    <div>
+                      <h4 className="font-semibold text-black">Overall Note</h4>
+                      <p className="mt-1 text-gray-600">{CandidateNote}</p>
+                    </div>
+                  )}
+                {/* just uncomment below if we want Strengths and areas of concern as well */}
+                  {/* {Strengths?.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-green-700">Strengths</h4>
+                      <ul className="list-disc list-inside text-gray-700 mt-1">
+                        {Strengths.map((item: string, idx: number) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )} */}
+
+                  {/* {AreasOfConcern?.length > 0 && (
+                    <div>
+                      <h4 className="font-semibold text-red-700">Areas of Concern</h4>
+                      <ul className="list-disc list-inside text-gray-700 mt-1">
+                        {AreasOfConcern.map((item: string, idx: number) => (
+                          <li key={idx}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )} */}
+                </div>
+              );
+            } catch (err) {
+              return <p>{feedbackContent}</p>;
+            }
+          })()}
+
             </div>
           </div>
         </div>

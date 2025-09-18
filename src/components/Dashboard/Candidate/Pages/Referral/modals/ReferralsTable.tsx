@@ -12,6 +12,7 @@ import ViewDetailsModal from "../../Job/modals/ViewDetailsModal";
 import RaiseIssueModal from "@Components/Dashboard/Employee/Pages/Referral/modals/RaiseIssueModal";
 import CompletedReferralModal from "@Components/Dashboard/Employee/Pages/Referral/modals/CompletedReferralModal";
 import ProvideFeedbackModal from "@Components/Dashboard/Employee/Pages/Referral/modals/ProvideFeedbackModal";
+import ChatWindow from "./ChatWindow";
 
 interface ReferralsTableProps {
   data: ReferralApiResponse | null;
@@ -48,6 +49,7 @@ const ReferralsTable = memo(
     const [showCompletedModal, setShowCompletedModal] = useState(false);
     const [referralData, setReferralData] = useState<any>(null);
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
+    const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
 
     const APP_API_URI = import.meta.env.APP_API_URI;
     const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
@@ -170,9 +172,15 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) =>
         row.status === "ACCEPTED" ? (
           <div className="flex justify-center m-auto w-[150px]">
+            <button
+            onClick={() => {
+                  setReferralData(row);
+                  setShowChatWindow(true);
+                }}>
             <a className="text-blue-600 hover:underline">
               <img src={chat} alt="" />
             </a>
+            </button>
           </div>
         ) : row.status === "AWAITING" ? (
             <div className="flex justify-center m-auto w-[150px]">
@@ -202,9 +210,9 @@ const ReferralsTable = memo(
         <div className='flex justify-center m-auto w-[150px]'>
         <span 
           className="truncate block w-full"
-          title={row.employeeDetails?.name ? row.employeeDetails?.name.toString() : "N/A"}
+          title={row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
           >
-          {row.refereeName ?? "N/A"}
+          {row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
           </span>
         </div>
       ),
@@ -440,6 +448,14 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               isOpen={showWithdrawModal}
             />
           )}
+          {/* {showChatWindow && (
+            <ChatWindow
+              onClose={()=>setShowChatWindow(false)}
+              show={showChatWindow}  
+              referralData={referralData}
+              user={"candidate"} 
+            />
+          )} */}
         </div>
       </div>
     );

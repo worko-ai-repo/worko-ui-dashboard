@@ -199,6 +199,7 @@ export interface JobApplicationDetailsDto {
     userId: string;
   };
   rejectionFeedbackBySystem?: string;
+  rejectionFeedbackBySystemForApplicant?:string;
   jdMatchErrorCode?: number;
   jdMatchErrorDesc?: string;
   scoreDetails?: string;

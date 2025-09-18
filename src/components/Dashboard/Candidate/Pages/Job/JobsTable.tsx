@@ -119,8 +119,8 @@ const processedJobs = data?.data?.map((job) => ({
 
   // Function to handle opening the feedback modal
 const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
-  if (job.rejectionFeedbackBySystem) {
-    setFeedbackContent(job.rejectionFeedbackBySystem);
+  if (job.rejectionFeedbackBySystemForApplicant) {
+    setFeedbackContent(job.rejectionFeedbackBySystemForApplicant);
     setjobTitle(job.jobTitle);
     setShowFeedbackModal(true);
   } else if (job.rejectedByUserId.userComment) {
