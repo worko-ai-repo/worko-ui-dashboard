@@ -37,7 +37,9 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formModal, setFormModal] = useState<boolean>(false);
+  const [checked, setChecked] = useState(false);
   const today = new Date().toISOString().split("T")[0];
+
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
     setEditingIndex(index);
@@ -90,7 +92,7 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
       companyName: companyName.trim(),
       date: { 
         startDate: startDate.trim(), 
-        endDate: endDate.trim() === today ? "" : endDate.trim()},
+        endDate: checked ? "" : endDate.trim()},
       description: description.trim(),
     };
 
@@ -110,7 +112,7 @@ const ResponsibilityEditor: React.FC<ResponsibilityEditorProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
-
+    console.log(editedItems)
     try {
       const success = await onSave(editedItems);
       if (!success) {
@@ -288,6 +290,8 @@ return (
           setEndDate={setEndDate}
           description={description}
           setDescription={setDescription}
+          checked={checked}
+          setChecked={setChecked}
           onSubmit={handleAddOrUpdate}
         />
       )}

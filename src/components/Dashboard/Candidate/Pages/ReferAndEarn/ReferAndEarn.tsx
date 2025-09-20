@@ -5,6 +5,7 @@ import EarningsDropdown from "./EarningsDropdown";
 import ReferralsTable from "./ReferAndEarnTable";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useDashboardContext } from "@Context/Dashboard.context";
+import { ChevronDown } from "lucide-react";
 
 const stats = [
     { label: 'Total Applicants', value: 106 },
@@ -142,13 +143,11 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
   }
 };
 
-
-
     return (
       <div className="w-full space-y-[35px] px-0">
         <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
           <div className=" flex-1 flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row gap-4 justify-start">
+            <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
               {stats.map((stat) => (
                 <div
                   key={stat.label}
@@ -159,7 +158,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 </div>
               ))}
             </div>
-            <div className="flex justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
               <input
                 type="text"
@@ -174,25 +173,47 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 Search
               </button>
             </div>
-              <div className="relative">
-                <select
-                  className="h-full px-4 py-3 bg-white text-sm text-gray-700 border-l border-gray-200 outline-none cursor-pointer rounded-xl"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="WITHDRAWAL_ACCEPTED">Withdrawal Accepted</option>
-                  <option value="WITHDRAWAL_REJECTED">Withdraw Rejected</option>
-                  <option value="PAYMENT_COMPLETED">Payment Completed</option>
-                  <option value="NOT_ACHIEVED_YET">Under Process</option>
-                  <option value="ACHIEVED">Achieved</option>
-                </select>
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
+              {/* Container for filter and button side by side */}
+              <div className="flex flex-row items-center gap-2">
+                
+                {/* Filter Dropdown */}
+                <div className="relative w-[150px]">
+                  <select
+                    className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="WITHDRAWAL_ACCEPTED">Withdrawal Accepted</option>
+                    <option value="WITHDRAWAL_REJECTED">Withdraw Rejected</option>
+                    <option value="PAYMENT_COMPLETED">Payment Completed</option>
+                    <option value="NOT_ACHIEVED_YET">Under Process</option>
+                    <option value="ACHIEVED">Achieved</option>
+                  </select>
+                  
+                  {/* Chevron icon inside the select */}
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </div>
+                </div>
+
+                {/* Refer a Friend Button (visible only on mobile) */}
+                <div>
+                  <button
+                    onClick={handleRedirect}
+                    className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-xl hover:bg-[#2555cc] transition w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible md:hidden"
+                  >
+                    Refer a friend
+                  </button>
+                </div>
               </div>
             </div>
-          <div className="w-max">
+            </div>
+          <div className="flex justify-start">
             <button
               onClick={handleRedirect}
-              className="inline-flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-white text-sm font-medium shadow hover:bg-blue-700"
+              className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-[#2555cc] transition hidden md:block"
             >
               Refer a friend
             </button>

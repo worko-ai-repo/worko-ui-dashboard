@@ -14,9 +14,9 @@ import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { verify } from 'crypto';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
-import ExperienceEditor from './Helper/ExperienceEditor';
 import profileService from '@Components/Dashboard/Employee/Service/ProfileService';
 import CurrentCompanyEditor from './Helper/CurrentCompanyEditor';
+import ExperienceEditor from '@Components/Dashboard/Candidate/Pages/Profile/Helper/ExperienceEditor';
 
 
 interface ProfileSectionProps {
@@ -450,7 +450,7 @@ const Profile = () => {
 
       {/* Main Content */}
       <div className="w-full flex">
-        <div className="w-full max-w-6xl flex flex-col gap-3 sm:gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
+        <div className="w-full max-w-sm sm:max-w-6xl flex flex-col gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
@@ -559,55 +559,60 @@ const Profile = () => {
                     <div className="border border-gray-300 opacity-50 w-full my-4"></div>
 
                     {/* Contact Info Grid */}
-                    <div className="flex items-center gap-10 flex-wrap sm:flex-nowrap">
+                      <div className="flex items-center justify-center gap-4 flex-wrap sm:gap-10 sm:flex-wrap sm:justify-start sm:items-start">
                       {[
-                        {
+                      {
                         key: "phone",
                         icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
-                        text: (
+                        text: showPhoneOtpInput ? (
+                          <>
+                            {/* Phone icon, number, and OTP input in one row */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
+                              <input
+                                type="text"
+                                value={otpValue}
+                                maxLength={6}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (/^\d*$/.test(val)) {
+                                    setOtpValue(val);
+                                  }
+                                }}
+                                className="border px-2 py-1 rounded text-sm w-24"
+                                placeholder="Enter OTP"
+                              />
+                            </div>
+
+                            {/* Confirm OTP, Resend, Cancel on a separate row */}
+                            <div className="mt-2 flex items-center gap-4 flex-wrap">
+                              <button
+                                className="text-xs font-medium text-green-600"
+                                onClick={handleVerifyPhoneOtp}
+                              >
+                                Confirm OTP
+                              </button>
+                              <button
+                                className="text-xs font-medium text-gray-600"
+                                onClick={handleSendPhoneOtp}
+                                disabled={resendCooldown}
+                              >
+                                {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                              </button>
+                              <button
+                                className="text-xs font-medium text-red-600"
+                                onClick={() => {
+                                  setShowPhoneOtpInput(false);
+                                  setOtpValue("");
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        ) : (
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
-
-                        {showPhoneOtpInput && (
-                          <>
-                            <input
-                              type="text"
-                              value={otpValue}
-                              maxLength={6} 
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (/^\d*$/.test(val)) {
-                                  setOtpValue(val);
-                                }
-                              }}
-                              className="border px-2 py-1 rounded text-sm w-full sm:w-24"
-                              placeholder="Enter OTP"
-                            />
-
-                            <button
-                              className="text-xs font-medium text-green-600"
-                              onClick={handleVerifyPhoneOtp}
-                            >
-                              Confirm OTP
-                            </button>
-                            <button
-                              className="text-xs font-medium text-gray-600"
-                              onClick={handleSendPhoneOtp}
-                              disabled={resendCooldown}
-                            >
-                              {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
-                            </button>
-                            <button
-                              className="text-xs font-medium text-red-600"
-                              onClick={() => {
-                                setShowPhoneOtpInput(false);
-                                setOtpValue("");
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        )}
                           </div>
                         ),
                         verify: !detailsData[0]?.isNumberVerified && !showPhoneOtpInput,

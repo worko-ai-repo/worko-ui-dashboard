@@ -337,11 +337,11 @@ const hasCandidateExperience =
     // console.log(email,data,"data",currentData,"currentdata",index)
     // If index is provided, update existing education entry
     // if (currentData && currentData[index || 0]) {
-      const updatedData = {
-        ...data
-      };
+      // const updatedData = {
+      //   ...data
+      // };
       // console.log("updateddata",updatedData)
-      return await this.updateUserData(email, 'education', [updatedData], 'POST');
+      return await this.updateUserData(email, 'education', data, 'POST');
     // } 
     // Otherwise add new education entry
     // else {

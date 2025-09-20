@@ -248,7 +248,7 @@ export function DynamicTable<T extends { id: string }>({
                   </tr>
 
                   {/* Expand Button */}
-                  {renderExpandedDetails && !isExpanded && (
+                  {renderExpandedDetails?.(row) && !isExpanded && (
                     <tr className="relative h-0">
                       <td colSpan={totalCols} className="p-0 border-t-0">
                         <div

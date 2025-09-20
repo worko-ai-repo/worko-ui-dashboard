@@ -13,6 +13,8 @@ interface ResponsibilityFormProps {
     setEndDate:(val:string) => void;
     description:string
     setDescription:(val:string) => void;
+    checked:boolean;
+    setChecked:(val:boolean)=>void;
     onSubmit: () => void;
 }
 const ResponsibilityForm: React.FC<ResponsibilityFormProps> = ({
@@ -27,6 +29,8 @@ const ResponsibilityForm: React.FC<ResponsibilityFormProps> = ({
   setEndDate,
   description,
   setDescription,
+  checked,
+  setChecked,
   onSubmit
 }) => {
   const [visible, setVisible] = useState(false);
@@ -75,6 +79,17 @@ const ResponsibilityForm: React.FC<ResponsibilityFormProps> = ({
             />
           </div>
           <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
+            <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm h-24"
+                placeholder="Description"
+            />
+          </div>
+
+        <div className='flex gap-3 justify-center'>
+          <div className='flex-1'>
             <label className="block text-xs font-medium text-gray-700 mb-1">Start Date</label>
             <input
                 type="date"
@@ -84,9 +99,10 @@ const ResponsibilityForm: React.FC<ResponsibilityFormProps> = ({
                 className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
             />
           </div>
-          <div>
+          <div className={`flex-1 flex-col flex-grow ${checked ? 'opacity-0' : ''}`}>
             <label className="block text-xs font-medium text-gray-700 mb-1">End Date</label>
             <input
+                disabled={checked}
                 type="date"
                 placeholder="End Date"
                 value={endDate}
@@ -95,21 +111,40 @@ const ResponsibilityForm: React.FC<ResponsibilityFormProps> = ({
                 max={new Date().toISOString().split('T')[0]}
             />
           </div>
-        <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">Description</label>
-            <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm h-24"
-                placeholder="Description"
-            />
         </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
+          <div
+            onClick={() => setChecked(!checked)}
+            className={`mt-2 flex items-center cursor-pointer select-none w-max`}
+          >
+          <div
+            className={`flex items-center justify-center w-5 h-5 mr-2 rounded-sm border ${
+              checked ? "border-blue-600 bg-blue-600" : "border-gray-400 bg-white"
+            }`}
+          >
+            {checked && (
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+              </svg>
+            )}
+          </div>
+          <span className="text-gray-700">
+            I am currently handling this responsibility
+          </span>
+        </div>
+        
+        <div className="mt-6 flex justify-start">
           <button
             onClick={onSubmit}
-            disabled={!companyName.trim() || !description.trim() || !startDate.trim() || !endDate.trim()}
+            disabled={!companyName.trim() || !description.trim() || !startDate.trim() || (!checked && !endDate?.trim())}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:bg-blue-300"
           >
             <Plus size={16} />

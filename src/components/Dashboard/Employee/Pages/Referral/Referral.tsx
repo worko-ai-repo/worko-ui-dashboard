@@ -226,7 +226,7 @@ const fetchReferrals = useCallback(
           </div> */}
             
           {/* search bar */}
-            <div className="flex justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
                 <input

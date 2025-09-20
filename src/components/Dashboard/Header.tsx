@@ -49,11 +49,17 @@ const getInitialFrame = () => {
      
       <div className="absolute bottom-0 left-0 w-full border-b border-gray-200" />
       
-      <div className="flex w-full items-center z-10">
-        <div className='basis-1/3 flex-1 flex justify-start'>
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 w-full sm:w-auto">
+      <div className="flex flex-col sm:flex-row flex-wrap w-full items-center z-10 gap-4 sm:gap-0">
+        <div className="w-full sm:w-1/3 flex justify-between sm:justify-start">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 flex-grow">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <img src={logo_text} onClick={()=>window.location.href = "/"} className="cursor-pointer h-6 sm:h-8" alt="Logo" />
+              <img 
+              src={logo_text} 
+              onClick={() => window.location.href = "/"} 
+              className="cursor-pointer h-6 sm:h-8 max-w-full" 
+              alt="Logo" 
+            />
+
               
               <div className="flex items-center gap-3 sm:hidden">
                 <button 
@@ -80,7 +86,7 @@ const getInitialFrame = () => {
             </span>
           </div>
         </div>
-        <div className='basis-1/3 flex-1 flex justify-center'>
+        <div className="w-full sm:w-1/3 flex justify-center">
           <div className="w-full sm:w-auto">
             {dashboardType === "CANDIDATE" || dashboardType === "EMPLOYEE"
             ? <CustomButtonWithButton options={options} activeFrame={activeFrame}
@@ -90,7 +96,7 @@ const getInitialFrame = () => {
 
           </div>
         </div>
-        <div className='basis-1/3 flex-1 flex justify-end'>
+        <div className="w-full sm:w-1/3 flex justify-end">
           <div className="hidden sm:flex items-center gap-4 text-blue-600">
             <span className="whitespace-nowrap text-sm font-semibold">
               {getDate()}

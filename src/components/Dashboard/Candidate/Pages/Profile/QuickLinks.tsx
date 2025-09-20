@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, FunctionComponent } from 'react';
 // Define the sections for the quick links
 const SECTIONS = [
   { id: 'about', label: 'About' },
+  { id: 'education', label: 'Education' },
   { id: 'experience', label: 'Experience' },
   { id: 'responsibilities', label: 'Responsibilities' },
   { id: 'core-skills', label: 'Core Skills' },
@@ -63,7 +64,7 @@ const QuickLinks: FunctionComponent = () => {
 
   return (
     <div className="sticky top-0 left-0 h-screen w-[198px] z-10">
-      <div className="absolute top-0 left-0 rounded-3xl bg-white w-[198px] h-[650px] overflow-auto shadow-md">
+      <div className="absolute top-0 left-0 rounded-3xl bg-white w-[198px] h-[full] overflow-auto shadow-md">
         <div className="px-4 pt-8 pb-2">
           <div className="text-[16px] text-black text-left font-semibold">Quick links</div>
         </div>

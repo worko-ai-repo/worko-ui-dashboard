@@ -23,6 +23,8 @@ import { getToastOptions } from 'lib-worko-ui';
 import ExperienceEditor from './Helper/ExperienceEditor';
 import AchievementsEditor from './Helper/AchievementsEditor';
 import SocialLinksEditor from './Helper/SocialLinksEditor';
+import VideoInterviewModal from './Helper/VideoInterviewModal';
+import EducationEditor from './Helper/EducationEditor';
 
 interface ProfileSectionProps {
   title: string;
@@ -89,7 +91,7 @@ const Profile = () => {
   const [otpValue, setOtpValue] = useState("");
   const [resendCooldown, setResendCooldown] = useState(false);
   const [countdown, setCountdown] = useState(30);
-
+  const [initiateVideoInterview,setInitiateVideoInterview] = useState<boolean>(false)
 
 
   const [isEditingEducation, setIsEditingEducation] = useState(false);
@@ -254,56 +256,84 @@ const Profile = () => {
     }
   };
 // Educatin section handlers
+  const handleEditEducation = () => {
+    setEditMode('education', true);
+  };
 
-  const handleSaveEducation = async () => {
-    if (!user) return;
-    // console.log(user.email, educationData, editedEducation);
+  const handleCancelEducation = () => {
+    setEditMode('education', false);
+  };
 
-    let success;
+  const handleSaveEducation = async (data:any) => {
+    if (!user) return false;
+    console.log(data)
     try {
       const timestamp = new Date().toISOString();
-
-      if (educationData[0]?.PK && educationData[0]?.SK) {
-        // console.log("existing")
-        success = await profileService.updateEducationData(
+        const success = await profileService.updateEducationData(
           user.email,
-          {
-            ...editedEducation,
-            PK: educationData[0].PK,
-            SK: educationData[0].SK,
-            updatedAt: timestamp,
-            createdAt:educationData[0].createdAt
-          },
-          null,
-          0                
-        );
-      } else {
-        // console.log("new")
-        success = await profileService.updateEducationData(
-          user.email,
-          {
-            ...editedEducation,
-          },
+          data,
           null,
         ); 
-      }
-
     // we are not checking for success here because backend is sending no response 
-    // if (!success) {
-      setEducationData([{
-        ...editedEducation,
-        updatedAt: timestamp,
-        ...(educationData[0]?.PK ? {} : { createdAt: timestamp }),
-      }]);
-
-      setIsEditingEducation(false);
-      // } else {
-      //     console.error("Failed to update education");
-      //   }
+      setEducationData(data);
+      setEditMode('education', false);
+      return true
       } catch (error) {
         console.error("Error while saving education:", error);
+        return false
       }
   };
+
+  //old education saving
+  //   const handleSaveEducation = async () => {
+  //   if (!user) return;
+  //   // console.log(user.email, educationData, editedEducation);
+
+  //   let success;
+  //   try {
+  //     const timestamp = new Date().toISOString();
+
+  //     if (educationData[0]?.PK && educationData[0]?.SK) {
+  //       // console.log("existing")
+  //       success = await profileService.updateEducationData(
+  //         user.email,
+  //         {
+  //           ...editedEducation,
+  //           PK: educationData[0].PK,
+  //           SK: educationData[0].SK,
+  //           updatedAt: timestamp,
+  //           createdAt:educationData[0].createdAt
+  //         },
+  //         null,
+  //         0                
+  //       );
+  //     } else {
+  //       // console.log("new")
+  //       success = await profileService.updateEducationData(
+  //         user.email,
+  //         {
+  //           ...editedEducation,
+  //         },
+  //         null,
+  //       ); 
+  //     }
+
+  //   // we are not checking for success here because backend is sending no response 
+  //   // if (!success) {
+  //     setEducationData([{
+  //       ...editedEducation,
+  //       updatedAt: timestamp,
+  //       ...(educationData[0]?.PK ? {} : { createdAt: timestamp }),
+  //     }]);
+
+  //     setIsEditingEducation(false);
+  //     // } else {
+  //     //     console.error("Failed to update education");
+  //     //   }
+  //     } catch (error) {
+  //       console.error("Error while saving education:", error);
+  //     }
+  // };
 
   // handling otp 
   // Send OTP (GET request)
@@ -652,6 +682,7 @@ const Profile = () => {
   };
 
   const handleSaveLocations = async (locations: any[]) => {
+    console.log(preferenceData)
     try {
       if (!user) return false;
       const success = await profileService.updatePreferenceData(
@@ -969,7 +1000,7 @@ const handleSaveSalary = async (data:any) => {
 
       {/* Main Content */}
       <div className="w-full flex">
-        <div className="w-full max-w-6xl flex flex-col gap-3 sm:gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
+        <div className="w-full mx-auto max-w-sm sm:max-w-6xl flex flex-col gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
@@ -978,6 +1009,7 @@ const handleSaveSalary = async (data:any) => {
                 {/* Profile Section */}
                 <div className="flex flex-col sm:flex-row w-full lg:flex-1">
                   {/* Profile Image */}
+                  <div className="flex flex-col items-center mb-4 sm:mb-0"> 
                 <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mb-4 sm:mb-0">         
                 {/* Edit Icon */}
                 {editMode.profilePic
@@ -1003,8 +1035,9 @@ const handleSaveSalary = async (data:any) => {
                     "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png"
                   }
                 />
+              </div>
               {editMode.profilePic &&
-              <div className="mt-4">
+              <div className="mt-4 w-full">
                 <UploadImageButton 
                 detailsData={detailsData[0]}
                 onUploadSuccess={(url) => {
@@ -1019,13 +1052,16 @@ const handleSaveSalary = async (data:any) => {
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">
                       {isEditingName ? (
-                        <>
+                      <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">                          
+                        <div>
                           <input
                             type="text"
                             value={editedName}
                             onChange={(e) => setEditedName(e.target.value)}
                             className="text-xl sm:text-2xl font-semibold text-black border border-gray-300 rounded px-2 py-1"
                           />
+                          </div>
+                          <div className="flex mt-2 lg:mt-0 lg:ml-4">
                           <button
                             onClick={handleSaveName}
                             className="ml-2 text-blue-600 text-sm font-medium"
@@ -1044,7 +1080,8 @@ const handleSaveSalary = async (data:any) => {
                           >
                             Cancel
                           </button>
-                        </>
+                          </div>
+                        </div>
                       ) : (
                         <>
                           <h2 className="text-xl sm:text-2xl font-semibold text-black capitalize">
@@ -1074,7 +1111,7 @@ const handleSaveSalary = async (data:any) => {
                       })}
                     </div>
 
-                  <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
+                  {/* <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
                     {isEditingEducation ? (
                       <>
                         <input
@@ -1141,133 +1178,134 @@ const handleSaveSalary = async (data:any) => {
                         />
                       </>
                     )}
-                    </div>
+                    </div> */}
                     
                     <div className="border border-gray-300 opacity-50 w-full my-4"></div>
 
                     {/* Contact Info Grid */}
-                    <div className="grid grid-cols-[auto] sm:grid-cols-[150px_1fr] gap-x-4 gap-y-3 sm:gap-y-4 mt-2">
-                      {[
-                        {
-                          icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
-                          text: isEditingName ? (
-                            <input
-                              type="text"
-                              value={editedLocation}
-                              onChange={(e) => setEditedLocation(e.target.value)}
-                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto font-semibold text-black"
-                              placeholder="Location"
-                            />
-                          ) : (
-                            toTitleCase(detailsData[0]?.location) || "Location"
-                          ),
-                        },
-                        {
+                  <div className="grid grid-cols-[auto] sm:grid-cols-[150px_1fr] gap-x-4 gap-y-3 sm:gap-y-4 mt-2">
+                    {[
+                      {
+                        icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
+                        text: isEditingName ? (
+                          <input
+                            type="text"
+                            value={editedLocation}
+                            onChange={(e) => setEditedLocation(e.target.value)}
+                            className="border px-2 py-1 rounded text-sm w-full sm:w-auto font-semibold text-black"
+                            placeholder="Location"
+                          />
+                        ) : (
+                          toTitleCase(detailsData[0]?.location) || "Location"
+                        ),
+                      },
+                      {
                         key: "phone",
                         icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
-                        text: (
+                        text: showPhoneOtpInput ? (
+                          <>
+                            {/* Phone icon, number, and OTP input in one row */}
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
+                              <input
+                                type="text"
+                                value={otpValue}
+                                maxLength={6}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (/^\d*$/.test(val)) {
+                                    setOtpValue(val);
+                                  }
+                                }}
+                                className="border px-2 py-1 rounded text-sm w-24"
+                                placeholder="Enter OTP"
+                              />
+                            </div>
+
+                            {/* Confirm OTP, Resend, Cancel on a separate row */}
+                            <div className="mt-2 flex items-center gap-4 flex-wrap">
+                              <button
+                                className="text-xs font-medium text-green-600"
+                                onClick={handleVerifyPhoneOtp}
+                              >
+                                Confirm OTP
+                              </button>
+                              <button
+                                className="text-xs font-medium text-gray-600"
+                                onClick={handleSendPhoneOtp}
+                                disabled={resendCooldown}
+                              >
+                                {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                              </button>
+                              <button
+                                className="text-xs font-medium text-red-600"
+                                onClick={() => {
+                                  setShowPhoneOtpInput(false);
+                                  setOtpValue("");
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </>
+                        ) : (
                           <div className="flex flex-wrap items-center gap-2">
                             <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
-
-                        {showPhoneOtpInput && (
-                          <>
-                            <input
-                              type="text"
-                              value={otpValue}
-                              maxLength={6} 
-                              onChange={(e) => {
-                                const val = e.target.value;
-                                if (/^\d*$/.test(val)) {
-                                  setOtpValue(val);
-                                }
-                              }}
-                              className="border px-2 py-1 rounded text-sm w-full sm:w-24"
-                              placeholder="Enter OTP"
-                            />
-                            <button
-                              className="text-xs font-medium text-green-600"
-                              onClick={handleVerifyPhoneOtp}
-                            >
-                              Confirm OTP
-                            </button>
-                            <button
-                              className="text-xs font-medium text-gray-600"
-                              onClick={handleSendPhoneOtp}
-                              disabled={resendCooldown}
-                            >
-                              {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
-                            </button>
-                            <button
-                              className="text-xs font-medium text-red-600"
-                              onClick={() => {
-                                setShowPhoneOtpInput(false);
-                                setOtpValue("");
-                              }}
-                            >
-                              Cancel
-                            </button>
-                          </>
-                        )}
                           </div>
                         ),
                         verify: !detailsData[0]?.isNumberVerified && !showPhoneOtpInput,
                         verified: detailsData[0]?.isNumberVerified,
                       },
-                        {
-                          icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
-                          text: isEditingName ? (
-                            <select
-                              value={editedGender}
-                              onChange={(e) => setEditedGender(e.target.value)}
-                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto"
-                            >
-                              <option value="">Select Gender</option>
-                              <option value="Male">Male</option>
-                              <option value="Female">Female</option>
-                              <option value="Other">Other</option>
-                            </select>
-                          ) : (
-                            toTitleCase(detailsData[0]?.gender) || "Add gender"
-                          ),
-                        },
-                        {
-                          icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
-                          text: detailsData[0]?.email || user?.email || "Email",
-                          verify:!detailsData[0]?.isEmailVerified,
-                          verified: detailsData[0]?.isEmailVerified,
-                        },
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center justify-center sm:justify-start">
-                          {item.icon}
-                          <span
-                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}
+                      {
+                        icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
+                        text: isEditingName ? (
+                          <select
+                            value={editedGender}
+                            onChange={(e) => setEditedGender(e.target.value)}
+                            className="border px-2 py-1 rounded text-sm w-full sm:w-auto"
                           >
-                            {item.text}
-                          </span>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        ) : (
+                          toTitleCase(detailsData[0]?.gender) || "Add gender"
+                        ),
+                      },
+                      {
+                        icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
+                        text: detailsData[0]?.email || user?.email || "Email",
+                        verify: !detailsData[0]?.isEmailVerified,
+                        verified: detailsData[0]?.isEmailVerified,
+                      },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-center justify-center sm:justify-start">
+                        {item.icon}
+                        <span className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}>
+                          {item.text}
+                        </span>
 
-                          {item.verify && (
-                            <button
-                              className="text-xs font-medium text-blue-600 ml-1"
-                              onClick={() => {
-                                if (item.key === "phone") {
-                                  handleSendPhoneOtp();
-                                }
-                              }}
-                            >
-                              Verify
-                            </button>
-                          )}
+                        {item.verify && (
+                          <button
+                            className="text-xs font-medium text-blue-600 ml-1"
+                            onClick={() => {
+                              if (item.key === "phone") {
+                                handleSendPhoneOtp();
+                              }
+                            }}
+                          >
+                            Verify
+                          </button>
+                        )}
 
-                          {item.verified && (
-                            <img
-                              className="w-4 h-4 ml-1"
-                              alt="Verified"
-                              src={verified}
-                            />
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                        {item.verified && (
+                          <img className="w-4 h-4 ml-1" alt="Verified" src={verified} />
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
                   </div>
                 </div>
 
@@ -1299,6 +1337,7 @@ const handleSaveSalary = async (data:any) => {
                   />
 
                   <button
+                    onClick={()=>setInitiateVideoInterview(true)}
                     className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 mt-9"
                   >
                     <Video className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -1335,6 +1374,25 @@ const handleSaveSalary = async (data:any) => {
             </ProfileSection>
             </div>
           )}
+
+          {/* Education */}
+          <div id="education">
+            {editMode.education ? (
+              <EducationEditor
+                title="Education"
+                items={educationData}
+                onSave={handleSaveEducation}
+                onCancel={handleCancelEducation}
+              />
+            ) : (
+              renderListSection({
+                title: "Education",
+                items: educationData,
+                variant: "education",
+                onEdit: handleEditEducation
+              })
+            )}
+          </div>
 
           {/* Work Experience */}
           <div id="experience">
@@ -1492,36 +1550,6 @@ const handleSaveSalary = async (data:any) => {
               </div>
             </>
           )}
-
-         {/* {[
-            {
-              id: "roles",
-              title: "Roles I am looking for",
-              skills: preference.roles || [],
-            },
-            {
-              id: "industry",
-              title: "Industry preference",
-              skills: preference.industries || [],
-            },
-            {
-              id: "department",
-              title: "Department preference",
-              skills: preference.departments || [],
-            },
-            {
-              id: "locations",
-              title: "Location preference",
-              skills: preference.locations || [],
-            },
-          ].map((section, index) => (
-            <div id={section.id} key={section.id}>
-              {renderSkillsSection({
-                title: section.title,
-                skills: section.skills,
-              })}
-            </div>
-          ))} */}
 
           {/* Achievements */}
           <div id="achievements">
@@ -1739,7 +1767,7 @@ const handleSaveSalary = async (data:any) => {
                 >
                   <div className="flex flex-col gap-4">
                     {/* Salary Info */}
-                    <div className="flex items-start gap-20">
+                    <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-6 sm:gap-20">
                       {[
                         { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
                         { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
@@ -1778,6 +1806,10 @@ const handleSaveSalary = async (data:any) => {
                 </ProfileSection>
               </div>
             )}
+            <VideoInterviewModal
+              onClose={()=>setInitiateVideoInterview(false)}
+              isOpen={initiateVideoInterview}
+            />
         </div>
       </div>
     </div>

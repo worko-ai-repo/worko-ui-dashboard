@@ -173,7 +173,7 @@ const fetchReferrals = useCallback(
     <div className="w-full space-y-[35px] px-0">
       <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
+          <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
             {statsItems.map((stat) => (
               <div
                 key={stat.label}
@@ -186,7 +186,7 @@ const fetchReferrals = useCallback(
           </div>
             
           {/* search bar */}
-            <div className="flex justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
                 <input
@@ -206,42 +206,54 @@ const fetchReferrals = useCallback(
                 </button>
 
             </div>
-              <div className="relative">
-                <div className="relative w-[140px]">
-                <select
-                  className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="ACCEPTED">Accepted</option>
-                  <option value="REJECTED">Rejected</option>
-                  <option value="AWAITING">Awaiting</option>
-                  <option value="CANCELLED">Cancelled</option>
-                  <option value="WITHDRAWN">Withdrawn</option>
-                  <option value="DONE">Done</option>
-                </select>
-                {/* Lucide ChevronDown icon */}
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
+            <div className="relative">
+              <div className="relative flex items-center space-x-4">
+                <div className="relative w-[140px]"> 
+                  <select
+                    className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="">All Statuses</option>
+                    <option value="ACCEPTED">Accepted</option>
+                    <option value="REJECTED">Rejected</option>
+                    <option value="AWAITING">Awaiting</option>
+                    <option value="CANCELLED">Cancelled</option>
+                    <option value="WITHDRAWN">Withdrawn</option>
+                    <option value="DONE">Done</option>
+                  </select>
+                  
+                  {/* Chevron icon inside the select */}
+                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </div>
                 </div>
-                </div>
+
+                {/* "Get New Referral" Button, visible only on mobile (hidden on laptop and higher) */}
+              <button
+                onClick={handleGetNewReferral}
+                className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-[#2555cc] transition block md:hidden w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible"
+              >
+                Get New Referral
+              </button>
+
               </div>
             </div>
+            </div>
             {/* Get New Referral Button */}
-            <div className="flex justify-start">
-            <button
-                onClick={handleGetNewReferral}
-                className="bg-[#316BFF] text-white text-sm font-medium px-5 py-2 rounded-lg hover:bg-[#2555cc] transition"
-            >
+              <div className="flex justify-start">
+                <button
+                  onClick={handleGetNewReferral}
+                  className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-[#2555cc] transition hidden md:block"
+                >
                 Get New Referral
             </button>
             </div>
         </div>
-                <div className="flex flex-col gap-4 justify-center sm:items-end">
+                {/* <div className="flex flex-col gap-4 justify-center sm:items-end">
           <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
           </div>
-        </div>
+        </div> */}
       </div>
 
       {isLoading ? (

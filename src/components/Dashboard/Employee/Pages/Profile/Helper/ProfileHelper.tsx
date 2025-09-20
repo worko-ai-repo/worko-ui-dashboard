@@ -6,9 +6,30 @@ function formatDate(isoDate?: string) {
   if (!isoDate) return "present";
   const date = new Date(isoDate);
   const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0"); // months are zero-indexed
-  const year = String(date.getFullYear()); // last two digits
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = String(date.getFullYear());
   return `${month}-${year}`;
+}
+
+function calculateYOE(startDate?: string, endDate?: string): { years: number; months: number } {
+  if (!startDate) return { years: 0, months: 0 };
+
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return { years: 0, months: 0 };
+  }
+
+  if (end < start) return { years: 0, months: 0 };
+
+  const diffMs: number = end.getTime() - start.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const totalMonths = Math.floor(diffDays / 30);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  return { years, months };
 }
 interface RenderCardProps {
   title: string;
@@ -237,7 +258,14 @@ export const renderListSection = ({
                 )}
               </div>
             <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
-              {formatDate(item.startDate)} - {formatDate(item.endDate)} . {item.YOE} {item.YOE === 1 ? "year" : "years"}
+              {formatDate(item.startDate)} - {formatDate(item.endDate)}{" "}
+              {(() => {
+                const { years, months } = calculateYOE(item.startDate, item.endDate);
+                let yoeString = "";
+                if (years > 0) yoeString += `${years} ${years === 1 ? "year" : "years"}`;
+                if (months > 0) yoeString += `${yoeString ? " " : ""}${months} ${months === 1 ? "month" : "months"}`;
+                return yoeString ? ` · ${yoeString}` : "";
+              })()}
             </div>
             </div>
             {index < items.length - 1 && (

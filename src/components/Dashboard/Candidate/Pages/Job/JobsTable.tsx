@@ -32,6 +32,10 @@ interface JobsTableProps {
   hasNextPage?: boolean; // Add this prop
 }
 
+interface StepperProps {
+  status: string;
+}
+
 const JobsTable = memo(({ 
   data, 
   pagination,
@@ -591,7 +595,9 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     }, [jobs, sortField, sortOrder]);
 
     const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
-      if (row.statusTracker && row.statusTracker.length > 0 && row.statusTracker[0].newStatus === "REJECTED") {
+    const statusTracker = row.statusTracker;
+    
+      if (statusTracker?.length > 1 && statusTracker[1].newStatus === "REJECTED") {
         return null;
       }
       if (row.statusTracker && row.statusTracker.length > 0) {

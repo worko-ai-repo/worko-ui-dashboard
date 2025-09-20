@@ -11,6 +11,28 @@ function formatDate(isoDate?: string) {
   const year = String(date.getFullYear());
   return `${month}-${year}`;
 }
+
+function calculateYOE(startDate?: string, endDate?: string): { years: number; months: number } {
+  if (!startDate) return { years: 0, months: 0 };
+
+  const start = new Date(startDate);
+  const end = endDate ? new Date(endDate) : new Date();
+
+  if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+    return { years: 0, months: 0 };
+  }
+
+  if (end < start) return { years: 0, months: 0 };
+
+  const diffMs: number = end.getTime() - start.getTime();
+  const diffDays = diffMs / (1000 * 60 * 60 * 24);
+  const totalMonths = Math.floor(diffDays / 30);
+  const years = Math.floor(totalMonths / 12);
+  const months = totalMonths % 12;
+
+  return { years, months };
+}
+
 interface RenderCardProps {
   title: string;
   children: React.ReactNode;
@@ -34,6 +56,12 @@ interface ExperienceItem {
   YOE: number;
   startDate:string;
   endDate:string;
+}
+
+interface EducationItem {
+  collage: string;
+  degree: string;
+  passingYear: string;
 }
 
 export const renderCard = ({
@@ -166,7 +194,7 @@ interface RenderListSectionProps {
   items: React.ReactNode[];
   key?: React.Key;
   onEdit?: () => void;
-  variant?: "default" | "socials" | "responsibilities" | "experience";
+  variant?: "default" | "socials" | "responsibilities" | "experience" | "education";
 }
 
 // Responsibility/Achievement section renderer with edit button
@@ -238,16 +266,41 @@ export const renderListSection = ({
                   </p>
                 )}
               </div>
-            <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
-              {formatDate(item.startDate)} - {formatDate(item.endDate)} . {item.YOE} {item.YOE === 1 ? "year" : "years"}
-            </div>
+              <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
+                {formatDate(item.startDate)} - {formatDate(item.endDate)}{" "}
+                {(() => {
+                  const { years, months } = calculateYOE(item.startDate, item.endDate);
+                  let yoeString = "";
+                  if (years > 0) yoeString += `${years} ${years === 1 ? "year" : "years"}`;
+                  if (months > 0) yoeString += `${yoeString ? " " : ""}${months} ${months === 1 ? "month" : "months"}`;
+                  return yoeString ? ` · ${yoeString}` : "";
+                })()}
+              </div>
             </div>
             {index < items.length - 1 && (
               <div className="border-t border-gray-200 opacity-20 my-4"></div>
             )}
           </React.Fragment>
         ))
-      ) : (
+      ) : variant === "education" ? (
+        (items as unknown as EducationItem[]).map((item, index) => (
+          <React.Fragment key={index}>
+            <div className="flex justify-between items-start mb-1 gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="font-medium text-black truncate">
+                  {item.degree} from {item.collage}
+                </div>
+              </div>
+              <div className="text-xs text-gray-500 whitespace-nowrap text-right min-w-[100px]">
+                Passing Year  - {item.passingYear}
+              </div>
+            </div>
+            {index < items.length - 1 && (
+              <div className="border-t border-gray-200 opacity-20 my-4"></div>
+            )}
+          </React.Fragment>
+        ))
+      ):(
         (items as React.ReactNode[]).map((item, index) => (
           <React.Fragment key={index}>
             <div className="flex items-start gap-4 mb-4">

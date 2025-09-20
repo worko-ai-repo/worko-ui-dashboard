@@ -358,7 +358,6 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
       if (!row) return;
 
       if (["CANCELLED", "REJECTED", "WITHDRAWN"].includes(row.status)) {
-        // Do nothing — no expand allowed
         return;
       }
 

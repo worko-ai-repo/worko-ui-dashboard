@@ -35,6 +35,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const [yoe, setYOE] = useState<string>("");
   const [startDate, setStartDate] = useState<string>("");
   const [endDate, setEndDate] = useState<string>("");
+  const [checked, setChecked] = useState(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,13 +79,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   };
 
   const handleAddOrUpdate = () => {
-    if (!companyName.trim() || !designation.trim() || !department.trim()) {
+    if (!companyName?.trim() || !designation?.trim() || !department?.trim()) {
       toast.error("Company Name and Designation are required.", getToastOptions({}));
       return;
     }
 
-    if (!startDate.trim() || !endDate.trim()) {
-      toast.error("Start and End are required", getToastOptions({}));
+    if (!startDate?.trim()) {
+      toast.error("Start date is required", getToastOptions({}));
       return;
     }
 
@@ -93,16 +94,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
       return;
     }
 
-    if(endDate === today){
-      setEndDate("")
-    }
     const newItem: Experience = {
-      companyName: companyName.trim(),
-      designation: designation.trim(),
-      department: department.trim(),
+      companyName: companyName?.trim(),
+      designation: designation?.trim(),
+      department: department?.trim(),
       YOE: Number(yoe) || 0,
-      startDate: startDate.trim(),
-      endDate: endDate === today ? "" : endDate.trim(),
+      startDate: startDate?.trim(),
+      endDate: checked? "" : endDate?.trim(),
     };
     
     if (editingIndex !== null) {
@@ -120,7 +118,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
-
+    console.log(editedItems)
     try {
       const success = await onSave(editedItems);
       if (!success) {
@@ -191,13 +189,13 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
                 {item.designation} - {item.companyName}
               </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-700 truncate">{item.department}</div>
+              <div className="text-sm text-gray-700 truncate">{item.department??"N/A"}</div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
               <div className="text-sm text-gray-500 whitespace-nowrap">
                 {formatDate(item.startDate)}-{formatDate(item.endDate)}
               </div>
-              <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div>
+              {/* <span className="hidden sm:inline-block text-gray-400">|</span>
+              <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div> */}
             </div>
             <div className="flex space-x-2 ml-4">
               <button
@@ -246,6 +244,8 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           setStartDate={setStartDate}
           endDate={endDate}
           setEndDate={setEndDate}
+          checked={checked}
+          setChecked={setChecked}
           onSubmit={handleAddOrUpdate}
         />
       )}

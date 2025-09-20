@@ -445,23 +445,23 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
             viewDetailsContent={viewDetailsContent}
             onClose={() => setShowViewDetails(false)}
           />
-          {showAcceptModal && (
+          {/* {showAcceptModal && ( */}
             <AcceptRefferralModal
               onClose={() => setShowAcceptModal(false)}
               isOpen={showAcceptModal}
               referralData={referralData}
               onRefresh={onRefresh}
             />
-          )}
-          {showRejectModal && (
+          {/* )} */}
+          {/* {showRejectModal && ( */}
             <RejectRefferralModal
               onClose={() => setShowRejectModal(false)}
               isOpen={showRejectModal}
               referralData={referralData}
               onRefresh={onRefresh}
             />
-          )}
-          {showRaiseIssueModal && (
+          {/* )} */}
+          {/* {showRaiseIssueModal && ( */}
             <RaiseIssueModal
               onClose={() => setShowRaiseIssueModal(false)}
               isOpen={showRaiseIssueModal}
@@ -469,8 +469,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onRefresh={onRefresh}
               isCandidate={false}
             />
-          )}
-          {showCompletedModal && (
+          {/* )} */}
+          {/* {showCompletedModal && ( */}
             <CompletedReferralModal
               onClose={() => setShowCompletedModal(false)}
               isOpen={showCompletedModal}
@@ -478,8 +478,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onRefresh={onRefresh}
               isCandidate={false}
             />
-          )}
-          {showProvideFeedback && (
+          {/* )} */}
+          {/* {showProvideFeedback && ( */}
             <ProvideFeedbackModal
               onClose={() => setShowProvideFeedback(false)}
               isOpen={showProvideFeedback}
@@ -487,7 +487,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onRefresh={onRefresh}
               isCandidate={false}
             />
-          )}
+          {/* )} */}
             {/* {showChatWindow && (
             <ChatWindow
               onClose={()=>setShowChatWindow(false)}

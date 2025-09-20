@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Plus, X } from 'lucide-react';
+import { locationAssets,industryTypeOptions } from '@AssetsFolder/jobs.assets';
 
 interface PreferenceEditorProps {
   title: string;
@@ -18,22 +19,25 @@ const PreferenceEditor: React.FC<PreferenceEditorProps> = ({
   const [newPreference, setNewPreference] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [filteredSuggestions, setFilteredSuggestions] = useState<{ label: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(true);
 
-  const handleAddSkill = () => {
+  const handleAddPreference = () => {
     if (!newPreference.trim()) return;
 
-    // Prevent duplicates (optional)
     if (editedPreference.includes(newPreference.trim())) {
-      setError("This role already exists.");
+      setError("This entry already exists.");
       return;
     }
 
     setEditedPreference([...editedPreference, newPreference.trim()]);
     setNewPreference('');
+    setFilteredSuggestions([]);
+    setShowSuggestions(false);
     setError(null);
   };
 
-  const handleRemoveSkill = (index: number) => {
+  const handleRemovePreference = (index: number) => {
     setEditedPreference(editedPreference.filter((_, i) => i !== index));
   };
 
@@ -48,11 +52,24 @@ const PreferenceEditor: React.FC<PreferenceEditorProps> = ({
       }
     } catch (err) {
       setError("An error occurred. Please try again.");
-      console.error("Skills submission error:", err);
+      console.error("Submission error:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
+
+const isLocation = title === "Location preference";
+const isIndustry = title === "Industry preference";
+
+useEffect(() => {
+  if (isLocation) {
+    setFilteredSuggestions(locationAssets);
+    setShowSuggestions(true);
+  } else if (isIndustry) {
+    setFilteredSuggestions(industryTypeOptions);
+    setShowSuggestions(true);
+  }
+}, [isLocation, isIndustry]);
 
   return (
     <div className="w-full rounded-3xl bg-white shadow p-8">
@@ -86,14 +103,14 @@ const PreferenceEditor: React.FC<PreferenceEditorProps> = ({
       )}
 
       <div className="flex flex-wrap gap-4 mb-4">
-        {editedPreference.map((preference: string, index: number) => (
+        {editedPreference.map((item, index) => (
           <div
             key={index}
             className="rounded-xl bg-gray-100 px-4 py-1 text-xs flex items-center"
           >
-            <span>{preference}</span>
-            <button 
-              onClick={() => handleRemoveSkill(index)}
+            <span>{item}</span>
+            <button
+              onClick={() => handleRemovePreference(index)}
               className="ml-2 text-gray-500 hover:text-red-500"
             >
               <X size={16} />
@@ -102,25 +119,76 @@ const PreferenceEditor: React.FC<PreferenceEditorProps> = ({
         ))}
       </div>
 
-      <div className="flex items-end gap-2 mt-4">
+      <div className="flex items-end gap-2 mt-4 relative">
         <div className="flex-1">
           <label htmlFor="newPreference" className="block text-xs font-medium text-gray-700 mb-1">
-            {title === "Roles I am looking for" ? "Add a new role"
-            :title === "Industry preference" ? "Add a new industry"
-            :title === "Department preference" ? "Add a new department"
-            :"Add a new location"}
+            {title === "Roles I am looking for"
+              ? "Add a new role"
+              : title === "Industry preference"
+              ? "Add a new industry"
+              : title === "Department preference"
+              ? "Add a new department"
+              : "Add a new location"}
           </label>
           <input
             type="text"
             id="newPreference"
             value={newPreference}
-            onChange={(e) => setNewPreference(e.target.value)}
+              onChange={(e) => {
+                const input = e.target.value;
+                setNewPreference(input);
+
+                if (input.length > 0) {
+                  let matches: { label: string }[] = [];
+
+                  if (isLocation) {
+                    matches = locationAssets.filter((loc) =>
+                      loc.label.toLowerCase().includes(input.toLowerCase())
+                    );
+                  } else if (isIndustry) {
+                    matches = industryTypeOptions.filter((ind) =>
+                      ind.label.toLowerCase().includes(input.toLowerCase())
+                    );
+                  }
+
+                  setFilteredSuggestions(matches);
+                  setShowSuggestions(true);
+                } else {
+                  setFilteredSuggestions([]);
+                  setShowSuggestions(false);
+                }
+              }}
+            onFocus={() => {
+              if ((isLocation || isIndustry) && newPreference.length > 0) setShowSuggestions(true);
+            }}
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
-            placeholder="Type role name"
-          />
-        </div>  
+            placeholder={`Type ${isLocation ? 'location' : isIndustry ? 'industry' : 'preference'} name`}          />
+
+          {(isLocation || isIndustry) && showSuggestions && filteredSuggestions.length > 0 && (
+            <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-md mt-1 max-h-48 overflow-y-auto text-sm">
+              {filteredSuggestions.map((suggestion, index) => (
+                <li
+                  key={index}
+                  onClick={() => {
+                    if (!editedPreference.includes(suggestion.label)) {
+                      setEditedPreference([...editedPreference, suggestion.label]);
+                    }
+                    setNewPreference('');
+                    setFilteredSuggestions([]);
+                    setShowSuggestions(false);
+                    setError(null);
+                  }}
+                  className="px-4 py-2 cursor-pointer hover:bg-blue-100"
+                >
+                  {suggestion.label}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
         <button
-          onClick={handleAddSkill}
+          onClick={handleAddPreference}
           disabled={!newPreference.trim()}
           className="flex items-center justify-center h-9 w-9 rounded-md bg-blue-600 text-white disabled:bg-blue-300"
         >

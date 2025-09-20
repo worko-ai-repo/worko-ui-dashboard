@@ -17,6 +17,8 @@ interface ExperienceFormProps {
   setStartDate: (val: string) => void;
   endDate: string;
   setEndDate: (val: string) => void;
+  checked:boolean;
+  setChecked:(val:boolean)=>void;
   onSubmit: () => void;
 }
 
@@ -36,6 +38,8 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
   setStartDate,
   endDate,
   setEndDate,
+  checked,
+  setChecked,
   onSubmit
 }) => {
   const [visible, setVisible] = useState(false);
@@ -108,7 +112,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
 
         {/* YOE, Start Date, End Date, Add button */}
         <div className="flex items-end gap-3">
-            <div className="flex flex-col flex-grow">
+            {/* <div className="flex flex-col flex-grow">
             <label className="block text-xs font-semibold mb-1">YOE</label>
             <input
                 type="number"
@@ -118,7 +122,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
                 onChange={(e) => setYOE(e.target.value)}
                 className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"
             />
-            </div>
+            </div> */}
 
             <div className="flex flex-col flex-grow">
             <label className="block text-xs font-semibold mb-1">Start Date</label>
@@ -130,9 +134,10 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
             />
             </div>
 
-            <div className="flex flex-col flex-grow">
+            <div className={`flex flex-col flex-grow ${checked ? 'opacity-0' : ''}`}>
             <label className="block text-xs font-semibold mb-1">End Date</label>
             <input
+                disabled={checked}
                 type="date"
                 max={new Date().toISOString().split('T')[0]}
                 value={endDate}
@@ -143,10 +148,36 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
         </div>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div
+          onClick={() => setChecked(!checked)}
+          className={`mt-2 flex items-center cursor-pointer select-none w-max`}
+        >
+          <div
+            className={`flex items-center justify-center w-5 h-5 mr-2 rounded-sm border ${
+              checked ? "border-blue-600 bg-blue-600" : "border-gray-400 bg-white"
+            }`}
+          >
+            {checked && (
+              <svg
+                className="w-4 h-4 text-white"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7"></path>
+              </svg>
+            )}
+          </div>
+          <span className="text-gray-700">
+            I am currently working in this role
+          </span>
+        </div>
+        <div className="mt-6 flex justify-start">
           <button
             onClick={onSubmit}
-            disabled={!companyName.trim() || !designation.trim() || !department.trim() || !yoe.trim() || !startDate.trim()|| !endDate.trim()}
+            disabled={!companyName?.trim() || !designation?.trim() || !department?.trim() || !startDate?.trim()|| (!checked && !endDate?.trim())}
             className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 disabled:bg-blue-300"
           >
             <Plus size={16} />

@@ -21,10 +21,11 @@ const initialPaginationState: PaginationInfo = {
 
 const statsItems = [
   { label: 'Total Applicants', value: 106 },
-  { label: 'Rejected', value: 90 },
-  { label: 'Reviewed', value: 20 },
-  { label: 'New Applicants', value: 10 },
+  { label: 'Pending', value: 90 },
+  { label: 'Under evaluation', value: 20 },
+  { label: 'In process', value: 10 },
   { label: 'Hired', value: 90 },
+  { label: 'Rejected/Cancelled', value: 90 },
 ];
 
 const Jobs = () => {
@@ -318,7 +319,7 @@ const Jobs = () => {
     <div className="w-full space-y-[35px] px-0">
       <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
+          <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
             {statsItems.map((stat) => (
               <div
                 key={stat.label}
@@ -329,7 +330,7 @@ const Jobs = () => {
               </div>
             ))}
           </div>
-        <div className='flex justify-center gap-2'>
+        <div className="flex flex-col sm:flex-row justify-center gap-2">
           <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
               type="text"

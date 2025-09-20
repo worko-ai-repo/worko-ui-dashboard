@@ -1,74 +1,59 @@
 import React, { useState } from "react";
 import { X } from "lucide-react";
 import { toast } from "react-toastify";
-import ExperienceForm from "@Components/Dashboard/Candidate/Pages/Profile/Helper/ExperienceForm";
 import { getToastOptions } from "@Utils/Toast.utils";
+import EducationForm from "./EducationForm";
 
-export interface Experience {
-  companyName: string;
-  designation: string;
-  department: string;
-  YOE: number;
-  startDate: string;
-  endDate: string;
+export interface Education {
+  collage: string;
+  degree: string;
+  passingYear: number;
+  PK:string;
+  SK:string;
 }
 
-interface ExperienceEditorProps {
+interface EducationEditorProps {
   title:string;
-  items: Experience[];
-  onSave: (items: Experience[]) => Promise<boolean>;
+  items: Education[];
+  onSave: (items: Education[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
-const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
+const EducationEditor: React.FC<EducationEditorProps> = ({
   title,
   items,
   onSave,
   onCancel
 }) => {
-  const [editedItems, setEditedItems] = useState<Experience[]>(items || []);
+  const [editedItems, setEditedItems] = useState<Education[]>(items || []);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const [companyName, setCompanyName] = useState("");
-  const [designation, setDesignation] = useState("");
-  const [department, setDepartment] = useState("");
-  const [yoe, setYOE] = useState<string>("");
-  const [startDate, setStartDate] = useState<string>("");
-  const [endDate, setEndDate] = useState<string>("");
-
+  const [collage, setCollage] = useState("");
+  const [degree, setDegree] = useState("");
+  const [passingYear, setPassingYear] = useState<number | null>(null);
+  const [PK,setPK] = useState("")
+  const [SK,setSK] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formModal,setFormModal] = useState<boolean>(false)
-  const today = new Date().toISOString().split("T")[0];
 
   const clearForm = () => {
     setEditingIndex(null);
-    setCompanyName("");
-    setDesignation("");
-    setDepartment("");
-    setYOE("");
-    setStartDate("");
-    setEndDate("");
+    setCollage("");
+    setDegree("");
+    setPK("");
+    setSK("");
+    setPassingYear(null);
   };
-
-  function formatDate(isoDate?: string) {
-    if (!isoDate) return "present";
-    const date = new Date(isoDate);
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = String(date.getFullYear());
-    return `${month}-${year}`;
-  }
 
   const handleEditItem = (index: number) => {
     const item = editedItems[index];
     setEditingIndex(index);
-    setCompanyName(item.companyName);
-    setDesignation(item.designation);
-    setDepartment(item.department);
-    setYOE(String(item.YOE));
-    setStartDate(item.startDate);
-    setEndDate(item.endDate);
+    setCollage(item.collage);
+    setDegree(item.degree);
+    setPassingYear(item.passingYear);
+    setPK(item.PK);
+    setSK(item.SK);
     setFormModal(true)
   };
 
@@ -78,32 +63,40 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   };
 
   const handleAddOrUpdate = () => {
-    if (!companyName.trim() || !designation.trim() || !department.trim()) {
+    if (!collage?.trim() || !degree?.trim() || !passingYear) {
       toast.error("Company Name and Designation are required.", getToastOptions({}));
       return;
     }
+    const currentYear = new Date().getFullYear();
+    const minPassingYear = currentYear - 50;  
+    const maxPassingYear = currentYear;       
 
-    if (!startDate.trim() || !endDate.trim()) {
-      toast.error("Start and End are required", getToastOptions({}));
-      return;
+    if (passingYear > maxPassingYear) {
+        toast.error("Passing year cannot be in the future", getToastOptions({}));
+        return;
     }
 
-    if (yoe !== "" && (isNaN(Number(yoe)) || Number(yoe) < 0)) {
-      toast.error("Years of experience must be a non-negative number.", getToastOptions({}));
-      return;
+    if (passingYear < minPassingYear) {
+        toast.error(`Passing year cannot be earlier than ${minPassingYear}`, getToastOptions({}));
+        return;
     }
 
-
-    
-    const newItem: Experience = {
-      companyName: companyName.trim(),
-      designation: designation.trim(),
-      department: department.trim(),
-      YOE: Number(yoe) || 0,
-      startDate: startDate.trim(),
-      endDate: endDate === today ? "" : endDate.trim(),
+    if(passingYear  > currentYear ){
+        toast.error("Passing year cannot be in future", getToastOptions({}));
+        return
+    }
+    if(passingYear < 1980 ){
+        toast.error("Passing year cannot be less than 1980", getToastOptions({}));
+        return
+    }
+    const newItem: Education = {
+      collage: collage?.trim(),
+      degree: degree?.trim(),
+      passingYear: passingYear,
+      PK:PK,
+      SK:SK,
     };
-
+    
     if (editingIndex !== null) {
       const updated = [...editedItems];
       updated[editingIndex] = newItem;
@@ -119,7 +112,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
-
+    console.log(editedItems)
     try {
       const success = await onSave(editedItems);
       if (!success) {
@@ -137,7 +130,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     <div className="w-full rounded-3xl bg-white shadow p-6 sm:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2 sm:gap-0">
-        <h3 className="text-lg font-semibold text-black">Work Experience</h3>
+        <h3 className="text-lg font-semibold text-black">Education</h3>
         <div className="flex items-center gap-4">
           <button
             onClick={onCancel}
@@ -148,12 +141,11 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           <button
             onClick={() => {
               setEditingIndex(null);
-              setCompanyName('');
-              setDesignation('');
-              setDepartment('');
-              setYOE('');
-              setStartDate('');
-              setEndDate('');
+              setCollage('');
+              setDegree('');
+              setPK('')
+              setSK('')
+              setPassingYear(null);
               setFormModal(true);
             }}
             disabled={isSubmitting}
@@ -179,7 +171,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
 
       {/* List */}
       {editedItems.length === 0 ? (
-        <p className="text-gray-500 text-sm mb-4">No work experience added yet.</p>
+        <p className="text-gray-500 text-sm mb-4">No past or current education added yet.</p>
       ) : (
         editedItems.map((item, index) => (
           <div
@@ -187,22 +179,21 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
             className="flex items-center justify-between py-2 border-b border-gray-200 gap-2">
             <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-2 truncate">
               <div className="font-medium truncate">
-                {item.designation} - {item.companyName}
+                {item.collage} - {item.degree}
               </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-700 truncate">{item.department}</div>
-              <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-500 whitespace-nowrap">
-                {formatDate(item.startDate)}-{formatDate(item.endDate)}
-              </div>
-              <span className="hidden sm:inline-block text-gray-400">|</span>
-              <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div>
+              <div className="text-sm text-gray-700 truncate">{item.passingYear ?? "N/A"}</div>
+              {/* <div className="text-sm text-gray-500 whitespace-nowrap">
+                {passingYear}
+              </div> */}
+              {/* <span className="hidden sm:inline-block text-gray-400">|</span>
+              <div className="text-sm text-gray-500 whitespace-nowrap">{item.YOE} years</div> */}
             </div>
             <div className="flex space-x-2 ml-4">
               <button
                 onClick={() => handleEditItem(index)}
                 className="text-gray-500 hover:text-blue-500"
-                aria-label="Edit experience">
+                aria-label="Edit education">
                 <svg
                   width="16"
                   height="16"
@@ -218,7 +209,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
               <button
                 onClick={() => handleRemoveItem(index)}
                 className="text-gray-500 hover:text-red-500"
-                aria-label="Remove experience">
+                aria-label="Remove education">
                 <X size={16} />
               </button>
             </div>
@@ -226,25 +217,19 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
         ))
       )}
         {formModal && (
-        <ExperienceForm
+        <EducationForm
           title={title}
           isOpen={formModal}
           onClose={() => {
             setFormModal(false);
             setEditingIndex(null);
           }}
-          designation={designation}
-          setDesignation={setDesignation}
-          companyName={companyName}
-          setCompanyName={setCompanyName}
-          department={department}
-          setDepartment={setDepartment}
-          yoe={yoe}
-          setYOE={setYOE}
-          startDate={startDate}
-          setStartDate={setStartDate}
-          endDate={endDate}
-          setEndDate={setEndDate}
+          collage={collage}
+          setCollage={setCollage}
+          degree={degree}
+          setDegree={setDegree}
+          passingYear={passingYear}
+          setPassingYear={setPassingYear}
           onSubmit={handleAddOrUpdate}
         />
       )}
@@ -252,4 +237,4 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   );
 };
 
-export default ExperienceEditor;
+export default EducationEditor;
