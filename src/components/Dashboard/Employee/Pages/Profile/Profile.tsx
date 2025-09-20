@@ -450,7 +450,7 @@ const Profile = () => {
 
       {/* Main Content */}
       <div className="w-full flex">
-        <div className="w-full max-w-sm sm:max-w-6xl flex flex-col gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
+        <div className="w-full mx-auto max-w-sm sm:max-w-6xl flex flex-col gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
@@ -503,13 +503,16 @@ const Profile = () => {
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">
                       {isEditingName ? (
-                        <>
+                        <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">
+                          <div>
                           <input
                             type="text"
                             value={editedName}
                             onChange={(e) => setEditedName(e.target.value)}
                             className="text-xl sm:text-2xl font-semibold text-black border border-gray-300 rounded px-2 py-1"
                           />
+                          </div>
+                          <div className="flex mt-2 lg:mt-0 lg:ml-4">
                           <button
                             onClick={handleSaveName}
                             className="ml-2 text-blue-600 text-sm font-medium"
@@ -528,7 +531,8 @@ const Profile = () => {
                           >
                             Cancel
                           </button>
-                        </>
+                        </div>
+                        </div>
                       ) : (
                         <>
                           <h2 className="text-xl sm:text-2xl font-semibold text-black capitalize">

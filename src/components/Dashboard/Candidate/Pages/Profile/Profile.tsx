@@ -1052,7 +1052,7 @@ const handleSaveSalary = async (data:any) => {
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">
                       {isEditingName ? (
-                      <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">                          
+                      <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">   
                         <div>
                           <input
                             type="text"
