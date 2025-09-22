@@ -360,7 +360,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 
       {/*Red Dot */}
       {config.showDot && (
-        <span className="absolute -top-1 right-1 w-3 h-3 bg-red-500 rounded-full bc"></span>
+        <span className="absolute -top-1 right-1 w-3 h-3 bg-red-500 rounded-full"></span>
       )}
     </div>
   );
