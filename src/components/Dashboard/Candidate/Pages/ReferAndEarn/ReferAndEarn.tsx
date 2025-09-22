@@ -6,6 +6,7 @@ import ReferralsTable from "./ReferAndEarnTable";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import { ChevronDown } from "lucide-react";
+import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 
 const stats = [
     { label: 'Total Applicants', value: 106 },
@@ -42,6 +43,15 @@ const stats = [
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
+
+    const StatusFilterDropdown = [
+    { label: "All", onClick: () => { setStatusFilter("")}},
+    { label: "Withdrawal Accepted", onClick: () => { setStatusFilter("WITHDRAWAL_ACCEPTED")}},
+    { label: "Withdraw Rejected", onClick: () => { setStatusFilter("WITHDRAWAL_REJECTED")} },
+    { label: "Payment Completed", onClick: () => { setStatusFilter("PAYMENT_COMPLETED")} },
+    { label: "Under Process", onClick: () => { setStatusFilter("NOT_ACHIEVED_YET")}},
+    { label: "Achieved", onClick: () => { setStatusFilter("ACHIEVED")}},
+  ];
 
       //filter data
     const filteredReferrals = useMemo(() => {
@@ -173,12 +183,12 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 Search
               </button>
             </div>
-            <div className="flex flex-col sm:flex-row justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
               {/* Container for filter and button side by side */}
               <div className="flex flex-row items-center gap-2">
                 
                 {/* Filter Dropdown */}
-                <div className="relative w-[150px]">
+                {/* <div className="relative w-[150px]">
                   <select
                     className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
                     value={statusFilter}
@@ -192,17 +202,24 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                     <option value="ACHIEVED">Achieved</option>
                   </select>
                   
-                  {/* Chevron icon inside the select */}
                   <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </div>
-                </div>
+                </div> */}
+              <div className="flex font-semibold sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Status"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
+              </div>
 
                 {/* Refer a Friend Button (visible only on mobile) */}
                 <div>
                   <button
                     onClick={handleRedirect}
-                    className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-xl hover:bg-[#2555cc] transition w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible md:hidden"
+                    className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-2xl hover:bg-[#2555cc] transition w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible md:hidden"
                   >
                     Refer a friend
                   </button>

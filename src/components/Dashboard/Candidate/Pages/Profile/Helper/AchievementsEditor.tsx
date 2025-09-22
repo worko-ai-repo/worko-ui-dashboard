@@ -155,7 +155,7 @@ const AchievementsEditor: React.FC<AchievementsEditorProps> = ({
         <React.Fragment key={index}>
           <div className="flex items-start gap-4 mb-4">
             <div className="flex-1">
-              <div className="font-medium">{item}</div>
+              <div className="text-sm">{item}</div>
             </div>
             <div className="flex items-center space-x-2">
               <button

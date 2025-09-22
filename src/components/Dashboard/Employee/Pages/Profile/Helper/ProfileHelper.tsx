@@ -217,38 +217,12 @@ export const renderListSection = ({
             </div>
           ))}
         </div>
-      ) : variant === "responsibilities" ? (
-        (items as unknown as ResponsibilityItem[]).map((item, index) => (
-          <React.Fragment key={index}>
-            <div className="flex justify-between items-start mb-1 gap-4">
-              <div className="flex-1 min-w-0">
-                <span className="font-medium text-black block truncate">
-                  Company - {item.companyName}
-                </span>
-                {item.description && (
-                  <p className="mt-1 text-sm text-gray-700 max-w-4xl">
-                    {item.description}
-                  </p>
-                )}
-              </div>
-              <div className="text-xs text-gray-500 whitespace-nowrap min-w-[140px] text-right flex-shrink-0">
-                {new Date(item.date.startDate).toLocaleDateString()} -{" "}
-                {item.date.endDate
-                  ? new Date(item.date.endDate).toLocaleDateString()
-                  : "Present"}
-              </div>
-            </div>
-            {index < items.length - 1 && (
-              <div className="border-t border-gray-400 opacity-20 my-4"></div>
-            )}
-          </React.Fragment>
-        ))
       ) : variant === "experience" ? (
         (items as unknown as ExperienceItem[]).map((item, index) => (
           <React.Fragment key={index}>
             <div className="flex justify-between items-start mb-1 gap-4">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-black truncate">
+                <div className="text-sm text-black truncate">
                   {item.designation} at {item.companyName}
                 </div>
                 {item.department && (
@@ -269,7 +243,7 @@ export const renderListSection = ({
             </div>
             </div>
             {index < items.length - 1 && (
-              <div className="border-t border-gray-200 opacity-20 my-4"></div>
+              <div className="border-t border-gray-800 opacity-20 my-3"></div>
             )}
           </React.Fragment>
         ))

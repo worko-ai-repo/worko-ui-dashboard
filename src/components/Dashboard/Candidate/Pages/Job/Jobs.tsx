@@ -9,6 +9,8 @@ import secureStorage from '@Utils/SecureStorage.utils';
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
 import { toTitleCase } from '@Utils/Titlecase.utils';
 import { ChevronDown } from 'lucide-react';
+import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown';
+import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -38,40 +40,20 @@ const Jobs = () => {
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>(initialPaginationState);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
-//   const dummyJobs = [
-//   { id: "dummy1", jobTitle: "Data Analyst", companyName: "InsightsAI", createdAt: new Date().toISOString(), matchingScore: 74, status: "APPLIED", action: null },
-
-//   { id: "dummy2", jobTitle: "QA Engineer", companyName: "Testify", createdAt: new Date().toISOString(), matchingScore: 80, status: "CV_DOWNLOADED", action: null },
-
-//   { id: "dummy3", jobTitle: "Cloud Architect", companyName: "SkyNet", createdAt: new Date().toISOString(), matchingScore: 90, status: "UNDER_EVALUATION", action: null },
-
-//   { id: "dummy4", jobTitle: "ML Engineer", companyName: "MLSoft", createdAt: new Date().toISOString(), matchingScore: 89, status: "PROCESSING_INTERVIEW", action: null },
-
-//   { id: "dummy5", jobTitle: "Frontend Developer", companyName: "PixelSoft", createdAt: new Date().toISOString(), matchingScore: 92, status: "INTERVIEW_DONE", action: null },
-
-//   { id: "dummy6", jobTitle: "Product Manager", companyName: "ProdSync", createdAt: new Date().toISOString(), matchingScore: 86, status: "HIRING_IN_PROCESS", action: null },
-
-//   { id: "dummy7", jobTitle: "DevOps Engineer", companyName: "InfraTech", createdAt: new Date().toISOString(), matchingScore: 88, status: "DOCUMENT_REQUESTED", action: "SUBMIT_DOCUMENT" },
-
-//   { id: "dummy8", jobTitle: "Additional Document Specialist", companyName: "TechFlow", createdAt: new Date().toISOString(), matchingScore: 85, status: "DOCUMENT_ADDITIONAL_REQUESTED", action: "SUBMIT_DOCUMENT" },
-
-//   { id: "dummy9", jobTitle: "Revision Document Specialist", companyName: "CodeBase", createdAt: new Date().toISOString(), matchingScore: 90, status: "DOCUMENT_REVISION_REQUESTED", action: "SUBMIT_DOCUMENT" },
-
-//   { id: "dummy10", jobTitle: "Verification Officer", companyName: "VerifyPro", createdAt: new Date().toISOString(), matchingScore: 83, status: "DOCUMENT_VERIFIED", action: null },
-
-//   { id: "dummy11", jobTitle: "Backend Engineer", companyName: "DataCloud", createdAt: new Date().toISOString(), matchingScore: 85, status: "OFFER_SENT", action: "CHECK_ACCEPT" },
-
-//   { id: "dummy12", jobTitle: "Support Analyst", companyName: "Helpify", createdAt: new Date().toISOString(), matchingScore: 78, status: "OFFER_ISSUE_RAISED", action: null },
-
-//   { id: "dummy13", jobTitle: "Revised Offer Candidate", companyName: "FlexJobs", createdAt: new Date().toISOString(), matchingScore: 82, status: "REVISED_OFFER_SENT", action: "CHECK_ACCEPT" },
-
-//   { id: "dummy14", jobTitle: "Security Analyst", companyName: "SecureNet", createdAt: new Date().toISOString(), matchingScore: 82, status: "HIRED", action: "JOINED" },
-
-//   { id: "dummy15", jobTitle: "Business Analyst", companyName: "BizLogic", createdAt: new Date().toISOString(), matchingScore: 76, status: "JOINED", action: null },
-
-//   { id: "dummy16", jobTitle: "UI/UX Designer", companyName: "Designify", createdAt: new Date().toISOString(), matchingScore: 78, status: "REJECTED", action: "VIEW_FEEDBACK", rejectionFeedbackBySystem: "Portfolio didn't match the project style" }
-// ];
-
+  
+const StatusFilterDropdown = [
+  { label: "All", onClick: () => { setStatusFilter("")}},
+  { label: "Applied", onClick: () => { setStatusFilter("APPLIED")}},
+  { label: "Accepted", onClick: () => { setStatusFilter("ACCEPTED")}},
+  { label: "Under Evaluation", onClick: () => { setStatusFilter("UNDER_EVALUATION")} },
+  { label: "Processing Interview", onClick: () => { setStatusFilter("PROCESSING_INTERVIEW")} },
+  { label: "Interview Done", onClick: () => { setStatusFilter("INTERVIEW_DONE")}},
+  { label: "Hiring In Process", onClick: () => { setStatusFilter("HIRING_IN_PROCESS")}},
+  { label: "Hired", onClick: () => { setStatusFilter("HIRED")}},
+  { label: "Joined", onClick: () => { setStatusFilter("JOINED")}},
+  { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
+];
+  
   // Store pagination keys for each page
   const paginationKeysRef = useRef<Record<number, string>>({
     1: '' // First page always has empty lastKey
@@ -136,75 +118,6 @@ const Jobs = () => {
       setIsLoading(false);
     }
 }, [user, pageSize, searchBarText, filters, currentPage]);
-
-
-// below is for the dummy data check above is the real one
-// const fetchJobs = useCallback((
-//   page: number = currentPage,
-//   size: number = pageSize,
-//   lastKey: string = '',
-//   searchFilters = filters,
-//   isSearch: boolean = false
-// ) => {
-//   setIsLoading(true);
-
-//   try {
-//     // 🔍 Apply search filter if present
-//     let filteredJobs = [...dummyJobs];
-
-//     if (searchFilters?.searchText) {
-//       const searchText = searchFilters.searchText.toLowerCase();
-
-//       filteredJobs = filteredJobs.filter(job =>
-//         job.jobTitle.toLowerCase().includes(searchText) ||
-//         job.companyName.toLowerCase().includes(searchText) ||
-//         job.status.toLowerCase().includes(searchText)
-//       );
-//     }
-
-//     const startIndex = (page - 1) * size;
-//     const paginatedData = filteredJobs.slice(startIndex, startIndex + size);
-//     const hasNext = startIndex + size < filteredJobs.length;
-
-//     setData({
-//       data: paginatedData,
-//       pagination: {
-//         count: filteredJobs.length,
-//         pageSize: size,
-//         sortOrder: 'desc',
-//         timesQueried: 1,
-//         queriedCount: paginatedData.length,
-//         lastKey: hasNext ? `page-${page + 1}` : undefined,
-//       },
-//     });
-
-//     setPaginationInfo({
-//       count: filteredJobs.length,
-//       pageSize: size,
-//       sortOrder: 'desc',
-//       timesQueried: 1,
-//       queriedCount: paginatedData.length,
-//       lastKey: hasNext ? `page-${page + 1}` : undefined,
-//     });
-
-//     // Update pagination key refs
-//     if (page === 1) {
-//       paginationKeysRef.current = { 1: '' };
-//       if (hasNext) {
-//         paginationKeysRef.current[2] = `page-${page + 1}`;
-//       }
-//     } else if (hasNext) {
-//       paginationKeysRef.current[page + 1] = `page-${page + 1}`;
-//     }
-
-//   } catch (err) {
-//     console.error("Dummy fetch error:", err);
-//   } finally {
-//     setIsLoading(false);
-//   }
-// }, [ pageSize, filters]);
-
-
 
 
   // Search handling with proper debounce
@@ -330,8 +243,11 @@ const Jobs = () => {
               </div>
             ))}
           </div>
-        <div className="flex flex-col sm:flex-row justify-center gap-2">
-          <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
+
+          {/* search bar */}
+            <div className="flex flex-col sm:flex-row justify-center gap-2">
+            {/* Search bar with search button */}
+            <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
               type="text"
               placeholder="Search by company name"
@@ -348,7 +264,7 @@ const Jobs = () => {
             </button>
           </div>
             <div className="relative">
-               <div className="relative w-[140px]">
+               {/* <div className="relative w-[140px]">
                 <select
                   className="h-full w-[140px] pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer truncate"
                   value={statusFilter}
@@ -368,19 +284,26 @@ const Jobs = () => {
                   <option value="JOINED">Joined</option>
                   <option value="REJECTED">Rejected</option>
                 </select>
-                {/* Lucide ChevronDown icon */}
                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </div>
+              </div> */}
+              <div className="flex gap-3 font-semibold w-full sm:w-auto">
+              <GenericDropdown
+                selectTitle={"Status"}
+                tooltipMessage="Select Status to filter applications"
+                disabled={false}
+                options={StatusFilterDropdown}
+              />
               </div>
             </div>
               </div>
         </div>
 
-        <div className="flex flex-col gap-4 justify-center sm:items-end">
+        {/* <div className="flex flex-col gap-4 justify-center sm:items-end">
           <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
           </div>
-        </div>
+        </div> */}
       </div>
 
       {isLoading ? (

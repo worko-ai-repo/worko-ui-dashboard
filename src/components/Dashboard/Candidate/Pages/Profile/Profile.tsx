@@ -266,7 +266,6 @@ const Profile = () => {
 
   const handleSaveEducation = async (data:any) => {
     if (!user) return false;
-    console.log(data)
     try {
       const timestamp = new Date().toISOString();
         const success = await profileService.updateEducationData(
@@ -819,12 +818,18 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
   };
 
   const handleSaveSocials = async (social: string[]) => {
+    console.log(social)
   try {
     if (!user) return false;
 
     const KNOWN_PLATFORMS = ['twitter', 'github', 'linkedin'];
 
-    const mainPlatforms: Record<string, string[]> = {};
+    const mainPlatforms: Record<string, string[]> = {
+      twitter: [],
+      github: [],
+      linkedin: []
+    };
+
     const otherPlatforms: Record<string, string[]> = {};
 
     social.forEach((entry) => {
@@ -840,39 +845,26 @@ const handleSaveResponsibilities = async (items: Responsibility[]) => {
         otherPlatforms[platform] = [url];
       }
     });
-
-    // const updatedData = {
-    //   ...socialLinks[0],
-    //   ...mainPlatforms,
-    //   otherSocialPlatForms: {
-    //     ...(socialLinks[0].otherSocialPlatForms || {}),
-    //     ...otherPlatforms,
-    //   },
-    // };
-  const updatedData = {
-    ...mainPlatforms,
-    otherSocialPlatForms: otherPlatforms,
-    PK: socialLinks[0]?.PK,
-    SK: socialLinks[0]?.SK,
-    createdAt: socialLinks[0]?.createdAt || new Date().toLocaleString(),
-    updatedAt: new Date().toLocaleString(),
-    linkedin:socialLinks[0]?.linkedin ? socialLinks[0].linkedin : []
-  };
+    const updatedData = {
+      ...mainPlatforms,
+      otherSocialPlatForms: otherPlatforms,
+      PK: socialLinks[0]?.PK,
+      SK: socialLinks[0]?.SK,
+      createdAt: socialLinks[0]?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
 
     // console.log(updatedData,"updatedData")
-    
-    const success = await profileService.updateSocialData(user.email, updatedData);
-
-    if (success) {
-      setSocialLinks([updatedData]);
-        setEditMode('socials', false);
+      const success = await profileService.updateSocialData(user.email, updatedData);
+      if (success) {
+        setSocialLinks([updatedData]);
+          setEditMode('socials', false);
+      }
+      return success;
+    } catch (err) {
+      console.error("Failed to update socials:", err);
+      return false;
     }
-
-    return success;
-  } catch (err) {
-    console.error("Failed to update socials:", err);
-    return false;
-  }
 };
 
 
@@ -1603,6 +1595,94 @@ const handleSaveSalary = async (data:any) => {
           {editMode.socials ? (
             <SocialLinksEditor
               title="Social Links"
+              itemsRaw={socialLinks && socialLinks[0] ? socialLinks[0] : null}
+              onSave={handleSaveSocials}
+              onCancel={handleCancelSocials}
+            />
+          ) : (
+            renderListSection({
+              title: "Social Links",
+              variant: "socials",
+              items: [
+                <div
+                  key="social-links"
+                  style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center" }}
+                >
+                  <Link strokeWidth={1.5} />
+                  {(() => {
+                    const validLinks = (socialLinks || []).flatMap((item: Record<string, string[]>, index:number) => {
+                      const links = Object.entries(item)
+                        .filter(
+                          ([key, value]) =>
+                            !["SK", "PK", "createdAt", "updatedAt", "otherSocialPlatForms"].includes(key) &&
+                            value &&
+                            value.length > 0 &&
+                            value[0] &&
+                            value[0] !== "undefined" &&
+                            value[0].trim() !== ""
+                        )
+                        .map(([key, value]) => (
+                          <a
+                            key={`${index}-${key}`}
+                            href={value[0]}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: "blue",
+                              textDecoration: "underline",
+                              textTransform: "capitalize",
+                            }}
+                          >
+                            {key}
+                          </a>
+                        ));
+
+                      if (item.otherSocialPlatForms) {
+                        links.push(
+                          ...Object.entries(item.otherSocialPlatForms)
+                            .filter(
+                              ([_, value]) =>
+                                value &&
+                                value.length > 0 &&
+                                value[0] &&
+                                value[0] !== "undefined" &&
+                                value[0].trim() !== ""
+                            )
+                            .map(([key, value]) => (
+                              <a
+                                key={`${index}-other-${key}`}
+                                href={value[0]}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                  color: "blue",
+                                  textDecoration: "underline",
+                                  textTransform: "capitalize",
+                                }}
+                              >
+                                {key}
+                              </a>
+                            ))
+                        );
+                      }
+
+                      return links;
+                    });
+
+                    return validLinks.length > 0 ? validLinks : <span className="text-gray-400">N/A</span>;
+                  })()}
+                </div>,
+              ],
+              onEdit: handleEditSocials,
+            })
+          )}
+        </div>
+
+      {/* Social Links */}
+        {/* <div id="social-links">
+          {editMode.socials ? (
+            <SocialLinksEditor
+              title="Social Links"
               items={
                 socialLinks && socialLinks[0]
                   ? [
@@ -1715,7 +1795,8 @@ const handleSaveSalary = async (data:any) => {
               onEdit: handleEditSocials,
             })
           )}
-        </div>
+        </div> */}
+
           {/* Salary */}
             {detailsData && (
               <div id="salary-availability" className="scroll-mt-16">

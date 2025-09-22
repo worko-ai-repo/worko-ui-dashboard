@@ -9,6 +9,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import VerifyCompanymodal from "./modals/VerifyCompanymodal";
 import { ChevronDown } from "lucide-react";
+import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -47,6 +48,14 @@ const Referrals = () => {
   });
   const [statusFilter, setStatusFilter] = useState<string>("");
   const { user, isLoadingUser } = useDashboardContext();
+
+  const StatusFilterDropdown = [
+  { label: "All", onClick: () => { setStatusFilter("")}},
+  { label: "Accepted", onClick: () => { setStatusFilter("ACCEPTED")}},
+  { label: "Awaiting", onClick: () => { setStatusFilter("AWAITING")} },
+  { label: "Done", onClick: () => { setStatusFilter("DONE")}},
+  { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
+];
 
   const APP_API_URI = import.meta.env.APP_API_URI
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
@@ -246,7 +255,7 @@ const fetchReferrals = useCallback(
                 </button>
             </div>
             <div className="relative">
-                 <div className="relative w-[140px]">
+                 {/* <div className="relative w-[140px]">
                 <select
                   className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
                   value={statusFilter}
@@ -259,10 +268,17 @@ const fetchReferrals = useCallback(
                   <option value="DONE">Done</option>
                 </select>
 
-                {/* Lucide ChevronDown icon */}
                 <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ChevronDown className="w-4 h-4 text-gray-500" />
                 </div>
+              </div> */}
+              <div className="flex font-semibold sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Status"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
               </div>
               </div>
 

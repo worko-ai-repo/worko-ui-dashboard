@@ -3,24 +3,69 @@ import { Plus, X } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
 
+interface SocialsRaw {
+  PK?: string;
+  SK?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  [key: string]: any; 
+  otherSocialPlatForms?: Record<string, string>;
+}
 interface SocialLinksEditorProps {
   title:string;
-  items: string[];
+  // items: string[];
+  itemsRaw: SocialsRaw | null;
   onSave: (items: string[]) => Promise<boolean>;
   onCancel: () => void;
 }
 
-const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ items, onSave, onCancel }) => {
-  const [editedItems, setEditedItems] = useState<string[]>(items || []);
+const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ itemsRaw, onSave, onCancel }) => {
+  const [editedItems, setEditedItems] = React.useState<string[]>([]);
   const [socialLabel, setSocialLabel] = useState('');
   const [socialLink, setSocialLink] = useState('');
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // useEffect(()=>{
-  //   console.log(items)
-  // },[])
+  useEffect(() => {
+    if (!itemsRaw) {
+      setEditedItems([]);
+      return;
+    }
+    let obj: { [key: string]: string } = {};
+    console.log(itemsRaw,"itemsRaw")
+    Object.keys(itemsRaw).forEach((social) => {
+      const socialLower = social.toLowerCase();
+      if (socialLower === "linkedin" || socialLower === "github" || socialLower === "twitter") {
+        if (Array.isArray(itemsRaw[social]) && itemsRaw[social].length > 0) {
+          if (itemsRaw[social][0] !== "" && itemsRaw[social][0] !== "undefined" && itemsRaw[social][0] !== undefined && itemsRaw[social][0] !== null) {
+            obj[socialLower] = itemsRaw[social][0] + "dabd";
+          }
+        }
+      }
+    });
+
+    const others = itemsRaw?.otherSocialPlatForms ? itemsRaw?.otherSocialPlatForms : {}
+
+    Object.keys(others).forEach((social) => {
+      const socialLower = social.toLowerCase();
+      if (socialLower !== "linkedin" && socialLower !== "github" && socialLower !== "twitter") {
+        if (Array.isArray(others[social]) && others[social].length > 0) {
+          if(others[social][0] !== "" && others[social][0] !== "undefined" && others[social][0] !== undefined && others[social][0] !== null){
+            obj[socialLower] = others[social][0];
+          }         
+        }
+      }
+    });
+
+    const formattedArray = Object.entries(obj).map(
+      ([label, url]) => `${label} - ${url}`
+    );
+    
+    setEditedItems(formattedArray);
+    console.log(formattedArray)
+  }, [itemsRaw]);
+
   const handleAddItem = () => {
     const label = socialLabel.trim();
     const url = socialLink.trim();

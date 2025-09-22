@@ -7,6 +7,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { ChevronDown } from "lucide-react";
+import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -33,6 +34,16 @@ const Referrals = () => {
   const [filters, setFilters] = useState<ReferralFilters>({});
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
   const [statusFilter, setStatusFilter] = useState<string>("");
+
+  const StatusFilterDropdown = [
+  { label: "All", onClick: () => { setStatusFilter("")}},
+  { label: "Accepted", onClick: () => { setStatusFilter("ACCEPTED")}},
+  { label: "Awaiting", onClick: () => { setStatusFilter("AWAITING")} },
+  { label: "Cancelled", onClick: () => { setStatusFilter("CANCELLED")} },
+  { label: "Withdrawn", onClick: () => { setStatusFilter("WITHDRAWN")}},
+  { label: "Done", onClick: () => { setStatusFilter("DONE")}},
+  { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
+];
 
   const paginationKeysRef = useRef<Record<number, string>>({
     1: "",
@@ -186,7 +197,7 @@ const fetchReferrals = useCallback(
           </div>
             
           {/* search bar */}
-            <div className="flex flex-col sm:flex-row justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
                 <input
@@ -208,7 +219,7 @@ const fetchReferrals = useCallback(
             </div>
             <div className="relative">
               <div className="relative flex items-center space-x-4">
-                <div className="relative w-[140px]"> 
+                {/* <div className="relative w-[140px]"> 
                   <select
                     className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
                     value={statusFilter}
@@ -222,17 +233,24 @@ const fetchReferrals = useCallback(
                     <option value="WITHDRAWN">Withdrawn</option>
                     <option value="DONE">Done</option>
                   </select>
-                  
-                  {/* Chevron icon inside the select */}
+
                   <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </div>
-                </div>
+                </div> */}
+              <div className="flex font-semibold sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Status"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
+              </div>
 
                 {/* "Get New Referral" Button, visible only on mobile (hidden on laptop and higher) */}
               <button
                 onClick={handleGetNewReferral}
-                className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-lg hover:bg-[#2555cc] transition block md:hidden w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible"
+                className="bg-[#316BFF] text-white text-sm font-medium px-5 py-3 rounded-2xl hover:bg-[#2555cc] transition block md:hidden w-[150px] overflow-hidden text-ellipsis whitespace-nowrap hover:w-auto hover:overflow-visible"
               >
                 Get New Referral
               </button>

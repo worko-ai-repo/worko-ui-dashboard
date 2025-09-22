@@ -257,7 +257,7 @@ export const renderListSection = ({
           <React.Fragment key={index}>
             <div className="flex justify-between items-start mb-1 gap-4">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-black truncate">
+                <div className="text-sm text-black truncate">
                   {item.designation} at {item.companyName}
                 </div>
                 {item.department && (
@@ -278,7 +278,7 @@ export const renderListSection = ({
               </div>
             </div>
             {index < items.length - 1 && (
-              <div className="border-t border-gray-200 opacity-20 my-4"></div>
+              <div className="border-t border-gray-800 opacity-20 my-4"></div>
             )}
           </React.Fragment>
         ))
@@ -287,7 +287,7 @@ export const renderListSection = ({
           <React.Fragment key={index}>
             <div className="flex justify-between items-start mb-1 gap-4">
               <div className="flex-1 min-w-0">
-                <div className="font-medium text-black truncate">
+                <div className="text-sm text-black truncate">
                   {item.degree} from {item.collage}
                 </div>
               </div>
@@ -296,7 +296,7 @@ export const renderListSection = ({
               </div>
             </div>
             {index < items.length - 1 && (
-              <div className="border-t border-gray-200 opacity-20 my-4"></div>
+              <div className="border-t border-gray-800 opacity-20 my-4"></div>
             )}
           </React.Fragment>
         ))
@@ -306,11 +306,11 @@ export const renderListSection = ({
             <div className="flex items-start gap-4 mb-4">
               <Briefcase strokeWidth={1.5} />
               <div className="flex-1">
-                <div className="font-medium">{item}</div>
+                <div className="text-sm">{item}</div>
               </div>
             </div>
             {index < items.length - 1 && (
-              <div className="border-t border-gray-200 opacity-20 my-4"></div>
+              <div className="border-t border-gray-800 opacity-20 my-4"></div>
             )}
           </React.Fragment>
         ))

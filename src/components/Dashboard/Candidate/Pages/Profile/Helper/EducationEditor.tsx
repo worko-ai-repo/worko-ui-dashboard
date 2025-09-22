@@ -178,7 +178,7 @@ const EducationEditor: React.FC<EducationEditorProps> = ({
             key={index}
             className="flex items-center justify-between py-2 border-b border-gray-200 gap-2">
             <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-2 truncate">
-              <div className="font-medium truncate">
+              <div className="text-sm truncate">
                 {item.collage} - {item.degree}
               </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>

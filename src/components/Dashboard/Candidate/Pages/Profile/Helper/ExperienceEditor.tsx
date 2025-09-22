@@ -136,7 +136,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
     <div className="w-full rounded-3xl bg-white shadow p-6 sm:p-8">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-2 sm:gap-0">
-        <h3 className="text-lg font-semibold text-black">Work Experience</h3>
+        <h3 className="text-lg font-semibold text-black">Work experience</h3>
         <div className="flex items-center gap-4">
           <button
             onClick={onCancel}
@@ -185,7 +185,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
             key={index}
             className="flex items-center justify-between py-2 border-b border-gray-200 gap-2">
             <div className="flex flex-col sm:flex-row sm:items-center flex-1 gap-1 sm:gap-2 truncate">
-              <div className="font-medium truncate">
+              <div className="text-sm truncate">
                 {item.designation} - {item.companyName}
               </div>
               <span className="hidden sm:inline-block text-gray-400">|</span>

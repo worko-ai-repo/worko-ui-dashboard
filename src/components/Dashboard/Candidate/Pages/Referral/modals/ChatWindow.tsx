@@ -5,6 +5,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { Send} from "lucide-react";
 
 // handling dates
 const formatDateLabel = (timestamp: number) => {
@@ -288,9 +289,10 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             />
             <button
               type="submit"
-              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm transition"
+              className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm transition flex items-center gap-1"
             >
-              Send
+            <Send size={16} />
+              Send          
             </button>
           </form>
         </div>
