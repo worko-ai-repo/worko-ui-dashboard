@@ -88,7 +88,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
             <p
             data-tooltip-id="my-tooltip"
             data-tooltip-content={row.userDetails?.about} 
-            className="text-wrap line-clamp-4">{row.userDetails?.about}</p>
+            className="text-wrap line-clamp-1">{row.userDetails?.about}</p>
           </div>
         </div>
       ),

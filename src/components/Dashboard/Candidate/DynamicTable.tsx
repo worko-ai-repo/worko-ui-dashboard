@@ -184,7 +184,7 @@ export function DynamicTable<T extends { id: string; jobTitle: string }>(props: 
           </div>
 
           {/*  Previous and Next buttons */}
-          <div className="bc flex gap-2">
+          <div className="flex gap-2">
             <button onClick={handlePreviousPage} disabled={currentPage <= 1} className={`flex items-center gap-1 px-3 py-1 rounded-md text-sm font-medium transition-colors ${currentPage <= 1 ? "bg-gray-100 text-gray-400 cursor-not-allowed" : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400"}`}>
               <ChevronLeft className="w-4 h-4" />
               Previous
