@@ -81,7 +81,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
     { key: "candidateExperience_designation", label: "Designation",sortable: true  },
     {
       key: "Cv link",
-      label: "Cv link",
+      label: "CV Link",
       render: (row: ApplicantDetails) => (
         <button
           key="view-cv"
@@ -97,7 +97,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
     {
       key: "Actions",
       label: "Actions",
-      contentWidth: "max-w-none !w-[900px]",
+      contentWidth: "max-w-none !min-w-96",
       render: (row: ApplicantDetails) => {
         return (
           <div className="flex gap-3 px-2  justify-between">

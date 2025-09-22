@@ -1,4 +1,4 @@
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
@@ -171,7 +171,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     enabled: !!subDataCompanyId, // only run if companyId exists
   });
 
-  const columns = [
+  const columns: Column<CorporateUserPageRecDataDto>[] = [
     {
       key: "id",
       label: "ID",
@@ -191,13 +191,21 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
       key: "companyDetails_name",
       label: "Company Name",
       sortable: true,
+      contentWidth: `max-w-none !min-w-auto`,
       render: (row: CorporateUserPageRecDataDto) => (
-        <span className="capitalize flex gap-2 items-center justify-center text-center truncate max-w-[99.3%] cursor-pointer text-sm">
-          {row?.companyDetails && row.companyDetails.id ? (
-            <CompanyLogoRender {...row.companyDetails} key={row.id} />
+        <div className="flex flex-row items-center gap-1 min-w-0">
+          {row?.companyDetails && row?.companyDetails.id ? (
+            <CompanyLogoRender {...row?.companyDetails} key={row?.id} />
           ) : null}
-          {row?.companyDetails?.name || "No company available"}
-        </span>
+          <span
+            className="capitalize text-center truncate w-full cursor-pointer text-sm"
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={row?.companyDetails?.name || "No company available"}
+            data-tooltip-place="top"
+            title={row?.companyDetails?.name || "No company available"}>
+            {row?.companyDetails?.name || "No company available"}
+          </span>
+        </div>
       ),
     },
     {
@@ -238,12 +246,10 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
       label: "Phone Number",
       render: (row: CorporateUserPageRecDataDto) => {
         const phoneNumber = row?.phoneNumberDetails
-          ? row.phoneNumberDetails.countryCode + row.phoneNumberDetails.phoneNumber
+          ? row?.phoneNumberDetails.countryCode + row?.phoneNumberDetails.phoneNumber
           : "N/A";
         return (
-          <span
-            className="w-36 mx-auto cursor-pointer select-all"
-            title="Double click to copy">
+          <span className="w-36 mx-auto cursor-pointer select-all" title="Double click to copy">
             {phoneNumber}
           </span>
         );

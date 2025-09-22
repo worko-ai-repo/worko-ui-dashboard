@@ -26,7 +26,7 @@ function CorporateDashboardLayout(): JSX.Element {
                         sidebarOpen={sidebarOpen}
                         setSidebarOpen={setSidebarOpen}
                     />
-                    <main className="  p-0 lg:py-0 lg:px-4">
+                    <main className=" p-0 lg:py-0 lg:px-4 w-full max-w-full min-w-0">
                         <Outlet />
                     </main>
                 </div>

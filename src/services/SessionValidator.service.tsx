@@ -6,6 +6,7 @@ import CognitoServiceObj from "@Utils/Cognito.utils";
 import { UnauthorizedAccessError } from "@Utils/ErrorBoundary.utils";
 import ErrorFallback from "@Pages/errors/base-error/ErrorFallback";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { useCrossAppAuth } from "@Hooks/useCrossAppAuth.hook";
 
 /**
  * Interface defining the structure of a decoded Cognito token.
@@ -61,7 +62,7 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: ProtectedRouteProps) => {
   const token: any = CognitoServiceObj.getAccessToken();
   let userType = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE);
-
+  const appHref = useCrossAppAuth();
   const currentTime = Date.now() / 1000;
 
   const refetchUserType = async () => {
@@ -69,7 +70,7 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
     await CognitoServiceObj.setAccessToken();
     const userRevised = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE);
     if (!userRevised && tokenRequired) {
-      return <Navigate to="/auth/login" />;
+      return appHref("/auth/login");
     } else {
       userType = userRevised;
       // console.log("Updated user type:", userType);
@@ -86,9 +87,9 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
   //  Step 1: If token is required but not present
   if (tokenRequired && !token) {
     if (requiredRoles?.includes(UserRole.CORPORATE)) {
-      return <Navigate to="/auth/corporate/login" />;
+      return appHref("/auth/corporate/login");
     }
-    return <Navigate to="/auth/login" />;
+    return appHref("/auth/login");
   }
 
   //  Step 2: If token is present, validate it
@@ -97,7 +98,7 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
       const decodedToken: JwtPayload & { role?: string } = jwtDecode(token);
 
       if (decodedToken.exp && decodedToken.exp < currentTime) {
-        return <Navigate to="/auth/login" />;
+        return appHref("/auth/login");
       }
     } catch (err) {
       console.error("Error decoding token:", err);
@@ -113,7 +114,7 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
       if (requiredRoles.includes(UserRole.GENERAL_USER)) {
         return element;
       }
-      return <Navigate to="/auth/login" />;
+      return appHref("/auth/login");
     }
     if (Array.isArray(userType) && !userType.some((role) => requiredRoles.includes(role))) {
       return (

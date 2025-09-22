@@ -200,11 +200,12 @@ worko/
   - Example: `Xyz.dto.ts`
 
 ### Workflow
-
+>>> SYNTAX [ TAG/OWNER/ORIGIN_BRANCH/TICKET-SHORT_DESCRIPTION ]
+ 
 1. Create a new branch for your feature:
 
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b bugfix/ashutosh/dev/AD-1-Admin_Dashboard
    ```
 
 2. Commit your changes with a meaningful message:
@@ -216,7 +217,7 @@ worko/
 3. Push your branch:
 
    ```bash
-   git push origin feature/your-feature-name
+   git push origin bugfix/ashutosh/dev/AD-1-Admin_Dashboard
    ```
 
 4. Open a pull request for review.
@@ -432,7 +433,7 @@ worko/
 1. Create a new branch for your feature:
 
    ```bash
-   git checkout -b feature/your-feature-name
+   git checkout -b bugfix/ashutosh/dev/AD-1-Admin_Dashboard
    ```
 
 2. Commit your changes with a meaningful message:
@@ -444,7 +445,7 @@ worko/
 3. Push your branch:
 
    ```bash
-   git push origin feature/your-feature-name
+   git push origin bugfix/ashutosh/dev/AD-1-Admin_Dashboard
    ```
 
 4. Open a pull request for review.

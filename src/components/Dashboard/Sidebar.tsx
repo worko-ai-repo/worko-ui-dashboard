@@ -197,6 +197,17 @@ const Sidebar: React.FC<SidebarProps> = ({
           )}
         </div>
         <div className=" h-full min-w-10 flex flex-col justify-start items-start overflow-scroll no-scrl-web">
+           {/* Expand Button */}
+           {collapsed && (
+            <div className="my-4 mx-auto border p-0.5 rounded-lg flex justify-center">
+              <button
+                onClick={() => setCollapsed(false)}
+                className="text-white focus:outline-none"
+                aria-label="Expand sidebar">
+                <ChevronLeftIcon className="w-5 h-5 rotate-180" />
+              </button>
+            </div>
+          )}
           <nav className="space-y-2  w-full overflow-scroll no-scrl-web">
             {navItems.map((item) => (
               <SidebarItem
@@ -208,17 +219,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               />
             ))}
           </nav>
-          {/* Expand Button */}
-          {collapsed && (
-            <div className="my-4 flex justify-center">
-              <button
-                onClick={() => setCollapsed(false)}
-                className="text-white focus:outline-none"
-                aria-label="Expand sidebar">
-                <ChevronLeftIcon className="w-5 h-5 rotate-180" />
-              </button>
-            </div>
-          )}
+         
         </div>
         {/* Logout Buttons */}
 

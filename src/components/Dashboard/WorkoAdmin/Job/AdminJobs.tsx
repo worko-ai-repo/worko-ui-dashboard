@@ -49,7 +49,7 @@ const AdminJobs = () => {
     limit: 30,
     mapFn: (job: JobData) => ({
       jobId: job.id,
-      companyId: job.companyDetails.id,
+      companyId: job?.companyDetails?.id,
       status: job.status as "PUBLISHED" | "CLOSED" | "ARCHIVED",
     }),
     keySelector: (job) => job.jobId,

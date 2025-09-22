@@ -61,7 +61,7 @@ const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
   };
 
   return (
-    <div className="relative z-[99] w-[180px] " ref={calendarRef}>
+    <div className="relative z-[20] w-[180px] " ref={calendarRef}>
       <div
         className=" flex items-center gap-2 border rounded-lg  px-3 py-1 cursor-pointer bg-white"
         onClick={() => setIsCalendarOpen(!isCalendarOpen)}>

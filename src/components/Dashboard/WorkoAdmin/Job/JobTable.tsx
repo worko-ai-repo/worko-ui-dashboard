@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Filter, X, Link } from "lucide-react";
+import { Filter, X, Link, Building2 } from "lucide-react";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
@@ -12,6 +12,7 @@ import Modal from "@Components/Shared/Modal";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
+import CompanyLogoRender from "../Company/CompanyLogoRender";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -88,17 +89,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       label: "Company",
       sortable: true,
       render: (row: JobData) => {
-        const finalLogoUrl = row?.companyDetails?.logo
-          ? `${import.meta.env.APP_WORKO_BASE_URL}/images/${row?.companyDetails?.logo}`
-          : row?.companyDetails?.logoUrl;
         return (
-          <div className="flex items-center gap-2">
-            <img
-              src={finalLogoUrl}
-              alt={row.companyName}
-              className="w-8 h-8 object-contain rounded-full"
-            />
-            <span>{row.companyName}</span>
+          <div className="flex flex-row items-center gap-1 min-w-0">
+            {row?.companyDetails && row?.companyDetails.id ? (
+              <CompanyLogoRender {...row?.companyDetails} key={row?.id} />
+            ) : (
+              <Building2 className="w-16 p-2 h-12  text-gray-400 rounded-full  border " />
+            )}
+            <span
+              className="capitalize text-center truncate w-full cursor-pointer text-sm"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row?.companyName || "No company available"}
+              data-tooltip-place="top"
+              title={row?.companyName || "No company available"}>
+              {row?.companyName || "No company available"}
+            </span>
           </div>
         );
       },

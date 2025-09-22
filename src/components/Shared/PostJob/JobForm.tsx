@@ -530,15 +530,25 @@ export default function JobForm({
                     <option value="USD">USD</option>
                   </select>
                 </div>
-                <label className="flex items-center text-xs font-medium text-gray-700">
-                  <input
-                    required={false}
-                    type="checkbox"
-                    {...register("displaySalaryRange")}
-                    className="form-checkbox text-blue-600 w-3 h-3 focus:ring-0 mr-1 accent-blue-600"
-                  />
-                  <span className="text-gray-700 whitespace-nowrap">Don't show to candidate</span>
-                </label>
+                <Controller
+                  name="displaySalaryRange"
+                  control={control}
+                  render={({ field: { value, onChange, ...field } }) => (
+                    <label className="flex items-center text-xs font-medium text-gray-700">
+                      <input
+                        required={false}
+                        type="checkbox"
+                        checked={!value} // Invert the display
+                        onChange={(e) => onChange(!e.target.checked)} // Invert the value
+                        className="form-checkbox text-blue-600 w-3 h-3 focus:ring-0 mr-1 accent-blue-600"
+                        {...field}
+                      />
+                      <span className="text-gray-700 whitespace-nowrap">
+                        Don't show to candidate
+                      </span>
+                    </label>
+                  )}
+                />
               </div>
 
               <div className="flex flex-col sm:flex-row items-center gap-2">

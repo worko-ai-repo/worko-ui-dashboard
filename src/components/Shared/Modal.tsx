@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+import ReactDOM from "react-dom";
 
 interface ModalProps {
   isOpen: boolean;
@@ -37,41 +38,41 @@ const Modal = ({
     }
   }, [isOpen]);
 
-  // Close on outside click
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (modalRef.current && !modalRef.current.contains(event.target as Node)) {
-        onClose();
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [onClose]);
+  // No need for document-wide outside click when using explicit overlay
 
   if (!visible) return null;
 
-  return (
-    <div
-      ref={modalRef}
-      className={`fixed top-0 right-0 z-[9999] max-h-[95vh]  p-6 pt-0 bg-white rounded-xl shadow-lg ${
-        isAnimatingOut ? "animate-slide-out" : "animate-slide-in"
-      }`}
-      style={{ overflowY: "auto" }}>
-      {showCloseButton && (
-        <div className="absolute top-0 right-0 w-fit bg-white z-10 pt-0 pr-2 flex justify-end">
-          <button
-            className="text-xl text-gray-500 hover:text-gray-800"
-            onClick={onClose}
-            aria-label="Close modal"
-            title="Close modal">
-            ×
-          </button>
-        </div>
-      )}
-      {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
-      <div className={`${className}`}>{children}</div>
-    </div>
+  return ReactDOM.createPortal(
+    <div className="fixed inset-0 z-[9998]">
+      <div
+        className={`absolute inset-0 bg-black/30 transition-opacity duration-300 ${
+          isAnimatingOut ? "opacity-0" : "opacity-100"
+        }`}
+        onClick={onClose}
+        aria-hidden
+      />
+      <div
+        ref={modalRef}
+        className={`fixed top-0 right-0 z-[9999] max-h-[95vh] p-6 pt-0 bg-white rounded-xl shadow-lg ${
+          isAnimatingOut ? "animate-slide-out" : "animate-slide-in"
+        }`}
+        style={{ overflowY: "auto" }}>
+        {showCloseButton && (
+          <div className="absolute top-0 right-0 w-fit bg-white z-10 pt-0 pr-2 flex justify-end">
+            <button
+              className="text-xl text-gray-500 hover:text-gray-800"
+              onClick={onClose}
+              aria-label="Close modal"
+              title="Close modal">
+              ×
+            </button>
+          </div>
+        )}
+        {title && <h2 className="text-lg font-semibold mb-4">{title}</h2>}
+        <div className={`${className}`}>{children}</div>
+      </div>
+    </div>,
+    document.body
   );
 };
 
