@@ -30,6 +30,7 @@ export default function JoinedModal({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
   
     useEffect(() => {
     if (isOpen) {
@@ -111,7 +112,7 @@ export default function JoinedModal({
       };
 
       const { response, error } = await httpServiceObj.patch(
-        `https://jobs.dev.worko.work/job-application/${job.id}/applicant-action`,
+        `${APP_JOBS_API_URI}/job-application/${job.id}/applicant-action`,
         payload,
         true,
         {},

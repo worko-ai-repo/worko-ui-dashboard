@@ -50,6 +50,7 @@ const SubmitDocumentModal = ({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const {
     control,
@@ -282,7 +283,7 @@ const SubmitDocumentModal = ({
 
       // Step 1: Get signed URLs
       const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
-        "https://jobs.dev.worko.work/file/gsu2u/USER_JOB_APPL_DOC",
+        `${APP_JOBS_API_URI}/file/gsu2u/USER_JOB_APPL_DOC`,
         payload,
         true,
         {},
@@ -356,7 +357,7 @@ const SubmitDocumentModal = ({
         };
 
         const patchResult = await httpServiceObj.patch(
-          `https://jobs.dev.worko.work/job-application/${jobId}/applicant-action`,
+          `${APP_JOBS_API_URI}/job-application/${jobId}/applicant-action`,
           updatePayload,
           true,
           {},
