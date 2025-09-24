@@ -31,9 +31,8 @@ const PricingCard = ({
 }: PricingCardProps) => {
   return (
     <div
-      className="w-[350px] rounded-[35px] overflow-hidden shadow-lg flex flex-col"
+      className="w-[350px] rounded-[35px] overflow-hidden shadow-lg flex flex-col bc bg-gradient-to-br from-custom-gradient-from to-custom-gradient-to transform"
       style={{ 
-        background: `linear-gradient(to bottom right, ${gradientFrom}, ${gradientTo})`,
         transform: `translateY(-${elevation}px)`
       }}
     >

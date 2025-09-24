@@ -488,14 +488,14 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               isCandidate={false}
             />
           {/* )} */}
-            {/* {showChatWindow && (
+            {/* {showChatWindow && ( */}
             <ChatWindow
               onClose={()=>setShowChatWindow(false)}
               show={showChatWindow}  
               referralData={referralData}      
               user={"employee"}   
             />
-          )} */}
+          {/* )} */}
         </div>
       </div>
     );

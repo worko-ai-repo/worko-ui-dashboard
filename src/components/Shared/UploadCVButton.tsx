@@ -7,6 +7,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useAppContext } from "@Context/App.context";
+import CVParsingPopup from "./CVParsingPopup";
 
 interface UploadCVButtonProps {
     onUploadSuccess?: (cvUrl: string) => void;
@@ -15,6 +16,7 @@ interface UploadCVButtonProps {
 const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
+    const [CVParsing,setCVParsing] = useState(false)
     const [error, setError] = useState<string | null>(null);
     const {userDetails} = useAppContext()
     const handleClick = () => {
@@ -73,6 +75,9 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             if (patchResult.status !== 200) {
                 throw new Error("Failed to update user record with CV");
             }
+            setCVParsing(true)
+
+            await new Promise(resolve => setTimeout(resolve, 30000));
 
             toast.success("CV uploaded successfully", getToastOptions());
 
@@ -86,10 +91,13 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
     };
 
     return (
+        <>
         <div>
             <button
                 onClick={handleClick}
-                className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-gradient-to-r from-blue-600 to-blue-500 text-white"
+                className={`w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer 
+                    ${uploading ? 'bg-gray-400 text-gray-100 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white'}
+                `}
                 disabled={uploading}
             >
                 <Plus className="h-4 w-4 sm:h-5 sm:w-5" />
@@ -106,6 +114,8 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             />
             {error && <p className="text-red-500 mt-1 text-xs">{error}</p>}
         </div>
+        {CVParsing && <CVParsingPopup />}
+        </>
     );
 };
 

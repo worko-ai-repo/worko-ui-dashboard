@@ -126,19 +126,21 @@ const Subscription = () => {
       {/* Current Plan */}
       {subscriptionData && (
         <div className="bg-white rounded-[19px] p-6 mb-8 shadow-sm">
-          <div className="flex justify-between gap-6">
+          <div className="flex flex-col md:flex-row justify-between gap-6">
+            {/* Left Side */}
             <div className="flex-1">
-              <div className="flex items-center">
-                <div className="text-2xl font-semibold">
-                  Package : <span className="text-[#316bff]">{subscriptionData.name}</span>
+              <div className="flex flex-wrap items-center">
+                <div className="text-xl sm:text-2xl font-semibold">
+                  Package: <span className="text-[#316bff]">{subscriptionData.name}</span>
                 </div>
-                <div className="ml-4 bg-[#d6e2ff] text-[#316bff] px-4 py-1 rounded-full">
+                <div className="ml-2 sm:ml-4 mt-2 sm:mt-0 bg-[#d6e2ff] text-[#316bff] px-3 py-1 rounded-full text-sm">
                   {subscriptionData.status}
                 </div>
               </div>
 
               <div className="mt-4 font-semibold text-left">Package info:</div>
-              <div className="mt-4 flex gap-16">
+
+              <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-16">
                 {[
                   { label: "Start date", value: formatDate(subscriptionData.purchaseDate) },
                   { label: "End date", value: formatDate(subscriptionData.expiryDate) },
@@ -148,23 +150,25 @@ const Subscription = () => {
                     <span className="font-medium">{item.value}</span>
                   </div>
                 ))}
-              </div>
-
-              <div className="mt-2 flex items-center gap-2">
+                <div className="flex items-center gap-2">
                 <span className="font-medium">Referral expires :</span>
                 <span className="font-medium">{formatDate(subscriptionData.expiryDate)}</span>
               </div>
+              </div>
+
+
             </div>
 
-            <div className="w-[250px] h-[120px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-[18px] p-4 text-white">
+            {/* Right Side */}
+            <div className="w-full md:w-[250px] h-[120px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-[18px] p-4 text-white">
               <div className="flex items-center justify-between mb-4">
-                <div className="font-semibold">Total referrals</div>
+                <div className="font-semibold text-sm">Total referrals</div>
                 <div className="bg-[#f6f6f6] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
                   {subscriptionData.creditedReferrals}
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <div className="font-semibold">Referrals left</div>
+                <div className="font-semibold text-sm">Referrals left</div>
                 <div className="bg-[#57e1e1] text-[#0048ff] font-semibold w-[45px] h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
                   {subscriptionData.availableReferrals}
                 </div>
@@ -175,20 +179,20 @@ const Subscription = () => {
       )}
 
       {/* Section title */}
-      <div className="mt-16 mb-40 text-center">
+      <div className="mt-12 mb-40 text-center">
         <h1 className="text-4xl font-bold text-[#0f0f0f]">Our Pricing Plans</h1>
         <p className="text-base font-light text-[#0f0f0f] mt-2">
           Pick an account plan that fits your workflow
         </p>
       </div>
 
-      <div className="flex justify-center gap-8 relative">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
         {/* Most popular tag */}
-        <div className="absolute -top-[120px] left-1/2 transform -translate-x-1/2 w-[350px] h-[99px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-t-[35px] flex items-center justify-center">
+        {/* <div className="absolute -top-[120px] left-1/2 transform -translate-x-1/2 w-[350px] h-[99px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-t-[35px] flex items-center justify-center">
           <span className="text-2xl font-bold text-white tracking-wider uppercase">
             Most popular
           </span>
-        </div>
+        </div> */}
 
         {plans.map((plan) => (
           <PricingCard

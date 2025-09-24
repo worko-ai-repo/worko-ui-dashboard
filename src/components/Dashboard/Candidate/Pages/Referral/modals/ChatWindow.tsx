@@ -5,7 +5,7 @@ import { format, isToday, isYesterday } from "date-fns";
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
-import { Send} from "lucide-react";
+import { Send } from "lucide-react";
 
 // handling dates
 const formatDateLabel = (timestamp: number) => {
@@ -59,10 +59,17 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   const { userDetails } = useAppContext();
   const [lastKey, setLastKey] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+  // New ref to store previous scrollHeight when loading older messages
+  const prevScrollHeightRef = useRef(0);
 
   // Animate
   useEffect(() => {
     if (show) {
+      setMessages([]); // Clear old messages
+      setLastKey(null);
+      setLoadingMore(false);
       setVisible(true);
       const timer = setTimeout(() => setIsAnimatingIn(true), 10);
       return () => clearTimeout(timer);
@@ -73,10 +80,15 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     }
   }, [show]);
 
-  // Auto-scroll
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+    const isUserNearBottom = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return false;
+
+    const threshold = 100;
+    return (
+      container.scrollHeight - container.scrollTop - container.clientHeight < threshold
+    );
+  };
 
   // Connect WebSocket
   useEffect(() => {
@@ -99,59 +111,76 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
             },
           };
           socket.send(JSON.stringify(getMessagesPayload));
-          // console.log('getMessages', getMessagesPayload);
         };
 
-        socket.onmessage = (event) => {
-          try {
-            const parsed = JSON.parse(event.data);
-            if (
-              parsed.eventName === "getMessages" &&
-              Array.isArray(parsed.data)
-            ) {
-              const incomingMessages: Message[] = parsed.data.map(
-                (msg: any) => ({
-                  id: msg.id,
-                  text: msg.text,
-                  sender: msg.senderId === userDetails?.id ? "me" : "other",
-                  timestamp: new Date(
-                    msg.updatedAt || msg.createdAt || Date.now()
-                  ).getTime(),
-                })
-              );
+      socket.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
 
-              setMessages((prev) =>
-                loadingMore
-                  ? [...incomingMessages.reverse(), ...prev]
-                  : incomingMessages.reverse()
-              );
-              setLastKey(parsed.pagination?.lastKey || null);
-              setLoadingMore(false);
-            }
+          // Handle older messages (pagination)
+          if (parsed.eventName === "getMessages" && Array.isArray(parsed.data)) {
+            const container = messagesContainerRef.current;
+            const prevScrollHeight = container?.scrollHeight || 0;
 
-            if (
-              parsed.eventName === "sendMessage" &&
-              parsed.id &&
-              parsed.text
-            ) {
-              const incomingMessage: Message = {
-                id: parsed.id,
-                text: parsed.text,
-                sender: parsed.senderId === userDetails?.id ? "me" : "other",
-                timestamp: new Date(
-                  parsed.updatedAt || parsed.createdAt || Date.now()
-                ).getTime(),
-              };
+            const incomingMessages: Message[] = parsed.data.map((msg: any) => ({
+              id: msg.id,
+              text: msg.text,
+              sender: msg.senderId === userDetails?.id ? "me" : "other",
+              timestamp: new Date(msg.updatedAt || msg.createdAt || Date.now()).getTime(),
+            }));
 
-              setMessages((prev) => [...prev, incomingMessage]);
-            }
-          } catch (err) {
-            toast.error("Failed to get incoming message:",getToastOptions({}));
+            setMessages((prev) => {
+              const all = [...incomingMessages, ...prev];
+              const deduped = Array.from(new Map(all.map((m) => [m.id, m])).values());
+              deduped.sort((a, b) => a.timestamp - b.timestamp);
+              return deduped;
+            });
+
+            setLastKey(parsed.pagination?.lastKey || null);
+            setLoadingMore(false);
+
+            // Restore scroll position after DOM updates
+            requestAnimationFrame(() => {
+              if (container) {
+                const newScrollHeight = container.scrollHeight;
+                const scrollOffset = newScrollHeight - prevScrollHeight;
+                container.scrollTop = scrollOffset;
+              }
+            });
           }
-        };
+
+          // Handle new incoming single message
+          if (parsed.eventName === "sendMessage" && parsed.id && parsed.text) {
+            const shouldScroll = isUserNearBottom();
+
+            const incomingMessage: Message = {
+              id: parsed.id,
+              text: parsed.text,
+              sender: parsed.senderId === userDetails?.id ? "me" : "other",
+              timestamp: new Date(parsed.updatedAt || parsed.createdAt || Date.now()).getTime(),
+            };
+
+            setMessages((prev) => {
+              if (prev.some((msg) => msg.id === incomingMessage.id)) return prev;
+              const merged = [...prev, incomingMessage];
+              merged.sort((a, b) => a.timestamp - b.timestamp);
+              return merged;
+            });
+
+            if (shouldScroll) {
+              requestAnimationFrame(() => {
+                messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+              });
+            }
+          }
+        } catch (err) {
+          toast.error("Failed to parse incoming message", getToastOptions({}));
+        }
+      };
+
 
         socket.onerror = (error) => {
-          toast.error("error connecting" + error,getToastOptions({}));
+          toast.error("error connecting" + error, getToastOptions({}));
         };
 
         socket.onclose = (event) => {
@@ -171,7 +200,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         socketRef.current.close();
       }
     };
-  }, [show, referralData]);
+  }, [show, referralData, userDetails?.id]);
 
   // Send new message handler
   const handleSend = () => {
@@ -192,50 +221,115 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     };
 
     socketRef.current.send(JSON.stringify(msgPayload));
-    // console.log('message sent', msgPayload);
     setNewMessage("");
   };
+
+  // Fetch older messages when scrolling to top
+  useEffect(() => {
+    if (!show) return;
+
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    let isFetching = false;
+
+    const handleScroll = () => {
+      if (
+        container.scrollTop <= 50 && // near the top
+        lastKey &&
+        !loadingMore &&
+        !isFetching
+      ) {
+        isFetching = true;
+        setLoadingMore(true);
+
+        // Save current scroll height before fetching older messages
+        prevScrollHeightRef.current = container.scrollHeight;
+
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          const getMessagesPayload = {
+            action: "getMessages",
+            getMessagesData: {
+              referralId: referralData.id,
+              senderId: referralData.acceptedByUserId,
+              lastKey: lastKey,
+            },
+          };
+          socketRef.current.send(JSON.stringify(getMessagesPayload));
+        }
+        setTimeout(() => {
+          isFetching = false;
+        }, 500); // debounce
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => container.removeEventListener("scroll", handleScroll);
+  }, [lastKey, loadingMore, show, referralData]);
+
+
+  // Preserve scroll position after prepending older messages
+  useEffect(() => {
+    if (!loadingMore) return;
+    const container = messagesContainerRef.current;
+    if (!container) return;
+
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const newScrollHeight = container.scrollHeight;
+        const scrollOffset = newScrollHeight - prevScrollHeightRef.current;
+
+        container.scrollTo({
+          top: scrollOffset,
+          behavior: "smooth",
+        });
+      });
+    });
+  }, [messages, loadingMore]);
+
+
 
   function renderGroupedMessages(messages: Message[]) {
     const grouped: { [date: string]: Message[] } = {};
 
     messages.forEach((msg) => {
-        const dateLabel = formatDateLabel(msg.timestamp);
-        if (!grouped[dateLabel]) grouped[dateLabel] = [];
-        grouped[dateLabel].push(msg);
+      const dateLabel = formatDateLabel(msg.timestamp);
+      if (!grouped[dateLabel]) grouped[dateLabel] = [];
+      grouped[dateLabel].push(msg);
     });
 
     return Object.entries(grouped).map(([date, msgs]) => (
-        <div key={date} className="space-y-2 mb-6">
+      <div key={date} className="space-y-2 mb-6">
         <div className="text-xs text-gray-500">{date}</div>
         {msgs.map((msg) => (
-            <div
+          <div
             key={msg.id}
             className={`flex ${
-                msg.sender === "me"
-                ? "justify-end text-end"
-                : "justify-start text-start"
+              msg.sender === "me" ? "justify-end text-end" : "justify-start text-start"
             }`}
-            >
+          >
             <div
-                className={`px-4 py-2 rounded-lg text-sm relative 
-                min-w-[100px] max-w-[75%] 
-                ${
-                msg.sender === "me"
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-200 text-gray-800"
-                }`}
+              className={`px-4 py-2 rounded-lg text-sm relative min-w-[100px] max-w-[75%] ${
+                msg.sender === "me" ? "bg-blue-500 text-white" : "bg-gray-200 text-gray-800"
+              }`}
             >
-                {msg.text}
-                <div className="text-[10px] mt-1 text-right text-gray-800">
+              {msg.text}
+              <div className="text-[10px] mt-1 text-right text-gray-800">
                 {formatTime(msg.timestamp)}
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         ))}
-        </div>
+      </div>
     ));
   }
+
+  {loadingMore && (
+    <div className="text-center text-xs text-red-800 py-2">
+      Loading earlier messages…
+    </div>
+  )}
+
 
   return (
     <div
@@ -250,13 +344,13 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
       >
         <button
           onClick={onClose}
-          className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+          className="absolute top-2 right-2 text-white hover:text-gray-700"
         >
           ×
         </button>
 
         {/* Header */}
-        <h2 className="text-xl font-semibold p-6 pb-0 text-left">{`Chatting with 
+        <h2 className="text-xl font-semibold p-6 pb-0 text-left bg-blue-500 text-white">{`Chatting with 
         ${toTitleCase(
           user === "employee"
             ? referralData?.userDetails?.name
@@ -264,10 +358,18 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         )}`}</h2>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-2 bg-gray-50">
-            <div className="chat-container">
-                {renderGroupedMessages(messages)}
-            </div>
+        <div
+          ref={messagesContainerRef}
+          className="flex-1 overflow-y-auto px-6 pb-4 space-y-2 bg-gray-50"
+        >
+          <div className="chat-container">
+            {loadingMore && (
+              <div className="text-center text-sm text-gray-500 py-2">
+                Loading earlier messages...
+              </div>
+            )}
+            {renderGroupedMessages(messages)}
+          </div>
           <div ref={messagesEndRef} />
         </div>
 
@@ -291,8 +393,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
               type="submit"
               className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-full text-sm transition flex items-center gap-1"
             >
-            <Send size={16} />
-              Send          
+              <Send size={16} />
+              Send
             </button>
           </form>
         </div>

@@ -447,14 +447,14 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               isOpen={showWithdrawModal}
             />
           )}
-          {/* {showChatWindow && (
+          {/* {showChatWindow && ( */}
             <ChatWindow
               onClose={()=>setShowChatWindow(false)}
               show={showChatWindow}  
               referralData={referralData}
               user={"candidate"} 
             />
-          )} */}
+          {/* )} */}
         </div>
       </div>
     );
