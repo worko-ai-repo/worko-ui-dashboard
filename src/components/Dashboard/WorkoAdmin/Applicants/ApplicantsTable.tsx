@@ -501,7 +501,7 @@ export default function ApplicationTable({
       ),
     },
     currentPosition: {
-      key: "company",
+      key: "currentPosition",
       label: "Current Position",
 
       render: (row: JobApplicationDetailsDto) => (
@@ -530,7 +530,7 @@ export default function ApplicationTable({
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
-          commonColumns.IsWorko,
+          // commonColumns.IsWorko,
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,

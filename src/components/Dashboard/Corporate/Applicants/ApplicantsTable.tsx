@@ -363,7 +363,7 @@ export default function ApplicationTable({
       ),
     },
     currentPosition: {
-      key: "company",
+      key: "currentPosition",
       label: "Current Position",
 
       render: (row: JobApplicationDetailsDto) => (

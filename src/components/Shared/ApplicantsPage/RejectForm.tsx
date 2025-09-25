@@ -191,7 +191,7 @@ const RejectionForm: React.FC<{
                 onClick={handleMicToggle}
                 disabled={!!error}
                 className={`
-                  absolute bottom-3 right-3 w-8 h-8 flex items-center justify-center rounded-full
+                  absolute bottom-3 right-3 w-12 h-12 flex items-center justify-center rounded-full
                   transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105
                   ${isListening 
                     ? "bg-red-500 hover:bg-red-600 animate-pulse" 
