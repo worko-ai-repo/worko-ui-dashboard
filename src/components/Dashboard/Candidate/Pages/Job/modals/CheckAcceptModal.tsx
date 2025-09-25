@@ -27,7 +27,6 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   const [issueDetail, setIssueDetail] = useState('');
   const [pdfUrl, setPdfUrl] = useState('');
   const [visible, setVisible] = useState(false);
-  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const handleConfirm = async (nextAction: 'accept' | 'raise') => {
     setError(null);
@@ -45,11 +44,12 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
         };
 
         const { response, error } = await httpServiceObj.patch(
-          `${APP_JOBS_API_URI}/job-application/${job.id}/applicant-action`,
+          `/job-application/${job.id}/applicant-action`,
           payload,
           true,
           {},
-          true
+          false,
+          'JOB'
         );
 
         if (error) {
@@ -75,11 +75,12 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
         };
 
         const { response, error } = await httpServiceObj.patch(
-          `${APP_JOBS_API_URI}/job-application/${job.id}/applicant-action`,
+          `/job-application/${job.id}/applicant-action`,
           payload,
           true,
           {},
-          true
+          false,
+          'JOB'
         );
 
         if (error) {
@@ -120,11 +121,12 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
       try {
         const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
-          `${APP_JOBS_API_URI}/file/gsu2v/HR_OFFER_LETTER_SENT`,
+          `/file/gsu2v/HR_OFFER_LETTER_SENT`,
           payload,
           true,
           {},
-          true
+          false,
+          'JOB'
         );
 
         if (error) {

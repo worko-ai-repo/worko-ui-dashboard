@@ -16,7 +16,6 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
 
-  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const handleSubmit = async () => {
     if (
@@ -46,12 +45,7 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
         branchName,
       };
 
-      await httpServiceObj.patch(
-        `/refer-and-earn/${statusData.id}/request-withdrawal
-    `,
-        payload,
-        true
-      );
+      await httpServiceObj.patch(`/refer-and-earn/${statusData.id}/request-withdrawal`, payload, true, {}, false,"BASE");
 
       toast.success("Withdrawal request submitted successfully!", getToastOptions({}));
       onClose();
