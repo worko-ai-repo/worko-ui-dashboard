@@ -285,11 +285,12 @@ const SubmitDocumentModal = ({
 
       // Step 1: Get signed URLs
       const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
-        "https://jobs.dev.worko.work/file/gsu2u/USER_JOB_APPL_DOC",
+        `/file/gsu2u/USER_JOB_APPL_DOC`,
         payload,
         true,
         {},
-        true
+        false,
+        "JOB"
       );
 
       if (error || !Array.isArray(response)) {
@@ -359,11 +360,12 @@ const SubmitDocumentModal = ({
         };
 
         const patchResult = await httpServiceObj.patch(
-          `https://jobs.dev.worko.work/job-application/${jobId}/applicant-action`,
+          `/job-application/${jobId}/applicant-action`,
           updatePayload,
           true,
           {},
-          true
+          false,
+          "JOB"
         );
 
         if (patchResult.status !== 200) {

@@ -44,10 +44,11 @@ const ReferralsTable = ({
   //     const encodedEmail = encodeURIComponent(user.email);
 
   //     const { response }: { response: any } = await httpServiceObj.get(
-  //       `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ""}`,
+  //       `/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchbarText || ""}`,
   //       true,
   //       {},
-  //       true
+  //       false,
+  //        "JOB",
   //     );
   //     console.log(response)
   //     if (!response?.data || !Array.isArray(response.data)) {

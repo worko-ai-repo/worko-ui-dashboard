@@ -111,11 +111,12 @@ export default function JoinedModal({
       };
 
       const { response, error } = await httpServiceObj.patch(
-        `https://jobs.dev.worko.work/job-application/${job.id}/applicant-action`,
+        `/job-application/${job.id}/applicant-action`,
         payload,
         true,
         {},
-        true
+        false,
+        "JOB"
       );
 
       if (error) {

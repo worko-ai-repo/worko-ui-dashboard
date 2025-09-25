@@ -50,7 +50,6 @@ const ReferralsTable = memo(
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
 
     const APP_API_URI = import.meta.env.APP_API_URI;
-    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
     const { user } = useDashboardContext();
 
     const referrals = data?.data || [];
