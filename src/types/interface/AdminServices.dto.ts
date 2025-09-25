@@ -39,6 +39,7 @@ export interface CursorPaginationAdminJobDataParams {
   dashboard: string;
   status: JobStatusType;
   searchText?: string;
+  includeCompanyDetails: boolean;
   lastKey?: string | undefined;
 }
 

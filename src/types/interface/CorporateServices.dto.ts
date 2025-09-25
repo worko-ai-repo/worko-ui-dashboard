@@ -323,6 +323,7 @@ export interface CursorPaginationJobDataParams {
   companyId: string;
   corporateRecruiterUserId?: string;
   lastKey?: string | undefined;
+  includeCompanyDetails:boolean;
 }
 
 /**

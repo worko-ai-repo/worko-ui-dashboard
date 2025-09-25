@@ -64,6 +64,7 @@ const AdminJobs = () => {
     sortOrder: "desc",
     dashboard: "ADMIN",
     status: activeTab,
+    includeCompanyDetails: true,
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
