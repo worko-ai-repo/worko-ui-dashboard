@@ -55,7 +55,7 @@ const handleCVUrlGenerator = async (corporateBulkJdId: string, id: string, fileN
       throw new Error("Failed to get pre-signed URL for document");
     }
     // Open document in new tab
-   return response.objectUrl;
+    return response.objectUrl;
   } catch (error) {
     console.error("Error viewing document:", error);
     toast.error("Failed to view document", getToastOptions({}));
@@ -69,12 +69,9 @@ export default function ApplicantScreeningTable() {
 
   //{ state: { jobTitle: row.jobTitle } } get this and set the job title
   let jobTitle = "";
-  if(
-    location.state && (location.state as any).jobTitle
-  ){
+  if (location.state && (location.state as any).jobTitle) {
     jobTitle = (location.state as any).jobTitle;
   }
-  
 
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
@@ -242,8 +239,12 @@ export default function ApplicantScreeningTable() {
       render: (row: (typeof applicantsData)[0]) => (
         <div className="flex mx-auto w-auto justify-center gap-2">
           <button
-            onClick={async() => {
-              const url = await handleCVUrlGenerator(row.corporateBulkJdId, row.companyId, row.cloudFileName);
+            onClick={async () => {
+              const url = await handleCVUrlGenerator(
+                row.corporateBulkJdId,
+                row.companyId,
+                row.cloudFileName
+              );
               setPdfViewDetails(url);
               setIsViewCVModalOpen(true);
             }}
@@ -306,49 +307,54 @@ export default function ApplicantScreeningTable() {
   return (
     <div className="max-h-screen  ">
       {/* Header Section */}
-      <div className="mb-6">
+      <div className="my-6">
         <div className="flex  flex-wrap items-center gap-4 mb-6">
-          <button 
-          onClick={() => nav(-1)}
-          className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow">
+          <button
+            onClick={() => nav(-1)}
+            className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow">
             <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
 
           <div className="flex flex-wrap gap-4">
             {/* Job Profile Card */}
-            <div className="bg-white rounded-xl shadow-sm p-4 w-80">
-              <div className="text-center">
+            <div className="bg-white max-w-[200px] rounded-xl shadow-sm p-4 w-80">
+              <div className="text-center h-full flex flex-col justify-between items-center ">
                 <div className="text-sm text-gray-500 mb-1">Job profile</div>
-                <div className="text-lg font-bold text-blue-600">{jobTitle ?? "-----"}</div>
+                <div
+                  className="text-xs font-bold text-blue-600 capitalize line-clamp-1 cursor-pointer"
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={jobTitle}>
+                  {jobTitle ?? "-----"}
+                </div>
               </div>
             </div>
 
             {/* Screened Card */}
-            <div className="bg-white rounded-xl shadow-sm p-4 w-40">
-              <div className="text-center">
+            <div className="bg-white max-w-[200px] rounded-xl shadow-sm p-4 w-40">
+              <div className="text-center h-full flex flex-col justify-between items-center  ">
                 <div className="text-sm text-gray-500 mb-1">Screened</div>
-                <div className="text-2xl font-bold text-gray-800">{applicantsData.length}</div>
+                <div className="text-2xl font-bold text-blue-500">{applicantsData.length}</div>
               </div>
             </div>
 
             {/* Screening Done By Card */}
-            <div className="bg-white rounded-xl shadow-sm p-4 ">
-              <div className="text-center">
+            <div className="bg-white max-w-[200px] rounded-xl shadow-sm p-4 ">
+              <div className="text-center h-full flex flex-col justify-between items-center ">
                 <div className="text-sm text-gray-500 mb-1">Screening done by</div>
-                <div className="text-lg font-semibold text-gray-800">
-                <CreatedByDisplay row={data?.[0] } mode="created" />
+                <div className="text-xs font-semibold text-gray-800 capitalize">
+                  <CreatedByDisplay row={data?.[0]} mode="created" />
                 </div>
               </div>
             </div>
 
             {/* Screening Time Card */}
-            <div className="bg-white rounded-xl shadow-sm p-4 w-72">
-              <div className="text-center">
+            <div className="bg-white max-w-[200px] rounded-xl shadow-sm p-4 w-72">
+              <div className="text-center h-full flex flex-col justify-between items-center ">
                 <div className="text-sm text-gray-500 mb-1">Screening time</div>
-                <div className="text-lg font-semibold text-gray-800">
+                <div className="text-xs font-semibold text-gray-800">
                   {new Date(data?.[0]?.createdAt).toLocaleString()}
                 </div>
-            </div>
+              </div>
             </div>
           </div>
         </div>

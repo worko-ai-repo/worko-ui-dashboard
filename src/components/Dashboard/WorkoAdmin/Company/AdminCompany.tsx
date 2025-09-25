@@ -60,7 +60,7 @@ const AdminCompany = () => {
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col ">
-          <div className="flex flex-col my-2 sm:flex-row justify-between items-center gap-1">
+          <div className="flex flex-col my-3 sm:flex-row justify-between items-center gap-1">
             {/* Search Bar */}
             <SearchBar
               searchBarText={searchBarText}

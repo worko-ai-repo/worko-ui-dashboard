@@ -120,7 +120,16 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         return <span className="capitalize">{locations.join(", ")}</span>;
       },
     },
+    {
+      key: "salaryRange",
+      label: "Salary Range",
+      render: (row: JobData) => {
+        return <div>{`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}</div>;
+      },
+    },
     { key: "department", label: "Department", sortable: true },
+    { key: "totalApplicants", label: "Total Applicants", sortable: true },
+    { key: "newApplicants", label: "New Applicants", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [
           {
@@ -151,10 +160,28 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           },
         ]
       : []),
+
+    {
+      key: "IsWorko",
+      label: "Job Source",
+      render: (row: JobData) => (
+        <div className="flex items-center justify-center gap-2">
+          {!row?.createdByCorporateUserId && row?.createdByUserId ? (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+              Worko
+            </span>
+          ) : (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600">
+              External
+            </span>
+          )}
+        </div>
+      ),
+    },
     {
       key: "actions",
       label: "Actions",
-      contentWidth: `max-w-none ${activeTab === "PUBLISHED" ? "!min-w-96" : ""} `,
+      contentWidth: `max-w-none ${activeTab !== "CLOSED" ? "!min-w-96" : ""} `,
       render: (row: JobData) => {
         const tabButtonConfig: Record<
           string,
@@ -298,10 +325,6 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             <div className="col-span-2">
               <div className="text-gray-400">Experience</div>
               {`${row.experienceRange.min} - ${row.experienceRange.max}`}
-            </div>
-            <div>
-              <div className="text-gray-400">Salary bucket</div>
-              {`${row.salaryRange.min} - ${row.salaryRange.max}`}
             </div>
 
             <div>

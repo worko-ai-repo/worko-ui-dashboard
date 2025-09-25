@@ -71,6 +71,29 @@ interface ApplicationTableProps {
   onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
 }
 
+export const getCvViewDate = (statusTracker: StatusTracker[]) => {
+  const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
+  return cvDownloadedEntry
+    ? new Date(cvDownloadedEntry.actionDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "-";
+};
+export const getCvDownloadedById = (row: JobApplicationDetailsDto) => {
+  const cvDownloadedEntry = row.statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
+  // ULID length is 26 characters and include - in the middle
+  const isUserIdTypeULID =
+    cvDownloadedEntry?.userId?.length === 26 || cvDownloadedEntry?.userId?.includes("-");
+  return isUserIdTypeULID
+    ? { updatedByUserId: cvDownloadedEntry?.userId || "" }
+    : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
+};
+
 export default function ApplicationTable({
   activeTab,
   setActiveTab,
@@ -174,20 +197,6 @@ export default function ApplicationTable({
 
   const isDropdownVisible = (rowIndex: string) => {
     return dropdownVisibleRows.includes(rowIndex);
-  };
-
-  const getCvViewDate = (statusTracker: StatusTracker[]) => {
-    const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
-    return cvDownloadedEntry
-      ? new Date(cvDownloadedEntry.actionDate).toLocaleDateString("en-GB", {
-          day: "numeric",
-          month: "short",
-          year: "numeric",
-          hour: "numeric",
-          minute: "2-digit",
-          hour12: true,
-        })
-      : "-";
   };
 
   // Status array for dropdown
@@ -357,6 +366,7 @@ export default function ApplicationTable({
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth: `mx-auto max-w-none !min-w-auto`,
       render: (row: JobApplicationDetailsDto) => {
         // Status color mapping
 
@@ -364,13 +374,30 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center p-2 w-fit relative">
+          <div className="flex justify-center mx-auto p-2 w-fit relative">
             <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
           </div>
         );
       },
+    },
+    IsWorko: {
+      key: "IsWorko",
+      label: "Job Source",
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          {!row?.jobCreatedByCorporateUserId && row?.jobCreatedByUserId ? (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+              Worko
+            </span>
+          ) : (
+            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600">
+              External
+            </span>
+          )}
+        </div>
+      ),
     },
     applicationDate: {
       key: "applicationDate",
@@ -462,23 +489,29 @@ export default function ApplicationTable({
         </div>
       ),
     },
-    company: {
-      key: "companyName",
-      label: "Current Company",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.companyName}</span>
-        </div>
-      ),
-    },
     currentCompany: {
       key: "company",
       label: "Current Company",
       render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.companyName}</span>
-        </div>
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.applicantDetails?.candidateExperience?.companyName || "NA"}>
+          {row?.applicantDetails?.candidateExperience?.companyName || "NA"}{" "}
+        </span>
+      ),
+    },
+    currentPosition: {
+      key: "company",
+      label: "Current Position",
+
+      render: (row: JobApplicationDetailsDto) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            row?.applicantDetails?.candidateExperience?.designation ?? "FRESHER"
+          }>
+          {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}{" "}
+        </span>
       ),
     },
   };
@@ -491,13 +524,15 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
-          commonColumns.company,
+          commonColumns.currentCompany,
+          commonColumns.currentPosition,
           commonColumns.experience, // Enhanced from yoe
-          commonColumns.location,
+          // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
-          commonColumns.applicationDate, // New column
-          commonColumns.cvViewedDate, // New column
+          commonColumns.IsWorko,
+          // commonColumns.applicationDate, // New column
+          // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
           commonColumns.response,
         ];
@@ -505,12 +540,13 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           commonColumns.currentCompany,
+          commonColumns.currentPosition,
           commonColumns.experience,
-          commonColumns.location,
+          // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
-          commonColumns.applicationDate,
-          commonColumns.cvViewedDate,
+          // commonColumns.applicationDate,
+          // commonColumns.cvViewedDate,
           commonColumns.actions,
           commonColumns.response,
         ];
@@ -602,10 +638,58 @@ export default function ApplicationTable({
           <Timeline steps={timeLineProps} />
         ) : (
           <>
-            <div className="basis-2/3">
-              <span className="font-semibold text-gray-500 ">About</span>
-              <p>{row.applicantDetails.about ?? "--------"}</p>
+            <div className="">
+              <span className="font-semibold text-gray-500">About</span>
+              <div className="max-w-md">
+                <p
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={row.applicantDetails.about}
+                  className="text-wrap line-clamp-3">
+                  {row.applicantDetails.about ?? "--------"}
+                </p>
+              </div>
             </div>
+
+            <div className="">
+              <span className="font-semibold text-gray-500">Location</span>
+              <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
+            </div>
+
+            <div className="">
+              <span className="font-semibold text-gray-500">Application Date</span>
+              <div className="flex items-center justify-center">
+                <span>
+                  {new Date(row.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              </div>
+            </div>
+
+            {getCvViewDate(row.statusTracker) !== "-" && (
+              <>
+                <div className="">
+                  <span className="font-semibold text-gray-500">Cv View Date</span>
+                  <div className="flex items-center justify-center">
+                    <span>{getCvViewDate(row.statusTracker)}</span>
+                  </div>
+                </div>
+
+                <div className="">
+                  <span className="font-semibold text-gray-500">Cv Viewed By</span>
+                  <div className="flex items-center justify-center">
+                    <span>
+                      <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
 
             {row.status === "REJECTED" ? (
               // Show rejection details
@@ -617,55 +701,48 @@ export default function ApplicationTable({
                   </p>
                 </div>
 
-                <div className="text-center">
-                  <div className="font-semibold text-gray-500 text-center">Reason</div>
-
-                  {row.rejectedByUserId ? (
-                    <>
-                      <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                      {row.rejectedByUserId.userComment && (
-                        <div>
-                          <ul>
-                            <span className="font-semibold text-gray-500">Comment</span>
-                          </ul>
-                          <li className="list-disc list-inside ">
-                            {row.rejectedByUserId.userComment}
-                          </li>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                        <p>--------</p>
-                      ) : (
-                        jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                          <li key={index} className="list-disc list-inside">
-                            {reason}
-                          </li>
-                        ))
-                      )}
-                    </>
-                  )}
+                <div>
+                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="max-w-lg">
+                    {row.rejectedByUserId ? (
+                      <>
+                        <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+                        {row.rejectedByUserId.userComment && (
+                          <div>
+                            <span className="font-semibold text-gray-500 mt-2 block">Comment</span>
+                            <li className="list-disc list-inside">
+                              {row.rejectedByUserId.userComment}
+                            </li>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+                          <p>--------</p>
+                        ) : (
+                          jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+                            <li key={index} className="list-disc list-inside">
+                              {reason}
+                            </li>
+                          ))
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
               // Show application details
               <>
                 <div>
-                  <span className="font-semibold text-gray-500">Position</span>
-                  <p className="capitalize">
-                    {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500">CTC</span>
+                  <span className="font-semibold text-gray-500">Current CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-500">CTC</span>
+                  <span className="font-semibold text-gray-500">Expected CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
                   </p>

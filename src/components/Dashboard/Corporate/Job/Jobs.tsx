@@ -87,7 +87,7 @@ const Jobs = () => {
     refetch,
     reset,
   } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
-    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, params],
+    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, JSON.stringify(params)],
     queryFn: CorporateServiceObj.fetchJobs,
     baseParams: params,
     enabled: !!userDetails?.companyId, // Only enable if companyId exists

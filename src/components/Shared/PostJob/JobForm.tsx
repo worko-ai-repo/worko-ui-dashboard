@@ -458,6 +458,7 @@ export default function JobForm({
                     errors={errors}
                     clearErrors={clearErrors}
                     setCompanyName={handleCompanySelect}
+                    showRequestCompany={false}
                   />
                   {errors.companyId && (
                     <p className="text-sm text-left text-red-500">

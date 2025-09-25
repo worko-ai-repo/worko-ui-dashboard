@@ -172,6 +172,7 @@ export interface JobApplicationDetailsDto {
   updatedByUserId?: string;
   updatedByCorporateUserId?: string;
   jobCreatedByCorporateUserId?: string;
+  jobCreatedByUserId?: string;
   offerLetterDetails?: Array<{
     userType: string;
     userId: string;

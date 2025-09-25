@@ -78,7 +78,7 @@ const AdminJobs = () => {
     refetch,
     reset,
   } = useCursorPagination<JobData, CursorPaginationAdminJobDataParams>({
-    queryKey: ["AdminJobsQuery", activeTab, !!searchBarText, params],
+    queryKey: ["AdminJobsQuery", activeTab, !!searchBarText, JSON.stringify(params)],
     queryFn: AdminServiceObj.fetchJobs,
     baseParams: params,
   });

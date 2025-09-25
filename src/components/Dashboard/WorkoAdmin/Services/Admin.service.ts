@@ -17,6 +17,7 @@ import {
   ReferralDetailsDto,
 } from "@Interfaces/CorporateDashboard.dto";
 import {
+  BulkJobApplicationUpdatePayload,
   CursorPaginationCorporateUserAdminDataParams,
   CursorPaginationCorporateUserRecDataParams,
   JobEvaluationRequestDto,
@@ -267,11 +268,9 @@ class AdminService {
    *
    * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
    */
-  async postBulkApplicationUpdate(payload: {
-    bulkJobApplicationUpdate: AdminBulkJobApplicationUpdateItem[];
-  }): Promise<any> {
+  async postBulkApplicationUpdate(payload:BulkJobApplicationUpdatePayload): Promise<any> {
     try {
-      const { response, status } = await httpServiceObj.post<any>(
+      const { response, status } = await httpServiceObj.patch<any>(
         "/job-application/bulk-update",
         payload,
         true, // withAuth

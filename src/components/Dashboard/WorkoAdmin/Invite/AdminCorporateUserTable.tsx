@@ -155,6 +155,13 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     }
   };
 
+  const handleRevokeInviteForMainTable = (inviteId: string) => {
+    const row = data?.find((item) => item.id === inviteId);
+    if (row) {
+      handleRevokeInvite(row, inviteId);
+    }
+  }
+
   const {
     data: subData,
     isLoading: queryIsJobsLoading,
@@ -345,10 +352,10 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
             )}
 
             {/* Revoke invite button - only for non-deleted invites */}
-            {!hasUserDetails && handleRevokeInviteForSubTable && (
+            {!hasUserDetails && handleRevokeInviteForMainTable && (
               <button
                 disabled={CantRevoke}
-                onClick={() => handleRevokeInviteForSubTable(subRow?.id)}
+                onClick={() => handleRevokeInviteForMainTable(subRow?.id)}
                 className="btn_disabled p-1 rounded-full border-2 border-red-600 hover:bg-red-50"
                 title="Revoke Invite">
                 <Minus className="text-red-500 font-bold" size={14} />
@@ -417,11 +424,11 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
       <Modal
         isOpen={modalState.activeModal === "revoke"}
-        onClose={() => dispatch({ type: "CLOSE" })}
+        onClose={() => {dispatch({ type: "CLOSE" })}}
         className="h-52">
         <RevokeForm
           inviteId={modalState.key as string}
-          onClose={() => dispatch({ type: "CLOSE" })}
+          onClose={() => {dispatch({ type: "CLOSE" }); refetch()}}
         />
       </Modal>
     </>

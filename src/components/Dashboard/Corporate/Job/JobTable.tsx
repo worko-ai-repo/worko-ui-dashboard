@@ -96,6 +96,19 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         return <span className="capitalize">{locations.join(", ")}</span>;
       },
     },
+    {
+      key: "salaryRange",
+      label: "Salary Range",
+      render: (row: JobData) => {
+        return (
+          <div>
+            {`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}
+          </div>
+        );
+      },
+    },
+    { key: "department", label: "Department", sortable: true },
+    { key: "totalApplicants", label: "Total Applicants", sortable: true },
     { key: "department", label: "Department", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [
@@ -130,7 +143,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     {
       key: "actions",
       label: "Actions",
-      contentWidth: `max-w-none ${activeTab === "PUBLISHED" ? "!min-w-96" : ""} `,
+      contentWidth: `max-w-none ${activeTab !== "CLOSED" ? "!min-w-96" : ""} `,
       render: (row: JobData) => {
         const tabButtonConfig: Record<
           string,
@@ -275,28 +288,24 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               <div className="text-gray-400">Experience</div>
               {`${row.experienceRange.min} - ${row.experienceRange.max}`}
             </div>
-            <div>
-              <div className="text-gray-400">Salary bucket</div>
-              {`${row.salaryRange.min} - ${row.salaryRange.max}`}
-            </div>
 
             <div>
               <div className="text-gray-400">Created by</div>
               <CreatedByDisplay row={row} mode="created" />
             </div>
 
-           {activeTab === "PUBLISHED" && ( 
-            <>
-              <div>
-                <div className="text-gray-400">Update At</div>
-                {new Date(row.updatedAt).toLocaleDateString("en-GB")}
-              </div>
-              <div>
-                <div className="text-gray-400">Update By</div>
-                <CreatedByDisplay row={row} mode="updated" />
-              </div>
-            </>
-           )}
+            {activeTab === "PUBLISHED" && (
+              <>
+                <div>
+                  <div className="text-gray-400">Update At</div>
+                  {new Date(row.updatedAt).toLocaleDateString("en-GB")}
+                </div>
+                <div>
+                  <div className="text-gray-400">Update By</div>
+                  <CreatedByDisplay row={row} mode="updated" />
+                </div>
+              </>
+            )}
             {activeTab !== "PUBLISHED" && (
               <div>
                 <div className="text-gray-400">

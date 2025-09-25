@@ -12,7 +12,7 @@ import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataAdminParams } from "@Interfaces/AdminServices.dto";
 import Modal from "../../../Shared/Modal";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
-import { BulkJobApplicationUpdateItem } from "@Interfaces/CorporateServices.dto";
+import { BulkJobApplicationUpdateItem, BulkJobApplicationUpdatePayloadItem } from "@Interfaces/CorporateServices.dto";
 import { useListSelection } from "@Hooks/useListSelection.hook";
 import AdminServiceObj from "../Services/Admin.service";
 import { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
@@ -121,10 +121,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         toast.error("Please select at least one application to update.", getToastOptions({}));
         return;
       }
-      const payload: BulkJobApplicationUpdateItem[] = ListSelection.selectedRows.map((row) => ({
-        ...row,
-        status: type, // Set the new status based on the dropdown selection
-      }));
+      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map((row) => {
+        const { id, applicantUserId, ...rest } = row;
+        return {
+          ...rest,
+          status: type, // Set the new status based on the dropdown selection
+        };
+      });
+      
       const data = await AdminServiceObj.postBulkApplicationUpdate({
         bulkJobApplicationUpdate: payload,
       }); //@TODO-Use the data somewhere atleast in both corporate and admin component
@@ -163,6 +167,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     { label: "Hired", onClick: () => setApiStatus("HIRED") },
     { label: "Joined", onClick: () => setApiStatus("JOINED") },
     { label: "Rejected", onClick: () => setApiStatus("REJECTED") },
+    { label: "On Hold", onClick: () => setApiStatus("ON_HOLD") },
   ];
 
   const handleBulkEvaluatorUpdate = () => {
@@ -331,9 +336,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             sendApplicationToRecruiter={(applicationId) =>
               handleSendToRecruiter(applicationId, refetch)
             }
-            showRejectReason={(applicationId) =>
-              console.log(``)
-            }
+            showRejectReason={(applicationId) => console.log(``)}
             isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
             onBulkUpdate={onBulkUpdate}
           />

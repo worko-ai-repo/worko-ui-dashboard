@@ -83,19 +83,21 @@ class JobApplicationService {
         jobApplication.matchingScore <= this.UPPER_MID_SCORE) ||
         jobApplication.matchingScore >= this.HIGH_SCORE) &&
       Boolean(jobApplication.scoreDetails);
-/*     console.log(
+    /*     console.log(
       isWithin24Hours &&
         jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
         jobApplication.status !== this.STATUS_REJECTED &&
         scoreIsValid &&
         jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID // this make sure that worko jobs don't show this button
     ); */
+    const isWorkoJob =
+      !jobApplication?.jobCreatedByCorporateUserId && jobApplication?.jobCreatedByUserId != null;
     return (
       isWithin24Hours &&
-      jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
+      !isWorkoJob &&
+      // jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID &&
       jobApplication.status !== this.STATUS_REJECTED &&
-      scoreIsValid &&
-      jobApplication?.companyId !== import.meta.env.APP_WORKO_COMP_ID // this make sure that worko jobs don't show this button
+      scoreIsValid
     );
   }
 

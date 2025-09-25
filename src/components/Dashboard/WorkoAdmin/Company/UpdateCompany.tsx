@@ -439,37 +439,31 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
             )}
           />
 
-          {/* Upload Logo */}
-          <div className="md:col-span-1 space-y-2">
+            {/* Upload Logo */}
+            <div className="md:col-span-1 space-y-2">
             <label className="block text-sm font-medium mt-0 text-gray-700">Company Logo</label>
             <div className="space-y-1">
               <div className="relative w-full">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleLogoChange}
-                  className="block rounded-xl p-3 w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
-                          file:rounded-lg file:border-0
-                          file:text-sm file:font-semibold
-                          file:bg-blue-50 file:text-blue-700
-                          hover:file:bg-blue-100
-                      "
-                  id="logo-upload-input"
-                />
-                <div
-                  className="relative w-full cursor-pointer"
-                  onClick={() => document.getElementById("logo-upload-input")?.click()} // Trigger input click
-                >
-                  <div className="w-full rounded-xl p-3 text-sm text-gray-500 bg-gray-100  border-gray-300">
-                    Click to upload or drag and drop
-                  </div>
-                  <div className="w-8 h-8 flex items-center justify-center shadow-md absolute rounded-lg top-1.5 right-2 bg-white overflow-hidden">
-                    <Upload className="w-6 h-6 text-blue-500 text-xl" />
-                  </div>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                id="logo-upload-input"
+              />
+              <div className="w-full rounded-xl p-1.5 text-sm text-gray-500 bg-gray-100 border border-gray-300 cursor-pointer">
+                <div className="flex items-center justify-between">
+                <span 
+                className="truncate max-w-[200px]"
+                >{logoFile ? logoFile.name : "Click to upload or drag and drop"}</span>
+                <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-md">  
+                    <Upload className="w-5 h-5 text-blue-500" />
+                </div>
                 </div>
               </div>
+              </div>
             </div>
-          </div>
+            </div>
 
           <Controller
             name="logoUrl"

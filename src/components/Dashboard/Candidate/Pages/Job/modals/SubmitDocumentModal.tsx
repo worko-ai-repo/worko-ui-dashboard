@@ -7,7 +7,10 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
-import { JobApplicationDetailsDto, JobApplicationDocumentStatusType,} from "@Interfaces/CorporateDashboard.dto";
+import {
+  JobApplicationDetailsDto,
+  JobApplicationDocumentStatusType,
+} from "@Interfaces/CorporateDashboard.dto";
 import { newDate } from "react-datepicker/dist/date_utils";
 
 interface SubmitDocumentModalProps {
@@ -414,8 +417,8 @@ const SubmitDocumentModal = ({
         </div>
 
         {/* Document upload form */}
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 ">
-          <div className="p-6 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 overflow-y-auto flex-1 min-h-0">
             {allDocuments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No documents found for this application
