@@ -85,6 +85,24 @@ export interface ApplicationListSelectionDto {
   getAllSelected: (items: JobApplicationDetailsDto[]) => boolean;
   reset: () => void;
 }
+export const checkIsWorkoJobFromSelected = (
+  selectedRows: BulkJobApplicationUpdateItem[],
+  applications: JobApplicationDetailsDto[]
+): boolean => {
+  if (selectedRows.length === 0) return false;
+  
+  const selectedIds = selectedRows.map(row => row.jobApplicationId);
+  // Consider selection as Worko only if ALL selected are Worko jobs.
+  // If any external job is selected, treat as external (i.e., not Worko).
+  const isWorko = (app?: JobApplicationDetailsDto) =>
+    Boolean(app && !app.jobCreatedByCorporateUserId && app.jobCreatedByUserId != null);
+
+  return selectedIds.every(id => {
+    const application = applications.find(app => app.id === id);
+    return isWorko(application);
+  });
+};
+
 const Applicants = () => {
   const { userDetails, fetchCorporateCompanyDetails } = useAppContext();
 
@@ -294,6 +312,7 @@ const Applicants = () => {
                 disabled={
                   apiStatus === undefined || apiStatus === "REJECTED" || apiStatus === "JOINED"
                 }
+                isWorkoJob={checkIsWorkoJobFromSelected(ListSelection.selectedRows, data)}
                 tooltipMessage="Select a bulk status update"
                 selectTitle="Bulk"
               />

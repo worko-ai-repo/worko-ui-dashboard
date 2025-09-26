@@ -530,7 +530,7 @@ export default function ApplicationTable({
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
-          // commonColumns.IsWorko,
+          commonColumns.IsWorko,
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,

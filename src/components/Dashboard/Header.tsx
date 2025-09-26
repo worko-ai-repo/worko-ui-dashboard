@@ -53,7 +53,7 @@ const getInitialFrame = () => {
         <div className='basis-1/3 flex-1 flex justify-start'>
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 w-full sm:w-auto">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <img src={logo_text} onClick={()=>window.location.href = "/"} className="cursor-pointer h-6 sm:h-8" alt="Logo" />
+              <img src={logo_text} onClick={()=>window.location.href = "/"} className="cursor-pointer w-24 h-auto sm:w-24 sm:h-auto flex-shrink-0" alt="Logo" />
               
               <div className="flex items-center gap-3 sm:hidden">
                 <button 
