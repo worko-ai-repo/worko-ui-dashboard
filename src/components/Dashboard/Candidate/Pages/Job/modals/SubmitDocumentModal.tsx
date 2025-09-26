@@ -50,7 +50,7 @@ const SubmitDocumentModal = ({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-
+  
   const {
     control,
     handleSubmit,
@@ -282,11 +282,12 @@ const SubmitDocumentModal = ({
 
       // Step 1: Get signed URLs
       const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
-        "https://jobs.dev.worko.work/file/gsu2u/USER_JOB_APPL_DOC",
+        `/file/gsu2u/USER_JOB_APPL_DOC`,
         payload,
         true,
         {},
-        true
+        false,
+        "JOB"
       );
 
       if (error || !Array.isArray(response)) {
@@ -356,11 +357,12 @@ const SubmitDocumentModal = ({
         };
 
         const patchResult = await httpServiceObj.patch(
-          `https://jobs.dev.worko.work/job-application/${jobId}/applicant-action`,
+          `/job-application/${jobId}/applicant-action`,
           updatePayload,
           true,
           {},
-          true
+          false,
+          "JOB"
         );
 
         if (patchResult.status !== 200) {
@@ -414,8 +416,8 @@ const SubmitDocumentModal = ({
         </div>
 
         {/* Document upload form */}
-        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 ">
-          <div className="p-6 overflow-y-auto flex-1">
+        <form onSubmit={handleSubmit(onFormSubmit)} className="flex flex-col flex-1 min-h-0">
+          <div className="p-6 overflow-y-auto flex-1 min-h-0">
             {allDocuments.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 No documents found for this application

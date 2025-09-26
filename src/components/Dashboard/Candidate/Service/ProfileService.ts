@@ -5,7 +5,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 const APP_API_URI = import.meta.env.APP_API_URI || '';
 
 // Data entity types for API calls
-export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription' | 'socialprofile' | 'preference' | 'multipleCandidateExperience';
+export type DataEntity = 'profile' | 'details' | 'education' | 'experience' | 'skills' | 'achievement' | 'subscription' | 'subscription/status' | 'plans' | 'socialprofile' | 'preference' | 'multipleCandidateExperience';
 
 export interface CognitoUserDetails {
   aud: string;
@@ -499,20 +499,66 @@ const hasCandidateExperience =
 
   // Get subscription plan
   async getSubscriptionPlan(email: string): Promise<any> {
-    // console.log(email);
     if (!email) {
       return null;
     }
     
     try {
-        // console.log('In get subscription plan');
       return await this.fetchUserData(email, 'subscription');
     } catch (error) {
       console.error("Error fetching subscription plan:", error);
       return null;
     }
   }
+
+    // Get plan history
+  async getPlans(email: string): Promise<any> {
+    if (!email) {
+      return null;
+    }
+    
+    try {
+      const { response } = await httpServiceObj.get(`/msubscription/plans`, true, {}, false, "BASE");
+      return response
+    } catch (error) {
+      console.error("Error fetching plan list:", error);
+      return null;
+    }
+  }
+
+    // Get subscription status
+  async getSubscriptionStatus(email: string): Promise<any> {
+    if (!email) {
+      return null;
+    }
+    
+    try {
+      return await this.fetchUserData(email, 'subscription/status');
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      return null;
+    }
+  }
+
+  // Razor pay implementation
+  
+  // create order from backend
+  async createOrder(userId: string,payload:{}): Promise<any>{
+    if(!userId){
+      return null
+    }
+
+    try {
+      const { response } = await httpServiceObj.post(`/user/${userId}/order/create`, payload, true, {}, false, "BASE");
+      return response
+    } catch (error) {
+      console.error("Error fetching subscription plan:", error);
+      return null;
+    }
+
+  }
 }
+
 
 // Create singleton instance
 const profileService = new ProfileService();

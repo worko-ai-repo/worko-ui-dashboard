@@ -3,58 +3,8 @@ import PricingCard from "./PricingCard";
 import { SubscriptionSkeletonLoader } from "@Components/Loader/Skeleton/SkeletonLoader";
 import profileService from "../../Service/ProfileService";
 import { useDashboardContext } from "@Context/Dashboard.context";
+import { useAppContext } from "@Context/App.context";
 
-const plans = [
-  {
-    name: "Starter",
-    price: 199,
-    referrals: 3,
-    referralCost: "265.33",
-    validity: "90 days",
-    features: ["AI Feedback Score", "Referee Feedback"],
-    isPopular: false,
-    gradientFrom: "#76c6ff",
-    gradientTo: "#76c6ff",
-    elevation: 0,
-  },
-  {
-    name: "Accelerator",
-    price: 499,
-    referrals: 10,
-    referralCost: "749.90",
-    validity: "90 days",
-    features: [
-      "On Call Support",
-      "Referee Feedback",
-      "Chat With Referee",
-      "Follow up: Additional Fee",
-    ],
-    isPopular: true,
-    gradientFrom: "#4fb5ff",
-    gradientTo: "#316bff",
-    elevation: 55,
-  },
-  {
-    name: "Maximizer",
-    price: 999,
-    referrals: 25,
-    referralCost: "239.96",
-    validity: "90 days",
-    features: [
-      "On Call Support",
-      "Referee Feedback",
-      "Chat With Referee",
-      "Follow up: Additional Fee",
-    ],
-    isPopular: false,
-    gradientFrom: "#76c6ff",
-    gradientTo: "#76c6ff",
-    elevation: 95,
-  },
-];
-
-const Subscription = () => {
-  const [activePlan, setActivePlan] = useState("");
   interface SubscriptionData {
     name: string;
     status: string;
@@ -62,24 +12,122 @@ const Subscription = () => {
     expiryDate: string;
     creditedReferrals: number;
     availableReferrals: number;
+    requestedReferrals:number;
+  }
+  interface UserDetails {
+  name: string;
+  number: string;
+  userId: string;
+  email: string;
   }
 
+  interface PlansList {
+    SK: string;
+    amount: number;
+    details: string;
+    duration: number;
+    isActive:boolean;
+    name:string;
+    referralCount:number
+  }
+
+  interface SubscriptionStatus{
+    isSubscribed: boolean;
+    referralCount: number;
+  }
+const features = [
+  {features: ["AI Feedback Score", "Referee Feedback"]},
+  {features: ["On Call Support", "Referee Feedback", "Chat With Referee", "Follow up: Additional Fee"]},
+  {features: [ "On Call Support", "Referee Feedback", "Chat With Referee", "Follow up: Additional Fee",]}
+]
+// const plans = [
+//   {
+//     name: "Starter",
+//     price: 199,
+//     referrals: 3,
+//     referralCost: "265.33",
+//     validity: "90 days",
+//     features: ["AI Feedback Score", "Referee Feedback"],
+//     isPopular: false,
+//     gradientFrom: "#76c6ff",
+//     gradientTo: "#76c6ff",
+//     elevation: 0,
+//   },
+//   {
+//     name: "Accelerator",
+//     price: 499,
+//     referrals: 10,
+//     referralCost: "749.90",
+//     validity: "90 days",
+//     features: [
+//       "On Call Support",
+//       "Referee Feedback",
+//       "Chat With Referee",
+//       "Follow up: Additional Fee",
+//     ],
+//     isPopular: true,
+//     gradientFrom: "#4fb5ff",
+//     gradientTo: "#316bff",
+//     elevation: 55,
+//   },
+//   {
+//     name: "Maximizer",
+//     price: 999,
+//     referrals: 25,
+//     referralCost: "239.96",
+//     validity: "90 days",
+//     features: [
+//       "On Call Support",
+//       "Referee Feedback",
+//       "Chat With Referee",
+//       "Follow up: Additional Fee",
+//     ],
+//     isPopular: false,
+//     gradientFrom: "#76c6ff",
+//     gradientTo: "#76c6ff",
+//     elevation: 95,
+//   },
+// ];
+
+
+const Subscription = () => {
+  const [activePlan, setActivePlan] = useState("");
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null);
+  const [userDetails, setUserDetails] = useState<UserDetails | undefined>(undefined);
+  const [PlansList, setPlansList] = useState<PlansList[]>([]);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const {user} = useDashboardContext();
-  
+  // const { setUserDetails } = useAppContext();
 
   useEffect(() => {
     const fetchSubscriptionData = async () => {
       if(!user?.email) return;
       setIsLoading(true);
       try {
-        const data = await profileService.getSubscriptionPlan(user.email);;
+        const data = await profileService.getSubscriptionPlan(user.email);
         if (data && data.length > 0) {
-          setSubscriptionData(data[0]);
+          setSubscriptionData(data[data.length-1]);
           setActivePlan(data[0].name);
         }
+
+        const details = await profileService.fetchUserData(user.email,"details");
+        if(details && details.length > 0){
+          setUserDetails(details[0])
+        }
+
+        const plans = await profileService.getPlans(user.email);
+        if(plans && plans.length > 0){
+          const reverse = plans.reverse()
+          setPlansList(reverse.slice(0,3));
+        }
+
+        const subscriptionStatus = await profileService.getSubscriptionStatus(user.email);
+        if(subscriptionStatus.referralCount){
+          setSubscriptionStatus(subscriptionStatus)
+        }
+        // console.log(data,details,plans,subscriptionStatus,"here")
         setError(null);
       } catch (err) {
         console.error("Error fetching subscription data:", err);
@@ -92,6 +140,24 @@ const Subscription = () => {
     fetchSubscriptionData();
     
   }, [user?.email]);
+
+  const fetchSubscriptionPlan = async () => {
+  if (!user?.email) return;
+  setIsLoading(true);
+  try {
+    const data = await profileService.getSubscriptionPlan(user.email);
+    if (data && data.length > 0) {
+      setSubscriptionData(data[0]);
+      setActivePlan(data[0].name);
+    }
+    setError(null);
+  } catch (err) {
+    console.error("Failed to fetch subscription plan:", err);
+    setError("Failed to load subscription plan. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   // Format date to DD-MM-YYYY
   const formatDate = (dateString:any) => {
@@ -160,11 +226,17 @@ const Subscription = () => {
             </div>
 
             {/* Right Side */}
-            <div className="w-full md:w-[250px] h-[120px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-[18px] p-4 text-white">
+            <div className="w-full md:w-[250px] h-full bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-[18px] p-4 text-white">
               <div className="flex items-center justify-between mb-4">
                 <div className="font-semibold text-sm">Total referrals</div>
                 <div className="bg-[#f6f6f6] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
                   {subscriptionData.creditedReferrals}
+                </div>
+              </div>
+              <div className="flex items-center justify-between mb-4">
+                <div className="font-semibold text-sm">Referrals Consumed</div>
+                <div className="bg-[#f6f6f6] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
+                  {subscriptionData.requestedReferrals}
                 </div>
               </div>
               <div className="flex items-center justify-between">
@@ -179,7 +251,7 @@ const Subscription = () => {
       )}
 
       {/* Section title */}
-      <div className="mt-12 mb-40 text-center">
+      <div className="mt-12 mb-10 md:mb-40 text-center">
         <h1 className="text-4xl font-bold text-[#0f0f0f]">Our Pricing Plans</h1>
         <p className="text-base font-light text-[#0f0f0f] mt-2">
           Pick an account plan that fits your workflow
@@ -194,14 +266,38 @@ const Subscription = () => {
           </span>
         </div> */}
 
-        {plans.map((plan) => (
-          <PricingCard
-            key={plan.name}
-            {...plan}
-            isActive={plan.name === activePlan}
-            buttonText={plan.name === activePlan ? "Already using" : "Buy now"}
-          />
-        ))}
+    {PlansList.map((plan, index) => {
+      const elevationClass =
+        index === 0
+          ? "translate-y-0"
+          : index === 1
+          ? "md:-translate-y-10"
+          : "md:-translate-y-20";
+            return (
+              <div
+                key={plan.name}
+                className={`
+                  w-[350px] rounded-[35px] overflow-hidden shadow-lg flex flex-col
+                  bg-gradient-to-br from-blue-400 to-blue-400
+                  transition-transform duration-300 bc
+                  ${elevationClass}
+                `}
+              >
+                <PricingCard
+                  SK={plan.SK}
+                  name={plan.name}
+                  amount={plan.amount}
+                  referralCount={plan.referralCount}
+                  duration={plan.duration}
+                  features={features[index]?.features || []}
+                  isActive={plan.name === activePlan}
+                  buttonText={plan.name === activePlan ? "Already using" : "Buy now"}
+                  userDetails={userDetails}
+                  onRefresh={fetchSubscriptionPlan}
+                />
+              </div>
+            );
+          })}
       </div>
     </div>
   );
