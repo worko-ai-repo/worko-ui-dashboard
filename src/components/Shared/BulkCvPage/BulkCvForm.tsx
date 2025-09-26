@@ -17,6 +17,8 @@ import { useNavigate } from "react-router-dom";
 import ChipInput from "../ui/InputWithChips";
 import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
 import { useDashboardContext } from "@Context/Dashboard.context";
+import { industryTypeOptions } from "@TypesAndConstants/common.constants";
+import SimpleSelectInput from "../PostJob/InputSelect";
 
 interface JobData {
   companyId: string;
@@ -42,7 +44,7 @@ interface BulkCvFormProps {
 
 const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropDownData }) => {
   const nav = useNavigate();
-  const {setBulkScreenDone}  = useDashboardContext();
+  const { setBulkScreenDone } = useDashboardContext();
   const [isProcessing, setIsProcessing] = useState(false);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [dragActive, setDragActive] = useState(false);
@@ -79,12 +81,15 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
 
   const experienceMin = watch("experienceRange.min");
   const experienceMax = watch("experienceRange.max");
-
+  const industrySelectOptions = industryTypeOptions.map((industry) => ({
+    value: industry.value.toLocaleLowerCase(),
+    label: industry.name,
+  }));
   // Prefill form data when jobData is available
   useEffect(() => {
     try {
       if (!jobData) {
-        return; 
+        return;
       }
       if (jobData) {
         setValue("jobTitle", jobData.jobTitle || "");
@@ -94,13 +99,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
         });
         setValue("mustHave", jobData.mustHaveSkills || []);
         setValue("goodToHave", jobData.goodToHaveSkills || []);
-        setValue(
-          "jobLocation",
-          jobData.location !== "Not Mentioned" ? jobData.location : ""
-        );
+        setValue("jobLocation", jobData.location !== "Not Mentioned" ? jobData.location : "");
 
-      
-       // setTechnicalSkills, coreSkills, softSkills to empty arrays as they are not provided in jobData
+        // setTechnicalSkills, coreSkills, softSkills to empty arrays as they are not provided in jobData
         setValue("technicalSkills", jobData.technicalSkills || []);
         setValue("coreSkills", jobData.coreSkills || []);
         setValue("softSkills", jobData.softSkills || []);
@@ -243,22 +244,29 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
 
     // setIsProcessing(true);
     onClose();
-    toast.info("Your request is being processed , you will be notified once done.", getToastOptions({ autoClose: 8000 }));
+    toast.info(
+      "Your request is being processed , you will be notified once done.",
+      getToastOptions({})
+    );
     setUploadError("");
     try {
       const finalPayload = {
         //@Todo update this payload to match the CorporateBulkScreeningDto interface
         companyId: companyId,
+        jobDescription: dropDownData || "",
         jobTitle: data.jobTitle,
+        jobLocation: data.jobLocation,
+        mustHaveSkills: data.mustHave,
+        mustNotHaveSkills: data.mustNotHaveSkills,
+        goodToHaveSkills: data.goodToHave,
+        coreSkills: data.coreSkills,
+        softSkills: data.softSkills,
+        technicalSkills: data.technicalSkills,
+        industryPreferences: data.industryPreference ? [data.industryPreference] : [],
         experienceRange: {
           min: data.experienceRange.min,
           max: data.experienceRange.max,
         },
-        mustHaveSkills: data.mustHave,
-        mustNotHaveSkills: data.mustNotHaveSkills,
-        jobDescription: dropDownData || "",
-        goodToHaveSkills: data.goodToHave,
-        jobLocation: data.jobLocation,
       };
       // Step 1: Create a partition in ddb for the bulk CV check
       const request = await CorporateServiceObj.bulkScreening(finalPayload);
@@ -547,6 +555,28 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                         <p className="text-red-500 text-sm mt-1">{errors.mustHave.message}</p>
                       )}
                     </div>
+                    {/* Must Not Have - Using ChipInput */}
+                    <div>
+                      <label className="block font-medium mb-1">
+                        Must not have<span className="text-red-500 ml-1">*</span>
+                      </label>
+                      <Controller
+                        name="mustNotHaveSkills"
+                        control={control}
+                        rules={{ required: "Must not have skills are required" }}
+                        render={({ field }) => (
+                          <ChipInput
+                            value={field.value || []}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                            placeholder="Type must-have skills and press Enter"
+                          />
+                        )}
+                      />
+                      {errors.mustNotHaveSkills && (
+                        <p className="text-red-500 text-sm mt-1">{errors.mustNotHaveSkills.message}</p>
+                      )}
+                    </div>
 
                     {/* Good To Have - Using ChipInput */}
                     <div>
@@ -573,21 +603,31 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
 
                     {/* Industry Preference (not array) */}
                     <div>
-                      <label className="block font-medium mb-1">
+                    {/*   <label className="block font-medium mb-1">
                         Industry preference<span className="text-red-500 ml-1">*</span>
-                      </label>
+                      </label> */}
                       <Controller
                         name="industryPreference"
                         control={control}
-                        render={({ field }) => (
-                          <input
+                        render={({ field }) => {
+                          return (
+                            <SimpleSelectInput
+                              label="Industry preference"
+                              {...field}
+                              error={errors.industryPreference?.message}
+                              options={industrySelectOptions}
+                              placeholder="Select industry"
+                              required
+                            />
+                          );
+                        }}
+                      />
+                      {/* <input
                             {...field}
                             type="text"
                             placeholder="Write industry here"
                             className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        )}
-                      />
+                          /> */}
                     </div>
                   </div>
 
