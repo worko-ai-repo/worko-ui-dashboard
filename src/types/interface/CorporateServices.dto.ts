@@ -245,9 +245,18 @@ export interface BulkJobApplicationUpdateItem {
   oldStatusTracker: StatusTracker[];
   applicantUserId: string;
 }
+export interface BulkJobApplicationUpdatePayloadItem {
+  emailId: string;
+  jobApplicationId: string;
+  status: JobApplicationStatusType;
+  oldStatus: JobApplicationStatusType;
+  userType: string;
+  applicantName: string;
+  oldStatusTracker: StatusTracker[];
+}
 
 export interface BulkJobApplicationUpdatePayload {
-  bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[];
+  bulkJobApplicationUpdate: BulkJobApplicationUpdatePayloadItem[];
 }
 
 interface StatusTrackerItem {
@@ -314,6 +323,7 @@ export interface CursorPaginationJobDataParams {
   companyId: string;
   corporateRecruiterUserId?: string;
   lastKey?: string | undefined;
+  // includeCompanyDetails:boolean;
 }
 
 /**

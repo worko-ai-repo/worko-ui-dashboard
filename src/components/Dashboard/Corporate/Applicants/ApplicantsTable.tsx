@@ -29,16 +29,13 @@ import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { JobApplicationActions } from "@Components/Shared/ApplicantsPage/ApplicationActions";
 import Duplicacy from "@Components/Shared/ApplicantsPage/Duplicacy";
-import { Job } from "aws-sdk/clients/codepipeline";
 import ResendOfferLetter, {
   getLatestOfferLetterIssueRaisedDetails,
-  handleViewDocumentClick,
 } from "@Components/Shared/ApplicantsPage/ReSendOfferLetter";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
-import { toast } from "react-toastify";
-import { getToastOptions } from "@Utils/Toast.utils";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
 // Component props interface
 
@@ -71,9 +68,9 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
 export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   // All Status that will be displayed in the table
   ALL: "All",
-  APPLIED: "Pending",
+  APPLIED: "Applied/Pending",
   ACCEPTED: "Accepted",
-  CV_DOWNLOADED: "Accepted",
+  CV_DOWNLOADED: "CV Downloaded",
   UNDER_EVALUATION: "Evaluation Pending",
   PROCESSING_INTERVIEW: "Interviewing",
   INTERVIEW_DONE: "Interview Done",
@@ -81,10 +78,11 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   //HIRED
   HIRING_IN_PROCESS: "Hiring in Process",
   DOCUMENT_REQUESTED: "Document Requested",
+  DOCUMENT_ADDITIONAL_REQUESTED: "Additional Document Requested",
   DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: "Document Requested",
-  DOCUMENT_REVISION_REQUEST_SUBMITTED: "Document Requested",
   DOCUMENT_REVISION_REQUESTED: "Document Requested",
-  DOCUMENT_SUBMITTED: "Document Requested",
+  DOCUMENT_REVISION_REQUEST_SUBMITTED: "Document Requested",
+  DOCUMENT_SUBMITTED: "Document Submitted",
   DOCUMENT_VERIFIED: "Document Verified",
   HIRED: "Hired",
   OFFER_SENT: "Offer Sent",
@@ -95,7 +93,6 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   REJECTED: "Rejected",
 
   // Additional statuses
-  DOCUMENT_ADDITIONAL_REQUESTED: "Document Requested",
   OFFER_ISSUE_RAISED: "Offer Issue Raised",
   REVISED_OFFER_SENT: "Revised Offer Sent",
   REVISED_LETTER: "Revised Letter Sent",
@@ -296,6 +293,7 @@ export default function ApplicationTable({
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth: `max-w-none !min-w-auto`,
       render: (row: JobApplicationDetailsDto) => {
         // Status color mapping
 
@@ -303,7 +301,7 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center p-2 w-fit relative">
+          <div className="flex justify-center  mx-auto p-2 w-fit relative">
             <span
               className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
@@ -352,22 +350,30 @@ export default function ApplicationTable({
         </div>
       ),
     },
-    company: {
-      key: "company",
-      label: "Current Company",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.companyName}</span>
-        </div>
-      ),
-    },
+
     currentCompany: {
       key: "company",
       label: "Current Company",
       render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.companyName}</span>
-        </div>
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.applicantDetails?.candidateExperience?.companyName || "NA"}>
+          {row?.applicantDetails?.candidateExperience?.companyName || "NA"}{" "}
+        </span>
+      ),
+    },
+    currentPosition: {
+      key: "currentPosition",
+      label: "Current Position",
+
+      render: (row: JobApplicationDetailsDto) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            row?.applicantDetails?.candidateExperience?.designation ?? "FRESHER"
+          }>
+          {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}{" "}
+        </span>
       ),
     },
   };
@@ -380,7 +386,8 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
-          commonColumns.company,
+          commonColumns.currentCompany,
+          commonColumns.currentPosition,
           commonColumns.profile,
           commonColumns.yoe,
           commonColumns.location,
@@ -393,6 +400,7 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           commonColumns.currentCompany,
+          commonColumns.currentPosition,
           commonColumns.profile,
           commonColumns.yoe,
           commonColumns.location,
@@ -489,9 +497,37 @@ export default function ApplicationTable({
           <Timeline steps={timeLineProps} />
         ) : (
           <>
-            <div className="basis-2/3">
-              <span className="font-semibold text-gray-500 ">About</span>
-              <p>{row.applicantDetails.about ?? "--------"}</p>
+            <div className="">
+              <span className="font-semibold text-gray-500">About</span>
+              <div className="max-w-md">
+                <p
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={row.applicantDetails.about}
+                  className="text-wrap line-clamp-3">
+                  {row.applicantDetails.about ?? "--------"}
+                </p>
+              </div>
+            </div>
+
+            <div className="">
+              <span className="font-semibold text-gray-500">Location</span>
+              <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
+            </div>
+
+            <div className="">
+              <span className="font-semibold text-gray-500">Application Date</span>
+              <div className="flex items-center justify-center">
+                <span>
+                  {new Date(row.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                  })}
+                </span>
+              </div>
             </div>
 
             {row.status === "REJECTED" ? (
@@ -499,58 +535,53 @@ export default function ApplicationTable({
               <>
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
-                  <p>{row.rejectedByUserId?.userType ?? "--------"}</p>
+                  <p>
+                    <CreatedByDisplay row={row} mode="updated" />
+                  </p>
                 </div>
 
-                <div className="text-center">
-                  <div className="font-semibold text-gray-500 text-center">Reason</div>
-
-                  {row.rejectedByUserId ? (
-                    <>
-                      <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                      {row.rejectedByUserId.userComment && (
-                        <div>
-                          <ul>
-                            <span className="font-semibold text-gray-500">Comment</span>
-                          </ul>
-                          <li className="list-disc list-inside ">
-                            {row.rejectedByUserId.userComment}
-                          </li>
-                        </div>
-                      )}
-                    </>
-                  ) : (
-                    <>
-                      {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                        <p>--------</p>
-                      ) : (
-                        jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                          <li key={index} className="list-disc list-inside">
-                            {reason}
-                          </li>
-                        ))
-                      )}
-                    </>
-                  )}
+                <div>
+                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="max-w-lg">
+                    {row.rejectedByUserId ? (
+                      <>
+                        <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+                        {row.rejectedByUserId.userComment && (
+                          <div>
+                            <span className="font-semibold text-gray-500 mt-2 block">Comment</span>
+                            <li className="list-disc list-inside">
+                              {row.rejectedByUserId.userComment}
+                            </li>
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+                          <p>--------</p>
+                        ) : (
+                          jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+                            <li key={index} className="list-disc list-inside">
+                              {reason}
+                            </li>
+                          ))
+                        )}
+                      </>
+                    )}
+                  </div>
                 </div>
               </>
             ) : (
               // Show application details
               <>
                 <div>
-                  <span className="font-semibold text-gray-500">Position</span>
-                  <p className="capitalize">
-                    {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500">CTC</span>
+                  <span className="font-semibold text-gray-500">Current CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
                   </p>
                 </div>
                 <div>
-                  <span className="font-semibold text-gray-500">CTC</span>
+                  <span className="font-semibold text-gray-500">Expected CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
                   </p>

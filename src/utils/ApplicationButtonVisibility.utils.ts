@@ -47,7 +47,10 @@ export type ActionVisibilityMap = Record<JobApplicationActionType, ActionVisibil
  */
 export const CONDITIONS = {
   canAccept: (app: JobApplicationDetailsDto): boolean => {
-    return RBAC.can("manage_users");
+    if (RBAC.can("play_admin") && isWorkoJob(app)) return true; // Admin can accept for worko jobs
+    if (RBAC.can("play_corporate") && !isWorkoJob(app)) return true; // Corporate user can accept for corporate jobs
+    return false;
+    // return RBAC.can("manage_users");
   },
   canShowMarkDuplicate: (app: JobApplicationDetailsDto): boolean => {
     const { userDetails } = useAppContext();
@@ -141,12 +144,22 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         PUSH_TO_RECRUITER: {
-          visible: true ,
-          condition: (application) =>{
-            return RBAC.can("push_to_recruiter") && !isWorkoJob(application) && CONDITIONS.shouldShowPushToRecruiter(application)},
+          visible: true,
+          condition: (application) => {
+            return (
+              RBAC.can("push_to_recruiter") &&
+              !isWorkoJob(application) &&
+              CONDITIONS.shouldShowPushToRecruiter(application)
+            );
+          },
         },
         ACCEPT: { visible: true, condition: CONDITIONS.canAccept },
         REJECT: { visible: true },
+        NOTES: { visible: true },
+        VIEW_CV: {
+          visible: true,
+          condition: (application) => RBAC.can("play_admin"),
+        },
       };
       break;
 
@@ -316,7 +329,7 @@ export function getActionVisibilityConfig(
         ...HIDDEN_ALL,
         REJECT: {
           visible: true,
-          condition: CONDITIONS.canAccept,
+          condition: () => RBAC.can("manage_users"),
           tabOverrides: { All: true, Hired: true },
         },
         ONHOLD: { visible: true },
@@ -339,10 +352,6 @@ export function getActionVisibilityConfig(
             All: false,
             Hired: true,
           },
-        },
-        VIEW_DOCUMENT: {
-          visible: true,
-          tabOverrides: { All: false, Hired: true },
         },
       };
 
@@ -372,10 +381,6 @@ export function getActionVisibilityConfig(
           tabOverrides: { All: false, Hired: true },
           condition: CONDITIONS.hasDocRequested,
         },
-        VIEW_DOCUMENT: {
-          visible: true,
-          tabOverrides: { All: false, Hired: true },
-        },
       };
       break;
 
@@ -384,10 +389,6 @@ export function getActionVisibilityConfig(
       baseConfig = {
         ...HIDDEN_ALL,
         NOTES: { visible: true },
-        VIEW_DOCUMENT: {
-          visible: true,
-          tabOverrides: { All: false, Hired: true, Joined: true },
-        },
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -471,7 +472,8 @@ const ADMIN_ALLOWED_ACTIONS_FOR_CORPORATE: JobApplicationActionType[] = [
 
 // Helper to check if job was posted by Worko
 const isWorkoJob = (app: JobApplicationDetailsDto) =>
-  Boolean(app?.companyId === import.meta.env.APP_WORKO_COMP_ID); // true => Worko job, false => corporate job
+  // A worko job is one created by a regular user, not corporate
+  !app?.jobCreatedByCorporateUserId && app?.jobCreatedByUserId != null;
 
 export function shouldShowAction(
   action: JobApplicationActionType,

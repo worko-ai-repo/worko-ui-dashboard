@@ -110,6 +110,7 @@ import mobile_install from './svgs/mobile_install.svg';
 import cancel from './svgs/cancel.svg';
 import clap from './svgs/clap.svg';
 import chat from './svgs/chat.svg'
+import infinitySquare from './svgs/infinitySquare.svg'
 
 export { 
     // Backgrounds
@@ -195,6 +196,7 @@ export {
     viewFeedback,
     askQuestion,
     chat,
+    infinitySquare,
     magnifyingQuestion,
     checkbubble,
     Not_Responding,

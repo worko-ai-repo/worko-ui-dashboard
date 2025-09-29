@@ -185,7 +185,6 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
         <Pause size={16} />
       </button>
     ),
-
     VIEW_CV: (
       <button
         key="view-cv"

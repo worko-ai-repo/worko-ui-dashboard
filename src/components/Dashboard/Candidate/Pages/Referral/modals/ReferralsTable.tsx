@@ -52,7 +52,6 @@ const ReferralsTable = memo(
     const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
 
     const APP_API_URI = import.meta.env.APP_API_URI;
-    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
     const { user } = useDashboardContext();
 
     const referrals = data?.data || [];

@@ -4,6 +4,7 @@ import { SubscriptionSkeletonLoader } from "@Components/Loader/Skeleton/Skeleton
 import profileService from "../../Service/ProfileService";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import { useAppContext } from "@Context/App.context";
+import OrderDetailsModal from "./modals/OrderDetailsModal";
 
   interface SubscriptionData {
     name: string;
@@ -40,55 +41,6 @@ const features = [
   {features: ["On Call Support", "Referee Feedback", "Chat With Referee", "Follow up: Additional Fee"]},
   {features: [ "On Call Support", "Referee Feedback", "Chat With Referee", "Follow up: Additional Fee",]}
 ]
-// const plans = [
-//   {
-//     name: "Starter",
-//     price: 199,
-//     referrals: 3,
-//     referralCost: "265.33",
-//     validity: "90 days",
-//     features: ["AI Feedback Score", "Referee Feedback"],
-//     isPopular: false,
-//     gradientFrom: "#76c6ff",
-//     gradientTo: "#76c6ff",
-//     elevation: 0,
-//   },
-//   {
-//     name: "Accelerator",
-//     price: 499,
-//     referrals: 10,
-//     referralCost: "749.90",
-//     validity: "90 days",
-//     features: [
-//       "On Call Support",
-//       "Referee Feedback",
-//       "Chat With Referee",
-//       "Follow up: Additional Fee",
-//     ],
-//     isPopular: true,
-//     gradientFrom: "#4fb5ff",
-//     gradientTo: "#316bff",
-//     elevation: 55,
-//   },
-//   {
-//     name: "Maximizer",
-//     price: 999,
-//     referrals: 25,
-//     referralCost: "239.96",
-//     validity: "90 days",
-//     features: [
-//       "On Call Support",
-//       "Referee Feedback",
-//       "Chat With Referee",
-//       "Follow up: Additional Fee",
-//     ],
-//     isPopular: false,
-//     gradientFrom: "#76c6ff",
-//     gradientTo: "#76c6ff",
-//     elevation: 95,
-//   },
-// ];
-
 
 const Subscription = () => {
   const [activePlan, setActivePlan] = useState("");
@@ -98,66 +50,52 @@ const Subscription = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const {user} = useDashboardContext();
   // const { setUserDetails } = useAppContext();
+  const [showOrderDetails, setShowOrderDetails] = useState<boolean>(false);
+  const [paymentID, setPaymentID] = useState<string>("");
+  const [orderID, setOrderID] = useState<string>("");
+  const [amount, setAmount] = useState<number>(0);
+
+  const fetchSubscriptionData = async () => {
+    if(!user?.email) return;
+    setIsLoading(true);
+    try {
+      const data = await profileService.getSubscriptionPlan(user.email);
+      if (data && data.length > 0) {
+        setSubscriptionData(data[data.length-1]);
+        setActivePlan(data[0].name);
+      }
+
+      const details = await profileService.fetchUserData(user.email,"details");
+      if(details && details.length > 0){
+        setUserDetails(details[0])
+      }
+
+      const plans = await profileService.getPlans(user.email);
+      if(plans && plans.length > 0){
+        const reverse = plans.reverse()
+        setPlansList(reverse.slice(0,3));
+      }
+
+      const subscriptionStatus = await profileService.getSubscriptionStatus(user.email);
+      if(subscriptionStatus.referralCount){
+        setSubscriptionStatus(subscriptionStatus)
+      }
+      // console.log(data,details,plans,subscriptionStatus,"here")
+      setError(null);
+    } catch (err) {
+      console.error("Error fetching subscription data:", err);
+      setError("Failed to load subscription data. Please try again later.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchSubscriptionData = async () => {
-      if(!user?.email) return;
-      setIsLoading(true);
-      try {
-        const data = await profileService.getSubscriptionPlan(user.email);
-        if (data && data.length > 0) {
-          setSubscriptionData(data[data.length-1]);
-          setActivePlan(data[0].name);
-        }
-
-        const details = await profileService.fetchUserData(user.email,"details");
-        if(details && details.length > 0){
-          setUserDetails(details[0])
-        }
-
-        const plans = await profileService.getPlans(user.email);
-        if(plans && plans.length > 0){
-          const reverse = plans.reverse()
-          setPlansList(reverse.slice(0,3));
-        }
-
-        const subscriptionStatus = await profileService.getSubscriptionStatus(user.email);
-        if(subscriptionStatus.referralCount){
-          setSubscriptionStatus(subscriptionStatus)
-        }
-        // console.log(data,details,plans,subscriptionStatus,"here")
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching subscription data:", err);
-        setError("Failed to load subscription data. Please try again later.");
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
     fetchSubscriptionData();
-    
   }, [user?.email]);
-
-  const fetchSubscriptionPlan = async () => {
-  if (!user?.email) return;
-  setIsLoading(true);
-  try {
-    const data = await profileService.getSubscriptionPlan(user.email);
-    if (data && data.length > 0) {
-      setSubscriptionData(data[0]);
-      setActivePlan(data[0].name);
-    }
-    setError(null);
-  } catch (err) {
-    console.error("Failed to fetch subscription plan:", err);
-    setError("Failed to load subscription plan. Please try again.");
-  } finally {
-    setIsLoading(false);
-  }
-};
 
   // Format date to DD-MM-YYYY
   const formatDate = (dateString:any) => {
@@ -207,22 +145,12 @@ const Subscription = () => {
               <div className="mt-4 font-semibold text-left">Package info:</div>
 
               <div className="mt-4 flex flex-col sm:flex-row gap-4 sm:gap-16">
-                {[
-                  { label: "Start date", value: formatDate(subscriptionData.purchaseDate) },
-                  { label: "End date", value: formatDate(subscriptionData.expiryDate) },
-                ].map((item, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    <span className="font-medium">{item.label} :</span>
-                    <span className="font-medium">{item.value}</span>
+                  <div className="flex items-center gap-8">
+                    <span className="font-medium">Start date : {formatDate(subscriptionData.purchaseDate)}</span>
+                    <span className="font-medium">End date : {formatDate(subscriptionData.expiryDate)}</span>
+                    <span className="font-medium">Referral expires : {formatDate(subscriptionData.expiryDate)}</span>
                   </div>
-                ))}
-                <div className="flex items-center gap-2">
-                <span className="font-medium">Referral expires :</span>
-                <span className="font-medium">{formatDate(subscriptionData.expiryDate)}</span>
               </div>
-              </div>
-
-
             </div>
 
             {/* Right Side */}
@@ -238,10 +166,10 @@ const Subscription = () => {
                 <div className="bg-[#f6f6f6] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
                   {subscriptionData.requestedReferrals}
                 </div>
-              </div>
-              <div className="flex items-center justify-between">
+              </div>            
+              <div className="flex items-center justify-between mb-4">
                 <div className="font-semibold text-sm">Referrals left</div>
-                <div className="bg-[#57e1e1] text-[#0048ff] font-semibold w-[45px] h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
+                <div className="bg-[#57e1e1] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
                   {subscriptionData.availableReferrals}
                 </div>
               </div>
@@ -251,14 +179,14 @@ const Subscription = () => {
       )}
 
       {/* Section title */}
-      <div className="mt-12 mb-10 md:mb-40 text-center">
+      <div className="mt-12 mb-1 text-center">
         <h1 className="text-4xl font-bold text-[#0f0f0f]">Our Pricing Plans</h1>
         <p className="text-base font-light text-[#0f0f0f] mt-2">
           Pick an account plan that fits your workflow
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center items-end">
         {/* Most popular tag */}
         {/* <div className="absolute -top-[120px] left-1/2 transform -translate-x-1/2 w-[350px] h-[99px] bg-gradient-to-br from-[#316bff] to-[#5fc9ff] rounded-t-[35px] flex items-center justify-center">
           <span className="text-2xl font-bold text-white tracking-wider uppercase">
@@ -267,23 +195,24 @@ const Subscription = () => {
         </div> */}
 
     {PlansList.map((plan, index) => {
-      const elevationClass =
-        index === 0
-          ? "translate-y-0"
-          : index === 1
-          ? "md:-translate-y-10"
-          : "md:-translate-y-20";
+      // const elevationClass =
+      //   index === 0
+      //     ? "translate-y-0"
+      //     : index === 1
+      //     ? "md:-translate-y-10"
+      //     : "md:-translate-y-20";
             return (
-              <div
-                key={plan.name}
-                className={`
-                  w-[350px] rounded-[35px] overflow-hidden shadow-lg flex flex-col
-                  bg-gradient-to-br from-blue-400 to-blue-400
-                  transition-transform duration-300 bc
-                  ${elevationClass}
-                `}
-              >
+              // <div
+              //   key={plan.name}
+              //   className={`
+              //     w-[350px] rounded-[35px] overflow-hidden shadow-lg flex flex-col
+              //     bg-gradient-to-br from-blue-400 to-blue-400
+              //     transition-transform duration-300 bc
+              //     ${elevationClass}
+              //   `}
+              // >
                 <PricingCard
+                  key={plan.SK}
                   SK={plan.SK}
                   name={plan.name}
                   amount={plan.amount}
@@ -291,13 +220,27 @@ const Subscription = () => {
                   duration={plan.duration}
                   features={features[index]?.features || []}
                   isActive={plan.name === activePlan}
+                  index={index}
                   buttonText={plan.name === activePlan ? "Already using" : "Buy now"}
                   userDetails={userDetails}
-                  onRefresh={fetchSubscriptionPlan}
+                  // onRefresh={()=>fetchSubscriptionData()}
+                  setShowOrderDetails={setShowOrderDetails}
+                  setPaymentID={setPaymentID}
+                  setOrderID={setOrderID}
+                  setAmount={setAmount}
+                  existingReferrals={subscriptionData?.availableReferrals}
                 />
-              </div>
+              // </div>
             );
           })}
+          <OrderDetailsModal
+            show={showOrderDetails}
+            amount={amount}
+            paymentID={paymentID}
+            orderID={orderID} 
+            onRefresh={()=>fetchSubscriptionData()}
+            onClose={() => setShowOrderDetails(false)} 
+            />
       </div>
     </div>
   );

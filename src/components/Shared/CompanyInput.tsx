@@ -11,7 +11,21 @@ import { useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 
-export default function CompanyInput({ errors, setValue, clearErrors, setCompanyName, isOtpSent }: { errors: FieldErrors<any>; setValue?: any; clearErrors: any; setCompanyName: any; isOtpSent?: boolean }) {
+export default function CompanyInput({
+  errors,
+  setValue,
+  clearErrors,
+  setCompanyName,
+  isOtpSent,
+  showRequestCompany = true,
+}: {
+  errors: FieldErrors<any>;
+  setValue?: any;
+  clearErrors: any;
+  setCompanyName: any;
+  isOtpSent?: boolean;
+  showRequestCompany?: boolean;
+}) {
   const [searhText, setSearchText] = useState("");
   const [isOpen, setIsOpen] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<CompanyShortDto | null>(null);
@@ -21,7 +35,9 @@ export default function CompanyInput({ errors, setValue, clearErrors, setCompany
 
   const findCompanies = useCallback<() => Promise<CompanyShortDto[]>>(async () => {
     if (!searhText || searhText.length < 2) return [];
-    const { response, error } = await httpServiceObj.get<any>("/company", true, { searchText: searhText });
+    const { response, error } = await httpServiceObj.get<any>("/company", true, {
+      searchText: searhText,
+    });
     if (error) throw error;
     return response.data as CompanyShortDto[];
   }, [searhText]);
@@ -75,10 +91,29 @@ export default function CompanyInput({ errors, setValue, clearErrors, setCompany
     <div className="w-full max-w-auto mx-auto">
       <div className="relative" ref={dropdownRef}>
         <div className="relative">
-          <input disabled={isOtpSent} type="text" value={searhText} onChange={handleInputChange} onFocus={() => setIsOpen(true)} readOnly={selectedCompany ? true : false} placeholder="Search for a company..." className={`input_primary bg-gray-100 w-full px-4 py-3 pl-14 text-sm border-none  ${errors.companyName && "error"}`} />
+          <input
+            disabled={isOtpSent}
+            type="text"
+            value={searhText}
+            onChange={handleInputChange}
+            onFocus={() => setIsOpen(true)}
+            readOnly={selectedCompany ? true : false}
+            placeholder="Search for a company..."
+            className={`input_primary bg-gray-100 w-full px-4 py-3 pl-14 text-sm border-none  ${
+              errors.companyName && "error"
+            }`}
+          />
           {selectedCompany ? (
             <div className="">
-              {selectedCompany.logo ? <img src={selectedCompany.logoUrl} alt={selectedCompany.name} className="bg-white object-contain absolute left-3 top-1.5 h-8 w-8 rounded" /> : <Building2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />}
+              {selectedCompany.logo ? (
+                <img
+                  src={selectedCompany.logoUrl}
+                  alt={selectedCompany.name}
+                  className="bg-white object-contain absolute left-3 top-1.5 h-8 w-8 rounded"
+                />
+              ) : (
+                <Building2 className="absolute left-3 top-3.5 h-4 w-4 text-gray-400" />
+              )}
               <X
                 onClick={() => {
                   setSelectedCompany(null);
@@ -99,10 +134,23 @@ export default function CompanyInput({ errors, setValue, clearErrors, setCompany
               <div className="px-4 py-3 text-sm text-gray-500">Loading...</div>
             ) : companies && companies.length > 0 ? (
               companies.map((company) => (
-                <button key={company.SK} onClick={() => handleCompanySelect(company)} className="group  w-full px-4 py-2 text-left hover:bg-blue-400 hover:text-white  flex items-center gap-3 border-b border-gray-100 last:border-0">
-                  {company.logo ? <img src={company.logoUrl} alt={company.name} className="bg-white object-contain w-8 h-8 rounded" /> : <Building2 className="w-8 h-8 text-gray-400" />}
+                <button
+                  key={company.SK}
+                  onClick={() => handleCompanySelect(company)}
+                  className="group  w-full px-4 py-2 text-left hover:bg-blue-400 hover:text-white  flex items-center gap-3 border-b border-gray-100 last:border-0">
+                  {company.logo ? (
+                    <img
+                      src={company.logoUrl}
+                      alt={company.name}
+                      className="bg-white object-contain w-8 h-8 rounded"
+                    />
+                  ) : (
+                    <Building2 className="w-8 h-8 text-gray-400" />
+                  )}
                   <div>
-                    <div className="font-semibold group-hover:text-white  text-gray-600">{company.name}</div>
+                    <div className="font-semibold group-hover:text-white  text-gray-600">
+                      {company.name}
+                    </div>
                   </div>
                 </button>
               ))
@@ -110,17 +158,21 @@ export default function CompanyInput({ errors, setValue, clearErrors, setCompany
               <div className="p-4">
                 <div className="text-sm text-gray-500 mb-3">No companies found</div>
                 {/* {isLoggedIn && ( */}
-                <button
-                  onClick={() => {
-                    setShowModal(true);
-                    setIsOpen(false);
-                  }}
-                  className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                  Request to add company
-                </button>
+                {showRequestCompany && (
+                  <button
+                    onClick={() => {
+                      setShowModal(true);
+                      setIsOpen(false);
+                    }}
+                    className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                    Request to add company
+                  </button>
+                )}
               </div>
             ) : (
-              <div className="px-4 py-3 text-sm text-gray-500">Type at least 2 characters to searhText</div>
+              <div className="px-4 py-3 text-sm text-gray-500">
+                Type at least 2 characters to searhText
+              </div>
             )}
           </div>
         )}

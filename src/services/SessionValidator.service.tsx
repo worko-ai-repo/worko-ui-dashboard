@@ -70,7 +70,8 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
     await CognitoServiceObj.setAccessToken();
     const userRevised = secureStorage.getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE);
     if (!userRevised && tokenRequired) {
-      return appHref("/auth/login");
+      appHref("/auth/login");
+      return null;
     } else {
       userType = userRevised;
       // console.log("Updated user type:", userType);
@@ -87,9 +88,11 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
   //  Step 1: If token is required but not present
   if (tokenRequired && !token) {
     if (requiredRoles?.includes(UserRole.CORPORATE)) {
-      return appHref("/auth/corporate/login");
+      appHref("/auth/corporate/login");
+      return null;
     }
-    return appHref("/auth/login");
+    appHref("/auth/login");
+    return null;
   }
 
   //  Step 2: If token is present, validate it
@@ -98,7 +101,8 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
       const decodedToken: JwtPayload & { role?: string } = jwtDecode(token);
 
       if (decodedToken.exp && decodedToken.exp < currentTime) {
-        return appHref("/auth/login");
+        appHref("/auth/login");
+        return null;
       }
     } catch (err) {
       console.error("Error decoding token:", err);
@@ -114,7 +118,8 @@ const ProtectedRoute = ({ element, requiredRoles, tokenRequired = true }: Protec
       if (requiredRoles.includes(UserRole.GENERAL_USER)) {
         return element;
       }
-      return appHref("/auth/login");
+      appHref("/auth/login");
+      return null;
     }
     if (Array.isArray(userType) && !userType.some((role) => requiredRoles.includes(role))) {
       return (

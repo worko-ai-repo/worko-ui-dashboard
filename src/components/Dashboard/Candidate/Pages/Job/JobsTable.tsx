@@ -70,8 +70,6 @@ const JobsTable = memo(({
 
     const [isError, setIsError] = useState(false);
     const { userDetails } = useAppContext();
-    const APP_API_URI = import.meta.env.APP_API_URI;
-    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
     // Map the status to action for the specific cases
     const getActionFromStatus = (status: string): string | null => {
       switch (status) {
@@ -140,10 +138,10 @@ const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
   //handling requestfollowup and modal
   const requestFollowup = async (id: string) => {
     const payload = { applicationDate: new Date().toISOString() };
-    const url = `${APP_JOBS_API_URI}/job-application/${id}/request-feedback`;
+    const url = `/job-application/${id}/request-feedback`;
 
       try {
-        const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+        const { response, error } = await httpServiceObj.patch(url, payload, true, {}, false,"JOB");
 
       if (!error) {
         setModalMessage({

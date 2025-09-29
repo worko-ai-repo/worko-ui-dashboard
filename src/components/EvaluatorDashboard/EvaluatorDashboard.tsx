@@ -55,6 +55,7 @@ const EvaluatorView: React.FC = () => {
     queryKey: ["evaluations", jobApplicationId, evaluationRequestId],
     queryFn: getEvaluationDetails,
     enabled: !!jobApplicationId && !!evaluationRequestId,
+    refetchOnWindowFocus: false,
   });
 
   const handleSubmitFeedback = () => {
@@ -154,23 +155,23 @@ const refreshRequests = useCallback(async () => {
     refreshRequests();
   }, [evaluatorEmail]);
 
-  useEffect(() => {
-    if (!evaluatorEmail) return;
+  // useEffect(() => {
+  //   if (!evaluatorEmail) return;
 
-    const init = async () => {
-      try {
-        const data = await fetchEvaluationRequests(evaluatorEmail);
-        setRequests(data);
-        if (data.length > 0) {
-          setSelectedRequest(data[0]);
-        }
-      } catch (err) {
-        console.error('Failed to fetch requests:', err);
-      }
-    };
+  //   const init = async () => {
+  //     try {
+  //       const data = await fetchEvaluationRequests(evaluatorEmail);
+  //       setRequests(data);
+  //       if (data.length > 0) {
+  //         setSelectedRequest(data[0]);
+  //       }
+  //     } catch (err) {
+  //       console.error('Failed to fetch requests:', err);
+  //     }
+  //   };
 
-    init();
-  }, [evaluatorEmail]);
+  //   init();
+  // }, [evaluatorEmail]);
 
   useEffect(() => {
     if (!selectedRequest) return;

@@ -115,11 +115,12 @@ const InviteForm = ({
           };
       // Make API call
       const { response, error } = await httpServiceObj.post(
-        `https://api.dev.worko.work/corporate-invite/`,
+        `/corporate-invite/`,
         apiPayload,
         true,
         {},
-        true
+        false,
+        "BASE"
       );
 
       if (error) {
@@ -185,6 +186,7 @@ const InviteForm = ({
                         errors={errors}
                         clearErrors={clearErrors}
                         setCompanyName={handleCompanySelect}
+                        showRequestCompany={false}
                       />
                       {errors.companyId && (
                         <p className="text-sm text-left text-red-500">

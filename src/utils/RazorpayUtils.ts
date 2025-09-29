@@ -84,7 +84,7 @@ export async function startRazorpayPayment({
 
   try {
     const response = await createOrder(userDetails?.userId ?? "", payload);
-    console.log("order created",response)
+    // console.log("order created",response)
     const orderId = response.userOrderResponse.pgatewayOrderId;
 
     const options = {
@@ -103,12 +103,12 @@ export async function startRazorpayPayment({
         color: "#3399cc",
       },
       handler: function (response: any) {
-        console.log("Payment success", response);
+        // console.log("Payment success", response);
         onPaymentSuccess(response);
       },
       modal: {
         ondismiss: function () {
-          console.log("Payment popup closed");
+        //   console.log("Payment popup closed");
           onPaymentFailure?.("User cancelled the payment");
         },
       },

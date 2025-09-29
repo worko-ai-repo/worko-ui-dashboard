@@ -18,6 +18,7 @@ import {
   JobEvaluationRequestDto,
   BulkJobApplicationUpdateItem,
   EvaluationResponseItemDto,
+  BulkJobApplicationUpdatePayload,
 } from "@Interfaces/CorporateServices.dto";
 import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
 
@@ -507,9 +508,7 @@ class CorporateService {
    *
    * @description - This API is used to send multiple applications feedback requests for multiple job applications at once.
    */
-  async postBulkApplicationUpdate(payload: {
-    bulkJobApplicationUpdate: BulkJobApplicationUpdateItem[];
-  }): Promise<any> {
+  async postBulkApplicationUpdate(payload: BulkJobApplicationUpdatePayload): Promise<any> {
     try {
       const { response, status } = await httpServiceObj.post<any>(
         "/job-application/bulk-update",

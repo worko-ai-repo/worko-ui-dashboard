@@ -4,10 +4,6 @@ import JobService from '../../Service/JobsService';
 import { JobApiResponse, PaginationInfo, JobFilters } from './JobTypes';
 import { debounce, last } from 'lodash';
 import { useDashboardContext } from '@Context/Dashboard.context';
-import httpServiceObj from '@Services/ApiHandler.service';
-import secureStorage from '@Utils/SecureStorage.utils';
-import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
-import { toTitleCase } from '@Utils/Titlecase.utils';
 import { ChevronDown } from 'lucide-react';
 import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown';
 import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
@@ -205,9 +201,9 @@ const StatusFilterDropdown = [
   //       const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
   //       const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
         
-  //     const url = `${APP_JOBS_API_URI}/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
+  //     const url = `/job-application/?pageSize=25&sortOrder=descending&userEmail=${email}&userType=CAND`;
   //     try {
-  //       const { response, error } = await httpServiceObj.get(url, true, {}, true);
+  //       const { response, error } = await httpServiceObj.get(url, true, {}, false,"JOB");
   //         console.log("response",response,"error",error)
   //     } catch (err) {
   //       console.log(err)

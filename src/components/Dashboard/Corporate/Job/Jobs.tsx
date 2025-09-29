@@ -68,6 +68,7 @@ const Jobs = () => {
     dashboard: "CORPORATE",
     userRole: userType ? [userType] : undefined,
     status: activeTab,
+    // includeCompanyDetails: true,
     companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
@@ -87,7 +88,7 @@ const Jobs = () => {
     refetch,
     reset,
   } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
-    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, params],
+    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, JSON.stringify(params)],
     queryFn: CorporateServiceObj.fetchJobs,
     baseParams: params,
     enabled: !!userDetails?.companyId, // Only enable if companyId exists

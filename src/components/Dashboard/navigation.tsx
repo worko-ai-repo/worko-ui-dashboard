@@ -10,6 +10,9 @@ import {
   JobIcon,
   ReferralIcon,
   SupportIcon,
+  UserIcon,
+  Subscription,
+  Guidance,
 } from "./icons";
 import { IdCard, List } from "lucide-react";
 
@@ -24,7 +27,7 @@ const navigationItems: NavItem[] = [
   {
     id: "profile",
     label: "Profile",
-    icon: InterviewIcon,
+    icon: UserIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
 /*   {
@@ -48,23 +51,21 @@ const navigationItems: NavItem[] = [
   {
     id: "guidance",
     label: "Guidance",
-    icon: HomeIcon,
+    icon: Guidance,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
   {
     id: "refer-and-earn",
     label: "Refer & Earn",
-    icon: HomeIcon,
+    icon: InterviewIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
-
   {
     id: "subscription",
     label: "Subscription",
-    icon: HomeIcon,
+    icon: Subscription,
     dashboardTypes: ["CANDIDATE"],
   },
-
   {
     id: "cApplicants",
     label: "Applicants",
@@ -178,12 +179,12 @@ const navigationItems: NavItem[] = [
         icon: InvoiceAndPaymentIcon,
         dashboardTypes: ['CORPORATE'],
     }, */
-  /* { //@NEXT-RELEASE : NEXT RELEASE
+  { //@NEXT-RELEASE : NEXT RELEASE
     id: "support",
     label: "Support",
     icon: SupportIcon,
     dashboardTypes: ["ADMIN", "EMPLOYEE", "CANDIDATE"],
-  }, */
+  },
 ];
 
 export default navigationItems;

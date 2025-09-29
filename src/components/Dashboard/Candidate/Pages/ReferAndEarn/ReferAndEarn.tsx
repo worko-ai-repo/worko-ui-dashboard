@@ -62,7 +62,6 @@ const stats = [
 
 
     const { user } = useDashboardContext();
-    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
 
   const fetchReferrals = async (page = 1, pageSize = 25) => {
     if (!user?.email) {
@@ -80,10 +79,11 @@ const stats = [
       const encodedEmail = encodeURIComponent(user.email);
 
       const { response }: { response: any } = await httpServiceObj.get(
-        `${APP_JOBS_API_URI}/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchBarText || ""}`,
+        `/refer-and-earn?referrerEmail=${encodedEmail}&pageSize=${pageSize}${lastKeyParam}&searchText=${searchBarText || ""}`,
         true,
         {},
-        true
+        false,
+        "JOB"
       );
 
       if (!response?.data || !Array.isArray(response.data)) {

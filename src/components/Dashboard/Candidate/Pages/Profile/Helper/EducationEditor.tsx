@@ -3,13 +3,14 @@ import { X } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import EducationForm from "./EducationForm";
-
+import httpServiceObj from "@Services/ApiHandler.service";
+import { useAppContext } from "@Context/App.context";
 export interface Education {
   collage: string;
   degree: string;
   passingYear: number;
-  PK:string;
-  SK:string;
+  PK?:string;
+  SK?:string;
 }
 
 interface EducationEditorProps {
@@ -31,12 +32,13 @@ const EducationEditor: React.FC<EducationEditorProps> = ({
   const [collage, setCollage] = useState("");
   const [degree, setDegree] = useState("");
   const [passingYear, setPassingYear] = useState<number | null>(null);
-  const [PK,setPK] = useState("")
-  const [SK,setSK] = useState("")
+  const [PK,setPK] = useState<string | undefined>("")
+  const [SK,setSK] = useState<string | undefined>("")
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formModal,setFormModal] = useState<boolean>(false)
-
+  const [deletedSKs, setDeletedSKs] = useState<string[]>([]);
+  const {userDetails} = useAppContext()
   const clearForm = () => {
     setEditingIndex(null);
     setCollage("");
@@ -57,10 +59,24 @@ const EducationEditor: React.FC<EducationEditorProps> = ({
     setFormModal(true)
   };
 
-  const handleRemoveItem = (index: number) => {
-    setEditedItems(editedItems.filter((_, i) => i !== index));
-    if (editingIndex === index) clearForm();
-  };
+  // const handleRemoveItem = (index: number) => {
+  //   setEditedItems(editedItems.filter((_, i) => i !== index));
+  //   if (editingIndex === index) clearForm();
+  // };
+
+const handleRemoveItem = (index: number) => {
+  const item = editedItems[index];
+  if (item.SK) {
+    const parts = item.SK.split("#");
+    const idOnly = parts[2]; 
+    if (idOnly) {
+      setDeletedSKs((prev) => [...prev, idOnly]);
+    }
+  }
+  setEditedItems(editedItems.filter((_, i) => i !== index));
+
+  if (editingIndex === index) clearForm();
+};
 
   const handleAddOrUpdate = () => {
     if (!collage?.trim() || !degree?.trim() || !passingYear) {
@@ -93,8 +109,8 @@ const EducationEditor: React.FC<EducationEditorProps> = ({
       collage: collage?.trim(),
       degree: degree?.trim(),
       passingYear: passingYear,
-      PK:PK,
-      SK:SK,
+      PK:PK?PK:undefined,
+      SK:SK?SK:undefined,
     };
     
     if (editingIndex !== null) {
@@ -114,6 +130,17 @@ const EducationEditor: React.FC<EducationEditorProps> = ({
     setError(null);
     console.log(editedItems)
     try {
+
+    // post was not working to remove any existing education so seperately handled by using delete
+    if (deletedSKs.length > 0) {
+      console.log(deletedSKs)
+      await Promise.all(
+        deletedSKs.map((sk) =>
+          httpServiceObj.delete(`/user/${userDetails?.email}/education/${sk}`)
+        )
+      );
+    }
+
       const success = await onSave(editedItems);
       if (!success) {
         setError("Failed to save changes. Please try again.");

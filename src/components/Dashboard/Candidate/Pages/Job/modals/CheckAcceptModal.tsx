@@ -28,7 +28,6 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   const [pdfUrl, setPdfUrl] = useState('');
   const [visible, setVisible] = useState(false);
 
-
   const handleConfirm = async (nextAction: 'accept' | 'raise') => {
     setError(null);
 
@@ -45,6 +44,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
         };
 
         const { response, error } = await httpServiceObj.patch(
+          `/job-application/${job.id}/applicant-action`,
           `/job-application/${job.id}/applicant-action`,
           payload,
           true,
@@ -76,6 +76,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
         };
 
         const { response, error } = await httpServiceObj.patch(
+          `/job-application/${job.id}/applicant-action`,
           `/job-application/${job.id}/applicant-action`,
           payload,
           true,
@@ -122,6 +123,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
       try {
         const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
+          `/file/gsu2v/HR_OFFER_LETTER_SENT`,
           `/file/gsu2v/HR_OFFER_LETTER_SENT`,
           payload,
           true,

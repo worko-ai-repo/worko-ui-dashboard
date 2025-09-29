@@ -16,7 +16,10 @@ import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { clipboard } from "@Assets";
 import { toast } from "react-toastify";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CursorPaginationApplicationDataParams } from "src/types/interface/CorporateServices.dto";
+import {
+  BulkJobApplicationUpdatePayloadItem,
+  CursorPaginationApplicationDataParams,
+} from "src/types/interface/CorporateServices.dto";
 import Modal from "../../../Shared/Modal";
 import ResponseEvaluation from "../../../Shared/ApplicantsPage/ViewEvaluation";
 import BulkStatusDropDown from "../../../Shared/ApplicantsPage/BulkStatusDropDown";
@@ -169,10 +172,15 @@ const Applicants = () => {
         toast.error("Please select at least one application to update.", getToastOptions({}));
         return;
       }
-      const payload: BulkJobApplicationUpdateItem[] = ListSelection.selectedRows.map((row) => ({
-        ...row,
-        status: type, // Set the new status based on the dropdown selection
-      }));
+      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
+        (row) => {
+          const { id, applicantUserId, ...rest } = row;
+          return {
+            ...rest,
+            status: type, // Set the new status based on the dropdown selection
+          };
+        }
+      );
       await CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
     } catch (error) {
       console.error("Error in bulk update:", error);
@@ -209,6 +217,7 @@ const Applicants = () => {
     { label: "Hired", onClick: () => setApiStatus("HIRED") },
     { label: "Joined", onClick: () => setApiStatus("JOINED") },
     { label: "Rejected", onClick: () => setApiStatus("REJECTED") },
+    { label: "On Hold", onClick: () => setApiStatus("ON_HOLD") },
   ];
 
   const handleBulkEvaluatorUpdate = () => {
@@ -248,8 +257,6 @@ const Applicants = () => {
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex  flex-col mt-2">
-         
-
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar

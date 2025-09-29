@@ -60,8 +60,6 @@ const ReferralsTable = memo(
     const [viewDetailsContent, setViewDetailsContent] = useState<string>("");
     const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
 
-    const APP_API_URI = import.meta.env.APP_API_URI;
-    const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI;
     const { user } = useDashboardContext();
 
     const referrals = data?.data || [];
@@ -104,10 +102,8 @@ const ReferralsTable = memo(
         }
         // console.log(userEmail);
         const { response } = await httpServiceObj.get<UserDetails[]>(
-          `/user/${userEmail}/details`,
-          true
-        );
-
+          `/user/${userEmail}/details`, true, {}, false, "BASE");
+        
         if (!response || response.length === 0) {
           toast.error("No CV found", getToastOptions({}));
           return;

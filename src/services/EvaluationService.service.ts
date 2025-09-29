@@ -65,7 +65,8 @@ export const fetchEvaluationRequests = async (
   const params = {
     evaluatorEmail,
     pageSize: '25',
-    sortOrder: 'descending'
+    sortOrder: 'descending',
+    dashboardType:"EVALUATOR"
   };
 
   const { response, error } = await httpServiceObj.get<{ data: EvaluationRequest[] }>(url, true, params, true);

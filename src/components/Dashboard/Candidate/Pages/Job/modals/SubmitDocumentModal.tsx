@@ -7,7 +7,10 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
-import { JobApplicationDetailsDto, JobApplicationDocumentStatusType,} from "@Interfaces/CorporateDashboard.dto";
+import {
+  JobApplicationDetailsDto,
+  JobApplicationDocumentStatusType,
+} from "@Interfaces/CorporateDashboard.dto";
 import { newDate } from "react-datepicker/dist/date_utils";
 
 interface SubmitDocumentModalProps {

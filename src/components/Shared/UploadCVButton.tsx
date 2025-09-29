@@ -7,7 +7,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useAppContext } from "@Context/App.context";
-import CVParsingPopup from "./CVParsingPopup";
+import CVParsingPopup from "../Dashboard/Candidate/Pages/Profile/Helper/CVParsingPopup";
 
 interface UploadCVButtonProps {
     onUploadSuccess?: (cvUrl: string) => void;
@@ -114,7 +114,7 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             />
             {error && <p className="text-red-500 mt-1 text-xs">{error}</p>}
         </div>
-        {CVParsing && <CVParsingPopup />}
+        {<CVParsingPopup />}
         </>
     );
 };

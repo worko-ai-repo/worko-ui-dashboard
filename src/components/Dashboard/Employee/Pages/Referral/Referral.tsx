@@ -58,7 +58,6 @@ const Referrals = () => {
 ];
 
   const APP_API_URI = import.meta.env.APP_API_URI
-  const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
 
 const fetchReferrals = useCallback(
   async (
@@ -71,10 +70,10 @@ const fetchReferrals = useCallback(
     if (!user?.email) return;
     // console.log(user)
     setIsLoading(true);
-      const url = `${APP_API_URI}/user/${user.email}/experience`;
+      const url = `/user/${user.email}/experience`;
         let companyId = "";
         try {
-          const { response } = await httpServiceObj.get(url, true, {}, true);
+          const { response } = await httpServiceObj.get(url, true, {}, false,"BASE");
           const data = response as UserDetails[]; 
           if (Array.isArray(data) && data[0]?.companyId) {
             companyId = data[0].companyId;
@@ -90,7 +89,7 @@ const fetchReferrals = useCallback(
     try {  
       // const url = `${APP_API_URI}/user/${user.email}/referral?lastKey=${lastKey}&pageSize=${size}`;
       const url = `/emp/referral/${user.email}?companyId=${companyId}&pageSize=${size}&lastKey=${lastKey}`;
-      const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true,);
+      const { response, error } = await httpServiceObj.get<ReferralApiResponse>(url, true,{},false,"BASE");
       const apiData = response?.data
       // console.log(apiData)
       if (response) {
