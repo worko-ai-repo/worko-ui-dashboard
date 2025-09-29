@@ -229,6 +229,7 @@ const ReferralsTable = memo(
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
           row.status !== "REJECTED" && row.status !== "AWAITING"? (
+            <div className="flex justify-center m-auto w-[150px]">
             <button
             onClick={() => {
                   setReferralData(row);
@@ -238,6 +239,7 @@ const ReferralsTable = memo(
               <img src={chat} alt="" />
             </a>
             </button>
+            </div>
           ) : ( null
             // <div className="flex justify-center m-auto w-[150px]">
             //   <a

@@ -114,7 +114,7 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             />
             {error && <p className="text-red-500 mt-1 text-xs">{error}</p>}
         </div>
-        {<CVParsingPopup />}
+        {CVParsing && <CVParsingPopup />}
         </>
     );
 };
