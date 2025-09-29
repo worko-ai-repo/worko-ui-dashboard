@@ -67,7 +67,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     viewUpdateMode: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data,keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
@@ -76,7 +76,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     key?: string;
   }>({ isOpen: false, details: null, key: undefined });
 
-  const columns:Column<GuidanceRequestDto>[] = [
+  const columns: Column<GuidanceRequestDto>[] = [
     { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
       key: "userDetails_about",
@@ -86,9 +86,11 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
         <div className="flex justify-center">
           <div className="text-center w-[800px] ">
             <p
-            data-tooltip-id="my-tooltip"
-            data-tooltip-content={row.userDetails?.about} 
-            className="text-wrap line-clamp-1">{row.userDetails?.about}</p>
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row.userDetails?.about}
+              className="text-wrap line-clamp-1">
+              {row.userDetails?.about}
+            </p>
           </div>
         </div>
       ),
@@ -157,9 +159,16 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
           <label className="font-semibold text-gray-500">Job Url</label>
           Link
         </a>
-        <span className="flex flex-col items-center mt-0 p-0">
+        <span className="">
           <label className="font-semibold text-gray-500 ">Requirement Details</label>
-          <p className="whitespace-pre-wrap">{row.guidanceRequestDescription}</p>
+          <div className="max-w-md">
+            <p
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row.guidanceRequestDescription}
+              className="text-wrap line-clamp-3">
+              {row.guidanceRequestDescription ?? "--------"}
+            </p>
+          </div>
         </span>
       </div>
     );

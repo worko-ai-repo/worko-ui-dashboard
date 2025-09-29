@@ -235,30 +235,30 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               className: "btn-blue shrink-0",
               tooltip: "Close Job",
               onClick: () =>
-                setIsCloseJobModalOpen({ id: row.id, companyId: row.companyDetails.id }),
+                setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
             },
             {
               icon: <img src={Archive} className="w-5 h-5" />,
               className: "btn-blue shrink-0",
               tooltip: "Archive Job",
               onClick: () =>
-                updateJobStatus("ARCHIVED", { id: row.id, companyId: row.companyDetails.id }),
+                updateJobStatus("ARCHIVED", { id: row.id, companyId: row?.companyDetails?.id }),
             },
           ],
           ARCHIVED: [
             {
               icon: <X className="w-5 h-5" />,
               className: "btn-blue shrink-0",
-              tooltip: "Remove Job",
+              tooltip: "Close Job",
               onClick: () =>
-                updateJobStatus("CLOSED", { id: row.id, companyId: row.companyDetails.id }),
+                setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
             },
             {
               icon: <img src={Repost} className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "Repost Job",
               onClick: () =>
-                updateJobStatus("PUBLISHED", { id: row.id, companyId: row.companyDetails.id }),
+                updateJobStatus("PUBLISHED", { id: row.id, companyId: row?.companyDetails?.id }),
             },
             {
               icon: <img src={Duplicate} className="w-5 h-5" />,

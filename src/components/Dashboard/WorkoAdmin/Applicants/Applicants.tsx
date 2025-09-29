@@ -20,7 +20,7 @@ import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDrop
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
-import { handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import { checkIsWorkoJobFromSelected, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { getToastOptions } from "@Utils/Toast.utils";
 
@@ -280,6 +280,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                   /*  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
                 ]}
                 apiStatus={apiStatus} // Change this to test
+                isWorkoJob={checkIsWorkoJobFromSelected(ListSelection.selectedRows, data)}
                 disabled={
                   apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"
                 }

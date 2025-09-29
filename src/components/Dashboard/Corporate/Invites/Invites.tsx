@@ -68,7 +68,7 @@ const Invites = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 mt-2">
       <div className="flex justify-end">
         <button
           onClick={() => setIsSendInviteModalOpen(true)}

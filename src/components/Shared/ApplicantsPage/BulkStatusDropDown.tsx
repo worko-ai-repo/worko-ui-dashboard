@@ -1,5 +1,8 @@
-import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+
+import { JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import React, { useEffect, useRef, useState } from "react";
+
 
 type BulkStatusDropDownProps = {
   options: {
@@ -10,6 +13,7 @@ type BulkStatusDropDownProps = {
   apiStatus?: JobApplicationStatusType;
   selectTitle?: string;
   tooltipMessage?: string;
+  isWorkoJob: boolean;
 };
 
 // Explicit allowed actions per status
@@ -18,12 +22,19 @@ const statusActionMap: Partial<Record<JobApplicationStatusType, string[]>> = {
   ACCEPTED: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Hold"],
   UNDER_EVALUATION: ["Initiate Interview", "Initiate Hiring", "Hold"], // just in case
   PROCESSING_INTERVIEW: ["Interview Done", "Initiate Hiring", "Hold"],
-  HIRING_IN_PROCESS: [ "Hold"],
-  INTERVIEW_DONE: ["Initiate Hiring","Hold"],
+  HIRING_IN_PROCESS: ["Hold"],
+  INTERVIEW_DONE: ["Initiate Hiring", "Hold"],
   HIRED: ["Joined", "Hold"],
   JOINED: [], // nothing
   ALL: [], // for safety
 };
+
+// Whitelist of bulk actions admin can perform for corporate jobs (similar to ApplicationButtonVisibility)
+const ADMIN_ALLOWED_BULK_ACTIONS_FOR_CORPORATE: string[] = [
+  "Accept",
+  "Hold",
+  // Add other actions that admin should be allowed to perform on corporate jobs
+];
 
 const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
   options,
@@ -31,6 +42,7 @@ const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
   apiStatus,
   selectTitle = "Bulk",
   tooltipMessage = "Allow you to update job application status in bulk mode.",
+  isWorkoJob
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -39,16 +51,27 @@ const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
     if (!disabled) setIsOpen((prev) => !prev);
   };
 
+
   const getIsOptionDisabled = (label: string): boolean => {
     if (!apiStatus || apiStatus === "ALL") return false;
 
     // For JOINED, everything is disabled
     if (apiStatus === "JOINED") return true;
 
-    // Allowed actions for this status
-    const allowed = statusActionMap[apiStatus] || [];
+    // Normalize labels (UI may show "On Hold" while rules use "Hold")
+    const normalizedLabel = label === "On Hold" ? "Hold" : label;
 
-    return !allowed.includes(label);
+    // Case 1: Admin on external (non-Worko) job → restrict to allowlist + status rules
+    if (RBAC.can("play_admin") && !isWorkoJob) {
+      const allowedForStatus = statusActionMap[apiStatus] || [];
+      const inAdminAllowlist = ADMIN_ALLOWED_BULK_ACTIONS_FOR_CORPORATE.includes(normalizedLabel);
+      const validForStatus = allowedForStatus.includes(normalizedLabel);
+      return !(inAdminAllowlist && validForStatus);
+    }
+
+    // Case 2: Otherwise follow general status-based approach
+    const allowed = statusActionMap[apiStatus] || [];
+    return !allowed.includes(normalizedLabel);
   };
 
   useEffect(() => {
