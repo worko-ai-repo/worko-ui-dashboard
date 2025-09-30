@@ -2,24 +2,35 @@ import { Loader } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 import { infinitySquare } from "@AssetsFolder/assets";
 import WaterFillLoader from "@Components/Dashboard/Candidate/Pages/Profile/Helper/WaterFillLoader";
+import useSetInterval from "@Hooks/useSetInterval.hook";
+import { useAppContext } from "@Context/App.context";
+import profileService from "@Components/Dashboard/Candidate/Service/ProfileService";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
-interface WaterFillLoaderProps {
-  forceComplete: boolean;
+interface CVParsingPopupProps {
+  onClose: () => void;
+  maxDurationMs?: number;
+  checkIntervalMs?: number;
 }
 
-const CVParsingPopup: React.FC<WaterFillLoaderProps> = ({forceComplete}) => {
+const CVParsingPopup: React.FC<CVParsingPopupProps> = ({ onClose, maxDurationMs = 40000, checkIntervalMs = 5000 }) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(30);
+  const [secondsLeft, setSecondsLeft] = useState(Math.floor(maxDurationMs / 1000));
   const [visibleMessages, setVisibleMessages] = useState<{
     id: number;
     text: string;
     position: number; // -1 (top), 0 (center), 1 (bottom)
   }[]>([]);
+  const [forceComplete, setForceComplete] = useState(false);
+  const { userDetails } = useAppContext();
 
   const messageIdRef = useRef(0);
   const currentIndexRef = useRef(0);
   // store numeric timeout ids (browser setTimeout returns number)
   const timeoutsRef = useRef<number[]>([]);
+  const startTimeRef = useRef<number | null>(null);
+  const hasClosedRef = useRef(false);
 
   const messages = [
     // "Matching your department",
@@ -41,7 +52,7 @@ const CVParsingPopup: React.FC<WaterFillLoaderProps> = ({forceComplete}) => {
   const MOVE_DELAY = 50; // small delay before starting the move (lets the new node paint)
   const OFFSET_PX = 56; // vertical offset for each slot (-1,0,1)
 
-  // Initialize with first message at center position
+// Initialize with first message at center position
 useEffect(() => {
   if (messages.length > 0) {
     setVisibleMessages([
@@ -59,6 +70,7 @@ useEffect(() => {
     currentIndexRef.current = 0;
     setCurrentMessageIndex(0);
   }
+  startTimeRef.current = Date.now();
 }, []);
 
 
@@ -107,7 +119,7 @@ const rotate = () => {
     };
   }, []);
 
-  // Countdown timer (unchanged)
+  // Countdown timer (based on maxDurationMs)
   useEffect(() => {
     const interval = window.setInterval(() => {
       setSecondsLeft((prev) => {
@@ -119,7 +131,40 @@ const rotate = () => {
       });
     }, 1000);
     return () => window.clearInterval(interval);
-  }, []);
+  }, [maxDurationMs]);
+
+  // Polling using interval hook every checkIntervalMs
+  useSetInterval(async () => {
+    if (hasClosedRef.current) return;
+    const now = Date.now();
+    const start = startTimeRef.current ?? now;
+    const elapsed = now - start;
+
+    if (elapsed > maxDurationMs) {
+      setForceComplete(true);
+      hasClosedRef.current = true;
+      toast.error("Error fetching CV. Please try again. If the issue persists, contact admin.", getToastOptions());
+      onClose();
+      return;
+    }
+
+    try {
+      if (!userDetails?.email) return;
+      const response = await profileService.fetchUserData(userDetails.email, "details");
+      const isDone = Boolean(response?.[0]?.isCvExtracted && response?.[0]?.isCvExtracted === true  );
+      if (isDone) {
+        setForceComplete(true);
+        hasClosedRef.current = true;
+        // small grace period to let the loader fill
+        window.setTimeout(() => {
+          toast.success("CV parsed successfully!", getToastOptions());
+          onClose();
+        }, 3000);
+      }
+    } catch {
+      // ignore individual poll errors, rely on timeout or next tick
+    }
+  }, checkIntervalMs);
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-[9999]">
@@ -204,82 +249,3 @@ const rotate = () => {
 };
 
 export default CVParsingPopup;
-
-
-
-
-// import { useEffect, useState } from "react";
-// import styles from "./referralloader.module.scss";
-
-// const messages = [
-//   "Reviewing your resume content...",
-//   "Extracting work experience...",
-//   "Identifying key skills...",
-//   "Gathering social media links...",
-//   "Parsing educational background...",
-//   "Finalizing your CV data extraction...",
-// ];
-
-// const CVParsingPopup: React.FC = () => {
-//   const [secondsLeft, setSecondsLeft] = useState(30);
-//   const [messageIndex, setMessageIndex] = useState(0);
-
-//   useEffect(() => {
-//     const timer = setInterval(() => {
-//       setSecondsLeft((prev) => {
-//         if (prev <= 1) {
-//           clearInterval(timer);
-//           return 0;
-//         }
-//         return prev - 1;
-//       });
-//     }, 1000);
-
-//     // Change message every 5 seconds (30 / 6 = 5 seconds per message)
-//     const messageTimer = setInterval(() => {
-//       setMessageIndex((prev) => (prev + 1) % messages.length);
-//     }, 5000);
-
-//     return () => {
-//       clearInterval(timer);
-//       clearInterval(messageTimer);
-//     };
-//   }, []);
-
-// return (
-//   <div className="fixed inset-0 bg-black bg-opacity-30 backdrop-blur-sm flex items-center justify-center z-[9999]">
-//     <div className="bg-white p-6 rounded-3xl w-96 shadow-lg flex flex-col items-center gap-6">
-//       {/* Smaller loader */}
-//       <div className={`${styles.loader} !w-24 !h-24`}>
-//         <div className={styles.loaderOne}>
-//           {[...Array(13)].map((_, index) => (
-//             <div key={index} className={styles.box_one_sub}></div>
-//           ))}
-//         </div>
-//         <div className={styles.loaderTwo}>
-//           {[...Array(13)].map((_, index) => (
-//             <div key={index} className={`${styles.box_one_sub} ${styles.two}`}></div>
-//           ))}
-//         </div>
-//       </div>
-
-//       {/* Message that changes every 5 sec */}
-//       <div className="text-center text-gray-700 font-semibold min-h-[2rem] px-4">
-//         {messages[messageIndex]}
-//       </div>
-
-//       {/* Countdown timer */}
-//       <div className="text-5xl font-extrabold text-blue-600 select-none">
-//         {secondsLeft}s
-//       </div>
-
-//       <div className="text-center text-gray-700 font-semibold">
-//         Parsing your CV... Please wait.
-//       </div>
-//     </div>
-//   </div>
-// );
-
-// };
-
-// export default CVParsingPopup;

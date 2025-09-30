@@ -86,39 +86,8 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             if (patchResult.status !== 200) {
                 throw new Error("Failed to update user record with CV");
             }
-            // setCVParsing(true)
-            // await new Promise(resolve => setTimeout(resolve, 40000));
-            // toast.success("CV uploaded successfully", getToastOptions());
-            // if (onUploadSuccess) onUploadSuccess(cloudFileName);
-
             setCVParsing(true);
-            const start = Date.now();
-
-            const poll = async () => {
-                const elapsed = Date.now() - start;
-
-                const response = await checkParsingStatus();
-                const isParsed = response?.data?.[0]?.isCvExtracted ?? false;
-
-                console.log(isParsed, elapsed);
-
-                if (isParsed && elapsed <= 40000) {
-                    setForceComplete(true);
-                    await new Promise(resolve => setTimeout(resolve, 3000));
-                    if (onUploadSuccess) onUploadSuccess(cloudFileName);
-                    toast.success("CV parsed successfully!", getToastOptions());
-                    setCVParsing(false);
-                } else if (elapsed > 40000) {
-                    setForceComplete(true);
-                    setCVParsing(false);
-                    toast.error("Error fetching CV. Please try again. If the issue persists, contact admin.", getToastOptions());                  
-                } else {
-                    // Retry after 3 seconds
-                    setTimeout(poll, 3000);
-                }
-            };
-
-            poll();
+            latestCloudFileNameRef.current = cloudFileName;
         } catch (err: any) {
             console.error(err);
             setError("Something went wrong while uploading.");
@@ -126,16 +95,16 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             setUploading(false);
         }
     };
-    // query to fetch details after cv has been uploaded
-    const { refetch: checkParsingStatus } = useQuery({
-    queryKey: ['checkParsingStatus'],
-    queryFn: async () => {
-        if (userDetails) {
-        return await profileService.fetchUserData(userDetails.email, "details");
-        }
-    },
-    enabled: false,
-    });
+    // Note: polling logic moved into CVParsingPopup
+
+    // keep the last uploaded cloud file name for onClose handling
+    const latestCloudFileNameRef = useRef<string | null>(null);
+
+    const handlePopupClose = () => {
+        setCVParsing(false);
+        const name = latestCloudFileNameRef.current;
+        if (onUploadSuccess && name) onUploadSuccess(name);
+    };
     
     return (
         <>
@@ -161,8 +130,11 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             />
             {error && <p className="text-red-500 mt-1 text-xs">{error}</p>}
         </div>
-        {CVParsing && <CVParsingPopup 
-        forceComplete={forceComplete}/>}
+        {CVParsing && (
+            <CVParsingPopup 
+                onClose={handlePopupClose}
+            />
+        )}
         </>
     );
 };

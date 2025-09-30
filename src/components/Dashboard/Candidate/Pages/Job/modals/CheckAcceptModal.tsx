@@ -45,7 +45,6 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
         const { response, error } = await httpServiceObj.patch(
           `/job-application/${job.id}/applicant-action`,
-          `/job-application/${job.id}/applicant-action`,
           payload,
           true,
           {},
@@ -77,12 +76,10 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
         const { response, error } = await httpServiceObj.patch(
           `/job-application/${job.id}/applicant-action`,
-          `/job-application/${job.id}/applicant-action`,
           payload,
           true,
           {},
           false,
-          "JOB"
         );
 
         if (error) {
@@ -123,7 +120,6 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
 
       try {
         const { response, error } = await httpServiceObj.post<AwsS3FileUploadResponse>(
-          `/file/gsu2v/HR_OFFER_LETTER_SENT`,
           `/file/gsu2v/HR_OFFER_LETTER_SENT`,
           payload,
           true,
