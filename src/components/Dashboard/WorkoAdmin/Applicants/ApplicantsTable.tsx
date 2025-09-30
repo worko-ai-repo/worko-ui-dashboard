@@ -180,6 +180,8 @@ export default function ApplicationTable({
       "applicantDetails.candidateExperience.designation",
     ],
     applicantDetails_CTC: ["applicantDetails.CTC"],
+    currentCTC: ["applicantDetails.CTC"],
+    ECTC: ["applicantDetails.ECTC"],
   };
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
@@ -514,7 +516,24 @@ export default function ApplicationTable({
         </span>
       ),
     },
+    currentCTC: {
+      key: "currentCTC",
+      label: "Current CTC",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span>{row.applicantDetails?.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}</span>
+      ),
+    },
+    ECTC: {
+      key: "ECTC",
+      label: "Expected CTC",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span>{row.applicantDetails?.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}</span>
+      ),
+    },
   };
+
 
   /**
    * Get column configuration based on active tab - enhanced with new columns
@@ -526,6 +545,8 @@ export default function ApplicationTable({
           commonColumns.name,
           commonColumns.currentCompany,
           commonColumns.currentPosition,
+          commonColumns.currentCTC,
+          commonColumns.ECTC,
           commonColumns.experience, // Enhanced from yoe
           // commonColumns.location,
           commonColumns.matchingScore,

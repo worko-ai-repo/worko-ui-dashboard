@@ -39,7 +39,7 @@ export interface CursorPaginationAdminJobDataParams {
   dashboard: string;
   status: JobStatusType;
   searchText?: string;
-  // includeCompanyDetails: boolean;
+  includeCompanyDetails: boolean;
   lastKey?: string | undefined;
 }
 
@@ -352,20 +352,20 @@ export interface ReferAndEarnUpdateApiDto {
 
 /**
  * ReferAndEarnPaymentDoneDetailsType
- * 
+ *
  * @reference `paymentDoneDetails` attribute of `ReferAndEarn.model.ts`
  */
 export interface ReferAndEarnPaymentDoneDetailsDto {
   userId: string;
-  userType: 'ADMIN';
+  userType: "ADMIN";
   actionDate: string;
   amountPaid: number;
   uniqueTransactionReference: string;
-};
+}
 
 /**
  * ReferAndEarnReferrerBankDetails
- * 
+ *
  * @reference `referrerBankDetails` attribute of `ReferAndEarn.model.ts`
  */
 export interface ReferAndEarnReferrerBankDetails {
@@ -386,13 +386,13 @@ export interface CursorPaginationAdminBulkScreenedJobsParams {
   pageSize: number;
   sortOrder: string;
   companyId?: string;
-  corporateBulkJdId?:string;
+  corporateBulkJdId?: string;
   corporateRecruiterUserId?: string;
 }
 
 /**
  * CorporateUserPageAdminDataDto
- * 
+ *
  * @description - Data Transfer Object representing a corporate user in the admin dashboard.
  */
 export interface CorporateUserPageAdminDataDto {
@@ -407,13 +407,12 @@ export interface CorporateUserPageAdminDataDto {
   cognitoUserId: string;
   updatedAt: string; // ISO date
   SK: string;
-  corporateUserType: "corporate-admin" | "corporate-recruiter" ; // extend if more types exist
+  corporateUserType: "corporate-admin" | "corporate-recruiter"; // extend if more types exist
   id: string;
   PK: string;
   GSI1SK: string;
   companyDetails: CompanyDetails;
 }
-
 
 export interface CorporateUserPageRecDataDto {
   GSI1PK: string;
@@ -433,11 +432,11 @@ export interface CorporateUserPageRecDataDto {
   phoneNumberDetails?: {
     countryCode: number;
     phoneNumber: number;
-  } 
+  };
   updatedAt: string; // ISO date string
   SK: string;
   corporateUserDetails?: CorporateUserDetails; // only present when inviteStatus = "ACCEPTED"
-  companyDetails?: CompanyDto; // only present when includeCompanyDetails = true in params  
+  companyDetails?: CompanyDto; // only present when includeCompanyDetails = true in params
 }
 
 interface CorporateUserDetails {

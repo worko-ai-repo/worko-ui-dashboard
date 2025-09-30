@@ -34,7 +34,9 @@ const AdminJobs = () => {
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
-  const [jobFormMode, setJobFormMode] = useState<"UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA">("CREATE");
+  const [jobFormMode, setJobFormMode] = useState<
+    "UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA"
+  >("CREATE");
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
@@ -64,7 +66,7 @@ const AdminJobs = () => {
     sortOrder: "desc",
     dashboard: "ADMIN",
     status: activeTab,
-    // includeCompanyDetails: true,
+    includeCompanyDetails: true,
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
@@ -135,27 +137,26 @@ const AdminJobs = () => {
       status: type,
     };
     if (type === "CLOSED" && closeReason) {
-    //  "companyId": "string",
-    //   "shortSoftDeleteReason": "string",
-    //   "detailedSoftDeleteReason": "string" // optional
+      //  "companyId": "string",
+      //   "shortSoftDeleteReason": "string",
+      //   "detailedSoftDeleteReason": "string" // optional
       delete payload.status;
       payload.shortSoftDeleteReason = closeReason.reason;
       payload.detailedSoftDeleteReason = closeReason.note;
     }
     let response;
-    if (type === "CLOSED" ){
+    if (type === "CLOSED") {
       response = await AdminServiceObj.deleteJob(payload, data.id);
-    }
-    else{
+    } else {
       if (payload.status) {
         response = await AdminServiceObj.updateJob(
-          { ...payload, status: payload.status }, 
-          {}, 
+          { ...payload, status: payload.status },
+          {},
           data.id
         );
       }
     }
-      if (response) {
+    if (response) {
       toast.success(`Job ${type.toLocaleLowerCase()} successfully`, getToastOptions({}));
     } else {
       toast.error("Failed to perform this operation.", getToastOptions({}));
@@ -167,7 +168,6 @@ const AdminJobs = () => {
     <div className="flex flex-col gap-[35px] mt-2 w-full px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
         <div className=" flex-1 flex flex-col gap-4">
-
           <div className="flex justify-between items-end gap-4">
             <SearchBar
               searchBarText={searchBarText}
