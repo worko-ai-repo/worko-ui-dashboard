@@ -347,7 +347,7 @@ export const validationRules = {
    */
   defaultTextarea: {
     required: "This field is required",
-    minLength: { value: 50, message: "Minimum 50 characters required" },
+    minLength: { value: 10, message: "Minimum 10 characters required" },
   },
 
   /**

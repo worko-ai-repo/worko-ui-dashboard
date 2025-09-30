@@ -35,7 +35,9 @@ const Jobs = () => {
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
-  const [jobFormMode, setJobFormMode] = useState<"UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA">("CREATE");
+  const [jobFormMode, setJobFormMode] = useState<
+    "UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA"
+  >("CREATE");
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
@@ -52,7 +54,7 @@ const Jobs = () => {
     limit: 30,
     mapFn: (job: JobData) => ({
       jobId: job.id,
-      companyId: job.companyDetails.id,
+      companyId: job?.companyDetails?.id,
       status: job.status as "PUBLISHED" | "CLOSED" | "ARCHIVED",
     }),
     keySelector: (job) => job.jobId,
@@ -68,7 +70,7 @@ const Jobs = () => {
     dashboard: "CORPORATE",
     userRole: userType ? [userType] : undefined,
     status: activeTab,
-    // includeCompanyDetails: true,
+    includeCompanyDetails: true,
     companyId: userDetails?.companyId ?? "", // Now guaranteed to be string
     // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
@@ -88,7 +90,13 @@ const Jobs = () => {
     refetch,
     reset,
   } = useCursorPagination<JobData, CursorPaginationJobDataParams>({
-    queryKey: ["CorporateJobsQuery", !!userDetails?.companyId, activeTab, !!searchBarText, JSON.stringify(params)],
+    queryKey: [
+      "CorporateJobsQuery",
+      !!userDetails?.companyId,
+      activeTab,
+      !!searchBarText,
+      JSON.stringify(params),
+    ],
     queryFn: CorporateServiceObj.fetchJobs,
     baseParams: params,
     enabled: !!userDetails?.companyId, // Only enable if companyId exists
@@ -103,7 +111,6 @@ const Jobs = () => {
     resetSelection(); // Reset selected rows when active tab changes
     refetch(); // Refetch data when active tab changes @TODO:Make sure to refetch only when necessary
   }, [activeTab, searchBarText, pageSize]);
-
 
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
     // update status of selectedRows element status with the params
