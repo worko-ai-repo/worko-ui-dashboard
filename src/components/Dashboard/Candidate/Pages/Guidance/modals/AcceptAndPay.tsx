@@ -3,6 +3,7 @@ import { GuidanceRequest } from "../Guidance";
 import httpServiceObj from '@Services/ApiHandler.service';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
+import { createPortal } from 'react-dom';
 
 interface AcceptAndPayProps {
   request: GuidanceRequest | null;
@@ -28,6 +29,19 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
   const [submitError, setSubmitError] = useState('');
   const social = acceptAndPayDetails?.socialProfile || {};
   const about = acceptAndPayDetails?.mentorDetails?.about || '';
+  const [showPopup, setShowPopup] = useState(false);
+
+  const redirectingToPayment = () => {
+    const paymentLink = request?.paymentRequestDetails?.linkForPayment;
+
+    if (paymentLink) {
+      window.open(paymentLink, '_blank');
+      setShowPopup(true);
+    } else {
+      toast.error("Payment link not found please contact admin for help.",getToastOptions({}));
+      return
+    }
+  };
 
   const handleAcceptAndPay = async () => {
     if (!request?.id || !userID) {
@@ -50,7 +64,8 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
         return;
       }
 
-      toast.success("Payment completed", getToastOptions({}));
+      toast.success("Payment submitted. An admin will review and confirm shortly.", getToastOptions({}));
+      setShowPopup(false)
       closeModal()
       onRefresh()
       return response;
@@ -216,7 +231,7 @@ return (
     <div className="px-6 pb-6 flex flex-col gap-3">
       <div className="flex flex-row gap-3">
         <button
-          onClick={handleAcceptAndPay}
+          onClick={redirectingToPayment}
           className="flex-1 bg-[#316bff] text-white rounded-lg h-11 flex items-center justify-center gap-2 hover:bg-[#2556e6] transition-colors cursor-pointer"
         >
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -252,6 +267,30 @@ return (
         </div>
       )}
     </div>
+      {showPopup &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-md text-center">
+              <h2 className="text-lg font-semibold mb-4">Have you completed the payment?</h2>
+              <div className="flex justify-center gap-4">
+                <button
+                  onClick={handleAcceptAndPay}
+                  className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setShowPopup(false)}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )
+      }
   </div>
 );
 

@@ -179,12 +179,12 @@ const navigationItems: NavItem[] = [
         icon: InvoiceAndPaymentIcon,
         dashboardTypes: ['CORPORATE'],
     }, */
-  { //@NEXT-RELEASE : NEXT RELEASE
-    id: "support",
-    label: "Support",
-    icon: SupportIcon,
-    dashboardTypes: ["ADMIN", "EMPLOYEE", "CANDIDATE"],
-  },
+  // { //@NEXT-RELEASE : NEXT RELEASE
+  //   id: "support",
+  //   label: "Support",
+  //   icon: SupportIcon,
+  //   dashboardTypes: ["ADMIN", "EMPLOYEE", "CANDIDATE"],
+  // },
 ];
 
 export default navigationItems;

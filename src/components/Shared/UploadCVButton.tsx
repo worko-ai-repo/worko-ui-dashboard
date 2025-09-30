@@ -8,16 +8,26 @@ import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useAppContext } from "@Context/App.context";
 import CVParsingPopup from "../Dashboard/Candidate/Pages/Profile/Helper/CVParsingPopup";
+import { useQuery } from "@tanstack/react-query";
+import profileService from "@Components/Dashboard/Candidate/Service/ProfileService";
 
 interface UploadCVButtonProps {
     onUploadSuccess?: (cvUrl: string) => void;
 }
+
+interface ParsingStatus {
+  isCvExtracted: boolean;
+  // add other keys if needed
+}
+
+
 
 const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [CVParsing,setCVParsing] = useState(false)
     const [error, setError] = useState<string | null>(null);
+    const [forceComplete,setForceComplete] = useState(false)
     const {userDetails} = useAppContext()
     const handleClick = () => {
         fileInputRef.current?.click();
@@ -70,18 +80,45 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
                 throw new Error("Upload failed");
             }
 
-            const patchResult = await httpServiceObj.patch(`/user/${email}/cv`, { userCvFileName:file.name,resume: cloudFileName }, true);
+            const patchResult = await httpServiceObj.patch(`/user/${email}/cv`, { 
+                userCvFileName:file.name,resume: cloudFileName,isCvExtracted:false }, true);
 
             if (patchResult.status !== 200) {
                 throw new Error("Failed to update user record with CV");
             }
-            setCVParsing(true)
+            // setCVParsing(true)
+            // await new Promise(resolve => setTimeout(resolve, 40000));
+            // toast.success("CV uploaded successfully", getToastOptions());
+            // if (onUploadSuccess) onUploadSuccess(cloudFileName);
 
-            await new Promise(resolve => setTimeout(resolve, 30000));
+            setCVParsing(true);
+            const start = Date.now();
 
-            toast.success("CV uploaded successfully", getToastOptions());
+            const poll = async () => {
+                const elapsed = Date.now() - start;
 
-            if (onUploadSuccess) onUploadSuccess(cloudFileName);
+                const response = await checkParsingStatus();
+                const isParsed = response?.data?.[0]?.isCvExtracted ?? false;
+
+                console.log(isParsed, elapsed);
+
+                if (isParsed && elapsed <= 40000) {
+                    setForceComplete(true);
+                    await new Promise(resolve => setTimeout(resolve, 3000));
+                    if (onUploadSuccess) onUploadSuccess(cloudFileName);
+                    toast.success("CV parsed successfully!", getToastOptions());
+                    setCVParsing(false);
+                } else if (elapsed > 40000) {
+                    setForceComplete(true);
+                    setCVParsing(false);
+                    toast.error("Error fetching CV. Please try again. If the issue persists, contact admin.", getToastOptions());                  
+                } else {
+                    // Retry after 3 seconds
+                    setTimeout(poll, 3000);
+                }
+            };
+
+            poll();
         } catch (err: any) {
             console.error(err);
             setError("Something went wrong while uploading.");
@@ -89,7 +126,17 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             setUploading(false);
         }
     };
-
+    // query to fetch details after cv has been uploaded
+    const { refetch: checkParsingStatus } = useQuery({
+    queryKey: ['checkParsingStatus'],
+    queryFn: async () => {
+        if (userDetails) {
+        return await profileService.fetchUserData(userDetails.email, "details");
+        }
+    },
+    enabled: false,
+    });
+    
     return (
         <>
         <div>
@@ -114,7 +161,8 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
             />
             {error && <p className="text-red-500 mt-1 text-xs">{error}</p>}
         </div>
-        {CVParsing && <CVParsingPopup />}
+        {CVParsing && <CVParsingPopup 
+        forceComplete={forceComplete}/>}
         </>
     );
 };

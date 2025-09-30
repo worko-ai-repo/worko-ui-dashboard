@@ -3,7 +3,11 @@ import React, { useState, useEffect, useRef } from "react";
 import { infinitySquare } from "@AssetsFolder/assets";
 import WaterFillLoader from "@Components/Dashboard/Candidate/Pages/Profile/Helper/WaterFillLoader";
 
-const CVParsingPopup: React.FC = () => {
+interface WaterFillLoaderProps {
+  forceComplete: boolean;
+}
+
+const CVParsingPopup: React.FC<WaterFillLoaderProps> = ({forceComplete}) => {
   const [currentMessageIndex, setCurrentMessageIndex] = useState(0);
   const [secondsLeft, setSecondsLeft] = useState(30);
   const [visibleMessages, setVisibleMessages] = useState<{
@@ -119,28 +123,31 @@ const rotate = () => {
 
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-[9999]">
-      <div className="relative bg-white/95 backdrop-blur-sm p-8 rounded-2xl w-96 shadow-2xl border border-white/20 animate-fade-in-scale">
-        <div className="flex flex-col items-center gap-1">
-          <div className="relative w-full h-60 overflow-hidden ">
-          <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 30 }}>
-            <Loader className="w-12 h-12 text-blue-500 animate-spin" />
+      <div className="relative bg-white/95 backdrop-blur-sm p-8 rounded-2xl w-[650px] max-w-full shadow-2xl border border-white/20 animate-fade-in-scale">
+        
+        {/* Two-column layout */}
+        <div className="flex flex-row gap-6 w-full">
+          
+          {/* Left Column: Loader */}
+          <div className="w-1/2 flex items-center justify-center h-60">
+            <WaterFillLoader 
+            forceComplete={forceComplete}
+            />
           </div>
 
-             {/* <div style={{ position: "absolute", top: "10%", left: "50%", transform: "translate(-50%, -50%)", zIndex: 30 }}>
-              <WaterFillLoader />
-            </div>  */}
+          {/* Right Column: Messages */}
+          <div className="w-1/2 relative h-60 overflow-hidden">
             {visibleMessages.map((message) => {
-              const translateY = message.position * OFFSET_PX; // px
+              const translateY = message.position * OFFSET_PX;
               const scale = message.position === 0 ? 1 : 0.96;
-              const opacity = 
-                message.position === 0 ? 1 : 
-                message.position === -1 ? 0.6 : 
+              const opacity =
+                message.position === 0 ? 1 :
+                message.position === -1 ? 0.6 :
                 message.position === 1 ? 0.85 :
                 message.position === -2 ? 0 :
                 1;
               const zIndex = 20 - Math.abs(message.position);
 
-              // keep the same visual styling you had but remove class-based "animate-..."
               let bgClasses = "";
               if (message.position === 0) {
                 bgClasses = "bg-gradient-to-r from-blue-600 to-blue-500 text-white opacity-100 shadow-lg ring-2 ring-blue-400/30";
@@ -150,13 +157,12 @@ const rotate = () => {
                 bgClasses = "bg-blue-500/70 text-white/90 shadow-md";
               } else if (message.position === -2) {
                 bgClasses = "bg-blue-500/40 text-white/60";
-              } 
+              }
 
               return (
                 <div
                   key={message.id}
-                  // absolute & centered horizontally/vertically; transform handles movement
-                  className={`absolute w-[86%] rounded-xl px-3 py-1 border border-white/10 flex items-center justify-between ${bgClasses}`}
+                  className={`absolute w-[90%] rounded-xl px-3 py-1 border border-white/10 flex items-center justify-between ${bgClasses}`}
                   style={{
                     left: "50%",
                     top: "50%",
@@ -168,41 +174,32 @@ const rotate = () => {
                 >
                   <span className="font-medium text-sm">{message.text}</span>
                   <div className="w-8 h-8 rounded border bg-white flex items-center justify-center text-center">
-                    <img src={infinitySquare} alt="" className="w-36 h-36" />
+                    <img src={infinitySquare} alt="" className="w-6 h-6" />
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
 
-          {/* Countdown */}
-          {/* <div className="text-center">
-            <div className="relative inline-block">
-              <div className="text-6xl font-bold bg-gradient-to-r from-blue-600 to-blue-500 bg-clip-text text-transparent select-none animate-bounce-soft">
-                {secondsLeft}
-              </div>
-              <div className="text-sm text-gray-500 font-medium mt-1 tracking-wide">SECONDS</div>
+        {/* Status Message */}
+        <div className="text-center space-y-3 mt-6">
+          <div className="flex items-center justify-center gap-2">
+            <div className="flex gap-1">
+              {[0, 1, 2].map((i) => (
+                <div
+                  key={i}
+                  className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
+                  style={{ animationDelay: `${i * 0.2}s` }}
+                />
+              ))}
             </div>
-          </div> */}
-
-          {/* Status */}
-          <div className="text-center space-y-3">
-            <div className="flex items-center justify-center gap-2">
-              <div className="flex gap-1">
-                {[0, 1, 2].map((i) => (
-                  <div
-                    key={i}
-                    className="w-2 h-2 bg-blue-500 rounded-full animate-bounce"
-                    style={{ animationDelay: `${i * 0.2}s` }}
-                  />
-                ))}
-              </div>
-            </div>
-            <p className="text-gray-600 font-semibold text-base">Parsing your CV... Please wait.</p>
           </div>
+          <p className="text-gray-600 font-semibold text-base">Parsing your CV... Please wait.</p>
         </div>
       </div>
     </div>
+
   );
 };
 

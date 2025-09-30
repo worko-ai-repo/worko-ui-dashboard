@@ -1322,10 +1322,7 @@ const handleSaveSalary = async (data:any) => {
                   </div>
 
                   <UploadCVButton
-                    onUploadSuccess={(cvUrl) => {
-                      // console.log("Uploaded CV URL:", cvUrl);
-                      fetchData();
-                    }}
+                    onUploadSuccess={() => fetchData()}
                   />
 
                   <button

@@ -2,12 +2,15 @@ import { FunctionComponent, useState, useCallback } from "react";
 import Table from "../../SharedComponents/Table";
 import { customer_support } from "@Assets";
 import { Button } from "@headlessui/react";
+import NewHelpModal from "./modals/NewHelpModal";
 
 
 const Support = () => {
   const [isHelpOpen, setHelpOpen] = useState(false);
+  const [showNewHelpModal, setShowNewHelpModal] = useState(false);
 
   const openHelp = useCallback(() => {
+    setShowNewHelpModal(true)
     setHelpOpen(true);
   }, []);
 
@@ -113,7 +116,8 @@ const Support = () => {
     <div className="w-full relative rounded-3xl overflow-hidden text-base text-slate-900 font-poppins">
       {/* Help button container at top with right alignment */}
       <div className="w-full flex justify-end p-2">
-        <div className="relative rounded-lg bg-[#316bff] h-11 flex flex-row items-center justify-center p-4 px-8 box-border gap-1.5 cursor-pointer text-center text-xs text-white font-poppins" onClick={openHelp}>
+        <div className="relative rounded-lg bg-[#316bff] h-11 flex flex-row items-center justify-center p-4 px-8 box-border gap-1.5 cursor-pointer text-center text-xs text-white font-poppins" 
+          onClick={openHelp}>
           <img className="w-5 h-5" alt="" src={customer_support} />
           <div className="relative tracking-[0.2px] leading-[114%] font-semibold">Help</div>
         </div>
@@ -123,6 +127,12 @@ const Support = () => {
         {/* Table positioned below the help button */}
         <Table data={serviceData} columns={columns} keyExtractor={(item) => item.id.toString()} className="w-full" headerClassName="bg-cyan-50 text-nowrap py-3 px-4 mb-2" rowClassName={() => "w-full mb-2 bg-white text-sm border-b"} />
       </div>
+
+        <NewHelpModal
+          onClose={() => setShowNewHelpModal(false)}
+          isOpen={showNewHelpModal}
+          isCandidate={true}
+        />
     </div>
   );
 };

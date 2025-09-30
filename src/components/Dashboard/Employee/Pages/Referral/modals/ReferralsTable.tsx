@@ -240,15 +240,14 @@ const ReferralsTable = memo(
             </a>
             </button>
             </div>
-          ) : ( null
-            // <div className="flex justify-center m-auto w-[150px]">
-            //   <a
-            //     href={""}
-            //     className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
-            //             bg-gray-300 cursor-not-allowed grayscale">
-            //     <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
-            //   </a>
-            // </div>
+          ) : (
+            <div className="flex justify-center m-auto w-[150px]">
+              <a
+                className="w-14 h-11 rounded-xl flex items-center justify-center transition-all
+              bg-gray-300 cursor-not-allowed grayscale">
+                <img src={chat} alt="Chat disabled" className="grayscale opacity-50" />
+              </a>
+            </div>
           ),
       },
       {
