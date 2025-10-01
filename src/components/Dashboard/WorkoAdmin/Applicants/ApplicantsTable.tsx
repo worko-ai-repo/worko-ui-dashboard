@@ -16,7 +16,7 @@ import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Assets and interfaces
 import { Not_Responding } from "@Assets";
-import { JobApplicationDetailsDto, StatusTracker } from "@Interfaces/CorporateDashboard.dto";
+import { ApplicantDetails, JobApplicationDetailsDto, StatusTracker } from "@Interfaces/CorporateDashboard.dto";
 import { ApplicationListSelectionDto, JobApplicationUpdatePayloadDto } from "./Applicants";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -92,6 +92,20 @@ export const getCvDownloadedById = (row: JobApplicationDetailsDto) => {
   return isUserIdTypeULID
     ? { updatedByUserId: cvDownloadedEntry?.userId || "" }
     : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
+};
+
+export const getCurrentPositionCell = (row: ApplicantDetails) => {
+  // Check the multiple candidate experience entries for the current company with empty endDate
+  let currentExperience = row.multipleCandidateExperience?.find(
+    (exp) => !exp.endDate
+  );
+  if (!currentExperience){
+    // compare all end date to get the latest one
+    currentExperience = row.multipleCandidateExperience
+      ?.filter(exp => exp.endDate) // Filter out experiences without endDate
+      .sort((a, b) => new Date(b.endDate!).getTime() - new Date(a.endDate!).getTime())?.[0]; // Sort by endDate descending and get first item
+  }
+  return currentExperience;
 };
 
 export default function ApplicationTable({
@@ -497,22 +511,19 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={row?.applicantDetails?.candidateExperience?.companyName || "NA"}>
-          {row?.applicantDetails?.candidateExperience?.companyName || "NA"}{" "}
+          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}>
+          {getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}{" "}
         </span>
       ),
     },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
-
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={
-            row?.applicantDetails?.candidateExperience?.designation ?? "FRESHER"
-          }>
-          {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}{" "}
+          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}>
+          {getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}{" "}
         </span>
       ),
     },
@@ -533,7 +544,6 @@ export default function ApplicationTable({
       ),
     },
   };
-
 
   /**
    * Get column configuration based on active tab - enhanced with new columns

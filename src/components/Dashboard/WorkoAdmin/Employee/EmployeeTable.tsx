@@ -10,6 +10,7 @@ import { AtSign } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import AdminServiceObj from "../Services/Admin.service";
+import { getCurrentPositionCell } from "../Applicants/ApplicantsTable";
 
 interface EmployeeTableProps {
   data: ApplicantDetails[];
@@ -40,7 +41,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-    user: ApplicantDetails ;
+    user: ApplicantDetails;
     key?: number; // Add a unique key to force re-render
   }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
 
@@ -56,20 +57,61 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
     });
   };
 
-  const columns:Column<ApplicantDetails>[] = [
+  const columns: Column<ApplicantDetails>[] = [
     {
       key: "name",
       label: "Name",
       render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
     },
-    { key: "email", label: "Email",sortable: true },
-    { key: "number", label: "Phone no",sortable: true },
-    { key: "candidateExperience_companyName", label: "Company Name" ,sortable: true,
-      render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.candidateExperience?.companyName ??row?.companyName ?? "N/A"}</span>
+    { key: "email", label: "Email", sortable: true },
+    { key: "number", label: "Phone no", sortable: true },
+    {
+      key: "candidateExperience_companyName",
+      label: "Company Name",
+      sortable: true,
+      render: (row: ApplicantDetails) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            getCurrentPositionCell(row)?.companyName ||
+            row?.candidateExperience?.companyName ||
+            "NA"
+          }>
+          {getCurrentPositionCell(row)?.companyName ||
+            row?.candidateExperience?.companyName ||
+            "NA"}
+        </span>
+      ),
     },
-    { key: "referralCount", label: "Referrals Request Pending" ,sortable: true},
-    { key: "candidateExperience_department", label: "Department",sortable: true },
-    { key: "candidateExperience_designation", label: "Designation",sortable: true },
+    { key: "referralCount", label: "Referrals Request Pending", sortable: true },
+    {
+      key: "candidateExperience_department",
+      label: "Department",
+      sortable: true,
+      render: (row: ApplicantDetails) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            getCurrentPositionCell(row)?.department || row?.candidateExperience?.department || "NA"
+          }>
+          {getCurrentPositionCell(row)?.department || row?.candidateExperience?.department || "NA"}
+        </span>
+      ),
+    },
+    {
+      key: "candidateExperience_designation",
+      label: "Designation",
+      sortable: true,
+      render: (row: ApplicantDetails) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            getCurrentPositionCell(row)?.department || row?.candidateExperience?.department || "NA"
+          }>
+          {getCurrentPositionCell(row)?.department || row?.candidateExperience?.department || "NA"}
+        </span>
+      ),
+    },
     { key: "isEmailVerified", label: "Company Email Verified" },
     {
       key: "Actions",
@@ -79,9 +121,11 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
         return (
           <div className="flex gap-3 px-2  justify-between">
             <button
-              data-tooltip-id= "my-tooltip"
-              data-tooltip-content= {row.isNumberVerified !== false ? "Mobile already verified" : "Verify mobile number"}
-              disabled={row.isNumberVerified !== false }
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={
+                row.isNumberVerified !== false ? "Mobile already verified" : "Verify mobile number"
+              }
+              disabled={row.isNumberVerified !== false}
               onClick={() => handleVerifyClick("MOBILE", row)}
               className=" cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
               <img src={mobile_install} alt="Verify Mobile" className="h-4 w-4 flex-shrink-0" />
@@ -92,8 +136,14 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
 
             <button
               disabled={row.isCurrentCompEmailVerified === true || !row.companyEmailId}
-              data-tooltip-id= "my-tooltip"
-              data-tooltip-content= {!row.companyEmailId ? "No company email found" : row.isCurrentCompEmailVerified === true ? "Company email already verified" : "Verify company email"}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={
+                !row.companyEmailId
+                  ? "No company email found"
+                  : row.isCurrentCompEmailVerified === true
+                  ? "Company email already verified"
+                  : "Verify company email"
+              }
               onClick={() => handleVerifyClick("COMPANY_EMAIL", row)}
               className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
               <img src={email_sync} alt="Verify Email" className="h-4 w-4 flex-shrink-0" />
@@ -103,8 +153,10 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({ data, fetchEmployees, pag
             </button>
 
             <button
-              data-tooltip-id= "my-tooltip"
-              data-tooltip-content= {row.isEmailVerified === true ? "Email already verified" : "Verify email"}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={
+                row.isEmailVerified === true ? "Email already verified" : "Verify email"
+              }
               onClick={() => handleVerifyClick("EMAIL", row)}
               disabled={row.isEmailVerified === true} //@TODO:ROHIT ADD ATTRB
               className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">

@@ -36,6 +36,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
+import { getCurrentPositionCell } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
 
 // Component props interface
 
@@ -359,22 +360,19 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={row?.applicantDetails?.candidateExperience?.companyName || "NA"}>
-          {row?.applicantDetails?.candidateExperience?.companyName || "NA"}{" "}
+          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}>
+          {getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}{" "}
         </span>
       ),
     },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
-
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={
-            row?.applicantDetails?.candidateExperience?.designation ?? "FRESHER"
-          }>
-          {row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}{" "}
+          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.designation|| "FRESHER"}>
+          {getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}{" "}
         </span>
       ),
     },
