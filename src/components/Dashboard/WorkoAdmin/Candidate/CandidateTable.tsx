@@ -13,6 +13,7 @@ import { AtSign, Eye } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { handleDeleteUsers } from "../Employee/EmployeeTable";
+import { getCurrentPositionCell } from "../Applicants/ApplicantsTable";
 
 interface CandidateTableProps {
   data: ApplicantDetails[];
@@ -74,11 +75,45 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       sortable: true,
       render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
     },
-    { key: "email", label: "Email",sortable: true },
-    { key: "number", label: "Phone no" ,sortable: true },
-    { key: "candidateExperience_companyName", label: "Company Name",sortable: true  },
-    { key: "referralCount", label: "Referrals Request Accepted",sortable: true  },
-    { key: "candidateExperience_designation", label: "Designation",sortable: true  },
+    { key: "email", label: "Email", sortable: true },
+    { key: "number", label: "Phone no", sortable: true },
+    {
+      key: "candidateExperience_companyName",
+      label: "Company Name",
+      sortable: true,
+      render: (row: ApplicantDetails) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            getCurrentPositionCell(row)?.companyName ||
+            row?.candidateExperience?.companyName ||
+            "NA"
+          }>
+          {getCurrentPositionCell(row)?.companyName ||
+            row?.candidateExperience?.companyName ||
+            "NA"}
+        </span>
+      ),
+    },
+    { key: "referralCount", label: "Referrals Request Accepted", sortable: true },
+    {
+      key: "candidateExperience_designation",
+      label: "Designation",
+      sortable: true,
+      render: (row: ApplicantDetails) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            getCurrentPositionCell(row)?.designation ||
+            row?.candidateExperience?.designation ||
+            "NA"
+          }>
+          {getCurrentPositionCell(row)?.designation ||
+            row?.candidateExperience?.designation ||
+            "NA"}
+        </span>
+      ),
+    },
     {
       key: "Cv link",
       label: "CV Link",
@@ -139,7 +174,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       <div className="p-4  flex justify-evenly gap-4">
         <span>
           <label>Experience</label>
-          <p>{row?.YOE || "  "}  </p>
+          <p>{row?.YOE || "  "} </p>
         </span>
         <span>
           <label>Account created at</label>
@@ -148,7 +183,17 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
 
         <span>
           <label>Department</label>
-          <p>{row?.candidateExperience?.department}</p>
+          <span
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={
+              getCurrentPositionCell(row)?.department ||
+              row?.candidateExperience?.department ||
+              "NA"
+            }>
+            {getCurrentPositionCell(row)?.department ||
+              row?.candidateExperience?.department ||
+              "NA"}
+          </span>
         </span>
 
         <div>
@@ -209,7 +254,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
           type={verifyModalOpen.type}
           user={verifyModalOpen.user}
           onClose={() => {
-            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails});
+            setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
           }}
           refetch={fetchEmployees}
         />

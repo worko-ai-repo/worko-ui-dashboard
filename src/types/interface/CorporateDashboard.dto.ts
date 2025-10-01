@@ -163,6 +163,16 @@ export interface JobDetails {
   variableComponent?: number;
   companyDetails: CompanyDetails;
 }
+
+export interface CandidateExperience {
+  companyName: string;    // e.g. "Worko.ai"
+  designation: string;    // e.g. "Founder"
+  department: string;     // e.g. "Entrepreneurship"
+  startDate: string;      // ISO date, e.g. "2023-07-01"
+  endDate: string;        // ISO date, e.g. "2024-06-01"
+  YOE: number;            // Years of experience, e.g. 1
+}
+
 export interface JobApplicationDetailsDto {
   id: string;
   companyId: string;
@@ -270,6 +280,7 @@ export interface ApplicantDetails {
   emailList: {
     primary: string;
   };
+  multipleCandidateExperience: CandidateExperience[];
   profileImage: string;
   profileImageAwsS3SignedUrl: string;
   cvAwsS3SignedUrl: string;
