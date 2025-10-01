@@ -6,6 +6,7 @@ import { toTitleCase } from "@Utils/Titlecase.utils";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { Send } from "lucide-react";
+import httpServiceObj from "@Services/ApiHandler.service";
 
 // handling dates
 const formatDateLabel = (timestamp: number) => {
@@ -31,6 +32,7 @@ interface ReferralData {
   id: string;
   userDetails?: {
     name: string;
+    id:string;
   };
   employeeDetails?: {
     name: string;
@@ -42,6 +44,7 @@ interface ChatWindowProps {
   show: boolean;
   referralData: ReferralData;
   user: string;
+  candidateDetails?:string;
 }
 
 const ChatWindow: React.FC<ChatWindowProps> = ({
@@ -49,6 +52,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   onClose,
   referralData,
   user,
+  candidateDetails,
 }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -63,6 +67,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // New ref to store previous scrollHeight when loading older messages
   const prevScrollHeightRef = useRef(0);
+  const CHAT_API = import.meta.env.APP_CHAT_API_URI
 
   // Animate
   useEffect(() => {
@@ -90,9 +95,26 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
     );
   };
 
-  // Connect WebSocket
+  // create chat and after that Connect WebSocket
   useEffect(() => {
+    const createChat = async () =>{
+    const url = `${CHAT_API}/chat/create`
+    const payload = {
+      referralId: referralData.id,
+      userIdOne: referralData.acceptedByUserId,
+      userIdTwo: referralData?.userDetails?.id || candidateDetails
+    }
+      try {
+        const {response} = await httpServiceObj.post(url,payload,true,{},true)
+        console.log(response)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+    createChat()
     const connectWebSocket = async () => {
+      // console.log("acceptedby :",referralData.acceptedByUserId)
+      // console.log("candidate:",referralData?.userDetails?.id || candidateDetails)
       try {
         if (!referralData?.id || !referralData.acceptedByUserId) return;
 

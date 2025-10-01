@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import profileService from "@Components/Dashboard/Candidate/Service/ProfileService";
 
 interface UploadCVButtonProps {
-    onUploadSuccess?: (cvUrl: string) => void;
+    onUploadSuccess: () => void;
 }
 
 interface ParsingStatus {
@@ -87,7 +87,7 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
                 throw new Error("Failed to update user record with CV");
             }
             setCVParsing(true);
-            latestCloudFileNameRef.current = cloudFileName;
+            // latestCloudFileNameRef.current = cloudFileName;
         } catch (err: any) {
             console.error(err);
             setError("Something went wrong while uploading.");
@@ -98,12 +98,13 @@ const UploadCVButton: React.FC<UploadCVButtonProps> = ({ onUploadSuccess }) => {
     // Note: polling logic moved into CVParsingPopup
 
     // keep the last uploaded cloud file name for onClose handling
-    const latestCloudFileNameRef = useRef<string | null>(null);
+    // const latestCloudFileNameRef = useRef<string | null>(null);
 
     const handlePopupClose = () => {
         setCVParsing(false);
-        const name = latestCloudFileNameRef.current;
-        if (onUploadSuccess && name) onUploadSuccess(name);
+        onUploadSuccess()
+        // const name = latestCloudFileNameRef.current;
+        // if (onUploadSuccess && name) onUploadSuccess(name);
     };
     
     return (

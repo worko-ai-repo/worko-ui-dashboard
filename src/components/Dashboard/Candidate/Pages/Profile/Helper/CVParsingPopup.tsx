@@ -33,18 +33,14 @@ const CVParsingPopup: React.FC<CVParsingPopupProps> = ({ onClose, maxDurationMs 
   const hasClosedRef = useRef(false);
 
   const messages = [
-    // "Matching your department",
-    // "Analyzing your core skills",
-    // "Analyzing your technical skills",
-    // "Fetching socials links",
-    // "Matching your locations",
-    // "Matching your Salary",
     "Reading your CV…",
     "Identifying your skills…",
     "Mapping your work experience…",
     "Checking your career progression",
+    "Analyzing education background",
     "Understanding your strengths & expertise…",
     "Refreshing your profile with updated insights",
+    "Matching roles with industry standards",
   ];
 
   // animation configuration — tweak these to change how smooth / how far
@@ -166,6 +162,64 @@ const rotate = () => {
     }
   }, checkIntervalMs);
 
+  // below checks is forcecomplete is true then all message should go out within 3 sec
+  useEffect(() => {
+  if (!forceComplete) return;
+
+  // Clear normal rotation timer
+  timeoutsRef.current.forEach((t) => window.clearTimeout(t));
+  timeoutsRef.current = [];
+
+  const remainingMessages = messages.length - currentIndexRef.current - 1;
+  if (remainingMessages <= 0) return;
+
+  const totalDuration = 3000; // 2 seconds
+  const stepDuration = totalDuration / remainingMessages;
+
+  let step = 0;
+
+  const fastRotation = () => {
+    const nextIndex = currentIndexRef.current + 1;
+    if (nextIndex >= messages.length) return;
+
+    // Add next-next message (lookahead)
+    if (nextIndex + 1 < messages.length) {
+      setVisibleMessages((prev) => [
+        ...prev,
+        {
+          id: messageIdRef.current++,
+          text: messages[nextIndex + 1],
+          position: 2,
+        },
+      ]);
+    }
+
+    // Move current messages up
+    setTimeout(() => {
+      setVisibleMessages((prev) =>
+        prev.map((m) => ({ ...m, position: m.position - 1 }))
+      );
+    }, MOVE_DELAY);
+
+    // Remove off-screen messages
+    setTimeout(() => {
+      setVisibleMessages((prev) => prev.filter((m) => m.position >= -1));
+    }, MOVE_DELAY + TRANSITION_MS + 20);
+
+    currentIndexRef.current = nextIndex;
+    setCurrentMessageIndex(nextIndex);
+
+    step++;
+    if (step < remainingMessages) {
+      const timeoutId = window.setTimeout(fastRotation, stepDuration);
+      timeoutsRef.current.push(timeoutId);
+    }
+  };
+
+  fastRotation(); 
+}, [forceComplete]);
+
+
   return (
     <div className="fixed inset-0 bg-black/20 backdrop-blur-md flex items-center justify-center z-[9999]">
       <div className="relative bg-white/95 backdrop-blur-sm p-8 rounded-2xl w-[650px] max-w-full shadow-2xl border border-white/20 animate-fade-in-scale">
@@ -218,8 +272,10 @@ const rotate = () => {
                   }}
                 >
                   <span className="font-medium text-sm">{message.text}</span>
-                  <div className="w-8 h-8 rounded border bg-white flex items-center justify-center text-center">
-                    <img src={infinitySquare} alt="" className="w-6 h-6" />
+                  {/* <div className="w-8 h-8 rounded border flex items-center justify-center text-center"> */}
+                    {/* <img src={infinitySquare} alt="" className="w-6 h-6" /> */}
+                    <div className="w-8 h-8 flex items-center justify-center text-center">
+                    {message.position === 0 && <Loader className="w-12 h-12 text-white-500 animate-spin" />}
                   </div>
                 </div>
               );

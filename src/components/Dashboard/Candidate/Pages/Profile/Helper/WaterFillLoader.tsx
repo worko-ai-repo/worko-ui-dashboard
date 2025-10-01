@@ -39,33 +39,32 @@ const WaterFillLoader: React.FC<WaterFillLoaderProps> = ({ forceComplete }) => {
   }, []);
 
   // Listen for forceComplete change
-  useEffect(() => {
-    if (forceComplete) {
-      // Clear the normal (slow) interval
-      clearInterval(normalIntervalRef.current!);
+useEffect(() => {
+  if (forceComplete) {
+    clearInterval(normalIntervalRef.current!);
 
-      const duration = 2000; // 2 seconds
-      const updateInterval = 100; // every 100ms
-      const steps = duration / updateInterval;
+    const duration = 3000; // 2 seconds
+    const updateInterval = 100;
+    const steps = duration / updateInterval;
 
-      fastIntervalRef.current = window.setInterval(() => {
-        setProgress((prev) => {
-          const current = progressRef.current;
-          const increment = (100 - current) / steps;
-          const next = current + increment;
+    const current = progressRef.current;
+    const increment = (100 - current) / steps;
 
-          if (next >= 100) {
-            clearInterval(fastIntervalRef.current!);
-            return 100;
-          }
+    fastIntervalRef.current = window.setInterval(() => {
+      setProgress((prev) => {
+        const next = prev + increment;
+        if (next >= 100) {
+          clearInterval(fastIntervalRef.current!);
+          return 100;
+        }
+        return next;
+      });
+    }, updateInterval);
+  }
 
-          return next;
-        });
-      }, updateInterval);
-    }
+  return () => clearInterval(fastIntervalRef.current!);
+}, [forceComplete]);
 
-    return () => clearInterval(fastIntervalRef.current!);
-  }, [forceComplete]);
 
   return (
     <div className="water-loader">

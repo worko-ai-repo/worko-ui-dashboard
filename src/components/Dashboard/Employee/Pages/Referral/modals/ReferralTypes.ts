@@ -26,6 +26,7 @@ export interface ReferralDetailsDto {
   rejectedByUserIds?: RejectedUser[];
   userDetails:{
     name:string,
+    id:string,
   }
 }
 

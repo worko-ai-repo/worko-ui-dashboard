@@ -5,6 +5,7 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import EducationForm from "./EducationForm";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useAppContext } from "@Context/App.context";
+import profileService from "@Components/Dashboard/Candidate/Service/ProfileService";
 export interface Education {
   collage: string;
   degree: string;
@@ -109,8 +110,8 @@ const handleRemoveItem = (index: number) => {
       collage: collage?.trim(),
       degree: degree?.trim(),
       passingYear: passingYear,
-      PK:PK?PK:undefined,
-      SK:SK?SK:undefined,
+      PK:PK ? PK : undefined,
+      SK:SK ? SK : undefined,
     };
     
     if (editingIndex !== null) {
@@ -141,8 +142,42 @@ const handleRemoveItem = (index: number) => {
       );
     }
 
-      const success = await onSave(editedItems);
-      if (!success) {
+    let newArray = [];
+    if(userDetails?.email){
+      const response = await profileService.fetchUserData(userDetails.email,"education")        
+          for (let i = 0; i < response.length; i++) {
+            for (let j = 0; j < editedItems.length; j++) {
+              if (
+                response[i].collage === editedItems[j].collage &&
+                response[i].degree === editedItems[j].degree &&
+                response[i].passingYear === editedItems[j].passingYear
+              ) {
+                newArray.push(response[i]);
+                break;
+              }
+            }
+          }
+
+          for (let i = 0; i < editedItems.length; i++) {
+            let isDuplicate = false;
+            for (let j = 0; j < response.length; j++) {
+              if (
+                editedItems[i].collage === response[j].collage &&
+                editedItems[i].degree === response[j].degree &&
+                editedItems[i].passingYear === response[j].passingYear
+              ) {
+                isDuplicate = true;
+                break;
+              }
+            }
+
+            if (!isDuplicate) {
+              newArray.push(editedItems[i]);
+            }
+          }
+          }
+    const success = await onSave(newArray);
+    if (!success) {
         setError("Failed to save changes. Please try again.");
       }
     } catch (err) {

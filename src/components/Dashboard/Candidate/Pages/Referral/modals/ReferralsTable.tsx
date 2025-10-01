@@ -13,6 +13,7 @@ import RaiseIssueModal from "@Components/Dashboard/Employee/Pages/Referral/modal
 import CompletedReferralModal from "@Components/Dashboard/Employee/Pages/Referral/modals/CompletedReferralModal";
 import ProvideFeedbackModal from "@Components/Dashboard/Employee/Pages/Referral/modals/ProvideFeedbackModal";
 import ChatWindow from "./ChatWindow";
+import { useAppContext } from '@Context/App.context';
 
 interface ReferralsTableProps {
   data: ReferralApiResponse | null;
@@ -53,7 +54,7 @@ const ReferralsTable = memo(
 
     const APP_API_URI = import.meta.env.APP_API_URI;
     const { user } = useDashboardContext();
-
+    const {userDetails} = useAppContext()
     const referrals = data?.data || [];
 
     // const keyExtractor = (item: ReferralDetailsDto) => item.id?.toString() ?? Math.random().toString();
@@ -450,6 +451,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={()=>setShowChatWindow(false)}
               show={showChatWindow}  
               referralData={referralData}
+              candidateDetails={userDetails?.id}
               user={"candidate"} 
             />
           {/* )} */}
