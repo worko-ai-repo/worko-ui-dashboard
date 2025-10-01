@@ -128,13 +128,13 @@ import WithdrawDialog from './WithdrawDialog';
             <span className="font-semibold text-lg" style={{color: '#0048ff'}}>Rs. 2,000</span>
           </div>
         </div>
-        <WithdrawDialog
+      </div>
+              <WithdrawDialog
         isOpen={showDialog}
         onClose={() => setShowDialog(false)}
         // referral={selectedReferral}
         // statusData={statusData}
       />
-      </div>
     </div>
   );
 };

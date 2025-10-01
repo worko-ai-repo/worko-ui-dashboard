@@ -362,7 +362,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 
       {/*Red Dot */}
       {config.showDot && (
-        <span className="absolute -top-1 right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+        <span className="absolute -top-1 right-2 w-3 h-3 bg-red-500 rounded-full"></span>
       )}
     </div>
   );
@@ -479,6 +479,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth:"max-w-none !min-w-52",
       render: (row: JobApplicationDetailsDto) =>( 
         <div className="flex justify-center m-auto w-[150px]">
           <StatusBadge status={row.status} />
