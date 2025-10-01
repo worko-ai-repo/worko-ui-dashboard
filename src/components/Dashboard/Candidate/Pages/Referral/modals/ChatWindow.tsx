@@ -67,8 +67,8 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
 
   // New ref to store previous scrollHeight when loading older messages
   const prevScrollHeightRef = useRef(0);
-  const CHAT_API = import.meta.env.APP_CHAT_API_URI
-
+  const CHAT_API = import.meta.env.APP_CHAT_API_URI;
+  const CHAT_SOCKET = import.meta.env.APP_CHAT_SOCKET_URI;
   // Animate
   useEffect(() => {
     if (show) {
@@ -98,20 +98,24 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
   // create chat and after that Connect WebSocket
   useEffect(() => {
     const createChat = async () =>{
-    const url = `${CHAT_API}/chat/create`
-    const payload = {
-      referralId: referralData.id,
-      userIdOne: referralData.acceptedByUserId,
-      userIdTwo: referralData?.userDetails?.id || candidateDetails
-    }
       try {
+        if (!referralData?.id || !referralData.acceptedByUserId || (!referralData?.userDetails?.id && !candidateDetails)) return;
+
+          const url = `${CHAT_API}/chat/create`
+          const payload = {
+            referralId: referralData.id,
+            userIdOne: referralData.acceptedByUserId,
+            userIdTwo: referralData?.userDetails?.id || candidateDetails
+          }
+
         const {response} = await httpServiceObj.post(url,payload,true,{},true)
-        console.log(response)
+        // console.log(response)
       } catch (error) {
         console.log(error)
       }
     }
     createChat()
+
     const connectWebSocket = async () => {
       // console.log("acceptedby :",referralData.acceptedByUserId)
       // console.log("candidate:",referralData?.userDetails?.id || candidateDetails)
@@ -119,7 +123,7 @@ const ChatWindow: React.FC<ChatWindowProps> = ({
         if (!referralData?.id || !referralData.acceptedByUserId) return;
 
         const token = CognitoServiceObj.getAccessToken();
-        const wsUrl = `wss://chatws.dev.worko.work/?userId=${referralData.acceptedByUserId}&referralId=${referralData.id}&Authorization=Bearer%20${token}`;
+        const wsUrl = `${CHAT_SOCKET}/?userId=${referralData.acceptedByUserId}&referralId=${referralData.id}&Authorization=Bearer%20${token}`;
 
         const socket = new WebSocket(wsUrl);
         socketRef.current = socket;
