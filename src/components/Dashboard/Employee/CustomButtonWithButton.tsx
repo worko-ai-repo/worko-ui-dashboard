@@ -90,13 +90,13 @@ const handleActiveFrame = async (frame: SignupMode) => {
           />
           <label
             htmlFor={option.value}
-            className="relative block w-full text-center px-1 sm:px-3 sm:py-1 text-sm font-medium cursor-pointer transition-colors duration-200"
+            className="relative block w-full text-left p-1 sm:p-1 text-sm font-medium cursor-pointer transition-colors duration-200"
           >
             <span
               className={
                 activeFrame === option.value
-                  ? 'text-[10px] sm:text-sm text-white font-bold'
-                  : 'text-[10px] sm:text-sm font-bold text-[#7C8FBF] hover:text-gray-400'
+                  ? 'text-[10px] sm:text-xs text-white font-bold'
+                  : 'text-[10px] sm:text-xs font-bold text-[#7C8FBF] hover:text-gray-400'
               }
             >
               {option.label}

@@ -7,7 +7,7 @@ import { DynamicTable } from "@Components/Shared/DynamicTable";
 import MentorDetails from './modals/MentorDetails';
 import AcceptAndPay from './modals/AcceptAndPay';
 import httpServiceObj from '@Services/ApiHandler.service';
-
+import ViewFullDetail from './modals/ViewFullDetail';
 interface GuidanceTableProps {
   data: GuidanceApiResponse | null;
   pagination: GuidancePaginationInfo;
@@ -41,7 +41,9 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
   const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
   const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
-
+  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  const [fullDetails, setFullDetails] = useState<string>("");
+  
   const APP_API_URI= import.meta.env.APP_API_URI
 
   const formatGuidanceType = (type: string) => {
@@ -181,54 +183,63 @@ const GuidanceTable = memo(({ data, pagination, currentPage, onPageChange, onPag
       label: 'Requirement detail',
       sortable: true,
       render: (row: GuidanceRequest) => (
-        <div className="flex justify-center">
-          <p className="tracking-wide truncate leading-6 max-w-xs">
-            {row.guidanceRequestDescription}
-          </p>
-        </div>
+      <div className='flex justify-center m-auto w-[150px]'>
+        <span
+          className="truncate block w-[150px]"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={
+            "Click to view full details"
+          }
+          onClick={() => {
+          console.log("Opening modal with:", row.guidanceRequestDescription);
+          setViewViewDetailsModal(true);
+          setFullDetails(row.guidanceRequestDescription?.toString() || "N/A");
+        }}>
+          {row.guidanceRequestDescription ? row.guidanceRequestDescription.toString() : "N/A"}
+        </span>
+      </div>
       )
     },
-{
-  key: "status",
-  label: 'Status',
-  sortable: true,
-  render: (row: GuidanceRequest) => (
-    <div
-      className={`w-32 rounded-full px-1 py-3 text-sm font-medium
-        inline-flex items-center justify-center
-        truncate
-        ${row.statusColor?.bg || 'bg-gray-200'}
-        ${row.statusColor?.text || 'text-gray-900'}
-        max-w-[200px]
-        text-xs
-      `}
-      title={row.statusColor?.label}
-    >
-        <span className="truncate block max-w-full text-center">
-          {row.statusColor?.label || row.status}
-        </span>
-    </div>
+    {
+      key: "status",
+      label: 'Status',
+      sortable: true,
+      render: (row: GuidanceRequest) => (
+        <div
+          className={`w-32 rounded-full px-1 py-3 text-sm font-medium
+            inline-flex items-center justify-center
+            truncate
+            ${row.statusColor?.bg || 'bg-gray-200'}
+            ${row.statusColor?.text || 'text-gray-900'}
+            max-w-[200px]
+            text-xs
+          `}
+          title={row.statusColor?.label}
+        >
+            <span className="truncate block max-w-full text-center">
+              {row.statusColor?.label || row.status}
+            </span>
+        </div>
 
-          //     <div className="flex justify-center ">
-          // <div
-          //     className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${              
-          //       row.status === "ACCEPTED"
-          //       ? "bg-green-100 text-green-500"
-          //       : row.status === "PENDING"
-          //       ? "bg-yellow-100 text-yellow-600"
-          //       : row.status === "AWAITING"
-          //       ? "bg-blue-100 text-blue-500"
-          //       : row.status === "DONE"
-          //       ? "bg-gray-100 text-gray-600"
-          //       : "bg-red-400 text-white"
-          //   }`}
-          // >
-          //   {row.status}
-          // </div>
-          // </div>
-  )
-},
-
+              //     <div className="flex justify-center ">
+              // <div
+              //     className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${              
+              //       row.status === "ACCEPTED"
+              //       ? "bg-green-100 text-green-500"
+              //       : row.status === "PENDING"
+              //       ? "bg-yellow-100 text-yellow-600"
+              //       : row.status === "AWAITING"
+              //       ? "bg-blue-100 text-blue-500"
+              //       : row.status === "DONE"
+              //       ? "bg-gray-100 text-gray-600"
+              //       : "bg-red-400 text-white"
+              //   }`}
+              // >
+              //   {row.status}
+              // </div>
+              // </div>
+      )
+    },
     {
       key: "mentorDetails",
       label: "Mentor Details",
@@ -394,10 +405,17 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 }
               />
             )}
-
           </div>
         </div>
       )}
+        <ViewFullDetail             
+          onClose={() => {
+            setViewViewDetailsModal(false);
+            setFullDetails("");
+          }}
+          isOpen={viewViewDetailsModal}
+          fullDetails={fullDetails}
+        />
     </div>
   );
 });
