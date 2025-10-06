@@ -153,14 +153,26 @@ useEffect(() => {
 
                   setFilteredSuggestions(matches);
                   setShowSuggestions(true);
-                } else {
-                  setFilteredSuggestions([]);
-                  setShowSuggestions(false);
+                }else {
+                  if (isLocation) {
+                    setFilteredSuggestions(locationAssets);
+                  } else if (isIndustry) {
+                    setFilteredSuggestions(industryTypeOptions);
+                  }
+                  setShowSuggestions(true);
                 }
               }}
+              
             onFocus={() => {
-              if ((isLocation || isIndustry) && newPreference.length > 0) setShowSuggestions(true);
-            }}
+                if (isLocation) {
+                  setFilteredSuggestions(locationAssets);
+                  setShowSuggestions(true);
+                } else if (isIndustry) {
+                  setFilteredSuggestions(industryTypeOptions);
+                  setShowSuggestions(true);
+                }
+              }}
+
             className="w-full p-2 border border-gray-300 rounded-md shadow-sm text-sm"
             placeholder={`Type ${isLocation ? 'location' : isIndustry ? 'industry' : 'preference'} name`}          />
 

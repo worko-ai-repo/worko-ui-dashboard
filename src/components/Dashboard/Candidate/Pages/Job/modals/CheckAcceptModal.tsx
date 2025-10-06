@@ -80,6 +80,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           true,
           {},
           false,
+          "JOB"
         );
 
         if (error) {
