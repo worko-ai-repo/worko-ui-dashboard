@@ -129,9 +129,21 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         };
       });
       
-      const data = await AdminServiceObj.postBulkApplicationUpdate({
+      const updatePromise = AdminServiceObj.postBulkApplicationUpdate({
         bulkJobApplicationUpdate: payload,
-      }); //@TODO-Use the data somewhere atleast in both corporate and admin component
+      });
+
+      toast.promise(
+        updatePromise,
+        {
+          pending: 'Updating applications...',
+          success: 'Applications updated successfully!',
+          error: 'Failed to update applications'
+        },
+        getToastOptions({})
+      );
+
+      const data = await updatePromise; //@TODO-Use the data somewhere atleast in both corporate and admin component
     } catch (error) {
       console.error("Error in bulk update:", error);
     } finally {
@@ -211,16 +223,28 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
    */
   const handleSendToRecruiter = async (applicationId: string, refetch: () => void) => {
     try {
-      // Call the service to send the application to the recruiter
-      const response = await AdminServiceObj.sendApplicationToRecruiters(applicationId);
+      // Create the promise for sending application to recruiter
+      const sendPromise = AdminServiceObj.sendApplicationToRecruiters(applicationId);
+      
+      // Use toast.promise to handle pending, success, and error states
+      toast.promise(
+        sendPromise,
+        {
+          pending: 'Sending application to recruiter...',
+          success: 'Application sent to recruiter successfully!',
+          error: 'Failed to send application to recruiter'
+        },
+        getToastOptions({})
+      );
+
+      const response = await sendPromise;
       if (!response) {
         throw new Error("Failed to send application to recruiter");
       }
-      toast.success("Application sent to recruiter successfully", getToastOptions({}));
+      
       refetch(); // Refetch the data to reflect the changes
     } catch (error) {
       console.error("Error sending application to recruiter:", error);
-      toast.error(`Failed to send application to recruiter: ${error}`, getToastOptions({}));
     }
   };
 
@@ -262,7 +286,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
               />
               <BulkStatusDropDown
                 options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
+                  { label: "Accept", onClick: () => onBulkUpdate("ACCEPTED") },
                   {
                     label: "Send to evaluator",
                     onClick: () => {

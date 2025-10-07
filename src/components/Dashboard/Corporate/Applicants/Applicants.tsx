@@ -56,22 +56,26 @@ export async function handleJobApplicationStatusUpdate(
   jobId: string,
   refetch?: () => void
 ): Promise<boolean> {
+  const updatePromise = CorporateServiceObj.updateApplicationStatus(payload, jobId);
+
+  toast.promise(
+    updatePromise,
+    {
+      pending: "Updating application status...",
+      success: `Application status updated to ${payload.status.toLowerCase()}`,
+      error: "Failed to update application status"
+    },
+    getToastOptions({})
+  );
+
   try {
-    // Here you would typically make an API call to update the status
-    const response = await CorporateServiceObj.updateApplicationStatus(payload, jobId);
+    const response = await updatePromise;
     if (!response) {
       throw new Error("Failed to update application status");
     }
-    if (refetch)
-      toast.success(
-        `Application status updated to ${payload.status.toLocaleLowerCase()}`,
-        getToastOptions({})
-      );
     return true;
-    // Optionally, you can refresh the data or perform other actions after updating
   } catch (error) {
     console.error("Error updating status:", error);
-    if (refetch) toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
     return false;
   } finally {
     if (refetch) refetch(); // Refetch the data to reflect the changes
@@ -185,21 +189,35 @@ const Applicants = () => {
   }, [activeTab, searchBarText, pageSize, apiStatus]);
 
   const onBulkUpdate = async (type: JobApplicationStatusType) => {
-    try {
-      if (ListSelection.selectedRows.length === 0) {
-        toast.error("Please select at least one application to update.", getToastOptions({}));
-        return;
+    if (ListSelection.selectedRows.length === 0) {
+      toast.error("Please select at least one application to update.", getToastOptions({}));
+      return;
+    }
+
+    const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
+      (row) => {
+        const { id, applicantUserId, ...rest } = row;
+        return {
+          ...rest,
+          status: type, // Set the new status based on the dropdown selection
+        };
       }
-      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
-        (row) => {
-          const { id, applicantUserId, ...rest } = row;
-          return {
-            ...rest,
-            status: type, // Set the new status based on the dropdown selection
-          };
-        }
-      );
-      await CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
+    );
+
+    const updatePromise = CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
+
+    toast.promise(
+      updatePromise,
+      {
+        pending: "Updating applications...",
+        success: "Applications updated successfully!",
+        error: "Failed to update applications"
+      },
+      getToastOptions({})
+    );
+
+    try {
+      await updatePromise;
     } catch (error) {
       console.error("Error in bulk update:", error);
     } finally {
@@ -291,7 +309,7 @@ const Applicants = () => {
               />
               <BulkStatusDropDown
                 options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
+                  { label: "Accept", onClick: () => onBulkUpdate("ACCEPTED") },
                   {
                     label: "Send to evaluator",
                     onClick: () => {

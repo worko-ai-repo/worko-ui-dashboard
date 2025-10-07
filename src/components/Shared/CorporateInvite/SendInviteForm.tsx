@@ -299,8 +299,8 @@ const InviteForm = ({
                         trigger("pricingPlan");
                       }}>
                       <option value="JOB_BOARD">Job Board</option>
-                      <option value="HIRING_PARTNER">Hiring Partner</option>
-                      <option value="CO_PILOT">Co-pilot</option>
+                      <option value="HIRING_PARTNER">Full Recruitment</option>
+                      <option value="CO_PILOT">Hiring Co-pilot</option>
                     </select>
                     <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
                     {errors.pricingPlan && (

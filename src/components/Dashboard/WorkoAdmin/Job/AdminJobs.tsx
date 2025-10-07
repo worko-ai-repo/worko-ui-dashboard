@@ -102,10 +102,17 @@ const AdminJobs = () => {
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    const response = await AdminServiceObj.bulkUpdate(updatedData);
-    if (response)
-      toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
-    else toast.error("Failed to perform this operation.", getToastOptions({}));
+    
+    await toast.promise(
+      AdminServiceObj.bulkUpdate(updatedData),
+      {
+        pending: `Updating jobs to ${params.toLowerCase()}...`,
+        success: `Bulk jobs ${params.toLowerCase()} successfully.`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+    
     refetch();
   }
 

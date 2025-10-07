@@ -30,7 +30,7 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
   const [showDetails, setShowDetails] = React.useState(details);
   if (!data) return <NoDataPresent />;
 
-  const { points: scorePoints, recruiterNote } = parseScorePoints(data);
+  const { points: scorePoints, recruiterNote }: { points: ScorePoint[]; recruiterNote?: string } = parseScorePoints(data);
 
   // Get score rating based on percentage
   const getScoreRating = (score: number) => {
@@ -63,10 +63,10 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
               <div className="mb-6">
                 <div className="mb-2">
                   <span className="text-gray-600 text-sm font-medium font-['Poppins']">
-                    Feedback summary for:
+                    {title} for
                   </span>
-                  <span className="text-blue-600 text-sm font-semibold font-['Poppins']">
-                    {candidateName}
+                  <span className="text-blue-600 capitalize text-sm font-semibold font-['Poppins']">
+                     &nbsp;{candidateName}
                   </span>
                 </div>
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 min-h-[120px]">

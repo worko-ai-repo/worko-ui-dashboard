@@ -36,7 +36,8 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
-import { getCurrentPositionCell } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
+import { getCurrentPositionCell, getRejectedById } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
+import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedbackModal";
 
 // Component props interface
 
@@ -184,6 +185,10 @@ export default function ApplicationTable({
     applicant: {} as JobApplicationDetailsDto,
     action: "EDIT" as "EDIT" | "VIEW",
   });
+  const [RejectionFeedbackModal, setRejectionFeedbackModal] = useState<{
+    isOpen: boolean;
+    application: JobApplicationDetailsDto;
+  }>({ isOpen: false, application: {} as JobApplicationDetailsDto });
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
 
   const keyFallbacks = {
@@ -304,9 +309,14 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center  mx-auto p-2 w-fit relative">
+          <div className="flex justify-center mx-auto p-2 w-fit relative">
             <span
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
+              onClick={() => {
+                if (row.status === "REJECTED") {
+                  setRejectionFeedbackModal({ isOpen: true, application: row });
+                }
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
           </div>
@@ -371,7 +381,9 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.designation|| "FRESHER"}>
+          data-tooltip-content={
+            getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"
+          }>
           {getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}{" "}
         </span>
       ),
@@ -381,7 +393,9 @@ export default function ApplicationTable({
       label: "Current CTC",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <span>{row.applicantDetails?.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}</span>
+        <span>
+          {typeof row.applicantDetails?.CTC === "number" ? `${row.applicantDetails.CTC} LPA` : "-"}
+        </span>
       ),
     },
     ECTC: {
@@ -389,7 +403,11 @@ export default function ApplicationTable({
       label: "Expected CTC",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <span>{row.applicantDetails?.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}</span>
+        <span>
+          {typeof row.applicantDetails?.ECTC === "number"
+            ? `${row.applicantDetails.ECTC} LPA`
+            : "-"}
+        </span>
       ),
     },
   };
@@ -554,7 +572,7 @@ export default function ApplicationTable({
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
-                    <CreatedByDisplay row={row} mode="updated" />
+                  <p><CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} /></p>
                   </p>
                 </div>
 
@@ -592,7 +610,7 @@ export default function ApplicationTable({
             ) : (
               // Show application details
               <>
-                <div>
+                {/*                 <div>
                   <span className="font-semibold text-gray-500">Current CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
@@ -603,7 +621,7 @@ export default function ApplicationTable({
                   <p className="capitalize">
                     {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
                   </p>
-                </div>
+                </div> */}
                 <div>
                   <span className="font-semibold text-gray-500">Notice</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
@@ -841,6 +859,18 @@ export default function ApplicationTable({
         }
         className="w-[90vw] sm:w-[455px] h-auto py-4">
         <JoinedModal jobApplication={joinedModalOpen.jobApplication} />
+      </Modal>
+
+      <Modal
+        isOpen={RejectionFeedbackModal.isOpen}
+        onClose={() =>
+          setRejectionFeedbackModal({
+            isOpen: false,
+            application: {} as JobApplicationDetailsDto,
+          })
+        }
+        className=" sm:max-w-2xl min-w-[500px] min-h-[150px]">
+        <RejectionFeedback jobApplication={RejectionFeedbackModal.application} />
       </Modal>
     </>
   );

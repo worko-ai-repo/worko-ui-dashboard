@@ -328,26 +328,14 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         disabled={jobApplicationServiceObj.showPushToRecruiterButton(row) === false}
         key="push-recruiter"
-        title={
-          row.displayToCorporate === true
-            ? "Already sent to recruiter"
-            : jobApplicationServiceObj.showPushToRecruiterButton(row)
-            ? "Cannot send to recruiter"
-            : "Send to Recruiter"
-        }
+        title="Send to Recruiter"
         onClick={() =>
           !row.displayToCorporate &&
           sendApplicationToRecruiter &&
           sendApplicationToRecruiter(row.id)
         }
         data-tooltip-id="my-tooltip"
-        data-tooltip-content={
-          row.displayToCorporate === true
-            ? "Already sent to recruiter"
-            : jobApplicationServiceObj.showPushToRecruiterButton(row) || !row.displayToCorporate
-            ? "Cannot send to recruiter"
-            : "Send to Recruiter"
-        }
+        data-tooltip-content="Send to Recruiter"
         className={`btn_disabled flex gap-2 items-center bg-green-600 text-white p-2 rounded-xl ${
           row.displayToCorporate ? "btn-gray cursor-not-allowed opacity-60" : "btn-sky"
         }`}>

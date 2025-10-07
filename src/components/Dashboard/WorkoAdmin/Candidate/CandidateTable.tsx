@@ -198,11 +198,11 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
 
         <div>
           <span className=" text-gray-500">Current CTC</span>
-          <p className="capitalize">{row.CTC ? `${row.CTC} LPA` : "-"}</p>
+          <p className="capitalize">{typeof row?.CTC === "number" ? `${row.CTC} LPA` : "-"}</p>
         </div>
         <div>
           <span className=" text-gray-500">Expected CTC</span>
-          <p className="capitalize">{row.ECTC ? `${row.ECTC} LPA` : "-"}</p>
+          <p className="capitalize">{typeof row?.ECTC === "number" ? `${row.ECTC} LPA` : "-"}</p>
         </div>
       </div>
     );

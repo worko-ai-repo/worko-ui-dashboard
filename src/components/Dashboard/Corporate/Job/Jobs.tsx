@@ -118,11 +118,23 @@ const Jobs = () => {
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    const response = await CorporateServiceObj.bulkUpdate(updatedData);
-    if (response)
-      toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
-    else toast.error("Failed to perform this operation.", getToastOptions({}));
-    refetch();
+    
+    const bulkUpdatePromise = CorporateServiceObj.bulkUpdate(updatedData);
+    
+    toast.promise(
+      bulkUpdatePromise,
+      {
+        pending: `Updating jobs to ${params.toLowerCase()}...`,
+        success: `Bulk jobs ${params.toLowerCase()} successfully.`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+    
+    const response = await bulkUpdatePromise;
+    if (response) {
+      refetch();
+    }
   }
 
   function handleJobCreation(mode: "UPDATE" | "DUPLICATE", job: any) {

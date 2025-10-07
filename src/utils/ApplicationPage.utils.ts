@@ -5,7 +5,7 @@ import { JobApplicationStatusEnum } from "@Enums/JobAndApplication.enum";
 
 class JobApplicationService {
   private readonly THRESHOLD_SCORE = 40;
-  private readonly UPPER_MID_SCORE = 70;
+  private readonly UPPER_MID_SCORE = 69;
   private readonly HIGH_SCORE = 90;
   private readonly STATUS_REJECTED = "REJECTED";
   private readonly STATUS_APPLIED = "APPLIED";
@@ -149,20 +149,52 @@ class JobApplicationService {
 
   public getRejectionReason(data: JobApplicationDetailsDto | string | null): string[] {
     if (!data) return [];
-
+  
     let feedback: string | undefined;
-
+  
     if (typeof data === "string") {
       feedback = data;
     } else {
       feedback = data.rejectionFeedbackBySystem;
     }
-
+  
     if (!feedback) return [];
-
+  
     try {
-      const scorePoints: ScorePoint[] = JSON.parse(feedback);
-      return scorePoints.map((point) => point.detail || "");
+      const parsed = JSON.parse(feedback);
+      
+      // Check if parsed data is an array
+      if (Array.isArray(parsed)) {
+        const scorePoints: ScorePoint[] = parsed;
+        return scorePoints?.map((point) => point.detail || "");
+      }
+      
+      // If it's an object, try to extract details from it
+      if (typeof parsed === 'object' && parsed !== null) {
+        // If it has a details property that's an array
+        if (Array.isArray(parsed.details)) {
+          return parsed.details.map((point: any) => point.detail || point.toString());
+        }
+        
+        // If it's a single object with detail property
+        if (parsed.detail) {
+          return [parsed.detail];
+        }
+        
+        // If it's an object with string values, return them
+        const values = Object.values(parsed).filter(val => typeof val === 'string');
+        if (values.length > 0) {
+          return values as string[];
+        }
+      }
+      
+      // If it's a string, return it as single item array
+      if (typeof parsed === 'string') {
+        return [parsed];
+      }
+      
+      console.warn("Unexpected rejection feedback format:", parsed);
+      return [];
     } catch (e) {
       console.error("Invalid rejection feedback format:", e);
       return [];

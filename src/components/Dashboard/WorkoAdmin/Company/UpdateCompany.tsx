@@ -87,6 +87,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [hasFormChanged, setHasFormChanged] = useState(false);
   const [initialFormData, setInitialFormData] = useState<string>("");
+  const [logoError, setLogoError] = useState<string>(""); // Add logo error state
 
   const {
     register,
@@ -159,14 +160,14 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
     });
   }, [register]);
 
-  // Handle logo file selection
+  // Handle logo file selection with validation
   const handleLogoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       // Validate file type
       const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
       if (!allowedTypes.includes(file.type)) {
-        toast.error("Only JPEG, PNG, and SVG files are allowed.", getToastOptions());
+        toast.error("Only JPEG, PNG files are allowed.", getToastOptions());
         return;
       }
 
@@ -178,6 +179,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
       }
 
       setLogoFile(file);
+      setLogoError(""); // Clear error when valid file is selected
 
       // Create preview
       const reader = new FileReader();
@@ -256,7 +258,38 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
     return changedFields;
   };
 
+  // Validate logo requirement
+  const validateLogo = (): boolean => {
+    // For CREATE mode, logo file is required
+    if (mode === "CREATE") {
+      if (!logoFile && !getValues("logoUrl")) {
+        setLogoError("Company logo is required. Please upload a file or provide a logo URL.");
+        return false;
+      }
+    }
+    
+    // For UPDATE mode, check if logo exists or is being updated
+    if (mode === "UPDATE") {
+      const hasExistingLogo = companyData?.logoUrl || companyData?.logo;
+      const hasNewLogo = logoFile || getValues("logoUrl");
+      
+      if (!hasExistingLogo && !hasNewLogo) {
+        setLogoError("Company logo is required. Please upload a file or provide a logo URL.");
+        return false;
+      }
+    }
+
+    setLogoError("");
+    return true;
+  };
+
   const onSubmit = async (data: CompanyDto) => {
+    // Validate logo before proceeding
+    if (!validateLogo()) {
+      toast.error("Please provide a company logo before submitting.", getToastOptions());
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
@@ -441,7 +474,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
 
             {/* Upload Logo */}
             <div className="md:col-span-1 space-y-2">
-            <label className="block text-sm font-medium mt-0 text-gray-700">Company Logo</label>
+            <label className="block text-sm font-medium mt-0 text-gray-700">Company Logo <span className="text-red-500">*</span></label>
             <div className="space-y-1">
               <div className="relative w-full">
               <input
@@ -451,7 +484,9 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
                 id="logo-upload-input"
               />
-              <div className="w-full rounded-xl p-1.5 text-sm text-gray-500 bg-gray-100 border border-gray-300 cursor-pointer">
+              <div className={`w-full rounded-xl p-1.5 text-sm text-gray-500 bg-gray-100 border cursor-pointer ${
+                  logoError ? 'border-red-300 bg-red-50' : 'border-gray-300'
+                }`}>
                 <div className="flex items-center justify-between">
                 <span 
                 className="truncate max-w-[200px]"
@@ -462,29 +497,32 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
                 </div>
               </div>
               </div>
+              {logoError && (
+                <p className="text-sm text-red-500 mt-1">{logoError}</p>
+              )}
             </div>
             </div>
 
           <Controller
             name="logoUrl"
             control={control}
-            rules={{
-              required: "Logo URL is required",
-              pattern: {
-                value: /^https?:\/\/.+\..+/,
-                message: "Please enter a valid logo URL",
-              },
-            }}
             render={({ field }) => (
               <Input
                 label="Or Logo URL"
                 placeholder="https://company.com/logo.png"
                 {...field}
                 error={errors.logoUrl?.message}
-                required
+                onChange={(e) => {
+                  field.onChange(e);
+                  // Clear logo error when URL is provided
+                  if (e.target.value.trim()) {
+                    setLogoError("");
+                  }
+                }}
               />
             )}
           />
+
 
           {/* Team Size */}
           <Controller
