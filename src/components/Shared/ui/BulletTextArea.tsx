@@ -134,7 +134,7 @@ export const BulletTextarea = React.forwardRef<HTMLTextAreaElement, BulletTextar
     };
 
     return (
-      <div className="w-full">
+      <div className="w-full  ">
         <textarea
           ref={textareaRef}
           value={displayValue}
@@ -142,7 +142,7 @@ export const BulletTextarea = React.forwardRef<HTMLTextAreaElement, BulletTextar
           onKeyDown={handleKeyDown}
           onPaste={handlePaste}
           name={name}
-          className={`w-full min-h-[120px] rounded-xl bg-gray-100 p-3 text-sm leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
+          className={`w-full min-h-[138px] rounded-xl bg-gray-100 p-3 text-sm leading-6 outline-none focus-visible:ring-2 focus-visible:ring-blue-500 ${
             error ? "border border-red-500" : ""
           } ${className}`}
           {...rest}
