@@ -160,6 +160,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
               </span>
             </button>
             <button
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Archive Candidate"}
               onClick={() => handleDeleteUsers(row)}
               className=" cursor-pointer w-12 h-9.5  text-white bg-blue-600   rounded-xl">
               <img src={Archive} alt="Archive Employee" className=" mx-auto w-6 flex-shrink-0" />

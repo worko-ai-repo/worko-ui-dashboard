@@ -221,6 +221,13 @@ class JobApplicationService {
       })
       .filter(Boolean) as TimelineStep[];
   }
+
+  public isVisibleToCorporate(row: JobApplicationDetailsDto): boolean {
+   if(row?.matchingScore  && row.matchingScore >= this.UPPER_MID_SCORE) return true; // auto visible if score is 70 or above)
+   else{ 
+    return typeof row?.displayToCorporate === "boolean" && row.displayToCorporate === true
+   }
+  } 
 }
 
 const jobApplicationServiceObj = new JobApplicationService();

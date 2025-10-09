@@ -210,9 +210,9 @@ const Jobs = () => {
                     activeTab != "PUBLISHED"
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
-                    activeTab != "CLOSED"
+/*                     activeTab != "CLOSED"
                       ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") }
-                      : null,
+                      : null, */
                     activeTab != "ARCHIVED"
                       ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") }
                       : null,

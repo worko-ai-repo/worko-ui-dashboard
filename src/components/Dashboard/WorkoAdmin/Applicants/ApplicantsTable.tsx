@@ -105,7 +105,7 @@ export const getRejectedById = (row: JobApplicationDetailsDto) => {
   return isUserIdTypeULID
     ? { updatedByUserId: rejectedEntry?.userId || "" }
     : { updatedByCorporateUserId: rejectedEntry?.userId || "" };
-}
+};
 
 export const getCurrentPositionCell = (row: ApplicantDetails) => {
   // Check the multiple candidate experience entries for the current company with empty endDate
@@ -186,7 +186,7 @@ export default function ApplicationTable({
     isOpen: false,
     jobApplication: {} as JobApplicationDetailsDto,
   });
-  const [RejectionFeedbackModal , setRejectionFeedbackModal] = useState<{
+  const [RejectionFeedbackModal, setRejectionFeedbackModal] = useState<{
     isOpen: boolean;
     application: JobApplicationDetailsDto;
   }>({ isOpen: false, application: {} as JobApplicationDetailsDto });
@@ -405,15 +405,13 @@ export default function ApplicationTable({
 
         return (
           <div className="flex justify-center mx-auto p-2 w-fit relative">
-            <span 
-            onClick={
-              () => {
-                if(row.status === "REJECTED"){
-                    setRejectionFeedbackModal({isOpen: true, application: row});
+            <span
+              onClick={() => {
+                if (row.status === "REJECTED") {
+                  setRejectionFeedbackModal({ isOpen: true, application: row });
                 }
-              }
-            }
-            className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
           </div>
@@ -440,19 +438,22 @@ export default function ApplicationTable({
     IsRefelectedToRec: {
       key: "IsRefelectedToRec",
       label: "Recruiter Visibility",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          {typeof row?.displayToCorporate === "boolean" && row.displayToCorporate === true ? (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">
-              Visible
-            </span>
-          ) : (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-              Not Visible
-            </span>
-          )}
-        </div>
-      ),
+      render: (row: JobApplicationDetailsDto) => {
+        
+        return (
+          <div className="flex items-center justify-center gap-2">
+            {jobApplicationServiceObj?.isVisibleToCorporate(row) ? (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">
+                Visible
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                Not Visible
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     applicationDate: {
       key: "applicationDate",
@@ -775,7 +776,9 @@ export default function ApplicationTable({
               <>
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
-                    <p><CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} /></p>
+                  <p>
+                    <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
+                  </p>
                 </div>
 
                 <div>
