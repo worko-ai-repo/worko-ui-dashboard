@@ -21,6 +21,7 @@ interface ScreeningRecord {
   location: string;
   experienceRange: string;
   totalCandidates: number;
+  resumesCount: number;
   screenOnDate: string;
   doneBy: string;
 }
@@ -73,6 +74,7 @@ const ScreeningListView: FunctionComponent = () => {
         id: item.id,
         jobTitle: item.jobTitle || "Not mentioned",
         location: item.jobLocation || "Not mentioned",
+        resumesCount: item.resumesCount || 0,
         experienceRange: item.experienceRange
           ? `${item.experienceRange.min} - ${item.experienceRange.max}`
           : "Not mentioned",
@@ -84,7 +86,9 @@ const ScreeningListView: FunctionComponent = () => {
               day: "numeric",
             })
           : "Not mentioned",
-        doneBy: item.createdByCorporateUserId || "Not mentioned",
+        doneBy: item?.corporateUserDetails?.firstName 
+          ? `${item.corporateUserDetails.firstName}${item.corporateUserDetails.lastName || ''}`
+          : (item)?.userDetails?.name || "Not mentioned",
       }));
     } else {
       console.warn("Data is not in the expected format or is empty.");
@@ -120,9 +124,6 @@ const ScreeningListView: FunctionComponent = () => {
       key: "jobTitle",
       label: "Job title",
       sortable: true,
-      render: (row: ScreeningRecord) => (
-        <span className="w-full capitalize text-center font-bold ">{row.jobTitle}</span>
-      ),
     },
     {
       key: "location",
@@ -135,7 +136,7 @@ const ScreeningListView: FunctionComponent = () => {
       sortable: true,
     },
     {
-      key: "totalCandidates",
+      key: "resumesCount",
       label: "Total candidates",
       sortable: true,
     },

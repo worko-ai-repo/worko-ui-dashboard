@@ -89,7 +89,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row.userDetails?.about}
               className="text-wrap line-clamp-1">
-              {row.userDetails?.about}
+              {row.userDetails?.about || "-"} 
             </p>
           </div>
         </div>
@@ -122,18 +122,20 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       contentWidth: "max-w-none w-96",
       render: (row: GuidanceRequestDto) => (
         <div className="flex justify-center w-full  flex-col sm:flex-row gap-2">
-          <button
-            onClick={() =>
-              dispatch({
-                type: "OPEN",
-                modal: "updateStatus",
-                payload: { data: row, key: row.id, fetchGuidance },
-              })
-            }
-            className="btn-sky grid grid-cols-[20px_auto] ">
-            <Edit className="h-4 w-4" />
-            Update Status
-          </button>
+          {!["REJECTED", "CANCELLED", "PROJECT_COMPLETED"].includes(row.status) && (
+            <button
+              onClick={() =>
+                dispatch({
+                  type: "OPEN",
+                  modal: "updateStatus",
+                  payload: { data: row, key: row.id, fetchGuidance },
+                })
+              }
+              className="btn-sky grid grid-cols-[20px_auto] ">
+              <Edit className="h-4 w-4" />
+              Update Status
+            </button>
+          )}
           <button
             onClick={() =>
               dispatch({

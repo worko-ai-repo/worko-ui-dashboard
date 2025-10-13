@@ -12,7 +12,10 @@ import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataAdminParams } from "@Interfaces/AdminServices.dto";
 import Modal from "../../../Shared/Modal";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
-import { BulkJobApplicationUpdateItem, BulkJobApplicationUpdatePayloadItem } from "@Interfaces/CorporateServices.dto";
+import {
+  BulkJobApplicationUpdateItem,
+  BulkJobApplicationUpdatePayloadItem,
+} from "@Interfaces/CorporateServices.dto";
 import { useListSelection } from "@Hooks/useListSelection.hook";
 import AdminServiceObj from "../Services/Admin.service";
 import { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
@@ -20,7 +23,10 @@ import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDrop
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
-import { checkIsWorkoJobFromSelected, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import {
+  checkIsWorkoJobFromSelected,
+  handleJobApplicationStatusUpdate,
+} from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { getToastOptions } from "@Utils/Toast.utils";
 
@@ -54,9 +60,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(
-    isAllApplicants ? 25 : 200
-  );
+  const [pageSize, setPageSize] = useState(isAllApplicants ? 25 : 200);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
@@ -123,14 +127,16 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         toast.error("Please select at least one application to update.", getToastOptions({}));
         return;
       }
-      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map((row) => {
-        const { id, applicantUserId, ...rest } = row;
-        return {
-          ...rest,
-          status: type, // Set the new status based on the dropdown selection
-        };
-      });
-      
+      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
+        (row) => {
+          const { id, applicantUserId, ...rest } = row;
+          return {
+            ...rest,
+            status: type, // Set the new status based on the dropdown selection
+          };
+        }
+      );
+
       const updatePromise = AdminServiceObj.postBulkApplicationUpdate({
         bulkJobApplicationUpdate: payload,
       });
@@ -138,9 +144,9 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       toast.promise(
         updatePromise,
         {
-          pending: 'Updating applications...',
-          success: 'Applications updated successfully!',
-          error: 'Failed to update applications'
+          pending: "Updating applications...",
+          success: "Applications updated successfully!",
+          error: "Failed to update applications",
         },
         getToastOptions({})
       );
@@ -227,14 +233,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     try {
       // Create the promise for sending application to recruiter
       const sendPromise = AdminServiceObj.sendApplicationToRecruiters(applicationId);
-      
+
       // Use toast.promise to handle pending, success, and error states
       toast.promise(
         sendPromise,
         {
-          pending: 'Sending application to recruiter...',
-          success: 'Application sent to recruiter successfully!',
-          error: 'Failed to send application to recruiter'
+          pending: "Sending application to recruiter...",
+          success: "Application sent to recruiter successfully!",
+          error: "Failed to send application to recruiter",
         },
         getToastOptions({})
       );
@@ -243,7 +249,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       if (!response) {
         throw new Error("Failed to send application to recruiter");
       }
-      
+
       refetch(); // Refetch the data to reflect the changes
     } catch (error) {
       console.error("Error sending application to recruiter:", error);
@@ -275,6 +281,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

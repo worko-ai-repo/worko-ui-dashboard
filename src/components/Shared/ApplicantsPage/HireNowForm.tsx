@@ -185,7 +185,7 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 text-left">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 my-3 text-left">
       <h2 className="text-lg font-semibold text-gray-800">Hire now</h2>
 
       {/* Job Title */}
@@ -301,10 +301,10 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       </div>
 
       {/* Remarks */}
-      <div className="flex flex-col gap-12">
+      <div className="flex flex-col gap-6">
         <div>
           <label className="block text-sm font-medium text-gray-700">
-          <span className="text-red-500 mr-1">*</span>Remarks 
+            <span className="text-red-500 mr-1">*</span>Remarks
           </label>
           <textarea
             placeholder="write here"
@@ -316,7 +316,7 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
         {/* Submit Button */}
         <button
           type="submit"
-          className="flex justify-center items-center w-fit gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
+          className="flex justify-center items-center w-fit gap-2 mb-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
           <Send size={16} />
           Send
         </button>

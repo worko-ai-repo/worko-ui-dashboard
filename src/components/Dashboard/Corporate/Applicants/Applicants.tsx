@@ -63,7 +63,7 @@ export async function handleJobApplicationStatusUpdate(
     {
       pending: "Updating application status...",
       success: `Application status updated to ${payload.status.toLowerCase()}`,
-      error: "Failed to update application status"
+      error: "Failed to update application status",
     },
     getToastOptions({})
   );
@@ -94,15 +94,15 @@ export const checkIsWorkoJobFromSelected = (
   applications: JobApplicationDetailsDto[]
 ): boolean => {
   if (selectedRows.length === 0) return false;
-  
-  const selectedIds = selectedRows.map(row => row.jobApplicationId);
+
+  const selectedIds = selectedRows.map((row) => row.jobApplicationId);
   // Consider selection as Worko only if ALL selected are Worko jobs.
   // If any external job is selected, treat as external (i.e., not Worko).
   const isWorko = (app?: JobApplicationDetailsDto) =>
     Boolean(app && !app.jobCreatedByCorporateUserId && app.jobCreatedByUserId != null);
 
-  return selectedIds.every(id => {
-    const application = applications.find(app => app.id === id);
+  return selectedIds.every((id) => {
+    const application = applications.find((app) => app.id === id);
     return isWorko(application);
   });
 };
@@ -194,24 +194,24 @@ const Applicants = () => {
       return;
     }
 
-    const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
-      (row) => {
-        const { id, applicantUserId, ...rest } = row;
-        return {
-          ...rest,
-          status: type, // Set the new status based on the dropdown selection
-        };
-      }
-    );
+    const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map((row) => {
+      const { id, applicantUserId, ...rest } = row;
+      return {
+        ...rest,
+        status: type, // Set the new status based on the dropdown selection
+      };
+    });
 
-    const updatePromise = CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
+    const updatePromise = CorporateServiceObj.postBulkApplicationUpdate({
+      bulkJobApplicationUpdate: payload,
+    });
 
     toast.promise(
       updatePromise,
       {
         pending: "Updating applications...",
         success: "Applications updated successfully!",
-        error: "Failed to update applications"
+        error: "Failed to update applications",
       },
       getToastOptions({})
     );
@@ -296,6 +296,7 @@ const Applicants = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

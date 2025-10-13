@@ -63,6 +63,7 @@ const AdminCompany = () => {
           <div className="flex flex-col my-3 sm:flex-row justify-between items-center gap-1">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by Company name"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

@@ -60,7 +60,7 @@ export const RolePermissions: Record<UserRole, UserRolesActions[]> = {
     "manage_users",
   ],
   [UserRole.EVALUATOR]: ["play_evaluator", "view_jobs", "evaluate_candidates"],
-  [UserRole.CORPORATE_RECRUITER]: ["play_corporate_recruiter", "view_jobs", "create_jobs"],
+  [UserRole.CORPORATE_RECRUITER]: ["play_corporate_recruiter", "view_jobs", "create_jobs","manage_users"],
   [UserRole.LINKEDIN]: ["play_linkedin", "view_jobs", "apply_jobs"],
   [UserRole.GENERAL_USER]: ["play_general_user", "view_jobs", "apply_jobs"],
 };

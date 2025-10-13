@@ -54,7 +54,7 @@ const AdminCandidate = () => {
   }, [searchBarText, pageSize]);
 
   return (
-    <div>
+  <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
@@ -64,6 +64,7 @@ const AdminCandidate = () => {
           <div className="flex flex-col sm:flex-row  justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

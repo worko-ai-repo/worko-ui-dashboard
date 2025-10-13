@@ -13,6 +13,9 @@ import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { keyFallbacksforJobs } from "@Components/Dashboard/WorkoAdmin/Job/JobTable";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -100,11 +103,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       key: "salaryRange",
       label: "Salary Range",
       render: (row: JobData) => {
-        return (
-          <div>
-            {`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}
-          </div>
-        );
+        return <div>{`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}</div>;
       },
     },
     { key: "department", label: "Department", sortable: true },
@@ -192,13 +191,18 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   "_blank"
                 ),
             },
-            {
-              icon: <X className="w-5 h-5" />,
-              className: "btn-blue shrink-0",
-              tooltip: "Close Job",
-              onClick: () =>
-                setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
-            },
+            ...(secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) ===
+            UserRole.CORPORATE_ADMIN
+              ? [
+                  {
+                    icon: <X className="w-5 h-5" />,
+                    className: "btn-blue shrink-0",
+                    tooltip: "Close Job",
+                    onClick: () =>
+                      setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
+                  },
+                ]
+              : []),
             {
               icon: <img src={Archive} className="w-5 h-5" />,
               className: "btn-blue shrink-0",
