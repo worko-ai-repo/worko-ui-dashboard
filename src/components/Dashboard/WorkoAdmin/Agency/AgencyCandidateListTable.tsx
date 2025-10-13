@@ -10,6 +10,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
+import ProgressCircle from "@Components/Shared/CircularBar";
 
 
 export const getCvViewDate = (statusTracker: any[]) => {
@@ -60,7 +61,7 @@ export default function AgencyCandidateListTable(props: any) {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
-
+  const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
 
@@ -303,7 +304,7 @@ const columns = [
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className='flex justify-center m-auto w-[40px]'>
             {/* <img src={View} className="w-7 h-7 btn-sky shrink-0" /> */}
-            <a href={row.cv} target="_blank" rel="noopener noreferrer">
+            <a href={row.cvLink} target="_blank" rel="noopener noreferrer">
                 <img src={View} className="w-8 h-8 btn-sky shrink-0" />
                 {/* <Eye className="cursor-pointer hover:text-blue-500" /> */}
             </a>
@@ -316,9 +317,24 @@ const columns = [
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className='flex justify-center m-auto w-[40px]'>
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.score ?? "NA"}</span>
-            </div>
+            <ProgressCircle
+            onClick={() => {
+                setFeedbackModalOpen(true);
+                const application = jobApplicationServiceObj.getScoreDetails(row);
+                if (application === null) return;
+                setScorePointsModal({
+                title: application.type === "SCORE",
+                data: application.feedback,
+                matchingScore: row.score ?? 0,
+                candidateName: row.applicantName,
+                details: true,
+                showCloseButton: true,
+                onClose: () => setFeedbackModalOpen(false),
+                });
+                // console.log("Matching Score Details:", scorePointsModal);
+            }}
+            value={row.score}
+            />
         </div>
         )
     },

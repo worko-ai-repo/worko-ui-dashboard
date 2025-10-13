@@ -2,12 +2,13 @@ import SearchBar from '@Components/Shared/SearchBar'
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
 import React, { useState } from 'react'
 import AgencyCandidateListTable from './AgencyCandidateListTable'
+import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown'
 
 const AgencyCandidateList = () => {
   const [searchBarText,setSearchBarText] = useState<string|null>("")
   const [queryIsJobsLoading,setQueryIsJobsLoading] = useState<boolean>(false)
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
-    
+  const [statusFilter, setStatusFilter] = useState<string>("");
 const dummyData = [
   {
     id: "ref-10",
@@ -30,7 +31,7 @@ const dummyData = [
     readyToRelocate: true,
     comments: "Certified AWS Solutions Architect.",
     cvLink: "https://calibre-ebook.com/downloads/demos/demo.pdf",
-    score: 8.5,
+    score: 80.5,
     currentStatus: "Under Review"
   },
   {
@@ -54,7 +55,7 @@ const dummyData = [
     readyToRelocate: false,
     comments: "Strong in UI/UX integration.",
     cvLink: "https://example.com/cv/neha-sharma.pdf",
-    score: 7.8,
+    score: 70.8,
     currentStatus: "Interview Scheduled"
   },
   {
@@ -78,7 +79,7 @@ const dummyData = [
     readyToRelocate: true,
     comments: "Hands-on with Power BI and SQL.",
     cvLink: "https://example.com/cv/rohan-mehta.pdf",
-    score: 7.2,
+    score:60.2,
     currentStatus: "Shortlisted"
   },
   {
@@ -102,7 +103,7 @@ const dummyData = [
     readyToRelocate: false,
     comments: "Expert in CI/CD pipelines and Docker.",
     cvLink: "https://example.com/cv/sana-ali.pdf",
-    score: 8.1,
+    score:50.1,
     currentStatus: "Technical Round"
   },
   {
@@ -126,7 +127,7 @@ const dummyData = [
     readyToRelocate: true,
     comments: "Strong API development experience.",
     cvLink: "https://example.com/cv/manish-kumar.pdf",
-    score: 8.0,
+    score: 40.0,
     currentStatus: "HR Discussion"
   },
   {
@@ -150,7 +151,7 @@ const dummyData = [
     readyToRelocate: true,
     comments: "Experienced in MERN stack and Agile.",
     cvLink: "https://example.com/cv/priya-sen.pdf",
-    score: 8.7,
+    score: 30.7,
     currentStatus: "Offer Made"
   },
   {
@@ -174,7 +175,7 @@ const dummyData = [
     readyToRelocate: false,
     comments: "Good in manual and automation testing.",
     cvLink: "https://example.com/cv/ankit-jha.pdf",
-    score: 7.5,
+    score: 20.5,
     currentStatus: "Pending Feedback"
   },
   {
@@ -198,7 +199,7 @@ const dummyData = [
     readyToRelocate: true,
     comments: "Strong portfolio and Figma skills.",
     cvLink: "https://example.com/cv/tanvi-kapoor.pdf",
-    score: 8.3,
+    score: 10.3,
     currentStatus: "Shortlisted"
   },
   {
@@ -251,7 +252,18 @@ const dummyData = [
   }
 ];
 
-
+const StatusFilterDropdown = [
+  { label: "All", onClick: () => { setStatusFilter("")}},
+  { label: "Applied", onClick: () => { setStatusFilter("APPLIED")}},
+  { label: "Accepted", onClick: () => { setStatusFilter("ACCEPTED")}},
+  { label: "Under Evaluation", onClick: () => { setStatusFilter("UNDER_EVALUATION")} },
+  { label: "Processing Interview", onClick: () => { setStatusFilter("PROCESSING_INTERVIEW")} },
+  { label: "Interview Done", onClick: () => { setStatusFilter("INTERVIEW_DONE")}},
+  { label: "Hiring In Process", onClick: () => { setStatusFilter("HIRING_IN_PROCESS")}},
+  { label: "Hired", onClick: () => { setStatusFilter("HIRED")}},
+  { label: "Joined", onClick: () => { setStatusFilter("JOINED")}},
+  { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
+];
 
       const toggleRow = (row: any) => {
           setSelectedRows((prev) =>
@@ -284,37 +296,36 @@ const dummyData = [
 
   return (
     <div>
-    <div className='flex flex-row gap-2 justify-center items-center'>
-      {/* Dropdown 1 */}
-      <div>
-        <select>
-          <option value="">Select Category</option>
-          <option value="Fruits">Fruits</option>
-          <option value="Vegetables">Vegetables</option>
-        </select>
-      </div>
+    <div className='flex flex-row gap-2 justify-center items-center m-2'>
+            {/* Dropdown 1 */}
+              <div className="flex gap-3 font-semibold w-full sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Select job"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
+              </div>
 
-      {/* Dropdown 2 */}
-      <div>
-        <select>
-          <option value="">Select Subcategory</option>
-          <option value="Citrus">Citrus</option>
-          <option value="Berries">Berries</option>
-          <option value="Leafy">Leafy</option>
-          <option value="Root">Root</option>
-        </select>
-      </div>
+            {/* Dropdown 2 */}
+              <div className="flex gap-3 font-semibold w-full sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Select agency"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
+              </div>
 
-      {/* Dropdown 3 */}
-      <div>
-        <select>
-          <option value="">Select Item</option>
-          <option value="Orange">Orange</option>
-          <option value="Lemon">Lemon</option>
-          <option value="Strawberry">Strawberry</option>
-          <option value="Carrot">Carrot</option>
-        </select>
-      </div>
+            {/* Dropdown 3 */}
+              <div className="flex gap-3 font-semibold w-full sm:w-auto">
+                <GenericDropdown
+                  selectTitle={"Company name"}
+                  tooltipMessage="Select Status to filter applications"
+                  disabled={false}
+                  options={StatusFilterDropdown}
+                />
+              </div>
     </div>
 
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">

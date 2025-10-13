@@ -129,6 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
+
   /**
    * Effect to set appropriate user name based on user type
    * - Corporate users: firstName + lastName
@@ -211,12 +212,15 @@ const Sidebar: React.FC<SidebarProps> = ({
           <nav className="space-y-2  w-full overflow-scroll no-scrl-web">
             {navItems.map((item) => (
               <SidebarItem
-                key={item.id}
-                item={item}
-                isActive={item.label === activeTab}
-                collapsed={collapsed}
-                onClick={handleTabClick}
-              />
+              key={item.id}
+              item={item}
+              isActive={item.label === activeTab}
+              activeTab={activeTab}
+              collapsed={collapsed}
+              onClick={handleTabClick}
+              expandable={item.expandable}
+              child={item.child}
+            />
             ))}
           </nav>
          

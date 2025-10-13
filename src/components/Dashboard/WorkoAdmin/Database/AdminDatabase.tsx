@@ -3,7 +3,7 @@ import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
 import { DatabaseStatusType, JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import AdminDatabaseTable from './AdminDatabaseTable';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
@@ -279,6 +279,20 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
     const [queryIsJobsLoading,setQueryIsJobsLoading] = useState<boolean>(false)
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
+    const [showDropdown, setShowDropdown] = useState(false);
+    const [isActionSelected,setIsActionSelected] = useState<boolean>(false);
+    const [actionName,setactionName] = useState<string>("");
+    const dropdownRef = useRef<HTMLDivElement | null>(null);
+  
+    useEffect(() => {
+      function handleClickOutside(event:any) {
+        if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+          setShowDropdown(false);
+        }
+      }
+      document.addEventListener("mousedown", handleClickOutside);
+      return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     // useEffect(()=>{
     //     console.log(selectedRows,"selectedrows")
@@ -384,7 +398,6 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                     <span>Bulk CV upload</span>
                 </button>
 
-                
                     <DatabaseDropdown
                     selectTitle="Source"
                     tooltipMessage="Filter by source"
@@ -396,7 +409,6 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                     tooltipMessage="Filter by status"
                     options={SourceFilterDropdown}
                     />
-
 
                 <button 
                     onClick={handleBulkBan}
@@ -426,12 +438,49 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                     <Trash2 className="w-4 h-4" />
                 </button>
 
-                <button 
+                <div className="relative inline-block" ref={dropdownRef}>
+                  <button 
+                    onClick={() => {
+                      if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
+                    }}                  
+                    disabled={selectedRows.length < 1}
                     type="button"
-                    className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
-                    >
-                    <Forward className="w-4 h-4" />
-                </button>
+                    data-tooltip-id="my-tooltip"
+                    data-tooltip-content={"Action"}
+                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition whitespace-nowrap
+                      ${selectedRows.length < 1 
+                        ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
+                        : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
+                  >
+                    <Forward className="w-5 h-6" />
+                  </button>
+
+                  {showDropdown && (
+                    <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+                      <button 
+                        onClick={() => {
+                          setIsActionSelected(true)
+                          setactionName("Move to applicants")
+                          setShowDropdown(false);
+                        }} 
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        Move to applicants
+                      </button>
+                      <button 
+                        onClick={() => {
+                          setIsActionSelected(true)
+                          setactionName("Move to bulk")
+                          setShowDropdown(false);
+                        }} 
+                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                      >
+                        Move for bulk matching
+                      </button>
+                    </div>
+                  )}
+                </div>
+
                 <button 
                     onClick={handleBulkCVDownload}
                     disabled={selectedRows.length<1}

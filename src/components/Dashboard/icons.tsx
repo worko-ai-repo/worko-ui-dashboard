@@ -255,6 +255,29 @@ export const FolderOpenIcon = () => {
   );
 };
 
-
+export const Warehouse = () => {
+  return (
+    <svg
+      width="24"
+      height="24"
+      viewBox="0 0 16 17"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path
+        d="M11.5 8.12V12.12H4.5V8.12H11.5Z"
+        fill="none"
+      />
+      <path
+        d="M0.895 5.63L14.895 2.63C15.06 2.59 15.24 2.66 15.35 2.79C15.46 2.92 15.49 3.1 15.43 3.26L15 3.74V11.62H1.5V6.53L1.11 6.61C0.97 6.64 0.82 6.6 0.71 6.5C0.59 6.39 0.53 6.23 0.55 6.08C0.57 5.93 0.64 5.8 0.75 5.71C0.85 5.62 0.96 5.61 0.895 5.63Z"
+        fill="none"
+      />
+    </svg>
+  );
+};
 
 

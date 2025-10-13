@@ -1,0 +1,281 @@
+import React, { useState } from "react";
+import { CircleMinus, CirclePause, Clipboard, ClipboardCheck, Eye, Pause, Pencil, Trash2, User } from "lucide-react";
+import { DynamicTable } from "../../../Shared/DynamicTable";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { useAppContext } from "@Context/App.context";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
+import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
+import { Edit, View } from "@AssetsFolder/assets";
+
+export const getCvViewDate = (statusTracker: any[]) => {
+  const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
+  return cvDownloadedEntry
+    ? new Date(cvDownloadedEntry.actionDate).toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      })
+    : "-";
+};
+
+export const getCvDownloadedById = (row: any) => {
+  const cvDownloadedEntry = row.statusTracker?.find((entry:any) => entry.newStatus === "CV_DOWNLOADED");
+  const isUserIdTypeULID = cvDownloadedEntry?.userId?.length === 26 || cvDownloadedEntry?.userId?.includes("-");
+  return isUserIdTypeULID ? { updatedByUserId: cvDownloadedEntry?.userId || "" } : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
+};
+
+export const getCurrentPositionCell = (row: any) => {
+  let currentExperience = row.multipleCandidateExperience?.find((exp: any) => !exp.endDate);
+  if (!currentExperience) {
+    currentExperience = row.multipleCandidateExperience
+      ?.filter((exp: any) => exp.endDate)
+      .sort((a: any, b: any) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())?.[0];
+  }
+  return currentExperience || null;
+};
+
+
+export default function AgencyListTable(props: any) {
+  const {
+    ListSelection,
+    data,
+    handleUpdate,
+    userType,
+  } = props as any;
+
+  // State required for table interactions
+  const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
+  const [selectedStatusDropdown, setSelectedStatusDropdown] = useState<string>("");
+  const [scorePointsModal, setScorePointsModal] = useState<any>();
+  const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
+  const [editProfileView,setEditProfileView] = useState<boolean>(false)
+  const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
+  const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
+  // App context
+  const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
+
+  // Sorting hook (keeps same fallback keys as before)
+  const keyFallbacks = {
+    yoe: ["yoe", "applicantDetails.YOE"],
+    matchingScore: ["matchingScore", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
+    experience: ["applicantDetails.YOE", "yoe"],
+    location: ["applicantDetails.location"],
+    applicantDetails_candidateExperience_designation: ["applicantDetails.candidateExperience.designation"],
+    applicantDetails_CTC: ["applicantDetails.CTC"],
+    current_CTC: ["applicantDetails.CTC"], //changed currentCTC to current_CTC
+    ECTC: ["applicantDetails.ECTC"],
+    remarks: ["remarks", "remark"],
+  };
+  const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+
+  // Column definitions (kept same as previous "All" view)
+  const columns = [
+    {
+        key: "agencyName",
+        label: "Agency Name",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px] text-center'>
+                <span className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "emailId",
+        label: "Email ID",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px] text-center'>
+                <span className="truncate block w-full">{row?.emailId ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "contactName",
+        label: "Contact person name",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.contactName ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "contactNumber",
+        label: "Ph no",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.contactNumber ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "dateActivated",
+        label: "Date activated",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className='flex justify-center m-auto w-[150px]'>
+            <span>{row?.dateActivated ?? "NA"}</span>
+        </div>
+        ),
+    },
+    {
+        key: "asignedJobs",
+        label: "Assigned Jobs",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[50px]'>
+                <span>{row?.assignedJobs ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "totalSubmitted",
+        label: "Total submitted",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[50px]'>
+                <span>{row?.totalCandidateSubmitted ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "totalRejected",
+        label: "Total rejected",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[50px]'>
+                <span>{row?.totalCandidateRejected ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "totalHired",
+        label: "Total hired",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.totalCandidateHired ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "action",
+        label: "Action",
+        sortable: false,
+        contentWidth: `max-w-none`,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => {
+        return (
+            <div className='flex justify-start m-auto gap-1'>
+                <div className="flex flex-row">
+                    <button
+                        className="btn-sky flex items-center space-x-2"
+                        onClick={() => {
+                        setEditProfileView(true);
+                        setEditProfileData(row);
+                        }}
+                    >
+                        <ClipboardCheck className="w-5 h-5 shrink-0" />
+                        <span className="text-xs">Assign jobs</span>
+                    </button>
+                </div>
+
+                <div className="flex flex-row">
+                    <button className="btn-blue flex items-center space-x-2"
+                        onClick={()=>{
+                            setEditProfileView(true)
+                            setEditProfileData(row)
+                        }}>
+                        <CircleMinus className="w-5 h-5 shrink-0" />
+                        <span className="text-xs">Remove jobs</span>
+                    </button>
+                </div>
+
+                <button className="border rounded-lg p-2"
+                    onClick={()=>{
+                        setEditProfileView(true)
+                        setEditProfileData(row)
+                    }}>
+                    <Pencil className="w-5 h-5 shrink-0 rounded-sm" />
+                </button>
+
+                <button className="border rounded-lg p-2"
+                    onClick={()=>{
+                        setEditProfileView(true)
+                        setEditProfileData(row)
+                    }}>
+                    <CirclePause className="w-5 h-5 shrink-0" />
+                </button>
+
+                <button className="border rounded-lg p-2 bg-red-500 text-white"
+                    onClick={()=>{
+                        setEditProfileView(true)
+                        setEditProfileData(row)
+                    }}>
+                    <Trash2 className="w-5 h-5 shrink-0" />
+                </button>
+            </div>
+        )}
+    },
+    {
+        key: "GSTIN",
+        label: "GSTIN no",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.GSTIN ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "contractCopy",
+        label: "Contract copy",
+        sortable: false,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className='flex justify-center m-auto w-[40px]'>
+            {/* <img src={View} className="w-7 h-7 btn-sky shrink-0" /> */}
+            <a href={row.contractLink} target="_blank" rel="noopener noreferrer" className="flex flex-row justify-center items-center">
+                <img src={View} className="w-8 h-8 btn-sky shrink-0" />
+                {/* <Eye className="cursor-pointer hover:text-blue-500" /> */}
+            </a>
+        </div>
+        )
+    },
+];
+
+  return (
+    <>
+      {/* Deselect button - only show when rows are selected */}
+      <button
+        className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${ListSelection?.selectedRows?.length === 0 ? "hidden" : ""}`}
+        onClick={() => ListSelection.reset && ListSelection.reset()}
+      >
+        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
+        <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
+      </button>
+
+        <DynamicTable
+        columns={columns}
+        rows={sortedData ?? []}
+        selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
+        enableSelect={false}
+        onSortChange={onSortChange}
+        pageSize={10}
+        setPageSize={() => {}}
+        hasPrevPage={false}
+        hasNextPage={false}
+        handlePreviousPage={() => {}}
+        handleNextPage={() => {}}
+        />
+    </>
+  );
+}

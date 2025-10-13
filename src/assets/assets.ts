@@ -112,7 +112,7 @@ import clap from './svgs/clap.svg';
 import chat from './svgs/chat.svg'
 import infinitySquare from './svgs/infinitySquare.svg'
 import folder_open from './svgs/folder_open.svg'
-
+import Warehouse from './svgs/Warehouse.svg'
 export { 
     // Backgrounds
     bg_plexus,
@@ -199,6 +199,7 @@ export {
     chat,
     infinitySquare,
     folder_open,
+    Warehouse,
     magnifyingQuestion,
     checkbubble,
     Not_Responding,

@@ -41,4 +41,12 @@ export interface AgencyDatabaseApplicantDetailsDto {
   score: number;
   currentStatus: string;
   location:string;
+  contactName:string;
+  dateActivated:string;
+  assignedJobs:number;
+  totalCandidateSubmitted:number;
+  totalCandidateRejected:number;
+  totalCandidateHired:number;
+  GSTIN:string;
+  contractLink:string;
 }

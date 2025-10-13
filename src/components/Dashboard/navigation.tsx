@@ -14,6 +14,7 @@ import {
   Subscription,
   Guidance,
   FolderOpenIcon,
+  Warehouse
 } from "./icons";
 import { IdCard, List } from "lucide-react";
 
@@ -116,26 +117,22 @@ const navigationItems: NavItem[] = [
   {
     id: "aAgency/allCandidates",
     label: "Agency",
-    icon: FolderOpenIcon,
-    dashboardTypes: ["ADMIN","CORPORATE"],
-  },
-  {
-    id: "aAgency/agencyList",
-    label: "Agency List",
-    icon: FolderOpenIcon,
-    dashboardTypes: ["ADMIN","CORPORATE"],
+    icon: Warehouse,
+    dashboardTypes: ["ADMIN", "CORPORATE"],
+    expandable: true,
+    child: [
+      { label: "Agency List", id: "aAgency/agencyList" }
+    ]
   },
   {
     id: "aDatabase",
     label: "My database",
     icon: FolderOpenIcon,
     dashboardTypes: ["ADMIN","CORPORATE"],
-  },
-  {
-    id: "aSearchDB",
-    label: "Search in database",
-    icon: FolderOpenIcon,
-    dashboardTypes: ["ADMIN","CORPORATE"],
+    expandable: true,
+    child: [
+      { label: "Search in database", id: "aSearchDB" }
+    ]
   },
   {
     id: "aGuidance",

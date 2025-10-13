@@ -233,9 +233,10 @@ const columns = [
         key: "action",
         label: "Action",
         sortable: false,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => {
         return (
-            <div className="flex justify-center m-auto w-[300px] gap-2">
+            <div className="flex justify-center m-auto gap-2">
             <div className="max-w-[150px]">
                 <button
                 type="button"
