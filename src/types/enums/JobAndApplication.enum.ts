@@ -204,3 +204,13 @@ export enum ReferAndEarnJobApplicationStatusEnum {
    */
   JOINED = "JOINED",
 }
+
+export enum DatabaseStatusEnum{
+  REFERRAL = "REFERRAL",
+  INTERNAL = "INTERNAL",
+  AGENCY = "AGENCY",
+  WORKO = "WORKO",
+  BLACKLISTED = "BLACKLISTED",
+  UNDER_COOLING_PERIOD = "UNDER_COOLING_PERIOD",
+  UNDER_PROCESSING = "UNDER_PROCESSING",
+}

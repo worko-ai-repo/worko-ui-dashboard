@@ -13,6 +13,7 @@ import {
   UserIcon,
   Subscription,
   Guidance,
+  FolderOpenIcon,
 } from "./icons";
 import { IdCard, List } from "lucide-react";
 
@@ -111,6 +112,30 @@ const navigationItems: NavItem[] = [
     label: "Referrals",
     icon: ReferralIcon,
     dashboardTypes: ["ADMIN"],
+  },
+  {
+    id: "aAgency/allCandidates",
+    label: "Agency",
+    icon: FolderOpenIcon,
+    dashboardTypes: ["ADMIN","CORPORATE"],
+  },
+  {
+    id: "aAgency/agencyList",
+    label: "Agency List",
+    icon: FolderOpenIcon,
+    dashboardTypes: ["ADMIN","CORPORATE"],
+  },
+  {
+    id: "aDatabase",
+    label: "My database",
+    icon: FolderOpenIcon,
+    dashboardTypes: ["ADMIN","CORPORATE"],
+  },
+  {
+    id: "aSearchDB",
+    label: "Search in database",
+    icon: FolderOpenIcon,
+    dashboardTypes: ["ADMIN","CORPORATE"],
   },
   {
     id: "aGuidance",

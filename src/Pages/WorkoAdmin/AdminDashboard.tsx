@@ -6,6 +6,7 @@ import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplica
 import AdminCorporateInvites from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUsers";
 
 
+
 const DashboardLayout = lazy(() => import("@Layouts/Dashboard.layout"));
 const SkeletonLoader = lazy(() => import("@Components/Shared/SkeletonLoader"));
 const JobSelectorModal = lazy(() => import("@Components/Shared/FindJobByDropdown"));
@@ -24,9 +25,11 @@ const AdminReferrals = lazy(
 );
 const AdminJobs = lazy(() => import("@Components/Dashboard/WorkoAdmin/Job/AdminJobs"));
 const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants"));
-const AdminCandidate = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Candidate/AdminCandidate")
-);
+const AdminCandidate = lazy(() => import("@Components/Dashboard/WorkoAdmin/Candidate/AdminCandidate"));
+const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
+const SearchDB = lazy(() => import ("@Components/Dashboard/WorkoAdmin/SearchDB/SearchDB"));
+const AllCandidateList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
+const AgencyList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyList"));
 
 const AdminDashboard = () => {
   const routes = useRoutes([
@@ -134,7 +137,38 @@ const AdminDashboard = () => {
             </Suspense>
           ),
         },
-
+        {
+          path: "aAgency/allCandidates",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <AllCandidateList />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aAgency/agencyList",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <AgencyList />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aDatabase",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <AdminDatabase />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aSearchDB/*",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <SearchDB />
+            </Suspense>
+          ),
+        },
         {
           path: "aInvites",
           element: (

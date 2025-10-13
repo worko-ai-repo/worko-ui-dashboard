@@ -111,6 +111,7 @@ import cancel from './svgs/cancel.svg';
 import clap from './svgs/clap.svg';
 import chat from './svgs/chat.svg'
 import infinitySquare from './svgs/infinitySquare.svg'
+import folder_open from './svgs/folder_open.svg'
 
 export { 
     // Backgrounds
@@ -197,6 +198,7 @@ export {
     askQuestion,
     chat,
     infinitySquare,
+    folder_open,
     magnifyingQuestion,
     checkbubble,
     Not_Responding,
