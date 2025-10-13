@@ -261,7 +261,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
-            <HeaderDetails />
+            <HeaderDetails
+              {...(!isAllApplicants && data && data.length > 0 && data[0].companyId && { companyId: data[0].companyId })}
+              {...(!isAllApplicants && jobId && { jobId: jobId })}
+              key={jobId || "all-applicants"}
+              pageType={isAllApplicants ? "corporateApplicants" : "applicant"}
+            />
             <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <InteractiveInput

@@ -118,19 +118,19 @@ const Jobs = () => {
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    
+
     const bulkUpdatePromise = CorporateServiceObj.bulkUpdate(updatedData);
-    
+
     toast.promise(
       bulkUpdatePromise,
       {
         pending: `Updating jobs to ${params.toLowerCase()}...`,
         success: `Bulk jobs ${params.toLowerCase()} successfully.`,
-        error: "Failed to perform this operation."
+        error: "Failed to perform this operation.",
       },
       getToastOptions({})
     );
-    
+
     const response = await bulkUpdatePromise;
     if (response) {
       refetch();
@@ -169,9 +169,9 @@ const Jobs = () => {
       payload.shortSoftDeleteReason = closeReason.reason;
       payload.detailedSoftDeleteReason = closeReason.note;
     }
-    
+
     let updatePromise: Promise<any>;
-    
+
     if (type === "CLOSED") {
       updatePromise = AdminServiceObj.deleteJob(payload, data.id);
     } else {
@@ -185,17 +185,17 @@ const Jobs = () => {
         return;
       }
     }
-    
+
     toast.promise(
       updatePromise,
       {
         pending: `Updating job status to ${type.toLowerCase()}...`,
         success: `Job ${type.toLowerCase()} successfully`,
-        error: "Failed to perform this operation."
+        error: "Failed to perform this operation.",
       },
       getToastOptions({})
     );
-    
+
     const response = await updatePromise;
     if (response) {
       refetch();
@@ -206,6 +206,14 @@ const Jobs = () => {
     <div className="flex flex-col gap-[35px] w-full mt-2 px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
         <div className=" flex-1 flex flex-col gap-4">
+          <div className="flex flex-wrap  gap-4">
+            <HeaderDetails
+              key="admin-job-stats"
+              companyId={userDetails?.companyId ?? ""}
+              jobId={jobDetails?.id}
+              pageType="jobs"
+            />
+          </div>
           <div className="flex justify-between items-end gap-4">
             <SearchBar
               placeholder="Search by job title"
@@ -221,7 +229,7 @@ const Jobs = () => {
                     activeTab != "PUBLISHED"
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
-/*                     activeTab != "CLOSED"
+                    /*                     activeTab != "CLOSED"
                       ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") }
                       : null, */
                     activeTab != "ARCHIVED"

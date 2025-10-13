@@ -185,6 +185,12 @@ const AdminJobs = () => {
     <div className="flex flex-col gap-[35px] mt-2 w-full px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
         <div className=" flex-1 flex flex-col gap-4">
+        <div className="flex flex-wrap  gap-4">
+        <HeaderDetails
+              key="admin-job-stats"
+              pageType="corporateJobs"
+            />
+          </div>
           <div className="flex justify-between items-end gap-4">
             <SearchBar
               placeholder="Search by job title, company name"
