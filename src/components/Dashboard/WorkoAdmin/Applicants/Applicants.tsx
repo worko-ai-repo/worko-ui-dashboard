@@ -180,6 +180,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Applied", onClick: () => setApiStatus("APPLIED") },
     { label: "Accepted", onClick: () => setApiStatus("ACCEPTED") },
+    { label: "Cv Downloaded", onClick: () => setApiStatus("CV_DOWNLOADED") },
     { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
     { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
     { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
