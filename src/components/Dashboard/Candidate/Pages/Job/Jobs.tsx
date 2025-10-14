@@ -7,6 +7,25 @@ import { useDashboardContext } from '@Context/Dashboard.context';
 import { ChevronDown } from 'lucide-react';
 import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown';
 import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
+import { useAppContext } from '@Context/App.context';
+import httpServiceObj from '@Services/ApiHandler.service';
+
+interface CountsProps{
+  PK: string,
+  SK: string,
+  userJobApplicationCounts: {
+    total: number,
+    applied: number,
+    underEvaluation: number,
+    hired:number,
+    rejected:number,
+  },
+}
+interface Stat {
+  label:string;
+  value:number|null;
+}
+
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -16,15 +35,6 @@ const initialPaginationState: PaginationInfo = {
   queriedCount: 0,
   lastKey: ''
 };
-
-const statsItems = [
-  { label: 'Total Applicants', value: 106 },
-  { label: 'Pending', value: 90 },
-  { label: 'Under evaluation', value: 20 },
-  { label: 'In process', value: 10 },
-  { label: 'Hired', value: 90 },
-  { label: 'Rejected/Cancelled', value: 90 },
-];
 
 const Jobs = () => {
   const [searchBarText, setSearchBarText] = useState<string>('');
@@ -36,6 +46,13 @@ const Jobs = () => {
   const [paginationInfo, setPaginationInfo] = useState<PaginationInfo>(initialPaginationState);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const APP_JOBS_API_URI = import.meta.env.APP_JOBS_API_URI
+  const [stats,setStats] = useState<Stat[]>([
+    { label: 'Total Applicants', value:null },
+    { label: 'Applied', value:null },
+    { label: 'Under evaluation', value:null },
+    { label: 'Hired', value:null },
+    { label: 'Rejected', value:null },
+])
   
 const StatusFilterDropdown = [
   { label: "All", onClick: () => { setStatusFilter("")}},
@@ -57,6 +74,7 @@ const StatusFilterDropdown = [
 
   // Get user from dashboard context
   const { user, isLoadingUser } = useDashboardContext();
+  const { userDetails } = useAppContext();
 
   // Memoize the fetch function to prevent unnecessary re-renders
 
@@ -175,12 +193,31 @@ const StatusFilterDropdown = [
       data: data.data.filter(item => item.status === statusFilter)
     };
   }, [data, statusFilter]);
+
+  // Fetch counts
+
+    const fetchCounts = async () => {
+      if(!userDetails?.email) {
+        return
+      }
+        const { response } = await httpServiceObj.get<CountsProps>(`/counts/${user?.email}/JOB_APPLICATION/user`, true, {}, false,"JOB");
+        // console.log(response?.userJobApplicationCounts)
+        setStats([
+          { label: 'Total Applicants', value: response?.userJobApplicationCounts?.total ?? null },
+          { label: 'Applied', value:  response?.userJobApplicationCounts?.applied ?? null },
+          { label: 'Under evaluation', value:  response?.userJobApplicationCounts?.underEvaluation ?? null },
+          { label: 'Hired', value:  response?.userJobApplicationCounts?.hired ?? null },
+          { label: 'Rejected', value:  response?.userJobApplicationCounts?.rejected ?? null },
+        ])
+    };
+
   // Initial data load
   useEffect(() => {
     if (user?.email && !data) {   // only run once, on first load
       setCurrentPage(1);
       setPaginationInfo(prev => ({ ...prev, lastKey: '' }));
       paginationKeysRef.current = { 1: '' };
+      fetchCounts()
       fetchJobs(1, pageSize, '');
     }
   }, [user, fetchJobs, pageSize, data]);
@@ -229,13 +266,13 @@ const StatusFilterDropdown = [
       <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
           <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
-            {statsItems.map((stat) => (
+            {stats.map((stat) => (
               <div
                 key={stat.label}
                 className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
               >
                 <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
+                <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
               </div>
             ))}
           </div>
