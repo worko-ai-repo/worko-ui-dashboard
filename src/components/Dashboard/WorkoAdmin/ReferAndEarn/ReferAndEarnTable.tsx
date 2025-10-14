@@ -285,7 +285,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       <div className="p-4  flex justify-start gap-12">
 
         <span>
-          <label>Id</label>
+          <label>Referral Id</label>
           <p className="capitalize">{row.id}</p>
         </span>
         <span>

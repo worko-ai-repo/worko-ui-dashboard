@@ -36,7 +36,12 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { JoinedModal } from "@Components/Shared/ApplicantsPage/JoinedModal";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
-import { getCurrentPositionCell, getRejectedById } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
+import {
+  getCurrentPositionCell,
+  getCvDownloadedById,
+  getCvViewDate,
+  getRejectedById,
+} from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
 import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedbackModal";
 
 // Component props interface
@@ -249,6 +254,22 @@ export default function ApplicationTable({
         </div>
       ),
     },
+    experience: {
+      key: "experience",
+      label: "Experience",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>
+            {row?.applicantDetails?.YOE
+              ? row?.applicantDetails?.YOE === 1
+                ? `${row?.applicantDetails?.YOE} year`
+                : `${row?.applicantDetails?.YOE} years`
+              : "0 years"}
+          </span>
+        </div>
+      ),
+    },
     yoe: {
       key: "yoe",
       label: "YOE",
@@ -438,6 +459,8 @@ export default function ApplicationTable({
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.profile,
+          commonColumns.experience,
+          commonColumns.currentCTC,
           commonColumns.yoe,
           commonColumns.location,
           commonColumns.matchingScore,
@@ -545,10 +568,10 @@ export default function ApplicationTable({
               </div>
             </div>
 
-            <div className="">
+            {/*             <div className="">
               <span className="font-semibold text-gray-500">Location</span>
               <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
-            </div>
+            </div> */}
 
             <div className="">
               <span className="font-semibold text-gray-500">Application Date</span>
@@ -565,19 +588,54 @@ export default function ApplicationTable({
                 </span>
               </div>
             </div>
+            {getCvViewDate(row.statusTracker) !== "-" && (
+              <>
+                <div className="">
+                  <span className="font-semibold text-gray-500">Cv View Date</span>
+                  <div className="flex items-center justify-center">
+                    <span>{getCvViewDate(row.statusTracker)}</span>
+                  </div>
+                </div>
 
+                <div className="">
+                  <span className="font-semibold text-gray-500">Cv Viewed By</span>
+                  <div className="flex items-center justify-center">
+                    <span>
+                      <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
+                    </span>
+                  </div>
+                </div>
+              </>
+            )}
             {row.status === "REJECTED" ? (
               // Show rejection details
               <>
                 <div>
+                  <span className="font-semibold text-gray-500">Rejected Date</span>
+                  <p>
+                    {new Date(
+                      row?.rejectedByUserId?.actionDate || row?.updatedAt
+                    ).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </p>
+                </div>
+                <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
-                  <p><CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} /></p>
+                    <p>
+                      <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
+                    </p>
                   </p>
                 </div>
 
                 <div>
-                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="font-semibold text-gray-500">Rejected Reason</div>
                   <div className="max-w-lg">
                     {row.rejectedByUserId ? (
                       <>
@@ -623,7 +681,7 @@ export default function ApplicationTable({
                   </p>
                 </div> */}
                 <div>
-                  <span className="font-semibold text-gray-500">Notice</span>
+                  <span className="font-semibold text-gray-500">Notice Period</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
                 </div>
               </>

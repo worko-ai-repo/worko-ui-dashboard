@@ -439,7 +439,6 @@ export default function ApplicationTable({
       key: "IsRefelectedToRec",
       label: "Recruiter Visibility",
       render: (row: JobApplicationDetailsDto) => {
-        
         return (
           <div className="flex items-center justify-center gap-2">
             {jobApplicationServiceObj?.isVisibleToCorporate(row) ? (
@@ -622,6 +621,7 @@ export default function ApplicationTable({
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
+          commonColumns.currentCTC,
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
@@ -775,6 +775,19 @@ export default function ApplicationTable({
               // Show rejection details
               <>
                 <div>
+                  <span className="font-semibold text-gray-500">Rejected Date</span>
+                  <p>
+                    {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </p>
+                </div>
+                <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
                     <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
@@ -782,7 +795,7 @@ export default function ApplicationTable({
                 </div>
 
                 <div>
-                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="font-semibold text-gray-500">Rejected Reason</div>
                   <div className="max-w-lg">
                     {row.rejectedByUserId ? (
                       <>
@@ -828,7 +841,7 @@ export default function ApplicationTable({
                   </p>
                 </div> */}
                 <div>
-                  <span className="font-semibold text-gray-500">Notice</span>
+                  <span className="font-semibold text-gray-500">Notice period</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
                 </div>
               </>
