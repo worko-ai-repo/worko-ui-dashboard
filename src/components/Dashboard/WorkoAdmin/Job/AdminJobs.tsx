@@ -146,7 +146,9 @@ const AdminJobs = () => {
     if (type === "CLOSED" && closeReason) {
       delete payload.status;
       payload.shortSoftDeleteReason = closeReason.reason;
-      payload.detailedSoftDeleteReason = closeReason.note;
+      if (closeReason.note && closeReason.note.trim()) {
+        payload.detailedSoftDeleteReason = closeReason.note;
+      }
     }
 
     const updatePromise = async () => {
