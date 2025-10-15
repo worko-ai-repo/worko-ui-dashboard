@@ -52,7 +52,7 @@ const AdminReferAndEarn = () => {
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
               {/* Search Bar */}
               <SearchBar
-                placeholder="Search by name, email"
+                placeholder="Search by company name, job title, ph.no, recipient detail."
                 searchBarText={searchBarText}
                 setSearchBarText={setSearchBarText}
                 handleClick={() => refetch()}
@@ -83,7 +83,6 @@ const AdminReferAndEarn = () => {
           />
         )}
       </div>
-      
     </div>
   );
 };

@@ -15,6 +15,7 @@ import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewE
 import { GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
 import GuidanceModal from "./GuidanceModal";
 import GuidanceUpdateModal from "./GuidanceUpdateModal";
+import { GUIDANCE_REQUEST_TYPE_LABELS } from "@TypesAndConstants/common.constants";
 
 interface GuidancePageTableProps {
   data: GuidanceRequestDto[];
@@ -79,6 +80,14 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   const columns: Column<GuidanceRequestDto>[] = [
     { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
+      key: "guidanceType",
+      label: "Guidance Type",
+      sortable: true,
+      render: (row: GuidanceRequestDto) => (
+        <span>{GUIDANCE_REQUEST_TYPE_LABELS[row.guidanceRequestType as keyof typeof GUIDANCE_REQUEST_TYPE_LABELS]}</span>
+      ),
+    },
+    {
       key: "userDetails_about",
       label: "About Candidate",
       sortable: true,
@@ -89,7 +98,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row.userDetails?.about}
               className="text-wrap line-clamp-1">
-              {row.userDetails?.about || "-"} 
+              {row.userDetails?.about || "-"}
             </p>
           </div>
         </div>

@@ -246,6 +246,7 @@ const Applicants = () => {
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Applied", onClick: () => setApiStatus("APPLIED") },
     { label: "Accepted", onClick: () => setApiStatus("ACCEPTED") },
+    { label: "CV Downloaded", onClick: () => setApiStatus("CV_DOWNLOADED") },
     { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
     { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
     { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
@@ -294,7 +295,7 @@ const Applicants = () => {
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex  flex-col mt-2">
         <div className="flex flex-wrap  gap-4">
-            <HeaderDetails
+        <HeaderDetails
               {...data && data.length > 0 && data[0].companyId && { companyId: data[0].companyId }}
               { ...jobId && { jobId: jobId }}
               key={jobId || "all-applicants"}
@@ -310,6 +311,18 @@ const Applicants = () => {
                 width="w-auto"
               />
             </div>
+            <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+              <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
+              <span
+              onClick={() => {
+                window.open(data && data.length > 0 ? data[0].jobUrl : "", "_blank");
+              }}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content= {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
+              className="cursor-pointer text-sm capitalize font-semibold text-[#101828] truncate">
+                {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
+              </span>
+            </div>
             {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
@@ -318,7 +331,7 @@ const Applicants = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
-              placeholder="Search by name, email"
+              placeholder="Search by company name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

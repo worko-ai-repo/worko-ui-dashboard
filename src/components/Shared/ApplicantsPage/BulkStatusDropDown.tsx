@@ -20,6 +20,7 @@ type BulkStatusDropDownProps = {
 const statusActionMap: Partial<Record<JobApplicationStatusType, string[]>> = {
   APPLIED: ["Accept", "Hold"],
   ACCEPTED: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Hold"],
+  CV_DOWNLOADED: ["Send to evaluator", "Initiate Interview", "Initiate Hiring", "Hold"],
   UNDER_EVALUATION: ["Initiate Interview", "Initiate Hiring", "Hold"], // just in case
   PROCESSING_INTERVIEW: ["Interview Done", "Initiate Hiring", "Hold"],
   HIRING_IN_PROCESS: ["Hold"],

@@ -72,7 +72,7 @@ interface ApplicationTableProps {
   showRejectReason?: (application: JobApplicationDetailsDto) => void;
   viewDuplicacyDetails?: (portal: string, date: string) => void;
   isBulkEvaluation: boolean; // New prop to handle bulk evaluation
-
+  isAllApplicants: boolean; // New prop to indicate if viewing all applicants
   onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
 }
 
@@ -137,6 +137,7 @@ export default function ApplicationTable({
   isBulkEvaluation,
   refetch,
   onBulkUpdate,
+  isAllApplicants
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -439,7 +440,6 @@ export default function ApplicationTable({
       key: "IsRefelectedToRec",
       label: "Recruiter Visibility",
       render: (row: JobApplicationDetailsDto) => {
-        
         return (
           <div className="flex items-center justify-center gap-2">
             {jobApplicationServiceObj?.isVisibleToCorporate(row) ? (
@@ -556,6 +556,18 @@ export default function ApplicationTable({
         </span>
       ),
     },
+   jobProfile: {
+    key: "jobTitle",
+    label: "Job Profile",
+    sortable: true,
+    render: (row: JobApplicationDetailsDto) => (
+      <span
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={row?.jobTitle|| "NA"}>
+        {row?.jobTitle || "NA"}{" "}
+      </span>
+    ),
+  },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
@@ -601,6 +613,7 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
+          ...isAllApplicants ? [commonColumns.jobProfile] : [],
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
@@ -619,9 +632,11 @@ export default function ApplicationTable({
       case "Hired":
         return [
           commonColumns.name,
+          ...isAllApplicants ? [commonColumns.jobProfile] : [],
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
+          commonColumns.currentCTC,
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
@@ -633,6 +648,7 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
+          ...isAllApplicants ? [commonColumns.jobProfile] : [],
           { key: "applicantDetails_CTC", label: "CTC", sortable: true },
           {
             key: "applicantDetails_candidateExperience_designation",
@@ -754,14 +770,14 @@ export default function ApplicationTable({
             {getCvViewDate(row.statusTracker) !== "-" && (
               <>
                 <div className="">
-                  <span className="font-semibold text-gray-500">Cv View Date</span>
+                  <span className="font-semibold text-gray-500">CV View Date</span>
                   <div className="flex items-center justify-center">
                     <span>{getCvViewDate(row.statusTracker)}</span>
                   </div>
                 </div>
 
                 <div className="">
-                  <span className="font-semibold text-gray-500">Cv Viewed By</span>
+                  <span className="font-semibold text-gray-500">CV Viewed By</span>
                   <div className="flex items-center justify-center">
                     <span>
                       <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
@@ -775,6 +791,19 @@ export default function ApplicationTable({
               // Show rejection details
               <>
                 <div>
+                  <span className="font-semibold text-gray-500">Rejected Date</span>
+                  <p>
+                    {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </p>
+                </div>
+                <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
                     <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
@@ -782,7 +811,7 @@ export default function ApplicationTable({
                 </div>
 
                 <div>
-                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="font-semibold text-gray-500">Rejected Reason</div>
                   <div className="max-w-lg">
                     {row.rejectedByUserId ? (
                       <>
@@ -828,7 +857,7 @@ export default function ApplicationTable({
                   </p>
                 </div> */}
                 <div>
-                  <span className="font-semibold text-gray-500">Notice</span>
+                  <span className="font-semibold text-gray-500">Notice period</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
                 </div>
               </>
