@@ -121,16 +121,16 @@ const processedJobs = data?.data?.map((job) => ({
 
   // Function to handle opening the feedback modal
   const handleViewFeedback = useCallback((job: JobApplicationDetailsDto) => {
-    const userComment = job.rejectedByUserId?.userComment;
-    const systemFeedback = job.rejectionFeedbackBySystemForApplicant;
+    const userComment = job?.rejectedByUserId?.userComment;
+    const systemFeedback = job?.rejectionFeedbackBySystemForApplicant;
 
     if (userComment) {
       setFeedbackContent(userComment); 
-      setjobTitle(job.jobTitle);
+      setjobTitle(job?.jobTitle);
       setShowFeedbackModal(true);
     } else if (systemFeedback) {
       setFeedbackContent(systemFeedback);
-      setjobTitle(job.jobTitle);
+      setjobTitle(job?.jobTitle);
       setShowFeedbackModal(true);
     } else {
       toast.error("No feedback found", getToastOptions({}));
