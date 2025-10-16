@@ -28,7 +28,9 @@ const dummyData = [
     about: "A passionate backend developer with strong experience in building scalable APIs.",
     CTC: "8 LPA",
     ECTC: "10 LPA",
-    cvLink: "https://example.com/cv/aarav-mehta"
+    cvLink: "https://example.com/cv/aarav-mehta",
+    emailId:"asad@gmail.com",
+    contactNumber:"+91 8899006655"
   },
   {
     id: 2,
@@ -41,7 +43,9 @@ const dummyData = [
     about: "Frontend specialist with a strong eye for design and usability.",
     CTC: "9.5 LPA",
     ECTC: "12 LPA",
-    cvLink: "https://example.com/cv/sanya-kapoor"
+    cvLink: "https://example.com/cv/sanya-kapoor",
+    emailId:"asad@gmail.com",
+    contactNumber:"+91 8899006655"
   },
   {
     id: 3,
@@ -54,7 +58,9 @@ const dummyData = [
     about: "Full-stack developer with a focus on Python and backend services.",
     CTC: "6.2 LPA",
     ECTC: "8.5 LPA",
-    cvLink: "https://example.com/cv/rohan-iyer"
+    cvLink: "https://example.com/cv/rohan-iyer",
+    emailId:"asad@gmail.com",
+    contactNumber:"+91 8899006655"
   },
   {
     id: 4,
@@ -67,7 +73,9 @@ const dummyData = [
     about: "UI/UX enthusiast with over 5 years of experience in building responsive web applications.",
     CTC: "11 LPA",
     ECTC: "13 LPA",
-    cvLink: "https://example.com/cv/megha-sharma"
+    cvLink: "https://example.com/cv/megha-sharma",
+    emailId:"asad@gmail.com",
+    contactNumber:"+91 8899006655"
   },
   {
     id: 5,
@@ -80,7 +88,9 @@ const dummyData = [
     about: "Experienced full-stack developer with a knack for building cloud-native applications.",
     CTC: "14 LPA",
     ECTC: "16.5 LPA",
-    cvLink: "https://example.com/cv/nikhil-verma"
+    cvLink: "https://example.com/cv/nikhil-verma",
+    emailId:"asad@gmail.com",
+    contactNumber:"+91 8899006655"
   }
 ];
 

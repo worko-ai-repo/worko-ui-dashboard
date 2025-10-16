@@ -108,6 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
    * - Closes sidebar on mobile after navigation
    */
   const handleTabClick = (NavItem: NavItem) => {
+    console.log(NavItem.label,NavItem.id)
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
 

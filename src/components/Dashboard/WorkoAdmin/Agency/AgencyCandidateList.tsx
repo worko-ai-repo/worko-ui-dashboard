@@ -32,7 +32,7 @@ const dummyData = [
     comments: "Certified AWS Solutions Architect.",
     cvLink: "https://calibre-ebook.com/downloads/demos/demo.pdf",
     score: 80.5,
-    currentStatus: "Under Review"
+    currentStatus: "APPLIED"
   },
   {
     id: "ref-11",
@@ -56,7 +56,7 @@ const dummyData = [
     comments: "Strong in UI/UX integration.",
     cvLink: "https://example.com/cv/neha-sharma.pdf",
     score: 70.8,
-    currentStatus: "Interview Scheduled"
+    currentStatus: "PROCESSING_INTERVIEW"
   },
   {
     id: "ref-12",
@@ -80,7 +80,7 @@ const dummyData = [
     comments: "Hands-on with Power BI and SQL.",
     cvLink: "https://example.com/cv/rohan-mehta.pdf",
     score:60.2,
-    currentStatus: "Shortlisted"
+    currentStatus: "HIRING_IN_PROCESS"
   },
   {
     id: "ref-13",
@@ -104,7 +104,7 @@ const dummyData = [
     comments: "Expert in CI/CD pipelines and Docker.",
     cvLink: "https://example.com/cv/sana-ali.pdf",
     score:50.1,
-    currentStatus: "Technical Round"
+    currentStatus: "REJECTED"
   },
   {
     id: "ref-14",
@@ -128,7 +128,7 @@ const dummyData = [
     comments: "Strong API development experience.",
     cvLink: "https://example.com/cv/manish-kumar.pdf",
     score: 40.0,
-    currentStatus: "HR Discussion"
+    currentStatus: "HIRED"
   },
   {
     id: "ref-15",
@@ -152,7 +152,7 @@ const dummyData = [
     comments: "Experienced in MERN stack and Agile.",
     cvLink: "https://example.com/cv/priya-sen.pdf",
     score: 30.7,
-    currentStatus: "Offer Made"
+    currentStatus: "JOINED"
   },
   {
     id: "ref-16",
@@ -176,7 +176,7 @@ const dummyData = [
     comments: "Good in manual and automation testing.",
     cvLink: "https://example.com/cv/ankit-jha.pdf",
     score: 20.5,
-    currentStatus: "Pending Feedback"
+    currentStatus: "OFFER_SENT"
   },
   {
     id: "ref-17",
@@ -200,7 +200,7 @@ const dummyData = [
     comments: "Strong portfolio and Figma skills.",
     cvLink: "https://example.com/cv/tanvi-kapoor.pdf",
     score: 10.3,
-    currentStatus: "Shortlisted"
+    currentStatus: "DOCUMENT_REQUESTED"
   },
   {
     id: "ref-18",
@@ -224,7 +224,7 @@ const dummyData = [
     comments: "Led cross-functional product teams.",
     cvLink: "https://example.com/cv/arjun-desai.pdf",
     score: 9.0,
-    currentStatus: "In Discussion"
+    currentStatus: "INTERVIEW_DONE"
   },
   {
     id: "ref-19",
@@ -248,7 +248,7 @@ const dummyData = [
     comments: "CEH certified, SOC experience.",
     cvLink: "https://example.com/cv/divya-iyer.pdf",
     score: 8.6,
-    currentStatus: "Background Check"
+    currentStatus: "DOCUMENT_VERIFIED"
   }
 ];
 

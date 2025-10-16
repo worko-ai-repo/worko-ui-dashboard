@@ -4,12 +4,13 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logo_text } from '@AssetsFolder/assets';
 import { useSpeechRecognition } from '@Hooks/useSpeechSynthesis.hook';
+import JobDropdown from './JobDropdown';
 
 const SearchPrompt: React.FC = () => {
   const [input, setInput] = React.useState("");
   const [mode, setMode] = React.useState<"jd" | "prompt">("jd");
 
-  const jobList = [
+  const jobsList = [
     { label: "Full-Stack", value: "full-stack" },
     { label: "Half-Stack", value: "half-stack" },
     { label: "Frontend", value: "frontend" },
@@ -79,83 +80,98 @@ const SearchPrompt: React.FC = () => {
 
       <div className="w-full max-w-3xl">
         <div className="relative flex">
-          <div className="relative top-4 inline-flex items-start gap-2 bg-blue-600 text-white px-4 py-1.5 rounded-t-xl text-xs font-medium h-12">
+          <div className="relative top-4 inline-flex items-start gap-2 bg-blue-600 text-white px-4 py-1.5 rounded-t-xl text-xs font-medium h-12 z-0">
             <Sparkles className="w-4 h-4" />
             <span>Who are you looking for</span>
           </div>
         </div>
 
-        <div className="border border-border rounded-2xl shadow-sm bg-white">
-          <div className="relative">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }}
-              placeholder={
-                mode === "jd"
-                  ? "Paste the job description here..."
-                  : "Write your prompt here..."
-              }
-              className="w-full h-36 resize-none px-4 py-3 pr-24 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none rounded-2xl"
-            />
+        <div className="border border-border rounded-2xl shadow-sm bg-white z-9999">
+        <div className={`relative border border-border ${mode === "jd" ? "rounded-2xl" : "rounded-t-2xl"} shadow-sm bg-white`}>
+  {mode === "prompt" ? (
+    <textarea
+      value={input}
+      onChange={(e) => setInput(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          handleSubmit();
+        }
+      }}
+      placeholder="Write your prompt here..."
+      className="w-full h-36 resize-none px-4 py-3 pr-24 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none rounded-2xl"
+    />
+  ) : (
+  <div className="flex items-center gap-2 px-4 py-3 w-full">
+    <div className="flex-1">
+      <JobDropdown
+        jobsList={jobsList}
+        input={input}
+        setInput={setInput}
+        handleSubmit={handleSubmit}
+      />
+    </div>
+    <button
+      onClick={handleSubmit}
+      className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
+    >
+      <ArrowRight className="w-5 h-5 text-white" />
+    </button>
+      <Dropdown
+        mode={mode}
+        setMode={setMode}
+        onSubmit={handleSubmit}
+        setInput={setInput}
+      />
+  </div>
+  )}
 
-            {/* Mic + Arrow buttons */}
-          <div className="absolute top-3 right-3 flex gap-2 items-center">
-            {isSupported && (
-              <button
-                type="button"
-                onClick={handleMicToggle}
-                disabled={!!error}
-                className={`
-                  w-10 h-10 flex items-center justify-center rounded-full
-                  transition duration-300 text-white shadow-md hover:shadow-lg
-                  ${isListening ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-blue-500 hover:bg-blue-600"}
-                  ${error ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}
-                `}
-              >
-                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
-              </button>
-            )}
-            <button
-              onClick={handleSubmit}
-              className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
-            >
-              <ArrowRight className="w-5 h-5 text-white" />
-            </button>
-            {isSupported && transcript && (
-              <button
-                type="button"
-                onClick={handleClearTranscript}
-                className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1 transition-colors"
-              >
-                <RotateCcw size={12} />
-                Clear
-              </button>
-            )}
-          </div>
+  {/* Mic + Arrow buttons (only in prompt mode) */}
+  {mode !== "jd" && (
+    <div className="absolute top-3 right-3 flex gap-2 items-center">
+      {isSupported && (
+        <button
+          type="button"
+          onClick={handleMicToggle}
+          disabled={!!error}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition duration-300 text-white shadow-md hover:shadow-lg ${
+            isListening ? "bg-red-500 hover:bg-red-600 animate-pulse" : "bg-blue-500 hover:bg-blue-600"
+          } ${error ? "opacity-50 cursor-not-allowed" : "cursor-pointer"}`}
+        >
+          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+        </button>
+      )}
+      <button
+        onClick={handleSubmit}
+        className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
+      >
+        <ArrowRight className="w-5 h-5 text-white" />
+      </button>
+    </div>
+  )}
 
-          {isSupported && isListening && (
-            <div className="mt-2 text-sm text-blue-600 flex justify-center items-center gap-2">
-              <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-              Listening... Speak now
-            </div>
-          )}
+  {/* Listening indicator */}
+  {isSupported && isListening && (
+    <div className="mt-2 text-sm text-blue-600 flex justify-center items-center gap-2">
+      <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+      Listening... Speak now
+    </div>
+  )}
 
+      {/* Dropdown placement for prompt mode (bottom right) */}
+      {mode === "prompt" && (
+        <div className="absolute bottom-3 right-3">
+          <Dropdown
+            mode={mode}
+            setMode={setMode}
+            onSubmit={handleSubmit}
+            // jobsList={jobsList}
+            setInput={setInput}
+          />
+        </div>
+      )}
+    </div>
 
-            {/* Dropdown for search mode */}
-            <div className="absolute bottom-3 right-8">
-              <Dropdown 
-              mode={mode} 
-              setMode={setMode} 
-              onSubmit={()=>handleSubmit()}
-              jobsList={jobList}/>
-            </div>
-          </div>
          {mode==="prompt" &&
           <div className="border-t border-border divide-y divide-border">
             {suggestions.map((suggestion, index) => (

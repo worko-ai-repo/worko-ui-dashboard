@@ -137,17 +137,21 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.candidateName ?? "NA"}</span>
+                <span 
+                title={row?.candidateName}
+                className="truncate block w-full">{row?.candidateName ?? "NA"}</span>
             </div>
         ),
     },
     {
-        key: "candidateEmail",
+        key: "email",
         label: "Email",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span className="truncate block w-full">{row?.candidateEmail ?? "NA"}</span>
+                <span 
+                title={row?.candidateEmail} 
+                className="truncate block w-full">{row?.candidateEmail ?? "NA"}</span>
             </div>
         ),
     },
@@ -167,7 +171,9 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.currentDesignation ?? "NA"}</span>
+                <span 
+                title={row?.currentDesignation}
+                className="truncate block w-full">{row?.currentDesignation ?? "NA"}</span>
             </div>
         ),
     },
@@ -177,26 +183,30 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.appliedCompany ?? "NA"}</span>
+                <span 
+                title={row?.appliedCompany}
+                className="truncate block w-full">{row?.appliedCompany ?? "NA"}</span>
             </div>
         ),
     },
     {
         key: "currentCTC",
-        label: "Current CTC",
+        label: "CTC",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.currentCTC ?? "NA"}</span>
             </div>
         ),
     },
     {
         key: "expectedCTC",
-        label: "Expected CTC",
+        label: "ECTC",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.expectedCTC ?? "NA"}</span>
             </div>
         ),
@@ -205,8 +215,9 @@ const columns = [
         key: "noticePeriod",
         label: "Notice Period",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.noticePeriod ?? "NA"}</span>
             </div>
         ),
@@ -227,7 +238,9 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className='flex justify-center m-auto w-[150px]'>
-            <span>{row?.addedBy ?? "NA"}</span>
+            <span 
+                title={row?.addedBy}
+                className="truncate block w-full">{row?.addedBy ?? "NA"}</span>
         </div>
         ),
     },
@@ -237,7 +250,9 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.addedFor ?? "NA"}</span>
+                <span 
+                title={row?.addedFor}
+                className="truncate block w-full">{row?.addedFor ?? "NA"}</span>
             </div>
         ),
     },
@@ -245,8 +260,9 @@ const columns = [
         key: "coolingPeriod",
         label: "Cooling period",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.coolingPeriod ?? "NA"}</span>
             </div>
         ),
@@ -265,8 +281,9 @@ const columns = [
         key: "YOE",
         label: "YOE",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
+        <div className='flex justify-center m-auto bc'>
             <span>{row?.YOE ?? "NA"}</span>
         </div>
         ),

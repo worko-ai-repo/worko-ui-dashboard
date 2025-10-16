@@ -10,6 +10,8 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
+import AssignJobModal from "./modals/AssignJobModal";
+import RemoveJobModal from "./modals/RemoveJobModal";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -59,6 +61,8 @@ export default function AgencyListTable(props: any) {
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
+  const [isAssignJobModelOpen,setIsAssignJobModelOpen] = useState<boolean>(false);
+  const [isRemoveJobModelOpen,setIsRemoveJobModelOpen] = useState<boolean>(false);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
 
@@ -84,17 +88,20 @@ export default function AgencyListTable(props: any) {
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
+                <span 
+                title={row?.agencyName}
+                className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
             </div>
         ),
     },
     {
-        key: "emailId",
+        key: "email",
         label: "Email ID",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span className="truncate block w-full">{row?.emailId ?? "NA"}</span>
+                <span title={row?.emailId}
+                className="truncate block w-full">{row?.emailId ?? "NA"}</span>
             </div>
         ),
     },
@@ -104,7 +111,9 @@ export default function AgencyListTable(props: any) {
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.contactName ?? "NA"}</span>
+                <span 
+                title={row?.contactName}
+                className="truncate block w-full">{row?.contactName ?? "NA"}</span>
             </div>
         ),
     },
@@ -132,8 +141,9 @@ export default function AgencyListTable(props: any) {
         key: "asignedJobs",
         label: "Assigned Jobs",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[50px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.assignedJobs ?? "NA"}</span>
             </div>
         ),
@@ -142,8 +152,9 @@ export default function AgencyListTable(props: any) {
         key: "totalSubmitted",
         label: "Total submitted",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[50px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.totalCandidateSubmitted ?? "NA"}</span>
             </div>
         ),
@@ -151,9 +162,10 @@ export default function AgencyListTable(props: any) {
     {
         key: "totalRejected",
         label: "Total rejected",
+        contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[50px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.totalCandidateRejected ?? "NA"}</span>
             </div>
         ),
@@ -161,9 +173,10 @@ export default function AgencyListTable(props: any) {
     {
         key: "totalHired",
         label: "Total hired",
+        contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto bc'>
                 <span>{row?.totalCandidateHired ?? "NA"}</span>
             </div>
         ),
@@ -180,7 +193,7 @@ export default function AgencyListTable(props: any) {
                     <button
                         className="btn-sky flex items-center space-x-2"
                         onClick={() => {
-                        setEditProfileView(true);
+                        setIsAssignJobModelOpen(true)
                         setEditProfileData(row);
                         }}
                     >
@@ -192,7 +205,7 @@ export default function AgencyListTable(props: any) {
                 <div className="flex flex-row">
                     <button className="btn-blue flex items-center space-x-2"
                         onClick={()=>{
-                            setEditProfileView(true)
+                            setIsRemoveJobModelOpen(true)
                             setEditProfileData(row)
                         }}>
                         <CircleMinus className="w-5 h-5 shrink-0" />
@@ -252,6 +265,192 @@ export default function AgencyListTable(props: any) {
     },
 ];
 
+const dummyJobData = [
+  {
+    id: "56739",
+    jobName: "Frontend Software Developer",
+    location: "Bangalore",
+    CTC: 40
+  },
+  {
+    id: "56740",
+    jobName: "Backend Software Engineer",
+    location: "Hyderabad",
+    CTC: 38
+  },
+  {
+    id: "56741",
+    jobName: "Full Stack Developer",
+    location: "Pune",
+    CTC: 42
+  },
+  {
+    id: "56742",
+    jobName: "UI/UX Designer",
+    location: "Delhi",
+    CTC: 30
+  },
+  {
+    id: "56743",
+    jobName: "Data Scientist",
+    location: "Mumbai",
+    CTC: 45
+  },
+  {
+    id: "56744",
+    jobName: "DevOps Engineer",
+    location: "Chennai",
+    CTC: 39
+  },
+  {
+    id: "56745",
+    jobName: "Mobile App Developer",
+    location: "Kolkata",
+    CTC: 35
+  },
+  {
+    id: "56746",
+    jobName: "Cloud Solutions Architect",
+    location: "Noida",
+    CTC: 48
+  },
+  {
+    id: "56747",
+    jobName: "Machine Learning Engineer",
+    location: "Ahmedabad",
+    CTC: 50
+  },
+  {
+    id: "56748",
+    jobName: "QA Automation Tester",
+    location: "Jaipur",
+    CTC: 32
+  },
+  // New 20 entries
+  {
+    id: "56749",
+    jobName: "Product Manager",
+    location: "Surat",
+    CTC: 55
+  },
+  {
+    id: "56750",
+    jobName: "Technical Writer",
+    location: "Lucknow",
+    CTC: 28
+  },
+  {
+    id: "56751",
+    jobName: "Business Analyst",
+    location: "Indore",
+    CTC: 36
+  },
+  {
+    id: "56752",
+    jobName: "Security Engineer",
+    location: "Nagpur",
+    CTC: 43
+  },
+  {
+    id: "56753",
+    jobName: "System Administrator",
+    location: "Kanpur",
+    CTC: 31
+  },
+  {
+    id: "56754",
+    jobName: "Network Engineer",
+    location: "Coimbatore",
+    CTC: 33
+  },
+  {
+    id: "56755",
+    jobName: "SEO Specialist",
+    location: "Visakhapatnam",
+    CTC: 25
+  },
+  {
+    id: "56756",
+    jobName: "Content Strategist",
+    location: "Thane",
+    CTC: 29
+  },
+  {
+    id: "56757",
+    jobName: "Graphic Designer",
+    location: "Bhopal",
+    CTC: 27
+  },
+  {
+    id: "56758",
+    jobName: "Database Administrator",
+    location: "Patna",
+    CTC: 37
+  },
+  {
+    id: "56759",
+    jobName: "AI Researcher",
+    location: "Vadodara",
+    CTC: 52
+  },
+  {
+    id: "56760",
+    jobName: "Technical Support Engineer",
+    location: "Ghaziabad",
+    CTC: 26
+  },
+  {
+    id: "56761",
+    jobName: "Digital Marketing Manager",
+    location: "Ludhiana",
+    CTC: 34
+  },
+  {
+    id: "56762",
+    jobName: "Scrum Master",
+    location: "Agra",
+    CTC: 41
+  },
+  {
+    id: "56763",
+    jobName: "Quality Assurance Analyst",
+    location: "Nashik",
+    CTC: 30
+  },
+  {
+    id: "56764",
+    jobName: "Game Developer",
+    location: "Faridabad",
+    CTC: 44
+  },
+  {
+    id: "56765",
+    jobName: "Business Intelligence Analyst",
+    location: "Meerut",
+    CTC: 46
+  },
+  {
+    id: "56766",
+    jobName: "Blockchain Developer",
+    location: "Rajkot",
+    CTC: 53
+  },
+  {
+    id: "56767",
+    jobName: "Cloud Engineer",
+    location: "Kochi",
+    CTC: 49
+  },
+  {
+    id: "56768",
+    jobName: "Mobile UX Designer",
+    location: "Mysore",
+    CTC: 31
+  },
+];
+
+
+
   return (
     <>
       {/* Deselect button - only show when rows are selected */}
@@ -275,6 +474,20 @@ export default function AgencyListTable(props: any) {
         hasNextPage={false}
         handlePreviousPage={() => {}}
         handleNextPage={() => {}}
+        />
+                
+        <AssignJobModal
+          dashboardType={"admin"}
+          onClose= {() => setIsAssignJobModelOpen(false)}
+          isOpen= {isAssignJobModelOpen}
+          jobsList={dummyJobData}
+        />
+
+        <RemoveJobModal
+          dashboardType={"admin"}
+          onClose= {() => setIsRemoveJobModelOpen(false)}
+          isOpen= {isRemoveJobModelOpen}
+          jobsList={dummyJobData}
         />
     </>
   );

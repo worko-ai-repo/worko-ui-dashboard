@@ -135,7 +135,9 @@ const columns = [
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.candidateName ?? "NA"}</span>
+                <span 
+                title={row?.candidateName}
+                className="truncate block w-full">{row?.candidateName ?? "NA"}</span>
             </div>
         ),
     },
@@ -150,12 +152,32 @@ const columns = [
         ),
     },
     {
+        key: "email",
+        label: "Email ID",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.emailId ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
+        key: "contactNumber",
+        label: "Contact no",
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span>{row?.contactNumber ?? "NA"}</span>
+            </div>
+        ),
+    },
+    {
         key: "coreSkills",
         label: "Core skills",
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px] text-start'>
-                <span className="truncate block w-full">{row?.coreSkills ?? "NA"}</span>
+                <span title={row?.coreSkills} className="truncate block w-full">{row?.coreSkills ?? "NA"}</span>
             </div>
         ),
     },
@@ -165,7 +187,9 @@ const columns = [
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.currentDesignation ?? "NA"}</span>
+                <span 
+                title={row?.currentDesignation}
+                className="truncate block w-full">{row?.currentDesignation ?? "NA"}</span>
             </div>
         ),
     },
@@ -173,8 +197,9 @@ const columns = [
         key: "YOE",
         label: "YOE",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
+        <div className='flex justify-center m-auto bc'>
             <span>{row?.YOE ?? "NA"}</span>
         </div>
         ),
@@ -185,7 +210,9 @@ const columns = [
     sortable: true,
     render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className='flex justify-center m-auto w-[150px]'>
-            <span>{row?.source ?? "NA"}</span>
+            <span 
+                title={row?.source}
+                className="truncate block w-full">{row?.source ?? "NA"}</span>
         </div>
     ),
     },
@@ -195,7 +222,7 @@ const columns = [
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px] text-start'>
-                <span className="truncate block w-full">{row?.about ?? "NA"}</span>
+                <span title={row?.about}className="truncate block w-full">{row?.about ?? "NA"}</span>
             </div>
         ),
     },
@@ -203,8 +230,9 @@ const columns = [
         key: "CTC",
         label: "CTC",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.CTC ?? "NA"}</span>
             </div>
         ),
@@ -213,8 +241,9 @@ const columns = [
         key: "ECTC",
         label: "ECTC",
         sortable: true,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.ECTC ?? "NA"}</span>
             </div>
         ),
@@ -223,8 +252,9 @@ const columns = [
         key: "link",
         label: "CV link",
         sortable: false,
+        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto'>
                 <a href={row?.cvLink} className="text-blue-400">Link</a>
             </div>
         ),
@@ -243,7 +273,7 @@ const columns = [
                 className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-3 py-2 text-xs hover:bg-blue-700 transition"
                 >
                 <RefreshCcw className="w-4 h-4 mt-1" />
-                <span className="text-left leading-tight text-sm">
+                <span className="text-left leading-tight text-xs">
                     Find Matching <br />Score
                 </span>
                 </button>
@@ -254,7 +284,7 @@ const columns = [
                 className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 text-xs hover:bg-blue-700 transition"
                 >
                 <LogOut className="w-4 h-4 mt-1" />
-                <span className="text-left leading-tight text-sm">
+                <span className="text-left leading-tight text-xs">
                     Move to<br />applicants
                 </span>
                 </button>
