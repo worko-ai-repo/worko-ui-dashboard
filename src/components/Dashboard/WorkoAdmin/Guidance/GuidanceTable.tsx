@@ -4,7 +4,7 @@ import Modal from "@Components/Shared/Modal";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 
-import { Edit } from "lucide-react";
+import { Edit, Loader2 } from "lucide-react";
 import { useReducer, useState } from "react";
 import CommonDashboardServicesObj, {
   ExtraReferralDetailsResponse,
@@ -16,10 +16,14 @@ import { GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
 import GuidanceModal from "./GuidanceModal";
 import GuidanceUpdateModal from "./GuidanceUpdateModal";
 import { GUIDANCE_REQUEST_TYPE_LABELS } from "@TypesAndConstants/common.constants";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface GuidancePageTableProps {
   data: GuidanceRequestDto[];
   fetchGuidance: () => void;
+  queryKey: any[];
   pagination: CommonCursorPaginationProp;
 }
 
@@ -53,8 +57,10 @@ function modalReducer(state: ModalState, action: Action): ModalState {
 const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   data,
   fetchGuidance,
+  queryKey,
   pagination,
 }) => {
+  const queryClient = useQueryClient();
   const keyFallbacks = {
     userDetails_name: ["name", "userDetails.name"],
     userDetails_about: ["about", "userDetails.about"],
@@ -68,14 +74,65 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     viewUpdateMode: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "guidance",
+    persistInUrl: true,
+    persistInLocalStorage: false,
+    defaultSort: null,
+  });
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [updatingGuidanceId, setUpdatingGuidanceId] = useState<string | null>(null);
   const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
     isOpen: boolean;
     details: ExtraReferralDetailsResponse | null;
     key?: string;
   }>({ isOpen: false, details: null, key: undefined });
+
+  // Mutation for updating guidance status
+  const updateGuidanceMutation = useMutation({
+    mutationFn: async ({
+      guidanceId,
+      updates,
+    }: {
+      guidanceId: string;
+      updates: Partial<GuidanceRequestDto>;
+    }) => {
+      // Replace with actual API call
+      // return await AdminServiceObj.updateGuidance(guidanceId, updates);
+      throw new Error("Update API not implemented");
+    },
+    onMutate: async ({ guidanceId, updates }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((guidance: GuidanceRequestDto) =>
+              guidance.id === guidanceId ? { ...guidance, ...updates } : guidance
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Failed to update guidance", getToastOptions({}));
+    },
+    onSuccess: () => {
+      toast.success("Guidance updated successfully", getToastOptions({}));
+    },
+  });
 
   const columns: Column<GuidanceRequestDto>[] = [
     { key: "userDetails_name", label: "Candidate Name", sortable: true },
@@ -84,7 +141,13 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       label: "Guidance Type",
       sortable: true,
       render: (row: GuidanceRequestDto) => (
-        <span>{GUIDANCE_REQUEST_TYPE_LABELS[row.guidanceRequestType as keyof typeof GUIDANCE_REQUEST_TYPE_LABELS]}</span>
+        <span>
+          {
+            GUIDANCE_REQUEST_TYPE_LABELS[
+              row.guidanceRequestType as keyof typeof GUIDANCE_REQUEST_TYPE_LABELS
+            ]
+          }
+        </span>
       ),
     },
     {
@@ -112,10 +175,15 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       render: (row: GuidanceRequestDto) => {
         const status = row.status as keyof typeof CommonDashboardServicesObj.getGuidanceStatusAlias;
         return (
-          <span
-            className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${CommonDashboardServicesObj.getGuidanceStatusColor[status]}`}>
-            {CommonDashboardServicesObj.getGuidanceStatusAlias[status]}
-          </span>
+          <div className="flex items-center justify-center gap-2">
+            <span
+              className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${CommonDashboardServicesObj.getGuidanceStatusColor[status]}`}>
+              {CommonDashboardServicesObj.getGuidanceStatusAlias[status]}
+            </span>
+            {updatingGuidanceId === row.id && (
+              <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+            )}
+          </div>
         );
       },
     },
@@ -244,6 +312,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
           onClose={() => dispatch({ type: "CLOSE" })}
           overrideType={modalState?.viewUpdateMode}
           fetchGuidance={modalState.fetchGuidance!}
+          queryKey={queryKey}
         />
       </Modal>
     </>

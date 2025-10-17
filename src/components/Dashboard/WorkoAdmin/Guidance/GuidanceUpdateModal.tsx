@@ -15,12 +15,14 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import Input from "@Components/Shared/PostJob/Input";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface GuidanceUpdateModalProps {
   data: GuidanceRequestDto;
   overrideType?: "REJECT" | "RESCHEDULE";
   onClose: () => void;
   fetchGuidance: () => void;
+  queryKey?: any[];
 }
 
 interface SelectedMentor {
@@ -57,10 +59,11 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
   onClose,
   overrideType,
   fetchGuidance,
+  queryKey,
 }) => {
+  const queryClient = useQueryClient();
   const [searchResults, setSearchResults] = useState<MentorSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [generalError, setGeneralError] = useState<string>("");
 
   const {
@@ -202,77 +205,135 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
     return combineDateTime(date || "", time || "");
   };
 
+  // Replace the onSubmit with mutation
+  const updateGuidanceMutation = useMutation({
+    mutationFn: async (requestBody: Record<string, any>) => {
+      const response = await AdminServiceObj.patchGuidanceStatus(data?.id || "", requestBody);
+      if (!response) {
+        throw new Error("Failed to update guidance status");
+      }
+      return response;
+    },
+    onMutate: async (requestBody) => {
+      // Cancel outgoing queries
+      if (queryKey) {
+        await queryClient.cancelQueries({ queryKey });
+      }
+      const previousData = queryKey ? queryClient.getQueryData(queryKey) : null;
+
+      // Optimistically update the cache
+      if (queryKey) {
+        queryClient.setQueryData(queryKey, (oldData: any) => {
+          if (!oldData?.pages) return oldData;
+
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              data: page.data.map((guidance: GuidanceRequestDto) =>
+                guidance.id === data.id
+                  ? {
+                      ...guidance,
+                      status: requestBody.newStatus,
+                      updatedAt: new Date().toISOString(),
+                      ...(requestBody.mentorDetails && {
+                        mentorDetails: requestBody.mentorDetails,
+                      }),
+                      ...(requestBody.scheduleMeetingDetails && {
+                        scheduleMeetingDetails: requestBody.scheduleMeetingDetails,
+                      }),
+                      ...(requestBody.rejectionReason && {
+                        rejectionReason: requestBody.rejectionReason,
+                      }),
+                    }
+                  : guidance
+              ),
+            })),
+          };
+        });
+      }
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData && queryKey) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      console.error("Error updating status:", err);
+      toast.error("Failed to update guidance status", getToastOptions({}));
+      setGeneralError("An error occurred. Please try again.");
+    },
+    onSuccess: () => {
+      toast.success("Status updated successfully", getToastOptions({}));
+      onClose();
+      // Optionally refetch in background to get fresh data
+      if (queryKey) {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ queryKey });
+        }, 1000);
+      }
+    },
+  });
+
   // Handle form submission
   const onSubmit = async (formData: FormData): Promise<void> => {
-    setIsSubmitting(true);
     setGeneralError("");
 
-    try {
-      let requestBody: Record<string, any> = {
-        newStatus: formData.selectedAction,
-        actionByUserId: secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID) || "",
-        actionByUserType: "ADMIN",
-      };
+    let requestBody: Record<string, any> = {
+      newStatus: formData.selectedAction,
+      actionByUserId: secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID) || "",
+      actionByUserType: "ADMIN",
+    };
 
-      // Add specific fields based on action
-      switch (formData.selectedAction) {
-        case "MENTOR_ASSIGNED":
-          requestBody = {
-            ...requestBody,
-            mentorDetails: {
-              userId: formData.selectedMentor?.id,
-              userEmail: formData.selectedMentor?.email,
-              name: formData.selectedMentor?.name,
-            },
-            scheduleMeetingDetails: {
-              date: new Date(formData.date + "T" + formData.time).toISOString(),
-              time: formData.time,
-              duration: formData.duration,
-            },
-            mentorAssignedRemarks: formData.remarks || "",
-            currency: "INR",
-            totalAmount: formData.totalAmount,
-            linkForPayment: formData.linkForPayment,
-          };
-          break;
+    // Add specific fields based on action
+    switch (formData.selectedAction) {
+      case "MENTOR_ASSIGNED":
+        requestBody = {
+          ...requestBody,
+          mentorDetails: {
+            userId: formData.selectedMentor?.id,
+            userEmail: formData.selectedMentor?.email,
+            name: formData.selectedMentor?.name,
+          },
+          scheduleMeetingDetails: {
+            date: new Date(formData.date + "T" + formData.time).toISOString(),
+            time: formData.time,
+            duration: formData.duration,
+          },
+          mentorAssignedRemarks: formData.remarks || "",
+          currency: "INR",
+          totalAmount: formData.totalAmount,
+          linkForPayment: formData.linkForPayment,
+        };
+        break;
 
-        case "REJECTED":
-          requestBody.rejectionReason = formData.rejectionReason?.trim();
-          break;
+      case "REJECTED":
+        requestBody.rejectionReason = formData.rejectionReason?.trim();
+        break;
 
-        case "PAYMENT_CONFIRMATION_DONE":
-          requestBody.uniqueTransactionReference = formData.utrNumber?.trim();
-          break;
+      case "PAYMENT_CONFIRMATION_DONE":
+        requestBody.uniqueTransactionReference = formData.utrNumber?.trim();
+        break;
 
-        case "MEETING_CONFIRMED":
-          requestBody.meetingLink = formData.meetingLink?.trim();
-          break;
+      case "MEETING_CONFIRMED":
+        requestBody.meetingLink = formData.meetingLink?.trim();
+        break;
 
-        case "MEETING_RESCHEDULE_CONFIRMED":
-          requestBody = {
-            ...requestBody,
-            scheduleMeetingDetails: {
-              date: new Date(formData.date + "T" + formData.time).toISOString(),
-              time: formData.time,
-              duration: formData.duration,
-            },
-            meetingLink: formData.meetingLink?.trim(),
-          };
-          break;
-      }
-
-      const response = await AdminServiceObj.patchGuidanceStatus(data?.id || "", requestBody);
-      if (response) {
-        toast.success("Status updated successfully", getToastOptions());
-        onClose();
-        fetchGuidance();
-      }
-    } catch (error) {
-      console.error("Error updating status:", error);
-      setGeneralError("An error occurred. Please try again.");
-    } finally {
-      setIsSubmitting(false);
+      case "MEETING_RESCHEDULE_CONFIRMED":
+        requestBody = {
+          ...requestBody,
+          scheduleMeetingDetails: {
+            date: new Date(formData.date + "T" + formData.time).toISOString(),
+            time: formData.time,
+            duration: formData.duration,
+          },
+          meetingLink: formData.meetingLink?.trim(),
+        };
+        break;
     }
+
+    updateGuidanceMutation.mutate(requestBody);
   };
 
   // Reset form when action changes
@@ -783,22 +844,22 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
           </div>
         )}
         {/* Project Completed Confirmation */}
-        {selectedAction === "PROJECT_COMPLETED" && (
+        {/* {selectedAction === "PROJECT_COMPLETED" && (
           <div className="text-center py-8">
             <h4 className="text-lg font-medium mb-2">Mark Project as Completed?</h4>
             <p className="text-gray-600">
               This action will mark the guidance request as completed.
             </p>
           </div>
-        )}
+        )} */}
         {/* Action Buttons */}
         <div className="flex justify-start space-x-3 pt-6">
           <button
             type="submit"
-            disabled={isSubmitting || !selectedAction}
+            disabled={updateGuidanceMutation.isPending || !selectedAction}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50">
             <PaperAirplaneIcon className="inline w-4 h-4 fill-white outline-blue-500 text-blue-600 relative -top-0.5 -rotate-45" />
-            {isSubmitting ? "Submitting..." : "Submit"}
+            {updateGuidanceMutation.isPending ? "Submitting..." : "Submit"}
           </button>
           <button
             type="button"

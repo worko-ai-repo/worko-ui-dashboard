@@ -146,7 +146,7 @@ const CorporateUsersSubTable: React.FC<CorporateUsersSubTableProps> = ({
                 isDeleted ||
                 hasUserDetails ||
                 subRow?.inviteStatus === "EXPIRED" ||
-                subRow?.inviteStatus === "REVOKED";
+                subRow?.inviteStatus === "DELETED"; // Fixed: Changed from "REVOKED" to "DELETED"
               return (
                 <div className="flex flex-col sm:flex-row gap-1 justify-center">
                   {/* Delete button - only show for registered users (has corporateUserDetails) */}

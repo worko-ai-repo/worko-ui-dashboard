@@ -132,7 +132,12 @@ export default function ApplicantScreeningTable() {
     }
     return [];
   }, [data]);
-  const { sortedData, onSortChange } = useSortableData(applicantsData, fallbackKeys);
+  const { sortedData, onSortChange } = useSortableData(applicantsData, fallbackKeys,    {
+    tableId:"screening-list-view",
+    defaultSort:null,
+    persistInLocalStorage:false,
+    persistInUrl:true
+  });
 
   // Keep the reset useEffect as it's safe
   useEffect(() => {

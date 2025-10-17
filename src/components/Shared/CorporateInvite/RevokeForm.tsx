@@ -13,10 +13,7 @@ type FormData = {
   revokeReason: string;
 };
 
-const RevokeForm: React.FC<RevokeFormProps> = ({
-  inviteId,
-  onClose,
-}) => {
+const RevokeForm: React.FC<RevokeFormProps> = ({ inviteId, onClose }) => {
   const {
     register,
     handleSubmit,
@@ -27,7 +24,7 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
 
   const onSubmit = async (data: FormData) => {
     try {
-      const { status } = await httpServiceObj.patch(
+      const apiCall = httpServiceObj.patch(
         `/corporate-invite/${inviteId}/delete`,
         { reasonForRevokingInvite: data.revokeReason },
         true,
@@ -36,36 +33,40 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
         "BASE"
       );
 
+      await toast.promise(
+        apiCall,
+        {
+          pending: "Revoking invite...",
+          success: "Invite revoked successfully",
+          error: "Failed to revoke the invite. Please try again.",
+        },
+        getToastOptions()
+      );
+
+      const { status } = await apiCall;
+
       if (status === 204) {
         onClose();
-      } else {
-        toast.error("Failed to revoke the invite. Please try again.",getToastOptions());
       }
-      toast.success("Invite revoked successfully.",getToastOptions());
     } catch (error) {
       console.error("Error revoking invite:", error);
-      toast.error("An error occurred while revoking the invite. Please try again.",getToastOptions());
+      // Error already handled by toast.promise
     }
   };
 
   return (
     <form
       onSubmit={handleSubmit(onSubmit)}
-      className="flex flex-col justify-between max-w-sm h-52 text-sm font-medium text-gray-800 p-4 space-y-4 bg-white"
-    >
-        <label className="block mb-1 font-bold text-lg">Reason for revoke</label>
+      className="flex flex-col justify-between max-w-sm h-52 text-sm font-medium text-gray-800 p-4 space-y-4 bg-white">
+      <label className="block mb-1 font-bold text-lg">Reason for revoke</label>
       <div>
-
         <div className="relative">
           <select
             {...register("revokeReason", { required: "Please select a reason" })}
             className={`w-full appearance-none px-4 py-2 pr-10 rounded-lg border ${
-              errors.revokeReason
-                ? "border-red-500"
-                : "border-gray-300"
+              errors.revokeReason ? "border-red-500" : "border-gray-300"
             } bg-white text-gray-700 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500`}
-            defaultValue=""
-          >
+            defaultValue="">
             <option value="" disabled>
               Choose why you are revoking
             </option>
@@ -77,9 +78,7 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
         </div>
 
         {errors.revokeReason && (
-          <p className="text-red-500 text-xs mt-1">
-            {errors.revokeReason.message}
-          </p>
+          <p className="text-red-500 text-xs mt-1">{errors.revokeReason.message}</p>
         )}
       </div>
 
@@ -88,11 +87,8 @@ const RevokeForm: React.FC<RevokeFormProps> = ({
           type="submit"
           disabled={isSubmitting}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white ${
-            isSubmitting
-              ? "bg-red-400 cursor-not-allowed"
-              : "bg-red-600 hover:bg-red-700"
-          }`}
-        >
+            isSubmitting ? "bg-red-400 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
+          }`}>
           <div className="p-[2px] rounded-full border border-white">
             <Minus className="w-2 h-2" />
           </div>

@@ -11,11 +11,28 @@ import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import ReferralTable from "./ReferralTable";
+import { useUrlState } from "@Hooks/useUrlState.hook";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminReferrals = () => {
-  const [pageSize, setPageSize] = useState(25);
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<ReferralStatusType | "">("");
-  const [searchBarText, setSearchBarText] = useState<string | null>(null);
+
+  // Use URL state management for persistence
+  const {
+    searchText: searchBarText,
+    setSearchText: setSearchBarText,
+    pageSize,
+    setPageSize,
+  } = useUrlState({
+    search: {
+      defaultValue: null,
+    },
+    pageSize: {
+      defaultValue: 25,
+      validValues: [10, 25, 50, 100, 150, 200],
+    },
+  });
 
   const params: Omit<CursorPaginationReferralsDataAdminParams, "lastKey"> = {
     pageSize: pageSize,
@@ -23,6 +40,9 @@ const AdminReferrals = () => {
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     ...(status ? { status: status } : {}),
   };
+
+  // Stable query key
+  const queryKey = ["AdminReferralQuery", !!searchBarText, JSON.stringify(params)];
 
   const {
     data,
@@ -34,7 +54,7 @@ const AdminReferrals = () => {
     refetch,
     reset,
   } = useCursorPagination<ReferralDetailsDto, CursorPaginationReferralsDataAdminParams>({
-    queryKey: ["AdminReferralQuery", !!searchBarText, params],
+    queryKey: queryKey,
     queryFn: AdminServiceObj.fetchReferrals,
     baseParams: params,
     enabled: !!params,
@@ -98,6 +118,7 @@ const AdminReferrals = () => {
           <ReferralTable
             data={data}
             fetchReferrals={refetch}
+            queryKey={queryKey}
             pagination={{
               goToNextPage,
               goToPreviousPage,
