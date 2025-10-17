@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReferralsTable from "./modals/ReferralsTable";
-import { ReferralApiResponse, PaginationInfo, ReferralFilters } from "./modals/ReferralTypes";
+// import { ReferralApiResponse, PaginationInfo, ReferralFilters } from "./modals/ReferralTypes";
+import { ReferralApiResponse, PaginationInfo, ReferralFilters, ReferralDetailsDto } from "./modals/ReferralTypes";
 import { debounce } from "lodash";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -139,6 +140,21 @@ const fetchReferrals = useCallback(
   const handleGetNewReferral = () => {
     window.location.href = `${window.location.origin}${"/"}referrals`;
   };
+
+  const handleLocalUpdate = useCallback((referralId: string, updatedData: Partial<ReferralDetailsDto>) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+      
+      return {
+        ...prevData,
+        data: prevData.data.map(referral => 
+          referral.id === referralId 
+            ? { ...referral, ...updatedData }
+            : referral
+        )
+      };
+    });
+  }, []);
 
   useEffect(() => {
     if (user?.email) {
@@ -292,6 +308,7 @@ const fetchReferrals = useCallback(
             const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || "" : "";
             fetchReferrals(currentPage, pageSize, lastKey);
           }}
+          onLocalUpdate={handleLocalUpdate}
         />
       )}
     </div>

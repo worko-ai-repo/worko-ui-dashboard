@@ -4,12 +4,13 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
-
+import { ReferralDetailsDto,ReferralStatus } from "./ReferralTypes";
 interface CompletedReferralModalProps {
   onClose: () => void;
   isOpen: boolean;
   referralData: any;
-  onRefresh: () => void;
+  // onRefresh: () => void;
+  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
   isCandidate?: boolean;
 }
 
@@ -17,7 +18,8 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh,
+  // onRefresh,
+  onLocalUpdate,
   isCandidate,
 }) => {
   const [visible, setVisible] = useState(false);
@@ -64,7 +66,10 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
         if (response) {
           toast.success("Referral request marked as done", getToastOptions({}));
           setIsError("");
-          onRefresh();
+          // onRefresh();
+        onLocalUpdate(referralData.id, { 
+           status: "DONE" as ReferralStatus
+         });
           onClose();
         }
       } catch (error: any) {
@@ -84,7 +89,10 @@ const CompletedReferralModal: FC<CompletedReferralModalProps> = ({
         if (response) {
           toast.success("Referral request marked as done", getToastOptions({}));
           setIsError("");
-          onRefresh();
+          onLocalUpdate(referralData.id, { 
+           status: "DONE" as ReferralStatus
+         });
+          // onRefresh();
           onClose();
         }
       } catch (error: any) {

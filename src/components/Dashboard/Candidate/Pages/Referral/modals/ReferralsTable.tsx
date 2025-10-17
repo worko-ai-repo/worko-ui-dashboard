@@ -22,6 +22,7 @@ interface ReferralsTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
+  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
 }
 interface StepperProps {
   status: string;
@@ -35,6 +36,7 @@ const ReferralsTable = memo(
     onPageChange,
     onPageSizeChange,
     onRefresh,
+    onLocalUpdate,
   }: ReferralsTableProps) => {
     const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
     const [sortField, setSortField] = useState<string>("");
@@ -408,7 +410,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowRaiseIssueModal(false)}
               isOpen={showRaiseIssueModal}
               referralData={referralData}
-              onRefresh={onRefresh}
+              onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
@@ -417,7 +420,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowCompletedModal(false)}
               isOpen={showCompletedModal}
               referralData={referralData}
-              onRefresh={onRefresh}
+              onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
@@ -426,7 +430,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowProvideFeedback(false)}
               isOpen={showProvideFeedback}
               referralData={referralData}
-              onRefresh={onRefresh}
+              // onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
