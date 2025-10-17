@@ -238,29 +238,22 @@ class AdminService {
    * @return {Promise<ApiResponseDto<JobApplicationDetailsDto>>} -= Common job data that will be listed in the corporate dashboard.
    */
   async fetchApplications(params: object): Promise<ApiResponseDto<JobApplicationDetailsDto>> {
-    try {
-      //path: string, data: object, authorization: boolean = true, params = {}, fullUri: boolean = false,apiType: ApiType = "BASE"
-      const { response } = await httpServiceObj.get<ApiResponseDto<JobApplicationDetailsDto>>(
-        "/job-application",
-        true,
-        params,
-        false,
-        "JOB"
-      );
-      if (response) return response;
-      else {
-        throw new Error();
-      }
-    } catch (error: any) {
-      console.error("[ADMIN SERVICE]: Failed to fetch Applications.");
-      return {
-        data: [],
-        pagination: {
-          count: 0,
-          pageSize: 0,
-        },
-      };
+    const { response, error, status } = await httpServiceObj.get<
+      ApiResponseDto<JobApplicationDetailsDto>
+    >("/job-application", true, params, false, "JOB");
+
+    if (error) {
+      console.error("[ADMIN SERVICE]: Failed to fetch Applications.", error);
+      throw error; // Throw error so React Query can retry
     }
+
+    if (!response) {
+      const err = new Error("No response received from fetchApplications");
+      console.error("[ADMIN SERVICE]:", err);
+      throw err; // Throw error so React Query can retry
+    }
+
+    return response;
   }
 
   /**
@@ -268,7 +261,7 @@ class AdminService {
    *
    * @description - This API is used to send multiple evaluator feedback requests for multiple job applications at once.
    */
-  async postBulkApplicationUpdate(payload:BulkJobApplicationUpdatePayload): Promise<any> {
+  async postBulkApplicationUpdate(payload: BulkJobApplicationUpdatePayload): Promise<any> {
     try {
       const { response, status } = await httpServiceObj.patch<any>(
         "/job-application/bulk-update",

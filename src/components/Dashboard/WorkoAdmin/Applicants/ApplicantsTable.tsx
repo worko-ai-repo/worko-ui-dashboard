@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, NotebookIcon, Send, User } from "lucide-react";
+import { Eye, Loader2, NotebookIcon, Send, User } from "lucide-react";
 
 // Component imports
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
@@ -74,6 +74,7 @@ interface ApplicationTableProps {
   isBulkEvaluation: boolean; // New prop to handle bulk evaluation
   isAllApplicants: boolean; // New prop to indicate if viewing all applicants
   onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
+  isUpdating?: boolean;
 }
 
 export const getCvViewDate = (statusTracker: StatusTracker[]) => {
@@ -137,11 +138,13 @@ export default function ApplicationTable({
   isBulkEvaluation,
   refetch,
   onBulkUpdate,
-  isAllApplicants
+  isAllApplicants,
+  isUpdating = false,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+  const [updatingApplicationId, setUpdatingApplicationId] = useState<string | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<{
     payload: JobApplicationUpdatePayloadDto;
     jobId: string;
@@ -215,80 +218,33 @@ export default function ApplicationTable({
     IsRefelectedToRec: ["displayToCorporate"],
   };
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: `applicants-${activeTab}`,
+    persistInUrl: true,
+    persistInLocalStorage: false,
+    defaultSort: null,
+  });
 
-  // Helper functions (improved functionality)
-  const shouldShowUpdateIcon = (row: JobApplicationDetailsDto) => {
-    return row.status !== "REJECTED" && row.status !== "HIRED";
-  };
 
-  const toggleDropdown = (rowIndex: string) => {
-    setDropdownVisibleRows((prev) =>
-      prev.includes(rowIndex) ? prev.filter((id) => id !== rowIndex) : [...prev, rowIndex]
-    );
-  };
-
-  const isDropdownVisible = (rowIndex: string) => {
-    return dropdownVisibleRows.includes(rowIndex);
-  };
-
-  // Status array for dropdown
-  const statusArray = [
-    "APPLIED",
-    "CV_DOWNLOADED",
-    "UNDER_EVALUATION",
-    "PROCESSING_INTERVIEW",
-    "INTERVIEW_DONE",
-    "HIRED",
-    "REJECTED",
-  ];
-
-  const isOptionDisabled = (option: string, currentStatus: string) => {
-    const statusOrder = {
-      APPLIED: 0,
-      CV_DOWNLOADED: 1,
-      UNDER_EVALUATION: 2,
-      PROCESSING_INTERVIEW: 3,
-      INTERVIEW_DONE: 4,
-      HIRED: 5,
-      REJECTED: 6,
-    };
-
-    return (
-      option !== "REJECTED" &&
-      statusOrder[option as keyof typeof statusOrder] <=
-        statusOrder[currentStatus as keyof typeof statusOrder]
-    );
-  };
-
-  const transformStatus = (status: string) => {
-    const statusMap: Record<string, string> = {
-      APPLIED: "Applied",
-      CV_DOWNLOADED: "CV Downloaded",
-      UNDER_EVALUATION: "Under Evaluation",
-      PROCESSING_INTERVIEW: "Processing Interview",
-      INTERVIEW_DONE: "Interview Done",
-      HIRED: "Hired",
-      REJECTED: "Rejected",
-      ON_HOLD: "On Hold",
-    };
-    return statusMap[status] || status;
-  };
-
-  // Handle Status update for all buttons
-  const handleStatusUpdate = (
+// Wrapper to track which application is being updated
+  const handleStatusUpdate = async (
     status: JobApplicationStatusType,
     row: JobApplicationDetailsDto,
     hasRefetch: boolean = true
   ) => {
-    const payload: JobApplicationUpdatePayloadDto = {
-      applicantName: row.applicantDetails.name,
-      emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
-      status,
-      userId: userDetails ? userDetails?.id : "",
-      userType,
-    };
-    handleUpdate(payload, row.id, hasRefetch);
+    setUpdatingApplicationId(row.id);
+    try {
+      const payload: JobApplicationUpdatePayloadDto = {
+        applicantName: row.applicantDetails.name,
+        emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
+        status,
+        userId: userDetails ? userDetails?.id : "",
+        userType,
+      };
+      handleUpdate(payload, row.id, hasRefetch);
+    } finally {
+      setUpdatingApplicationId(null);
+    }
   };
 
   // Common column definitions
@@ -301,6 +257,9 @@ export default function ApplicationTable({
         <div className="flex items-center justify-center gap-2">
           <User size={20} />
           <span>{row.applicantDetails.name}</span>
+          {updatingApplicationId === row.id && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          )}
         </div>
       ),
     },
@@ -556,18 +515,16 @@ export default function ApplicationTable({
         </span>
       ),
     },
-   jobProfile: {
-    key: "jobTitle",
-    label: "Job Profile",
-    sortable: true,
-    render: (row: JobApplicationDetailsDto) => (
-      <span
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={row?.jobTitle|| "NA"}>
-        {row?.jobTitle || "NA"}{" "}
-      </span>
-    ),
-  },
+    jobProfile: {
+      key: "jobTitle",
+      label: "Job Profile",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span data-tooltip-id="my-tooltip" data-tooltip-content={row?.jobTitle || "NA"}>
+          {row?.jobTitle || "NA"}{" "}
+        </span>
+      ),
+    },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
@@ -613,7 +570,7 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
@@ -632,7 +589,7 @@ export default function ApplicationTable({
       case "Hired":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
@@ -648,7 +605,7 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           { key: "applicantDetails_CTC", label: "CTC", sortable: true },
           {
             key: "applicantDetails_candidateExperience_designation",
@@ -793,7 +750,9 @@ export default function ApplicationTable({
                 <div>
                   <span className="font-semibold text-gray-500">Rejected Date</span>
                   <p>
-                    {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString("en-GB", {
+                    {new Date(
+                      row?.rejectedByUserId?.actionDate || row?.updatedAt
+                    ).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",

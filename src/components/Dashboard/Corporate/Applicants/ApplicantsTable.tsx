@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, NotebookIcon, User } from "lucide-react";
+import { Eye, NotebookIcon, User, Loader2 } from "lucide-react";
 
 // Component imports
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
@@ -44,8 +44,6 @@ import {
 } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
 import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedbackModal";
 
-// Component props interface
-
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
   ACCEPTED: "bg-[#00ADC0] text-[#D6F4FF]",
@@ -72,8 +70,8 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
   REVISED_LETTER: "bg-[#D6F4FF] text-[#00ADC0]",
   OFFER_ACCEPTED: "bg-[#D1E7DD] text-[#0F5132]",
 };
+
 export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
-  // All Status that will be displayed in the table
   ALL: "All",
   APPLIED: "Applied/Pending",
   ACCEPTED: "Accepted",
@@ -81,8 +79,6 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   UNDER_EVALUATION: "Evaluation Pending",
   PROCESSING_INTERVIEW: "Interviewing",
   INTERVIEW_DONE: "Interview Done",
-
-  //HIRED
   HIRING_IN_PROCESS: "Hiring in Process",
   DOCUMENT_REQUESTED: "Document Requested",
   DOCUMENT_ADDITIONAL_REQUESTED: "Additional Document Requested",
@@ -93,18 +89,15 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   DOCUMENT_VERIFIED: "Document Verified",
   HIRED: "Hired",
   OFFER_SENT: "Offer Sent",
-
-  // JOINED
   JOINED: "Joined",
   ON_HOLD: "On Hold",
   REJECTED: "Rejected",
-
-  // Additional statuses
   OFFER_ISSUE_RAISED: "Offer Issue Raised",
   REVISED_OFFER_SENT: "Revised Offer Sent",
   REVISED_LETTER: "Revised Letter Sent",
   OFFER_ACCEPTED: "Offer Accepted",
 };
+
 export interface ApplicationTableProps {
   activeTab: "All" | "Hired" | "Joined";
   setActiveTab: (tab: "All" | "Hired" | "Joined") => void;
@@ -112,7 +105,7 @@ export interface ApplicationTableProps {
   data: JobApplicationDetailsDto[];
   handleUpdate: (
     payload: JobApplicationUpdatePayloadDto,
-    jobId: string,
+    applicationId: string,
     hasRefetch: boolean
   ) => void;
   userType: string;
@@ -122,8 +115,9 @@ export interface ApplicationTableProps {
   setIsAddEvaluatorModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
   EvaluatorFormProps: EvaluatorFormProps | null;
   setEvaluatorFormProps: React.Dispatch<React.SetStateAction<EvaluatorFormProps | null>>;
-  isBulkEvaluation: boolean; // Optional prop to indicate if it's a bulk evaluation
-  onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
+  isBulkEvaluation: boolean;
+  onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void;
+  isUpdating?: boolean;
 }
 
 export default function ApplicationTable({
@@ -141,10 +135,12 @@ export default function ApplicationTable({
   isBulkEvaluation,
   onBulkUpdate,
   refetch,
+  isUpdating = false,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+  const [updatingApplicationId, setUpdatingApplicationId] = useState<string | null>(null);
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<{
     payload: JobApplicationUpdatePayloadDto;
     jobId: string;
@@ -213,22 +209,32 @@ export default function ApplicationTable({
     currentCTC: ["applicantDetails.CTC"],
   };
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "application-table",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
+  });
 
-  // Handle Status update for all buttons
-  const handleStatusUpdate = (
+  // Wrapper to track which application is being updated
+  const handleUpdateApplicationStatus = async (
     status: JobApplicationStatusType,
     row: JobApplicationDetailsDto,
     hasRefetch: boolean = true
   ) => {
-    const payload: JobApplicationUpdatePayloadDto = {
-      applicantName: row.applicantDetails.name,
-      emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
-      status,
-      userId: userDetails ? userDetails?.id : "",
-      userType,
-    };
-    handleUpdate(payload, row.id, hasRefetch);
+    setUpdatingApplicationId(row.id);
+    try {
+      const payload: JobApplicationUpdatePayloadDto = {
+        applicantName: row.applicantDetails.name,
+        emailId: secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) || "",
+        status,
+        userId: userDetails ? userDetails?.id : "",
+        userType,
+      };
+      handleUpdate(payload, row.id, hasRefetch);
+    } finally {
+      setUpdatingApplicationId(null);
+    }
   };
 
   // Common column definitions
@@ -241,19 +247,12 @@ export default function ApplicationTable({
         <div className="flex items-center justify-center gap-2">
           <User size={20} />
           <span>{row.applicantDetails.name}</span>
+          {updatingApplicationId === row.id && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          )}
         </div>
       ),
     },
-    /*     profile: {
-      key: "profile",
-      sortable: true,
-      label: "Profile",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.applicantDetails?.candidateExperience?.designation ?? "FRESHER"}</span>
-        </div>
-      ),
-    }, */
     experience: {
       key: "experience",
       label: "Experience",
@@ -304,14 +303,13 @@ export default function ApplicationTable({
               if (application === null) return;
               setScorePointsModal({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
-                data: application.feedback, // Assuming matchingScore is an object with details
+                data: application.feedback,
                 matchingScore: row.matchingScore ?? 0,
                 candidateName: row.applicantDetails.name,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
-              // console.log("Matching Score Details:", scorePointsModal);
             }}
             value={row.matchingScore}
           />
@@ -324,8 +322,6 @@ export default function ApplicationTable({
       sortable: true,
       contentWidth: `max-w-none !min-w-auto`,
       render: (row: JobApplicationDetailsDto) => {
-        // Status color mapping
-
         const colorClass =
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
@@ -348,30 +344,32 @@ export default function ApplicationTable({
       key: "actions",
       label: "Actions",
       contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-auto h-8" : ""} `,
-      render: (row: JobApplicationDetailsDto) => (
-        <JobApplicationActions
-          row={row}
-          activeTab={activeTab}
-          userDetails={userDetails}
-          userType={userType}
-          isBulkEvaluation={isBulkEvaluation}
-          handleStatusUpdate={handleStatusUpdate}
-          setIsViewCVModalOpen={setIsViewCVModalOpen}
-          setPdfViewDetails={setPdfViewDetailsID}
-          setViewEvaluation={setViewEvaluation}
-          setIsHireNowModalOpen={setIsHireNowModalOpen}
-          setIsViewOfferIssue={setIsViewOfferIssue}
-          setIsNoteModalOpen={setIsNoteModalOpen}
-          setIsRejectModalOpen={setIsRejectModalOpen}
-          setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
-          setEvaluatorFormProps={setEvaluatorFormProps}
-          setIsRequestDocModalOpen={setIsRequestDocModalOpen}
-          setJoinedModalOpen={setJoinedModalOpen}
-          handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
-            setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
-          }}
-        />
-      ),
+      render: (row: JobApplicationDetailsDto) => {
+        return (
+          <JobApplicationActions
+            row={row}
+            activeTab={activeTab}
+            userDetails={userDetails}
+            userType={userType}
+            isBulkEvaluation={isBulkEvaluation}
+            handleStatusUpdate={handleUpdateApplicationStatus}
+            setIsViewCVModalOpen={setIsViewCVModalOpen}
+            setPdfViewDetails={setPdfViewDetailsID}
+            setViewEvaluation={setViewEvaluation}
+            setIsHireNowModalOpen={setIsHireNowModalOpen}
+            setIsViewOfferIssue={setIsViewOfferIssue}
+            setIsNoteModalOpen={setIsNoteModalOpen}
+            setIsRejectModalOpen={setIsRejectModalOpen}
+            setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
+            setEvaluatorFormProps={setEvaluatorFormProps}
+            setIsRequestDocModalOpen={setIsRequestDocModalOpen}
+            setJoinedModalOpen={setJoinedModalOpen}
+            handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
+              setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
+            }}
+          />
+        );
+      },
     },
     response: {
       key: "response",
@@ -384,7 +382,6 @@ export default function ApplicationTable({
         </div>
       ),
     },
-
     currentCompany: {
       key: "company",
       label: "Current Company",
@@ -451,12 +448,11 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
-          commonColumns.jobProfile,
+          // commonColumns.jobProfile, //@TODO:Add card for job profile
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
           commonColumns.ECTC,
-          // commonColumns.profile,
           commonColumns.yoe,
           commonColumns.location,
           commonColumns.matchingScore,
@@ -467,10 +463,9 @@ export default function ApplicationTable({
       case "Hired":
         return [
           commonColumns.name,
-          commonColumns.jobProfile,
+          // commonColumns.jobProfile,
           commonColumns.currentCompany,
           commonColumns.currentPosition,
-          // commonColumns.profile,
           commonColumns.experience,
           commonColumns.currentCTC,
           commonColumns.yoe,
@@ -483,7 +478,7 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          commonColumns.jobProfile,
+          // commonColumns.jobProfile,
           { key: "applicantDetails_CTC", label: "CTC", sortable: true },
           {
             key: "applicantDetails_candidateExperience_designation",
@@ -509,24 +504,6 @@ export default function ApplicationTable({
               </div>
             ),
           },
-          /*   {
-            key: "actions",
-            label: "Documents",
-            render: (jobData: JobApplicationDetailsDto) => (
-              <div className="flex gap-2 justify-center">
-                <button
-                  className="flex gap-2 items-center btn-sky"
-                  onClick={() => {
-                    jobData
-                      ? handleViewDocumentClick(jobData)
-                      : toast.error("Failed to view document", getToastOptions({}));
-                  }}>
-                  <Eye size={16} />
-                  View Document
-                </button>
-              </div>
-            ),
-          }, */
           commonColumns.actions,
         ];
       default:
@@ -534,30 +511,12 @@ export default function ApplicationTable({
     }
   };
 
-  // Get columns for current tab
   const applicationColumns = getColumnsForTab(activeTab);
 
-  /**
-   * Toggle select all rows
-   */
-  /*   const toggleSelectAll = () => {
-    if (ListSelection.selectedRows.length === data.length) {
-      ListSelection.reset();
-    } else {
-      data.forEach((row) => ListSelection.toggleRow(row));
-    }
-  }; */
-
-  /**
-   * Toggle row expansion
-   */
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
   };
 
-  /**
-   * Render expanded row details
-   */
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
     let timeLineProps: TimelineStep[] = [];
     if (row.status === "JOINED") {
@@ -580,11 +539,6 @@ export default function ApplicationTable({
                 </p>
               </div>
             </div>
-
-            {/*             <div className="">
-              <span className="font-semibold text-gray-500">Location</span>
-              <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
-            </div> */}
 
             <div className="">
               <span className="font-semibold text-gray-500">Application Date</span>
@@ -621,7 +575,6 @@ export default function ApplicationTable({
               </>
             )}
             {row.status === "REJECTED" ? (
-              // Show rejection details
               <>
                 <div>
                   <span className="font-semibold text-gray-500">Rejected Date</span>
@@ -641,9 +594,7 @@ export default function ApplicationTable({
                 <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
-                    <p>
-                      <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
-                    </p>
+                    <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
                   </p>
                 </div>
 
@@ -679,20 +630,7 @@ export default function ApplicationTable({
                 </div>
               </>
             ) : (
-              // Show application details
               <>
-                {/*                 <div>
-                  <span className="font-semibold text-gray-500">Current CTC</span>
-                  <p className="capitalize">
-                    {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500">Expected CTC</span>
-                  <p className="capitalize">
-                    {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
-                  </p>
-                </div> */}
                 <div>
                   <span className="font-semibold text-gray-500">Notice Period</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
@@ -707,7 +645,6 @@ export default function ApplicationTable({
 
   return (
     <>
-      {/* Deselect button - only show when rows are selected */}
       <button
         className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${
           ListSelection.selectedRows.length === 0 ? "hidden" : ""
@@ -719,7 +656,6 @@ export default function ApplicationTable({
         <span>deselect {ListSelection.selectedRows.length} rows</span>
       </button>
 
-      {/* Main table component */}
       <DynamicTable
         columns={applicationColumns}
         rows={sortedData ?? []}
@@ -740,7 +676,7 @@ export default function ApplicationTable({
         hasPrevPage={Pagination.hasPreviousPage}
       />
 
-      {/* Modal components */}
+      {/* All Modals */}
       <Modal
         isOpen={isViewCVModalOpen}
         onClose={() => {
@@ -822,7 +758,7 @@ export default function ApplicationTable({
         className="w-[90vw] sm:w-[455px] h-[500px] ">
         <RequestDocumentModal
           {...isRequestDocModalOpen}
-          handleStatusUpdate={handleStatusUpdate}
+          handleStatusUpdate={handleUpdateApplicationStatus}
           refetch={refetch}
         />
       </Modal>
@@ -859,7 +795,7 @@ export default function ApplicationTable({
         )}
         <ResponseEvaluation
           jobApplicationData={isViewEvaluator.jobApplicationData}
-          handleUpdate={handleStatusUpdate}
+          handleUpdate={handleUpdateApplicationStatus}
           setIsRejectModalOpen={setIsRejectModalOpen}
           onClose={() => {
             setViewEvaluation({
@@ -873,7 +809,6 @@ export default function ApplicationTable({
               SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
             );
             const applicantData = sortedData.find((row) => row.id === JobApplicationId);
-            /* console.log("Applicant Data:", applicantData); */
             if (applicantData && companyDetails) {
               setEvaluatorFormProps({
                 Defaultvalues: {
@@ -896,6 +831,7 @@ export default function ApplicationTable({
           }}
         />
       </Modal>
+
       <Modal
         isOpen={duplicateModalOpen.isOpen}
         onClose={() =>
