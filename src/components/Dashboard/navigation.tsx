@@ -115,23 +115,23 @@ const navigationItems: NavItem[] = [
     dashboardTypes: ["ADMIN"],
   },
   {
-    id: "aAgency/allCandidates",
-    label: "Agency",
+    id: "aAgency/agencyList",
+    label: "Agency List",
     icon: Warehouse,
     dashboardTypes: ["ADMIN", "CORPORATE"],
     expandable: true,
     child: [
-      { label: "Agency List", id: "aAgency/agencyList" }
+      { label: "All candidates", id: "aAgency/allCandidates" }
     ]
   },
   {
-    id: "aDatabase",
-    label: "My database",
+    id: "aSearchDB",
+    label: "Search in DB",
     icon: FolderOpenIcon,
     dashboardTypes: ["ADMIN","CORPORATE"],
     expandable: true,
     child: [
-      { label: "Search in database", id: "aSearchDB" }
+      { label: "My database", id: "aDatabase" }
     ]
   },
   {

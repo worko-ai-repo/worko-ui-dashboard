@@ -12,6 +12,9 @@ import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApp
 import { Edit, View } from "@AssetsFolder/assets";
 import AssignJobModal from "./modals/AssignJobModal";
 import RemoveJobModal from "./modals/RemoveJobModal";
+import EditAgencyModal, { FormValues } from "./modals/EditAgencyModal";
+import PauseAgencyModal from "./modals/PauseAgencyModal";
+import DeleteAgencyModal from "./modals/DeleteAgencyModal";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -59,10 +62,14 @@ export default function AgencyListTable(props: any) {
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
-  const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
+  const [editProfileData,setEditProfileData] = useState<any>()
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
   const [isAssignJobModelOpen,setIsAssignJobModelOpen] = useState<boolean>(false);
   const [isRemoveJobModelOpen,setIsRemoveJobModelOpen] = useState<boolean>(false);
+  const [isEditAgencyModelOpen,setIsEditAgencyModelOpen] = useState<boolean>(false);
+  const [isPauseAgencyModelOpen,setIsPauseAgencyModelOpen] = useState<boolean>(false);
+  const [isDeleteAgencyModelOpen,setIsDeleteAgencyModelOpen] = useState<boolean>(false);
+  
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
 
@@ -215,7 +222,7 @@ export default function AgencyListTable(props: any) {
 
                 <button className="border rounded-lg p-2"
                     onClick={()=>{
-                        setEditProfileView(true)
+                        setIsEditAgencyModelOpen(true)
                         setEditProfileData(row)
                     }}>
                     <Pencil className="w-5 h-5 shrink-0 rounded-sm" />
@@ -223,7 +230,7 @@ export default function AgencyListTable(props: any) {
 
                 <button className="border rounded-lg p-2"
                     onClick={()=>{
-                        setEditProfileView(true)
+                        setIsPauseAgencyModelOpen(true)
                         setEditProfileData(row)
                     }}>
                     <CirclePause className="w-5 h-5 shrink-0" />
@@ -231,7 +238,7 @@ export default function AgencyListTable(props: any) {
 
                 <button className="border rounded-lg p-2 bg-red-500 text-white"
                     onClick={()=>{
-                        setEditProfileView(true)
+                        setIsDeleteAgencyModelOpen(true)
                         setEditProfileData(row)
                     }}>
                     <Trash2 className="w-5 h-5 shrink-0" />
@@ -489,6 +496,38 @@ const dummyJobData = [
           isOpen= {isRemoveJobModelOpen}
           jobsList={dummyJobData}
         />
+
+        <EditAgencyModal
+          dashboardType={"admin"}
+          onClose= {() => setIsEditAgencyModelOpen(false)}
+          isOpen= {isEditAgencyModelOpen}
+          data={editProfileData}
+        />
+
+        <PauseAgencyModal
+          dashboardType={"admin"}
+          onClose= {() => setIsPauseAgencyModelOpen(false)}
+          isOpen= {isPauseAgencyModelOpen}
+          // data={editProfileData}
+          //     onClose={() => setShowCompletedModal(false)}
+          //     isOpen={showCompletedModal}
+          //     referralData={referralData}
+          //     onRefresh={onRefresh}
+          //     isCandidate={true}
+        />
+
+        <DeleteAgencyModal
+          dashboardType={"admin"}
+          onClose= {() => setIsDeleteAgencyModelOpen(false)}
+          isOpen= {isDeleteAgencyModelOpen}
+          // data={editProfileData}
+          //     onClose={() => setShowCompletedModal(false)}
+          //     isOpen={showCompletedModal}
+          //     referralData={referralData}
+          //     onRefresh={onRefresh}
+          //     isCandidate={true}
+        />
+
     </>
   );
 }

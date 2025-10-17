@@ -1,12 +1,8 @@
-import SearchBar from '@Components/Shared/SearchBar'
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
 import React, { useState } from 'react'
 import AgencyListTable from './AgencyListTable'
-import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown'
 import { Plus } from 'lucide-react'
 import AddNewAgencyModal from './modals/AddNewAgencyModal'
-import AssignJobModal from './modals/AssignJobModal'
-import RemoveJobModal from './modals/RemoveJobModal'
 
 const AgencyList = () => {
   const [searchBarText,setSearchBarText] = useState<string|null>("")

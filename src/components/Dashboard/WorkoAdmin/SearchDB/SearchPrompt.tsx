@@ -70,7 +70,7 @@ const SearchPrompt: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen w-full bg-background">
+    <div className="flex flex-col justify-start items-center min-h-screen w-full bg-background">
       <div className="flex flex-col justify-center items-center text-center mb-8">
         <img src={logo_text} alt="worko_logo" className="h-20 w-auto" />
         <p className="text-muted-foreground text-sm">

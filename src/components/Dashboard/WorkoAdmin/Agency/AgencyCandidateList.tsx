@@ -2,7 +2,8 @@ import SearchBar from '@Components/Shared/SearchBar'
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
 import React, { useState } from 'react'
 import AgencyCandidateListTable from './AgencyCandidateListTable'
-import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown'
+import GenericDropdownAgency from '@Components/Shared/DropDown/GenericDropdownAgency'
+import SearchBarAgency from '@Components/Shared/SearchBarAgency'
 
 const AgencyCandidateList = () => {
   const [searchBarText,setSearchBarText] = useState<string|null>("")
@@ -299,7 +300,7 @@ const StatusFilterDropdown = [
     <div className='flex flex-row gap-2 justify-center items-center m-2'>
             {/* Dropdown 1 */}
               <div className="flex gap-3 font-semibold w-full sm:w-auto">
-                <GenericDropdown
+                <GenericDropdownAgency
                   selectTitle={"Select job"}
                   tooltipMessage="Select Status to filter applications"
                   disabled={false}
@@ -309,7 +310,7 @@ const StatusFilterDropdown = [
 
             {/* Dropdown 2 */}
               <div className="flex gap-3 font-semibold w-full sm:w-auto">
-                <GenericDropdown
+                <GenericDropdownAgency
                   selectTitle={"Select agency"}
                   tooltipMessage="Select Status to filter applications"
                   disabled={false}
@@ -319,7 +320,7 @@ const StatusFilterDropdown = [
 
             {/* Dropdown 3 */}
               <div className="flex gap-3 font-semibold w-full sm:w-auto">
-                <GenericDropdown
+                <GenericDropdownAgency
                   selectTitle={"Company name"}
                   tooltipMessage="Select Status to filter applications"
                   disabled={false}
@@ -332,9 +333,9 @@ const StatusFilterDropdown = [
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
           </div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-end items-end gap-3">
             {/* Search Bar */}
-            <SearchBar
+            <SearchBarAgency
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => console.log("as")}
