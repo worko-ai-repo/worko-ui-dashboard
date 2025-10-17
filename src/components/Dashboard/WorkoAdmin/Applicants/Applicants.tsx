@@ -199,14 +199,34 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       );
       return;
     }
+
+    // Create a map of applications by ID for quick lookup
+    const applicationMap = new Map(data.map((app) => [app.id, app]));
+
+    // Get unique job IDs from selected rows
+    const selectedApplications = ListSelection.selectedRows
+      .map((row) => applicationMap.get(row.jobApplicationId))
+      .filter((app) => app !== undefined) as JobApplicationDetailsDto[];
+
+    // Check if all selections are from the same job (for single job scenario)
+    const uniqueJobIds = new Set(selectedApplications.map((app) => app.jobId));
+
+    if (uniqueJobIds.size === 0) {
+      toast.error("No valid applications found", getToastOptions({}));
+      return;
+    }
+
+    // Use the first application's job details as default (could be all same job or representative)
+    const firstApp = selectedApplications[0];
+
     setIsAddEvaluatorModalOpen(true);
     setEvaluatorFormProps({
       Defaultvalues: {
         jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
-        jobId: data[0]?.jobId ?? "",
-        jobTitle: data[0]?.jobTitle ?? "",
+        jobId: firstApp.jobId,
+        jobTitle: firstApp.jobTitle,
         applicantUserName: ListSelection.selectedRows.map((row) => row.applicantName),
-        companyId: data[0]?.companyId ?? "",
+        companyId: firstApp.companyId,
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
         hrName: userDetails?.fullName ?? "",
@@ -273,18 +293,30 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                 width="w-auto"
               />
             </div>
-            <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
-              <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
-              <span
-              onClick={() => {
-                window.open(data && data.length > 0 ? data[0].jobUrl : "", "_blank");
-              }}
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content= {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
-              className="cursor-pointer capitalize text-sm font-semibold text-[#101828] truncate">
-                {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
-              </span>
-            </div>
+            {!isAllApplicants && (
+              <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+                <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
+                <span
+                  onClick={() => {
+                    window.open(data && data.length > 0 ? data[0].jobUrl : "", "_blank");
+                  }}
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={
+                    queryIsJobsLoading
+                      ? "Loading..."
+                      : data && data.length > 0
+                      ? data[0].jobTitle
+                      : ""
+                  }
+                  className="cursor-pointer capitalize text-sm font-semibold text-[#101828] truncate">
+                  {queryIsJobsLoading
+                    ? "Loading..."
+                    : data && data.length > 0
+                    ? data[0].jobTitle
+                    : ""}
+                </span>
+              </div>
+            )}
             {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>

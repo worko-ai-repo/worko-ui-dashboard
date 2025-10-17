@@ -494,39 +494,32 @@ export default function ApplicationTable({
           {
             key: "status_actionDate",
             label: "Joining Date",
-            render: (row: JobApplicationDetailsDto) => (
-              <div className="flex items-center justify-center gap-2">
-                <span>
-                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
-                    "en-GB",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
-              </div>
-            ),
+            render: (row: JobApplicationDetailsDto) => {
+              // Find the JOINED status in the status tracker
+              const joinedStatus = row.statusTracker
+                ?.slice()
+                .reverse()
+                .find((tracker) => tracker.newStatus === "JOINED");
+
+              const joiningDate = joinedStatus?.actionDate
+                ? new Date(joinedStatus.actionDate)
+                : null;
+
+              return (
+                <div className="flex items-center justify-center gap-2">
+                  <span>
+                    {joiningDate
+                      ? joiningDate.toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "N/A"}
+                  </span>
+                </div>
+              );
+            },
           },
-          /*   {
-            key: "actions",
-            label: "Documents",
-            render: (jobData: JobApplicationDetailsDto) => (
-              <div className="flex gap-2 justify-center">
-                <button
-                  className="flex gap-2 items-center btn-sky"
-                  onClick={() => {
-                    jobData
-                      ? handleViewDocumentClick(jobData)
-                      : toast.error("Failed to view document", getToastOptions({}));
-                  }}>
-                  <Eye size={16} />
-                  View Document
-                </button>
-              </div>
-            ),
-          }, */
           commonColumns.actions,
         ];
       default:
