@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
@@ -35,6 +35,10 @@ import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import { TabType } from "@Utils/ApplicationButtonVisibility.utils";
+import ApplicantFilters, {
+  ApplicantFilterValues,
+} from "@Components/Shared/ApplicantsPage/ApplicantFilters";
+import { filterApplicants } from "@Utils/ApplicantFilter.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -115,7 +119,7 @@ const Applicants = () => {
 
   const {
     activeTab,
-    setActiveTab: handleTabChange,
+    setActiveTab: setActiveTabUrl,
     searchText: searchBarText,
     setSearchText: handleSearchChange,
     pageSize,
@@ -133,6 +137,13 @@ const Applicants = () => {
       validValues: [10, 25, 50, 100, 150, 200],
     },
   });
+
+  // Custom tab change handler that updates both tab and status together
+  const handleTabChange = (tab: TabType) => {
+    const newStatus = getInitialApiStatus(tab);
+    setApiStatus(newStatus);
+    setActiveTabUrl(tab);
+  };
 
   // Initialize apiStatus based on activeTab to prevent double API calls
   const getInitialApiStatus = (tab: TabType): JobApplicationStatusType | undefined => {
@@ -158,6 +169,9 @@ const Applicants = () => {
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType | undefined>(
     getInitialApiStatus(activeTab)
   );
+
+  // Add filter state
+  const [filters, setFilters] = useState<ApplicantFilterValues>({});
 
   const { id: jobId } = useParams<{ id: string }>();
 
@@ -210,6 +224,12 @@ const Applicants = () => {
     baseParams: params,
     enabled: !!jobId && !!userDetails?.companyId && !!userType,
   });
+
+  // Apply filters to the data locally
+  const filteredData = useMemo(() => {
+    if (!data) return data;
+    return filterApplicants(data, filters);
+  }, [data, filters]);
 
   // Mutation for single application status update
   const updateApplicationMutation = useMutation({
@@ -466,6 +486,7 @@ const Applicants = () => {
               handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
+              <ApplicantFilters onFilterChange={setFilters} className="min-w-fit" />
               <GenericDropdown
                 selectTitle="Status"
                 tooltipMessage="Select Status to filter applications"
@@ -526,7 +547,7 @@ const Applicants = () => {
           <ApplicationTable
             activeTab={activeTab}
             setActiveTab={handleTabChange}
-            data={data}
+            data={filteredData}
             handleUpdate={handleJobApplicationStatusUpdate}
             userType={userType ?? ""}
             Pagination={{

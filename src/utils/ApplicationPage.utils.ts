@@ -160,6 +160,13 @@ class JobApplicationService {
   
     if (!feedback) return [];
   
+    // Check if feedback is a JSON string (starts with '[' or '{')
+    const trimmedFeedback = feedback.trim();
+    if (!trimmedFeedback.startsWith('[') && !trimmedFeedback.startsWith('{')) {
+      // It's a plain text string, return it as a single-item array
+      return [feedback];
+    }
+  
     try {
       const parsed = JSON.parse(feedback);
       
@@ -196,8 +203,9 @@ class JobApplicationService {
       console.warn("Unexpected rejection feedback format:", parsed);
       return [];
     } catch (e) {
-      console.error("Invalid rejection feedback format:", e);
-      return [];
+      // If JSON parsing fails, treat as plain text
+      console.warn("Feedback is not valid JSON, treating as plain text:", feedback);
+      return [feedback];
     }
   }
 

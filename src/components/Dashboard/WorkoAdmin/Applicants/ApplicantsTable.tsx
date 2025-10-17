@@ -894,7 +894,7 @@ export default function ApplicationTable({
         onClose={() => setIsRejectModalOpen(null)}
         className="w-[90vw] sm:w-[455px] h-auto">
         {isRejectModalOpen && (
-          <RejectionForm payload={isRejectModalOpen.payload} jobId={isRejectModalOpen.jobId} />
+          <RejectionForm payload={isRejectModalOpen.payload} jobId={isRejectModalOpen.jobId} onClose={()=>  setIsRejectModalOpen(null)} />
         )}
       </Modal>
 

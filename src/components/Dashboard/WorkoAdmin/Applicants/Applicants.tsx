@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
@@ -28,6 +28,10 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { TabType } from "@Utils/ApplicationButtonVisibility.utils";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import ApplicantFilters, {
+  ApplicantFilterValues,
+} from "@Components/Shared/ApplicantsPage/ApplicantFilters";
+import { filterApplicants } from "@Utils/ApplicantFilter.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -105,6 +109,9 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     getInitialApiStatus(activeTab)
   );
 
+  // Add filter state
+  const [filters, setFilters] = useState<ApplicantFilterValues>({});
+
   const ListSelection: ApplicationListSelectionDto = useListSelection({
     limit: 30,
     mapFn: (application: JobApplicationDetailsDto): BulkJobApplicationUpdateItem => ({
@@ -154,6 +161,13 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     baseParams: params,
     enabled: isAllApplicants ? true : !!jobId,
   });
+
+  // Apply filters to the data locally
+  const filteredData = useMemo(() => {
+    if (!data) return data;
+    return filterApplicants(data, filters);
+  }, [data, filters]);
+
   const updateApplicationMutation = useMutation({
     mutationFn: async ({
       payload,
@@ -164,45 +178,44 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     }) => {
       const result = await AdminServiceObj.updateApplicationStatus(payload, applicationId);
       if (!result) {
-        throw new Error('Failed to update application status');
+        throw new Error("Failed to update application status");
       }
       return result;
     },
-  
+
     // Optimistically update local data only
     onMutate: async () => {
       // Stop any refetching (optional)
       await queryClient.cancelQueries({ queryKey });
     },
-  
+
     onError: (err) => {
       console.error(" Failed to update application status:", err);
       toast.error("Failed to update application status.", getToastOptions({}));
     },
-  
+
     // When API returns fresh data, replace only the target record
     onSuccess: (updatedApplication: JobApplicationDetailsDto) => {
       toast.success("Application status updated successfully", getToastOptions({}));
-    
+      debugger;
       if (!data || !Array.isArray(data)) {
         console.warn(" Data is not an array or empty:", data);
         return;
       }
-    
+
       const index = data.findIndex(
         (app: JobApplicationDetailsDto) => app.id === updatedApplication.id
       );
-    
+
       if (index === -1) {
         console.warn("Application not found in local data:", updatedApplication.id);
         return;
       }
-    
+
       data[index] = { ...data[index], ...updatedApplication };
       console.log(`Updated application ${updatedApplication.id} in local data.`);
     },
   });
-  
 
   // Mutation for bulk application updates
   const bulkUpdateMutation = useMutation({
@@ -437,6 +450,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
               handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
+              <ApplicantFilters onFilterChange={setFilters} className="min-w-fit" />
               <GenericDropdown
                 selectTitle="Status"
                 tooltipMessage="Select Status to filter applications"
@@ -500,7 +514,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
           <ApplicationTable
             activeTab={activeTab}
             setActiveTab={handleTabChange}
-            data={data}
+            data={filteredData}
             handleUpdate={handleUpdateWithMutation}
             userType={"ADMIN"}
             Pagination={{
