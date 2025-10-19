@@ -29,7 +29,7 @@ interface ProvideFeedbackModalProps {
   onClose: () => void;
   isOpen: boolean;
   referralData: any;
-  onRefresh: () => void;
+  // onRefresh: () => void;
   isCandidate?: boolean;
 }
 
@@ -41,7 +41,7 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh,
+  // onRefresh,
   isCandidate,
 }) => {
   const [visible, setVisible] = useState(false);
@@ -105,7 +105,7 @@ const ProvideFeedbackModal: FC<ProvideFeedbackModalProps> = ({
       if (response) {
         toast.success("Feedback submitted Successfully", getToastOptions({}));
         setIsError("");
-        onRefresh();
+        // onRefresh();
         onClose();
       }
 

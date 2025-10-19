@@ -1,5 +1,6 @@
 import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react"; 
+import { ReferralDetailsDto } from "./ReferralTypes";
 
 
 
@@ -11,6 +12,7 @@ interface WithdrawRefferralModalProps {
   onSubmit: () => void;
   onClose: () => void;
   isOpen: boolean;
+  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
 }
 
 const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
@@ -21,6 +23,7 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
   onSubmit,
   onClose,
   isOpen,
+  onLocalUpdate,
 }) => {
   const options = [
     "Got referral from somewhere else",

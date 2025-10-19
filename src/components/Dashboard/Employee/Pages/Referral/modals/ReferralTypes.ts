@@ -35,7 +35,11 @@ export type ReferralStatus =
   | "ACCEPTED"
   | "REJECTED"
   | "AWAITING"
-  | "DONE";
+  | "DONE"
+  | "ISSUE_RAISED" 
+  | "COMPLETED"   
+  | "CANCELLED"
+  | "WITHDRAWN"
 
 export interface PaginationInfo {
   count: number;
