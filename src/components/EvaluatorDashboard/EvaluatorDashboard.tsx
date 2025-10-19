@@ -55,7 +55,7 @@ const EvaluatorView: React.FC = () => {
     queryKey: ["evaluations", jobApplicationId, evaluationRequestId],
     queryFn: getEvaluationDetails,
     enabled: !!jobApplicationId && !!evaluationRequestId,
-    // refetchOnWindowFocus: false,
+    refetchOnWindowFocus: false,
   });
 
   const handleSubmitFeedback = () => {

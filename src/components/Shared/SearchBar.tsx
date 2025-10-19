@@ -2,12 +2,13 @@ import { X } from "lucide-react";
 import React, { useCallback, useRef } from "react";
 
 interface SearchBarProps {
+  placeholder?:string;
   searchBarText: string | null;
   setSearchBarText: React.Dispatch<React.SetStateAction<string | null>>;
   handleClick: (value?: string | null) => void;
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ searchBarText, setSearchBarText, handleClick }) => {
+const SearchBar: React.FC<SearchBarProps> = ({placeholder, searchBarText, setSearchBarText, handleClick }) => {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const onClear = useCallback(() => {
@@ -31,7 +32,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ searchBarText, setSearchBarText, 
               handleClick();
             }
           }}
-          placeholder="Search"
+          placeholder={placeholder || "Search"}
           value={searchBarText ?? ""}
           onChange={(e) => setSearchBarText(e.target.value)}
           className="px-10 py-3 relative w-full outline-none bg-[#FAFAFA] text-sm"

@@ -117,8 +117,8 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       // className: "capitalize font-semibold text-sm text-nowrap",
     },
     {
-      key: "recipientDetails_name",
-      label: "Referral name",
+      key: "recipientDetails_email",
+      label: "Email",
       sortable: true,
     },
     {
@@ -285,12 +285,12 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       <div className="p-4  flex justify-start gap-12">
 
         <span>
-          <label>Id</label>
+          <label>Referral Id</label>
           <p className="capitalize">{row.id}</p>
         </span>
         <span>
           <label>Referral name</label>
-          <p className="capitalize">{row?.referrerDetails?.email}</p>
+          <p className="capitalize">{row?.referrerDetails?.name}</p>
         </span>
 
         <span>

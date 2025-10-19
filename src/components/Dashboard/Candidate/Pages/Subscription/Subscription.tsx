@@ -65,7 +65,7 @@ const Subscription = () => {
       const data = await profileService.getSubscriptionPlan(user.email);
       if (data && data.length > 0) {
         setSubscriptionData(data[data.length-1]);
-        setActivePlan(data[0].name);
+        setActivePlan(data[data.length-1].name);
       }
 
       const details = await profileService.fetchUserData(user.email,"details");
@@ -126,7 +126,7 @@ const Subscription = () => {
   }
 
   return (
-    <div className="w-full font-['Poppins'] text-[#000000]">
+    <div className="w-full font-['Poppins'] text-[#000000] mt-5">
       {/* Current Plan */}
       {subscriptionData && (
         <div className="bg-white rounded-[19px] p-6 mb-8 shadow-sm">

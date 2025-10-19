@@ -67,7 +67,7 @@ export default function ApplicantScreeningTable() {
   const location = useLocation();
   const { userDetails } = useAppContext();
 
-  //{ state: { jobTitle: row.jobTitle } } get this and set the job title
+  //{ state: { jobTitle: row?.jobTitle } } get this and set the job title
   let jobTitle = "";
   if (location.state && (location.state as any).jobTitle) {
     jobTitle = (location.state as any).jobTitle;
@@ -143,7 +143,7 @@ export default function ApplicantScreeningTable() {
     if (selectedRows.length === applicantsData.length) {
       setSelectedRows([]);
     } else {
-      setSelectedRows(applicantsData.map((row) => row.id));
+      setSelectedRows(applicantsData.map((row) => row?.id));
     }
   };
 
@@ -163,18 +163,23 @@ export default function ApplicantScreeningTable() {
     {
       key: "name",
       label: "Applicants name",
+      sortable: true,
+      contentWidth:"max-w-none",
       render: (row: (typeof applicantsData)[0]) => (
-        <div className="flex w-full  items-center gap-3">
-          <div className="w-10 h-10 mx-auto bg-gray-200 rounded-lg flex items-center justify-center">
+        <div className="flex w-full  mx-auto justify-center   items-center gap-3">
+          <div className="w-10 h-10 mx-auto bg-gray-200  rounded-lg flex items-center justify-center">
             <span className="text-sm font-medium text-gray-600">
-              {row.name
-                .split(" ")
-                .map((n: string) => n[0])
-                .slice(0, 3) // limit to max 3 initials
-                .join("")}
+              {row?.name
+          .split(" ")
+          .map((n: string) => n[0])
+          .slice(0, 3) // limit to max 3 initials
+          .join("")}
             </span>
           </div>
-          <span className="font-semibold text-gray-800">{row.name}</span>
+          <span 
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.name}
+          className="font-semibold text-gray-800  flex-1 text-left truncate">{row?.name}</span>
         </div>
       ),
     },
@@ -182,28 +187,34 @@ export default function ApplicantScreeningTable() {
       key: "company",
       label: "Company",
       render: (row: (typeof applicantsData)[0]) => (
-        <span className="text-gray-700">{row.company}</span>
+        <span
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={row?.company}
+        className="text-gray-700">{row?.company}</span>
       ),
     },
     {
       key: "designation",
       label: "Designation",
       render: (row: (typeof applicantsData)[0]) => (
-        <span className="text-gray-700">{row.designation}</span>
+        <span
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={row?.designation}
+        className="text-gray-700">{row?.designation}</span>
       ),
     },
     {
       key: "yoe",
       label: "YOE",
       render: (row: (typeof applicantsData)[0]) => (
-        <span className="font-semibold text-gray-800">{row.yoe}</span>
+        <span className="font-semibold text-gray-800">{row?.yoe}</span>
       ),
     },
     {
       key: "location",
       label: "Location",
       render: (row: (typeof applicantsData)[0]) => (
-        <span className="text-gray-700">{row.location}</span>
+        <span className="text-gray-700">{row?.location}</span>
       ),
     },
     {
@@ -220,15 +231,15 @@ export default function ApplicantScreeningTable() {
               setScorePointsModal({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
                 data: application.feedback, // Assuming matchingScore is an object with details
-                matchingScore: row.matchingScore ?? 0,
-                candidateName: row.name,
+                matchingScore: row?.matchingScore ?? 0,
+                candidateName: row?.name,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
               // console.log("Matching Score Details:", scorePointsModal);
             }}
-            value={row.matchingScore}
+            value={row?.matchingScore}
           />
         </div>
       ),
@@ -241,9 +252,9 @@ export default function ApplicantScreeningTable() {
           <button
             onClick={async () => {
               const url = await handleCVUrlGenerator(
-                row.corporateBulkJdId,
-                row.companyId,
-                row.cloudFileName
+                row?.corporateBulkJdId,
+                row?.companyId,
+                row?.cloudFileName
               );
               setPdfViewDetails(url);
               setIsViewCVModalOpen(true);
@@ -264,27 +275,27 @@ export default function ApplicantScreeningTable() {
         <strong>Status:</strong>
         <span
           className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
-            row.status === "accepted"
+            row?.status === "accepted"
               ? "bg-green-100 text-green-800"
-              : row.status === "rejected"
+              : row?.status === "rejected"
               ? "bg-red-100 text-red-800"
               : "bg-yellow-100 text-yellow-800"
           }`}>
-          {row.status.charAt(0).toUpperCase() + row.status.slice(1)}
+          {row?.status.charAt(0).toUpperCase() + row?.status.slice(1)}
         </span>
       </div>
 
       <div className="flex gap-4 text-sm text-gray-600">
-        {row.rejectedDate && (
+        {row?.rejectedDate && (
           <div>
             <span className="font-medium">Rejected on:</span>
-            <span className="ml-2">{row.rejectedDate}</span>
+            <span className="ml-2">{row?.rejectedDate}</span>
           </div>
         )}
-        {row.viewedDate && (
+        {row?.viewedDate && (
           <div>
             <span className="font-medium">Viewed on:</span>
-            <span className="ml-2">{row.viewedDate}</span>
+            <span className="ml-2">{row?.viewedDate}</span>
           </div>
         )}
       </div>

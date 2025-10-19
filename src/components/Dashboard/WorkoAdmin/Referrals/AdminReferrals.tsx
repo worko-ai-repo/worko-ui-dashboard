@@ -58,6 +58,7 @@ const AdminReferrals = () => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by company name"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

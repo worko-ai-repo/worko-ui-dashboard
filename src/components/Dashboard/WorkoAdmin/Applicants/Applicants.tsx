@@ -12,7 +12,10 @@ import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataAdminParams } from "@Interfaces/AdminServices.dto";
 import Modal from "../../../Shared/Modal";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
-import { BulkJobApplicationUpdateItem, BulkJobApplicationUpdatePayloadItem } from "@Interfaces/CorporateServices.dto";
+import {
+  BulkJobApplicationUpdateItem,
+  BulkJobApplicationUpdatePayloadItem,
+} from "@Interfaces/CorporateServices.dto";
 import { useListSelection } from "@Hooks/useListSelection.hook";
 import AdminServiceObj from "../Services/Admin.service";
 import { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
@@ -20,7 +23,10 @@ import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDrop
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
-import { checkIsWorkoJobFromSelected, handleJobApplicationStatusUpdate } from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import {
+  checkIsWorkoJobFromSelected,
+  handleJobApplicationStatusUpdate,
+} from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { getToastOptions } from "@Utils/Toast.utils";
 
@@ -54,9 +60,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
 
   //Api states
   const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(
-    isAllApplicants ? 25 : 200
-  );
+  const [pageSize, setPageSize] = useState(isAllApplicants ? 25 : 200);
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
 
@@ -123,14 +127,16 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         toast.error("Please select at least one application to update.", getToastOptions({}));
         return;
       }
-      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map((row) => {
-        const { id, applicantUserId, ...rest } = row;
-        return {
-          ...rest,
-          status: type, // Set the new status based on the dropdown selection
-        };
-      });
-      
+      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
+        (row) => {
+          const { id, applicantUserId, ...rest } = row;
+          return {
+            ...rest,
+            status: type, // Set the new status based on the dropdown selection
+          };
+        }
+      );
+
       const updatePromise = AdminServiceObj.postBulkApplicationUpdate({
         bulkJobApplicationUpdate: payload,
       });
@@ -138,9 +144,9 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       toast.promise(
         updatePromise,
         {
-          pending: 'Updating applications...',
-          success: 'Applications updated successfully!',
-          error: 'Failed to update applications'
+          pending: "Updating applications...",
+          success: "Applications updated successfully!",
+          error: "Failed to update applications",
         },
         getToastOptions({})
       );
@@ -174,6 +180,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Applied", onClick: () => setApiStatus("APPLIED") },
     { label: "Accepted", onClick: () => setApiStatus("ACCEPTED") },
+    { label: "CV Downloaded", onClick: () => setApiStatus("CV_DOWNLOADED") },
     { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
     { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
     { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
@@ -192,14 +199,34 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       );
       return;
     }
+
+    // Create a map of applications by ID for quick lookup
+    const applicationMap = new Map(data.map((app) => [app.id, app]));
+
+    // Get unique job IDs from selected rows
+    const selectedApplications = ListSelection.selectedRows
+      .map((row) => applicationMap.get(row.jobApplicationId))
+      .filter((app) => app !== undefined) as JobApplicationDetailsDto[];
+
+    // Check if all selections are from the same job (for single job scenario)
+    const uniqueJobIds = new Set(selectedApplications.map((app) => app.jobId));
+
+    if (uniqueJobIds.size === 0) {
+      toast.error("No valid applications found", getToastOptions({}));
+      return;
+    }
+
+    // Use the first application's job details as default (could be all same job or representative)
+    const firstApp = selectedApplications[0];
+
     setIsAddEvaluatorModalOpen(true);
     setEvaluatorFormProps({
       Defaultvalues: {
         jobApplicationId: ListSelection.selectedRows.map((row) => row.jobApplicationId),
-        jobId: data[0]?.jobId ?? "",
-        jobTitle: data[0]?.jobTitle ?? "",
+        jobId: firstApp.jobId,
+        jobTitle: firstApp.jobTitle,
         applicantUserName: ListSelection.selectedRows.map((row) => row.applicantName),
-        companyId: data[0]?.companyId ?? "",
+        companyId: firstApp.companyId,
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
         hrName: userDetails?.fullName ?? "",
@@ -227,14 +254,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     try {
       // Create the promise for sending application to recruiter
       const sendPromise = AdminServiceObj.sendApplicationToRecruiters(applicationId);
-      
+
       // Use toast.promise to handle pending, success, and error states
       toast.promise(
         sendPromise,
         {
-          pending: 'Sending application to recruiter...',
-          success: 'Application sent to recruiter successfully!',
-          error: 'Failed to send application to recruiter'
+          pending: "Sending application to recruiter...",
+          success: "Application sent to recruiter successfully!",
+          error: "Failed to send application to recruiter",
         },
         getToastOptions({})
       );
@@ -243,7 +270,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       if (!response) {
         throw new Error("Failed to send application to recruiter");
       }
-      
+
       refetch(); // Refetch the data to reflect the changes
     } catch (error) {
       console.error("Error sending application to recruiter:", error);
@@ -266,6 +293,30 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                 width="w-auto"
               />
             </div>
+            {!isAllApplicants && (
+              <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+                <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
+                <span
+                  onClick={() => {
+                    window.open(data && data.length > 0 ? data[0].jobUrl : "", "_blank");
+                  }}
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={
+                    queryIsJobsLoading
+                      ? "Loading..."
+                      : data && data.length > 0
+                      ? data[0].jobTitle
+                      : ""
+                  }
+                  className="cursor-pointer capitalize text-sm font-semibold text-[#101828] truncate">
+                  {queryIsJobsLoading
+                    ? "Loading..."
+                    : data && data.length > 0
+                    ? data[0].jobTitle
+                    : ""}
+                </span>
+              </div>
+            )}
             {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
               <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
               <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
@@ -275,6 +326,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by company name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
@@ -366,6 +418,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             showRejectReason={(applicationId) => console.log(``)}
             isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
             onBulkUpdate={onBulkUpdate}
+            isAllApplicants={isAllApplicants}
           />
         )}
       </div>

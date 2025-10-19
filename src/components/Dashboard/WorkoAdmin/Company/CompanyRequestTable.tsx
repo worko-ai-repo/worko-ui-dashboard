@@ -59,8 +59,10 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
     data: null,
     fetchCompany: undefined,
   });
-
-  let { sortedData, onSortChange } = useSortableData(data, {});
+  const keyFallbacks = {
+    companyDetail_industry:["companyDetail.industry",]
+  };
+  let { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
@@ -97,7 +99,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       ),
     },
     {
-      key: "industry",
+      key: "companyDetail_industry",
       label: "Industry",
       sortable: true,
     },

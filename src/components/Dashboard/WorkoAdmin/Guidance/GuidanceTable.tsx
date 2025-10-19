@@ -15,6 +15,7 @@ import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewE
 import { GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
 import GuidanceModal from "./GuidanceModal";
 import GuidanceUpdateModal from "./GuidanceUpdateModal";
+import { GUIDANCE_REQUEST_TYPE_LABELS } from "@TypesAndConstants/common.constants";
 
 interface GuidancePageTableProps {
   data: GuidanceRequestDto[];
@@ -79,6 +80,14 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   const columns: Column<GuidanceRequestDto>[] = [
     { key: "userDetails_name", label: "Candidate Name", sortable: true },
     {
+      key: "guidanceType",
+      label: "Guidance Type",
+      sortable: true,
+      render: (row: GuidanceRequestDto) => (
+        <span>{GUIDANCE_REQUEST_TYPE_LABELS[row.guidanceRequestType as keyof typeof GUIDANCE_REQUEST_TYPE_LABELS]}</span>
+      ),
+    },
+    {
       key: "userDetails_about",
       label: "About Candidate",
       sortable: true,
@@ -89,7 +98,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row.userDetails?.about}
               className="text-wrap line-clamp-1">
-              {row.userDetails?.about}
+              {row.userDetails?.about || "-"}
             </p>
           </div>
         </div>
@@ -122,18 +131,20 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       contentWidth: "max-w-none w-96",
       render: (row: GuidanceRequestDto) => (
         <div className="flex justify-center w-full  flex-col sm:flex-row gap-2">
-          <button
-            onClick={() =>
-              dispatch({
-                type: "OPEN",
-                modal: "updateStatus",
-                payload: { data: row, key: row.id, fetchGuidance },
-              })
-            }
-            className="btn-sky grid grid-cols-[20px_auto] ">
-            <Edit className="h-4 w-4" />
-            Update Status
-          </button>
+          {!["REJECTED", "CANCELLED", "PROJECT_COMPLETED"].includes(row.status) && (
+            <button
+              onClick={() =>
+                dispatch({
+                  type: "OPEN",
+                  modal: "updateStatus",
+                  payload: { data: row, key: row.id, fetchGuidance },
+                })
+              }
+              className="btn-sky grid grid-cols-[20px_auto] ">
+              <Edit className="h-4 w-4" />
+              Update Status
+            </button>
+          )}
           <button
             onClick={() =>
               dispatch({
