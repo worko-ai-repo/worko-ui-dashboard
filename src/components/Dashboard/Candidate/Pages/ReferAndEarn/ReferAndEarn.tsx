@@ -161,7 +161,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               {stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
+                  className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
                 >
                   <p className="text-sm text-[#64748B]">{stat.label}</p>
                   <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>

@@ -4,21 +4,24 @@ import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
+import { JobTypes } from '../JobTypes';
 
 type CheckAcceptModalProps = {
   userDetails: any;
   job: JobApplicationDetailsDto;
   onClose: () => void;
-  onConfirm: () => Promise<void>;
+  // onConfirm: () => Promise<void>;
   onSuccess: () => void;
+  onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
 };
 
 const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
   job,
   onClose,
-  onConfirm,
+  // onConfirm,
   userDetails,
   onSuccess,
+  onLocalUpdate,
 }) => {
   const [loadingAccept, setLoadingAccept] = useState(false);
   const [loadingRaise, setLoadingRaise] = useState(false);
@@ -56,6 +59,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to accept the offer. Please try again.');
           return;
         }
+        onLocalUpdate(job.id,{status:"HIRED"})
         toast.success("Offer Accepted Successfully",getToastOptions({}))
         // console.log('Accepted successfully:', response);
       } else if (nextAction === 'raise') {
@@ -87,6 +91,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           setError('Failed to raise the issue. Please try again.');
           return;
         }
+        onLocalUpdate(job.id,{status:"OFFER_ISSUE_RAISED"})
         toast.success("Issue Raised Successfully",getToastOptions({}))
         // console.log('Issue raised successfully:', response);
       }

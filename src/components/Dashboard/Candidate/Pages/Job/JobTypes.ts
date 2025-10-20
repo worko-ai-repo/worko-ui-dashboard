@@ -18,6 +18,9 @@ export interface JobTypes {
   applicationSteps?: ApplicationStep[];
   jobType: string;
   requestedDocumentDetails?: RequestedDocumentDetail[];
+  followUpRequest?: {
+    actionDate: string;
+  }[];
 }
 
 export interface RequestedDocumentDetail {
@@ -50,7 +53,8 @@ export type JobStatus =
   | 'JOINED'
   | 'APPLIED'
   | 'CV_DOWNLOADED'
-  | 'OFFER_ACCEPTED';
+  | 'OFFER_ACCEPTED'
+  | 'OFFER_ISSUE_RAISED';
 
 export type JobAction = 
   | 'HIRED'

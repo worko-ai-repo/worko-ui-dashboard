@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, useMemo, useRef } from 'react';
 import JobsTable from './JobsTable';
 import JobService from '../../Service/JobsService';
-import { JobApiResponse, PaginationInfo, JobFilters } from './JobTypes';
+import { JobApiResponse, PaginationInfo, JobFilters, JobTypes } from './JobTypes';
 import { debounce, last } from 'lodash';
 import { useDashboardContext } from '@Context/Dashboard.context';
 import { ChevronDown } from 'lucide-react';
@@ -85,7 +85,7 @@ const StatusFilterDropdown = [
       );
 
       if (response) {
-        // console.log(response)
+        console.log(response)
         setData(response);
         if (response.pagination) {
           setPaginationInfo(response.pagination);
@@ -185,7 +185,10 @@ const StatusFilterDropdown = [
     }
   }, [user, fetchJobs, pageSize, data]);
 
-
+  useEffect(() => {
+    console.log(data)
+  }, [data])
+  
   // Clean up debounced function on unmount
   useEffect(() => {
     return () => {
@@ -195,6 +198,46 @@ const StatusFilterDropdown = [
       debouncedSearch.cancel();
     };
   }, [debouncedSearch]);
+
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: Partial<JobTypes>) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+      
+      return {
+        ...prevData,
+        data: prevData.data.map(job => 
+          job.id === jobId 
+            ? { ...job, ...updatedData }
+            : job
+        )
+      };
+    });
+  }, []);
+
+const handleFollowUpRequestUpdate = useCallback(
+  (jobId: string, followUpRequest: { actionDate: string }[]) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        data: prevData.data.map(job => {
+          if (job.id !== jobId) return job;
+
+          return {
+            ...job,
+            followUpRequest: [
+              ...(job.followUpRequest ?? []),
+              ...followUpRequest,
+            ],
+          };
+        }),
+      };
+    });
+  },
+  []
+);
+
 
   // useEffect(() => {
   //   const fetchJobs = async () => {
@@ -232,7 +275,7 @@ const StatusFilterDropdown = [
             {statsItems.map((stat) => (
               <div
                 key={stat.label}
-                className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
+                className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
               >
                 <p className="text-sm text-[#64748B]">{stat.label}</p>
                 <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
@@ -322,6 +365,8 @@ const StatusFilterDropdown = [
           }}
           // Add this prop to properly handle cursor pagination
           hasNextPage={!!paginationInfo?.lastKey} // This is the key change
+          onLocalUpdate={handleLocalUpdate}
+          handleFollowUpRequestUpdate={handleFollowUpRequestUpdate}
         />
       )}
     </div>
