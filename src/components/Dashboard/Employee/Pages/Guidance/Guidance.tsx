@@ -271,7 +271,7 @@ const Guidance = () => {
   }
 
   return (
-    <div className="w-full relative rounded-xl overflow-hidden text-base text-slate-900 font-poppins">
+    <div className="w-full relative rounded-xl overflow-hidden text-base text-slate-900 font-poppins mt-5">
       {/* Help button container at top with right alignment */}
       {/* <div className="w-full flex justify-end p-2">
         <button 

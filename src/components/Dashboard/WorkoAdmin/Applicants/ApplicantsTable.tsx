@@ -616,20 +616,31 @@ export default function ApplicationTable({
           {
             key: "status_actionDate",
             label: "Joining Date",
-            render: (row: JobApplicationDetailsDto) => (
-              <div className="flex items-center justify-center gap-2">
-                <span>
-                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
-                    "en-GB",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
-              </div>
-            ),
+            render: (row: JobApplicationDetailsDto) => {
+              // Find the JOINED status in the status tracker
+              const joinedStatus = row.statusTracker
+                ?.slice()
+                .reverse()
+                .find((tracker) => tracker.newStatus === "JOINED");
+
+              const joiningDate = joinedStatus?.actionDate
+                ? new Date(joinedStatus.actionDate)
+                : null;
+
+              return (
+                <div className="flex items-center justify-center gap-2">
+                  <span>
+                    {joiningDate
+                      ? joiningDate.toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "N/A"}
+                  </span>
+                </div>
+              );
+            },
           },
           /*     {
             key: "actions",

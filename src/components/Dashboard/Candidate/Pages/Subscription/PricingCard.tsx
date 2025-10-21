@@ -191,7 +191,7 @@ return (
         <div className="px-6 text-left text-xl flex-1">
           <FeatureItem label={`No. of Referral: ${referralCount}`} />
           <FeatureItem label={`Per referral cost:\n₹${(Number(amount) / referralCount).toFixed(2)}`} />
-          <FeatureItem label={`Validity: ${duration}`} />
+          <FeatureItem label={`Validity: ${duration} days`} />
           {features.map((feature, idx) => (
             <FeatureItem key={idx} label={feature} />
           ))}
@@ -202,7 +202,7 @@ return (
           <button
             className={`bg-[#316bff] w-full h-12 rounded-xl text-white font-bold text-base transition-all duration-200 ${
               isActive 
-                ? "bg-pricing-button-active cursor-not-allowed opacity-80" 
+                ? "bg-pricing-button-active cursor-not-allowed opacity-30" 
                 : "bg-pricing-button hover:bg-pricing-button-active"
             }`}
             disabled={isActive}
