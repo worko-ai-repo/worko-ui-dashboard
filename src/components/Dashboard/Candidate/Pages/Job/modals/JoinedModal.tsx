@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 import { joining_success_img } from "@Assets";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { JobTypes } from "../JobTypes";
 
 interface JoinedModalProps {
   isOpen: boolean;
@@ -13,6 +14,7 @@ interface JoinedModalProps {
   userDetails: any;
   job: JobApplicationDetailsDto | null;
   onSuccess: () => void;
+  onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
 }
 
 export default function JoinedModal({
@@ -21,6 +23,7 @@ export default function JoinedModal({
   userDetails,
   job,
   onSuccess,
+  onLocalUpdate,
 }: JoinedModalProps) {
   const [joiningDate, setJoiningDate] = useState<string>("");
   const [hrName, setHrName] = useState<string>("");
@@ -123,7 +126,7 @@ export default function JoinedModal({
         setError("Failed to submit. Please try again.");
         return;
       }
-
+      onLocalUpdate(job.id,{status:"JOINED"})
       // console.log("Submitted successfully:", response);
       showSuccessAndClear();
     } catch (err) {
@@ -220,7 +223,7 @@ export default function JoinedModal({
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full flex flex-col items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full flex flex-col items-center">
             <img
               src={joining_success_img}
               alt="success"

@@ -19,7 +19,7 @@ export interface NormalizedUser {
 
 	// General User only
 	profileImageUrl?: string;
-    profileImageAwsS3SignedUrl?:string;
+  profileImageAwsS3SignedUrl?:string;
 	cvUrl?: string;
 	CTC?: number;
 	ECTC?: number;

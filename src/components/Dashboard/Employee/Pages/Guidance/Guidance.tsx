@@ -157,18 +157,18 @@ const Guidance = () => {
           if (Array.isArray(response.data)) {
             const processedData = response.data.map((item: GuidanceRequest) => {
               // Determine status colors based on status
-            const statusColors = {
-              "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
-              "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
-              "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
-              "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Confirmation Pending" },
-              "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
-              "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
-              "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
-              "MEETING_CONFIRMED": { bg: "bg-orange-200", text: "text-orange-600", label: "Meeting Confirmed" },
-              "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
-              "PROJECT_COMPLETED": { bg: "bg-teal-400", text: "text-teal-800", label: "Project Completed" }, 
-            };
+            // const statusColors = {
+            //   "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
+            //   "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
+            //   "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
+            //   "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Confirmation Pending" },
+            //   "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
+            //   "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
+            //   "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
+            //   "MEETING_CONFIRMED": { bg: "bg-orange-200", text: "text-orange-600", label: "Meeting Confirmed" },
+            //   "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
+            //   "PROJECT_COMPLETED": { bg: "bg-teal-400", text: "text-teal-800", label: "Project Completed" }, 
+            // };
 
               // Format date from ISO to DD-MM-YYYY
               const date = new Date(item.guidanceRequestDeadline);
@@ -177,7 +177,7 @@ const Guidance = () => {
               return {
                 ...item,
                 dateNeeded: formattedDate,
-                statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
+                // statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
               };
             });
 
@@ -258,6 +258,21 @@ const Guidance = () => {
     }
   }, [user, fetchGuidanceRequests, pageSize]);
 
+  const handleLocalUpdate = useCallback((guidanceId: string, updatedData: Partial<GuidanceRequest>) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+      
+      return {
+        ...prevData,
+        data: prevData.data.map(guidance => 
+          guidance.id === guidanceId 
+            ? { ...guidance, ...updatedData }
+            : guidance
+        )
+      };
+    });
+  }, []);
+
   // Loading state when user is not available yet
   if (!user) {
     return (
@@ -299,10 +314,11 @@ const Guidance = () => {
               currentPage={currentPage}
               onPageChange={handlePageChange}
               onPageSizeChange={handlePageSizeChange}
-              onRefresh={() => {
-                const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || "" : "";
-                fetchGuidanceRequests(currentPage, pageSize, lastKey);
-              }}
+              // onRefresh={() => {
+              //   const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || "" : "";
+              //   fetchGuidanceRequests(currentPage, pageSize, lastKey);
+              // }}
+              onLocalUpdate={handleLocalUpdate}
             />
           )}
         {/* </div> */}

@@ -11,8 +11,9 @@ interface MentorDetailsProps {
   request: GuidanceRequest | null;
   mentorDetails: any | null;
   closeModal:()=>void;
-  onRefresh:()=>void;
+  // onRefresh:()=>void;
   mentorID:string;
+  onLocalUpdate:((guidanceId: string, updatedData: Partial<GuidanceRequest>)=>void);
 }
 
 const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
@@ -21,8 +22,9 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   request,
   mentorDetails,
   closeModal,
-  onRefresh,
-  mentorID
+  // onRefresh,
+  mentorID,
+  onLocalUpdate,
 }) => {
   const [showRescheduleForm, setShowRescheduleForm] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState('');
@@ -99,7 +101,7 @@ useEffect(() => {
       console.error('Missing request ID or actionByUserId');
       return;
     }
-
+    
     try {
       // console.log(request)
       const payload = {
@@ -121,8 +123,9 @@ useEffect(() => {
       toast.success("Reschedule request sent successfully", getToastOptions({}));
       setShowRescheduleForm(false);
       setRescheduleError('');
+      // onRefresh()
+      onLocalUpdate(request.id,{status:"MEETING_RESCHEDULE_REQUESTED_BY_MENTOR"})
       closeModal()
-      onRefresh()
       return response;
     } catch (err) {
       console.error('Exception in reschedule request:', err);
