@@ -113,8 +113,9 @@ const InviteForm = ({
             pricingPlan: data.pricingPlan,
             cvDuplicacyAccess: data.cvDuplicacyAccess,
           };
-      // Make API call
-      const { response, error } = await httpServiceObj.post(
+
+      // Make API call with toast promise
+      const apiCall = httpServiceObj.post(
         `/corporate-invite/`,
         apiPayload,
         true,
@@ -123,22 +124,30 @@ const InviteForm = ({
         "BASE"
       );
 
+      await toast.promise(
+        apiCall,
+        {
+          pending: "Sending invite...",
+          success: "Invite sent successfully!",
+          error: "Failed to send invite. Please try again.",
+        },
+        getToastOptions()
+      );
+
+      const { response, error } = await apiCall;
+
       if (error) {
-        toast.error(error.message || "Failed to send invite", getToastOptions());
         throw new Error(error.message || "Failed to send invite");
       }
 
       setName(`${data.firstName} ${data.lastName}`);
       setInviteSent(true);
-      toast.success("Invite sent successfully!", getToastOptions());
-    } catch (error) {
-      console.error("Error sending invite:", error);
-      toast.error("Failed to send invite. Please try again.", getToastOptions());
-    } finally {
-      setIsSubmitting(false);
-      // Don't close modal if there's an error - only close on success
       onRefetch();
       onClose();
+    } catch (error) {
+      console.error("Error sending invite:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

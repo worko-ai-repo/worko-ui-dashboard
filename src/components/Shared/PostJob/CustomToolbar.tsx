@@ -24,10 +24,6 @@ export const CustomToolbar = () => (
     {/* <button className="ql-align" value="" />
     <button className="ql-align" value="center" />
     <button className="ql-align" value="right" /> */}
-    <button className="ql-align" value="justify" />
-
-    <button className="ql-undo">↶</button>
-    <button className="ql-redo">↷</button>
 
     {/* <button>⋮</button> */}
   </div>

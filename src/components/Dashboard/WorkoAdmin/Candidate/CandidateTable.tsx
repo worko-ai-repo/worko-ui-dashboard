@@ -95,7 +95,9 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
         </span>
       ),
     },
+    { key: "referralApplied", label: "Referrals Applied", sortable: true },
     { key: "referralCount", label: "Referrals Request Accepted", sortable: true },
+    { key: "jobCount", label: "Job Applied", sortable: true },
     {
       key: "candidateExperience_designation",
       label: "Designation",
@@ -185,7 +187,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
 
         <span>
           <label>Department</label>
-          <span
+          <div
             data-tooltip-id="my-tooltip"
             data-tooltip-content={
               getCurrentPositionCell(row)?.department ||
@@ -195,7 +197,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
             {getCurrentPositionCell(row)?.department ||
               row?.candidateExperience?.department ||
               "NA"}
-          </span>
+          </div>
         </span>
 
         <div>

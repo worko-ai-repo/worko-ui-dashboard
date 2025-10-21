@@ -268,61 +268,67 @@ export default function JobForm({
    */
   const onSubmit = async (data: JobFormSchema) => {
     if (isCorporatePath) {
-      data.companyId = companyIdFromPath; // Ensure companyId is set from path for corporate users
+      data.companyId = companyIdFromPath;
     }
-    // Check if form has changed for duplicate mode
+  
     if (mode === "DUPLICATE" && !hasFormChanged) {
       toast.error("Please make some changes before creating a duplicate job", getToastOptions());
       return;
     }
-
+  
     if (!watch("companyId")) {
       const userDetails = secureStorage.getItem<CorporateUserDetail>(
         SecureStorageKeyEnum.SIGNINDETAILS
       );
       setValue("companyId", userDetails?.companyId!);
     }
-
+  
     if (!selectedLocations.length) {
       toast.error("Please select at least one location", getToastOptions());
       return;
     }
-
+  
     const jobData = { ...data };
-
+  
     try {
       for (const location of selectedLocations) {
-        const payload = {
-          ...jobData,
-          location: location.value,
-        };
-
-        let response;
-        if (mode !== "UPDATE") {
-          response = await CorporateServiceObj.postJobs(payload, {});
-        } else {
-          response = await CorporateServiceObj.updateJob(payload, {}, jobDetails?.id!);
-        }
-
-        if (!response || Array.isArray(response)) {
-          console.error("Job operation failed for:", location.label);
-          toast.error(
-            `Job operation failed for: ${location.label}`,
-            getToastOptions({ autoClose: false })
-          );
-          continue;
-        }
-
-        const successMessage =
-          mode === "DUPLICATE"
-            ? "Job duplicated successfully"
-            : mode === "UPDATE"
-            ? "Job updated successfully"
-            : "Job created successfully";
-
-        toast.success(successMessage, getToastOptions());
+        const payload = { ...jobData, location: location.value };
+  
+        // 🔥 Wrap API call in toast.promise
+        await toast.promise(
+          (async () => {
+            let response;
+            if (mode !== "UPDATE") {
+              response = await CorporateServiceObj.postJobs(payload, {});
+            } else {
+              response = await CorporateServiceObj.updateJob(payload, {}, jobDetails?.id!);
+            }
+  
+            if (!response || Array.isArray(response)) {
+              throw new Error(`Job operation failed for: ${location.label}`);
+            }
+  
+            return response;
+          })(),
+          {
+            pending: `Processing job for ${location.label}...`,
+            success:
+              mode === "DUPLICATE"
+                ? "Job duplicated successfully"
+                : mode === "UPDATE"
+                ? "Job updated successfully"
+                : "Job created successfully",
+            error: {
+              render({ data }: any) {
+                return data?.message || `Job operation failed for ${location.label}`;
+              },
+              autoClose: false,
+            },
+          },
+          getToastOptions()
+        );
       }
-
+  
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -332,6 +338,7 @@ export default function JobForm({
       invalidateJobs();
     }
   };
+  
 
   // Rest of your existing useEffects and functions remain the same...
   useEffect(() => {

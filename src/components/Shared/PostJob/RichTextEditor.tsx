@@ -5,6 +5,7 @@ import { CustomToolbar } from "./CustomToolbar";
 
 // 👇 Import Quill to access the font format
 import Quill, { QuillOptionsStatic } from "quill";
+import { BsJustify } from "react-icons/bs";
 
 type EditorProps = {
   value: string;
@@ -14,7 +15,7 @@ type EditorProps = {
   formats?: string[];
 };
 
-const defaultFormats = ["header", "bold", "italic", "underline", "list", "bullet", "link"];
+const defaultFormats = ["header", "bold", "italic", "underline", "list", "bullet", "link","blockquote"];
 
 const defaultModules = {
   toolbar: {
@@ -22,13 +23,6 @@ const defaultModules = {
   },
 };
 
-const formats = ["bold", "italic", "underline", "list", "bullet", "link", "blockquote"];
-
-/* const modules = {
-  toolbar: {
-    container: "#custom-toolbar",
-  },
-}; */
 
 const Editor: FC<EditorProps & { style?: React.CSSProperties }> = ({ value, onChange, style }) => {
   const [internalValue, setInternalValue] = useState(value);
