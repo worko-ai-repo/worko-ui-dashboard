@@ -149,7 +149,8 @@ export function getActionVisibilityConfig(
             return (
               RBAC.can("push_to_recruiter") &&
               !isWorkoJob(application) &&
-              CONDITIONS.shouldShowPushToRecruiter(application)
+              CONDITIONS.shouldShowPushToRecruiter(application) &&
+              !("displayToCorporate" in application)
             );
           },
         },

@@ -95,7 +95,9 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
         </span>
       ),
     },
+    { key: "referralApplied", label: "Referrals Applied", sortable: true },
     { key: "referralCount", label: "Referrals Request Accepted", sortable: true },
+    { key: "jobCount", label: "Job Applied", sortable: true },
     {
       key: "candidateExperience_designation",
       label: "Designation",
@@ -160,6 +162,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
               </span>
             </button>
             <button
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Archive Candidate"}
               onClick={() => handleDeleteUsers(row)}
               className=" cursor-pointer w-12 h-9.5  text-white bg-blue-600   rounded-xl">
               <img src={Archive} alt="Archive Employee" className=" mx-auto w-6 flex-shrink-0" />
@@ -183,7 +187,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
 
         <span>
           <label>Department</label>
-          <span
+          <div
             data-tooltip-id="my-tooltip"
             data-tooltip-content={
               getCurrentPositionCell(row)?.department ||
@@ -193,16 +197,16 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
             {getCurrentPositionCell(row)?.department ||
               row?.candidateExperience?.department ||
               "NA"}
-          </span>
+          </div>
         </span>
 
         <div>
           <span className=" text-gray-500">Current CTC</span>
-          <p className="capitalize">{row.CTC ? `${row.CTC} LPA` : "-"}</p>
+          <p className="capitalize">{typeof row?.CTC === "number" ? `${row.CTC} LPA` : "-"}</p>
         </div>
         <div>
           <span className=" text-gray-500">Expected CTC</span>
-          <p className="capitalize">{row.ECTC ? `${row.ECTC} LPA` : "-"}</p>
+          <p className="capitalize">{typeof row?.ECTC === "number" ? `${row.ECTC} LPA` : "-"}</p>
         </div>
       </div>
     );

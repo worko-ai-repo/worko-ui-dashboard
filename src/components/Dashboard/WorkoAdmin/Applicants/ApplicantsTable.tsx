@@ -16,7 +16,11 @@ import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Assets and interfaces
 import { Not_Responding } from "@Assets";
-import { ApplicantDetails, JobApplicationDetailsDto, StatusTracker } from "@Interfaces/CorporateDashboard.dto";
+import {
+  ApplicantDetails,
+  JobApplicationDetailsDto,
+  StatusTracker,
+} from "@Interfaces/CorporateDashboard.dto";
 import { ApplicationListSelectionDto, JobApplicationUpdatePayloadDto } from "./Applicants";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -43,6 +47,7 @@ import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
+import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedbackModal";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -67,7 +72,7 @@ interface ApplicationTableProps {
   showRejectReason?: (application: JobApplicationDetailsDto) => void;
   viewDuplicacyDetails?: (portal: string, date: string) => void;
   isBulkEvaluation: boolean; // New prop to handle bulk evaluation
-
+  isAllApplicants: boolean; // New prop to indicate if viewing all applicants
   onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
 }
 
@@ -87,22 +92,28 @@ export const getCvViewDate = (statusTracker: StatusTracker[]) => {
 export const getCvDownloadedById = (row: JobApplicationDetailsDto) => {
   const cvDownloadedEntry = row.statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
   // ULID length is 26 characters and include - in the middle
-  const isUserIdTypeULID =
-    cvDownloadedEntry?.userId?.length === 26 || cvDownloadedEntry?.userId?.includes("-");
+  const isUserIdTypeULID = cvDownloadedEntry?.userId?.includes("-");
   return isUserIdTypeULID
     ? { updatedByUserId: cvDownloadedEntry?.userId || "" }
     : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
 };
 
+export const getRejectedById = (row: JobApplicationDetailsDto) => {
+  const rejectedEntry = row.statusTracker?.find((entry) => entry.newStatus === "REJECTED");
+  // ULID length is 26 characters and include - in the middle
+  const isUserIdTypeULID = rejectedEntry?.userId?.includes("-");
+  return isUserIdTypeULID
+    ? { updatedByUserId: rejectedEntry?.userId || "" }
+    : { updatedByCorporateUserId: rejectedEntry?.userId || "" };
+};
+
 export const getCurrentPositionCell = (row: ApplicantDetails) => {
   // Check the multiple candidate experience entries for the current company with empty endDate
-  let currentExperience = row.multipleCandidateExperience?.find(
-    (exp) => !exp.endDate
-  );
-  if (!currentExperience){
+  let currentExperience = row.multipleCandidateExperience?.find((exp) => !exp.endDate);
+  if (!currentExperience) {
     // compare all end date to get the latest one
     currentExperience = row.multipleCandidateExperience
-      ?.filter(exp => exp.endDate) // Filter out experiences without endDate
+      ?.filter((exp) => exp.endDate) // Filter out experiences without endDate
       .sort((a, b) => new Date(b.endDate!).getTime() - new Date(a.endDate!).getTime())?.[0]; // Sort by endDate descending and get first item
   }
   return currentExperience;
@@ -126,6 +137,7 @@ export default function ApplicationTable({
   isBulkEvaluation,
   refetch,
   onBulkUpdate,
+  isAllApplicants,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -175,6 +187,10 @@ export default function ApplicationTable({
     isOpen: false,
     jobApplication: {} as JobApplicationDetailsDto,
   });
+  const [RejectionFeedbackModal, setRejectionFeedbackModal] = useState<{
+    isOpen: boolean;
+    application: JobApplicationDetailsDto;
+  }>({ isOpen: false, application: {} as JobApplicationDetailsDto });
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
   // Add dropdown state for status updates (improved functionality)
   const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
@@ -196,6 +212,7 @@ export default function ApplicationTable({
     applicantDetails_CTC: ["applicantDetails.CTC"],
     currentCTC: ["applicantDetails.CTC"],
     ECTC: ["applicantDetails.ECTC"],
+    IsRefelectedToRec: ["displayToCorporate"],
   };
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
@@ -384,14 +401,18 @@ export default function ApplicationTable({
       sortable: true,
       contentWidth: `mx-auto max-w-none !min-w-auto`,
       render: (row: JobApplicationDetailsDto) => {
-        // Status color mapping
-
         const colorClass =
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
           <div className="flex justify-center mx-auto p-2 w-fit relative">
-            <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
+            <span
+              onClick={() => {
+                if (row.status === "REJECTED") {
+                  setRejectionFeedbackModal({ isOpen: true, application: row });
+                }
+              }}
+              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
           </div>
@@ -414,6 +435,25 @@ export default function ApplicationTable({
           )}
         </div>
       ),
+    },
+    IsRefelectedToRec: {
+      key: "IsRefelectedToRec",
+      label: "Recruiter Visibility",
+      render: (row: JobApplicationDetailsDto) => {
+        return (
+          <div className="flex items-center justify-center gap-2">
+            {jobApplicationServiceObj?.isVisibleToCorporate(row) ? (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">
+                Visible
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                Not Visible
+              </span>
+            )}
+          </div>
+        );
+      },
     },
     applicationDate: {
       key: "applicationDate",
@@ -516,13 +556,25 @@ export default function ApplicationTable({
         </span>
       ),
     },
+    jobProfile: {
+      key: "jobTitle",
+      label: "Job Profile",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span data-tooltip-id="my-tooltip" data-tooltip-content={row?.jobTitle || "NA"}>
+          {row?.jobTitle || "NA"}{" "}
+        </span>
+      ),
+    },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
       render: (row: JobApplicationDetailsDto) => (
         <span
           data-tooltip-id="my-tooltip"
-          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}>
+          data-tooltip-content={
+            getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"
+          }>
           {getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}{" "}
         </span>
       ),
@@ -532,7 +584,9 @@ export default function ApplicationTable({
       label: "Current CTC",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <span>{row.applicantDetails?.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}</span>
+        <span>
+          {typeof row.applicantDetails?.CTC === "number" ? `${row.applicantDetails.CTC} LPA` : "-"}
+        </span>
       ),
     },
     ECTC: {
@@ -540,7 +594,11 @@ export default function ApplicationTable({
       label: "Expected CTC",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <span>{row.applicantDetails?.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}</span>
+        <span>
+          {typeof row.applicantDetails?.ECTC === "number"
+            ? `${row.applicantDetails.ECTC} LPA`
+            : "-"}
+        </span>
       ),
     },
   };
@@ -553,6 +611,7 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
@@ -562,6 +621,7 @@ export default function ApplicationTable({
           commonColumns.matchingScore,
           commonColumns.status,
           commonColumns.IsWorko,
+          commonColumns.IsRefelectedToRec,
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
@@ -570,9 +630,11 @@ export default function ApplicationTable({
       case "Hired":
         return [
           commonColumns.name,
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
+          commonColumns.currentCTC,
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.status,
@@ -584,6 +646,7 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           { key: "applicantDetails_CTC", label: "CTC", sortable: true },
           {
             key: "applicantDetails_candidateExperience_designation",
@@ -594,20 +657,31 @@ export default function ApplicationTable({
           {
             key: "status_actionDate",
             label: "Joining Date",
-            render: (row: JobApplicationDetailsDto) => (
-              <div className="flex items-center justify-center gap-2">
-                <span>
-                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
-                    "en-GB",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
-              </div>
-            ),
+            render: (row: JobApplicationDetailsDto) => {
+              // Find the JOINED status in the status tracker
+              const joinedStatus = row.statusTracker
+                ?.slice()
+                .reverse()
+                .find((tracker) => tracker.newStatus === "JOINED");
+
+              const joiningDate = joinedStatus?.actionDate
+                ? new Date(joinedStatus.actionDate)
+                : null;
+
+              return (
+                <div className="flex items-center justify-center gap-2">
+                  <span>
+                    {joiningDate
+                      ? joiningDate.toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "N/A"}
+                  </span>
+                </div>
+              );
+            },
           },
           /*     {
             key: "actions",
@@ -705,14 +779,14 @@ export default function ApplicationTable({
             {getCvViewDate(row.statusTracker) !== "-" && (
               <>
                 <div className="">
-                  <span className="font-semibold text-gray-500">Cv View Date</span>
+                  <span className="font-semibold text-gray-500">CV View Date</span>
                   <div className="flex items-center justify-center">
                     <span>{getCvViewDate(row.statusTracker)}</span>
                   </div>
                 </div>
 
                 <div className="">
-                  <span className="font-semibold text-gray-500">Cv Viewed By</span>
+                  <span className="font-semibold text-gray-500">CV Viewed By</span>
                   <div className="flex items-center justify-center">
                     <span>
                       <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
@@ -726,14 +800,29 @@ export default function ApplicationTable({
               // Show rejection details
               <>
                 <div>
+                  <span className="font-semibold text-gray-500">Rejected Date</span>
+                  <p>
+                    {new Date(
+                      row?.rejectedByUserId?.actionDate || row?.updatedAt
+                    ).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "2-digit",
+                      hour12: true,
+                    })}
+                  </p>
+                </div>
+                <div>
                   <span className="font-semibold text-gray-500">Rejected by</span>
                   <p>
-                    <CreatedByDisplay row={row} mode="updated" />
+                    <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
                   </p>
                 </div>
 
                 <div>
-                  <div className="font-semibold text-gray-500">Reason</div>
+                  <div className="font-semibold text-gray-500">Rejected Reason</div>
                   <div className="max-w-lg">
                     {row.rejectedByUserId ? (
                       <>
@@ -766,7 +855,7 @@ export default function ApplicationTable({
             ) : (
               // Show application details
               <>
-                <div>
+                {/*     <div>
                   <span className="font-semibold text-gray-500">Current CTC</span>
                   <p className="capitalize">
                     {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
@@ -777,9 +866,9 @@ export default function ApplicationTable({
                   <p className="capitalize">
                     {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
                   </p>
-                </div>
+                </div> */}
                 <div>
-                  <span className="font-semibold text-gray-500">Notice</span>
+                  <span className="font-semibold text-gray-500">Notice period</span>
                   <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
                 </div>
               </>
@@ -1011,6 +1100,18 @@ export default function ApplicationTable({
         }
         className="w-[90vw] sm:w-[455px] h-auto py-4">
         <JoinedModal jobApplication={joinedModalOpen.jobApplication} />
+      </Modal>
+
+      <Modal
+        isOpen={RejectionFeedbackModal.isOpen}
+        onClose={() =>
+          setRejectionFeedbackModal({
+            isOpen: false,
+            application: {} as JobApplicationDetailsDto,
+          })
+        }
+        className=" sm:max-w-2xl min-w-[500px] min-h-[150px]">
+        <RejectionFeedback jobApplication={RejectionFeedbackModal.application} />
       </Modal>
     </>
   );

@@ -118,11 +118,23 @@ const Jobs = () => {
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    const response = await CorporateServiceObj.bulkUpdate(updatedData);
-    if (response)
-      toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
-    else toast.error("Failed to perform this operation.", getToastOptions({}));
-    refetch();
+    
+    const bulkUpdatePromise = CorporateServiceObj.bulkUpdate(updatedData);
+    
+    toast.promise(
+      bulkUpdatePromise,
+      {
+        pending: `Updating jobs to ${params.toLowerCase()}...`,
+        success: `Bulk jobs ${params.toLowerCase()} successfully.`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+    
+    const response = await bulkUpdatePromise;
+    if (response) {
+      refetch();
+    }
   }
 
   function handleJobCreation(mode: "UPDATE" | "DUPLICATE", job: any) {
@@ -153,31 +165,43 @@ const Jobs = () => {
       status: type,
     };
     if (type === "CLOSED" && closeReason) {
-      //  "companyId": "string",
-      //   "shortSoftDeleteReason": "string",
-      //   "detailedSoftDeleteReason": "string" // optional
       delete payload.status;
       payload.shortSoftDeleteReason = closeReason.reason;
-      payload.detailedSoftDeleteReason = closeReason.note;
+      if (closeReason.note && closeReason.note.trim()) {
+        payload.detailedSoftDeleteReason = closeReason.note;
+      }
     }
-    let response;
+    
+    let updatePromise: Promise<any>;
+    
     if (type === "CLOSED") {
-      response = await AdminServiceObj.deleteJob(payload, data.id);
+      updatePromise = AdminServiceObj.deleteJob(payload, data.id);
     } else {
       if (payload.status) {
-        response = await AdminServiceObj.updateJob(
+        updatePromise = AdminServiceObj.updateJob(
           { ...payload, status: payload.status },
           {},
           data.id
         );
+      } else {
+        return;
       }
     }
+    
+    toast.promise(
+      updatePromise,
+      {
+        pending: `Updating job status to ${type.toLowerCase()}...`,
+        success: `Job ${type.toLowerCase()} successfully`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+    
+    const response = await updatePromise;
     if (response) {
-      toast.success(`Job ${type.toLocaleLowerCase()} successfully`, getToastOptions({}));
-    } else {
-      toast.error("Failed to perform this operation.", getToastOptions({}));
+      refetch();
     }
-    refetch();
   }
 
   return (
@@ -186,6 +210,7 @@ const Jobs = () => {
         <div className=" flex-1 flex flex-col gap-4">
           <div className="flex justify-between items-end gap-4">
             <SearchBar
+              placeholder="Search by job title"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
@@ -198,9 +223,9 @@ const Jobs = () => {
                     activeTab != "PUBLISHED"
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
-                    activeTab != "CLOSED"
+/*                     activeTab != "CLOSED"
                       ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") }
-                      : null,
+                      : null, */
                     activeTab != "ARCHIVED"
                       ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") }
                       : null,

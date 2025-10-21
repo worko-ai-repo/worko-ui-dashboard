@@ -94,10 +94,7 @@ const mapParsedToJobDetails = (parsed: JdParsedResponse): JobDetails => {
     technicalSkills: parsed.technicalSkills || [],
     softSkills: parsed.softSkills || [],
     goodSkills: parsed.goodToHaveSkills || [],
-    otherRequirements: [
-      ...(parsed.mandatoryRequirements || []),
-      ...(parsed.preferredRequirements || []),
-    ].join(", "),
+    otherRequirements:"",
     typeofEmployment: parsed.typeOfEmployment as JobTypeofEmploymentType,
     status: "PUBLISHED", // default until set
     noticePeriod: parsed.noticePeriod ? Number(parsed.noticePeriod) : 0,

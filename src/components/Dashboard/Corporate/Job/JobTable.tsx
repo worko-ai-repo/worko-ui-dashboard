@@ -13,6 +13,9 @@ import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { keyFallbacksforJobs } from "@Components/Dashboard/WorkoAdmin/Job/JobTable";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -100,15 +103,13 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       key: "salaryRange",
       label: "Salary Range",
       render: (row: JobData) => {
-        return (
-          <div>
-            {`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}
-          </div>
-        );
+        return <div>{`${row.salaryRange.min} - ${row.salaryRange.max} LPA`}</div>;
       },
     },
     { key: "department", label: "Department", sortable: true },
     { key: "totalApplicants", label: "Total Applicants", sortable: true },
+    { key: "newApplicants", label: "New Applicants", sortable: true },
+    { key: "pendingApplicants", label: "Pending", sortable: true },
     { key: "department", label: "Department", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [
@@ -132,7 +133,32 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     ...(activeTab === "CLOSED"
       ? [
           { key: "status", label: "Status" },
-          { key: "shortSoftDeleteReason", label: "Reason" },
+          {
+            key: "shortSoftDeleteReason",
+            label: "Reason",
+            contentWidth: "max-w-none",
+            render: (row: JobData) => {
+              const ReasonColorMap: Record<string, string> = {
+                "Hired from Worko": "bg-green-100 text-green-800 border border-green-200",
+                "Hired from Other Platform": "bg-blue-100 text-yellow-800 border border-blue-200",
+                "Hired Internally": "bg-blue-100 text-blue-800 border border-blue-200",
+                "Position Went on Hold/Dismissed": "bg-red-100 text-red-800 border border-red-200",
+              };
+
+              const reason = row.shortSoftDeleteReason;
+              const colorClass =
+                reason && ReasonColorMap[reason]
+                  ? ReasonColorMap[reason]
+                  : "bg-gray-100 text-gray-600 border border-gray-200";
+
+              return (
+                <div
+                  className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${colorClass}`}>
+                  {reason || "N/A"}
+                </div>
+              );
+            },
+          },
           {
             key: "detailedSoftDeleteReason ",
             label: "Other Reason",
@@ -192,13 +218,18 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   "_blank"
                 ),
             },
-            {
-              icon: <X className="w-5 h-5" />,
-              className: "btn-blue shrink-0",
-              tooltip: "Close Job",
-              onClick: () =>
-                setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
-            },
+            ...(secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) ===
+            UserRole.CORPORATE_ADMIN
+              ? [
+                  {
+                    icon: <X className="w-5 h-5" />,
+                    className: "btn-blue shrink-0",
+                    tooltip: "Close Job",
+                    onClick: () =>
+                      setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
+                  },
+                ]
+              : []),
             {
               icon: <img src={Archive} className="w-5 h-5" />,
               className: "btn-blue shrink-0",
@@ -312,6 +343,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   {activeTab === "CLOSED" ? "Closed" : "Archived"} by
                 </div>
                 <CreatedByDisplay row={row} mode="updated" />
+              </div>
+            )}
+            {activeTab !== "PUBLISHED" && (
+              <div>
+                <div>
+                  <div className="text-gray-400">Created at</div>
+                  <div>{new Date(row.createdAt).toLocaleDateString("en-GB")}</div>
+                </div>
               </div>
             )}
           </div>

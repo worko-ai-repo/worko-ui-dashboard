@@ -5,7 +5,7 @@ import TagInput from "./TagInput";
 import { useEffect, useState } from "react";
 import { validationRules } from "@Utils/FormValidator.utils";
 import Editor from "./RichTextEditor";
-import { JobApiResponse, JobDetails } from "@Interfaces/CorporateDashboard.dto";
+import { JobDetails } from "@Interfaces/CorporateDashboard.dto";
 import { JobFormSchema } from "@Components/Dashboard/types";
 import SimpleSelectInput from "./InputSelect";
 import { workModeOptions, employmentTypeOptions, locationAssets } from "@AssetsFolder/jobs.assets";
@@ -22,7 +22,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import CompanyInput from "../CompanyInput";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
-import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
+import { BulletTextarea } from "../ui/BulletTextArea";
 
 type JobFormMode = "CREATE" | "UPDATE" | "DUPLICATE" | "CREATE_WITH_DATA";
 
@@ -268,61 +268,67 @@ export default function JobForm({
    */
   const onSubmit = async (data: JobFormSchema) => {
     if (isCorporatePath) {
-      data.companyId = companyIdFromPath; // Ensure companyId is set from path for corporate users
+      data.companyId = companyIdFromPath;
     }
-    // Check if form has changed for duplicate mode
+  
     if (mode === "DUPLICATE" && !hasFormChanged) {
       toast.error("Please make some changes before creating a duplicate job", getToastOptions());
       return;
     }
-
+  
     if (!watch("companyId")) {
       const userDetails = secureStorage.getItem<CorporateUserDetail>(
         SecureStorageKeyEnum.SIGNINDETAILS
       );
       setValue("companyId", userDetails?.companyId!);
     }
-
+  
     if (!selectedLocations.length) {
       toast.error("Please select at least one location", getToastOptions());
       return;
     }
-
+  
     const jobData = { ...data };
-
+  
     try {
       for (const location of selectedLocations) {
-        const payload = {
-          ...jobData,
-          location: location.value,
-        };
-
-        let response;
-        if (mode !== "UPDATE") {
-          response = await CorporateServiceObj.postJobs(payload, {});
-        } else {
-          response = await CorporateServiceObj.updateJob(payload, {}, jobDetails?.id!);
-        }
-
-        if (!response || Array.isArray(response)) {
-          console.error("Job operation failed for:", location.label);
-          toast.error(
-            `Job operation failed for: ${location.label}`,
-            getToastOptions({ autoClose: false })
-          );
-          continue;
-        }
-
-        const successMessage =
-          mode === "DUPLICATE"
-            ? "Job duplicated successfully"
-            : mode === "UPDATE"
-            ? "Job updated successfully"
-            : "Job created successfully";
-
-        toast.success(successMessage, getToastOptions());
+        const payload = { ...jobData, location: location.value };
+  
+        // 🔥 Wrap API call in toast.promise
+        await toast.promise(
+          (async () => {
+            let response;
+            if (mode !== "UPDATE") {
+              response = await CorporateServiceObj.postJobs(payload, {});
+            } else {
+              response = await CorporateServiceObj.updateJob(payload, {}, jobDetails?.id!);
+            }
+  
+            if (!response || Array.isArray(response)) {
+              throw new Error(`Job operation failed for: ${location.label}`);
+            }
+  
+            return response;
+          })(),
+          {
+            pending: `Processing job for ${location.label}...`,
+            success:
+              mode === "DUPLICATE"
+                ? "Job duplicated successfully"
+                : mode === "UPDATE"
+                ? "Job updated successfully"
+                : "Job created successfully",
+            error: {
+              render({ data }: any) {
+                return data?.message || `Job operation failed for ${location.label}`;
+              },
+              autoClose: false,
+            },
+          },
+          getToastOptions()
+        );
       }
-
+  
       onSuccess?.();
       onClose();
     } catch (err) {
@@ -332,6 +338,7 @@ export default function JobForm({
       invalidateJobs();
     }
   };
+  
 
   // Rest of your existing useEffects and functions remain the same...
   useEffect(() => {
@@ -792,21 +799,16 @@ export default function JobForm({
             )}
           </div>
 
-          {/* Other Requirements */}
-          <div className="col-span-1 sm:col-span-3 lg:col-span-3 xl:col-span-3">
+          <div className="col-span-1 sm:col-span-3">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Other mandatory requirements<span className="text-red-500">*</span> (Will not be
-              visible to candidates)
+              Other mandatory requirements
+              <span className="text-red-500">*</span> (Will not be visible to candidates)
             </label>
-            <textarea
+            <BulletTextarea
               {...register("otherRequirements", validationRules.defaultTextarea)}
-              className="mt-1 w-full min-h-[120px] sm:min-h-[133px] rounded-xl bg-gray-100 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
-              placeholder="Write here"
-              rows={3}
+              placeholder={`Bachelor's degree required\n2+ years experience\nStrong communication skills`}
+              error={errors.otherRequirements?.message}
             />
-            {errors.otherRequirements && (
-              <span className="text-sm text-red-500">{errors.otherRequirements.message}</span>
-            )}
           </div>
         </div>
 

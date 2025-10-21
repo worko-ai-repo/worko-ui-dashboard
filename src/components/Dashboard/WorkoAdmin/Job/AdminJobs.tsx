@@ -102,10 +102,17 @@ const AdminJobs = () => {
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    const response = await AdminServiceObj.bulkUpdate(updatedData);
-    if (response)
-      toast.success(`Bulk jobs ${params.toLocaleLowerCase()} successfully. `, getToastOptions({}));
-    else toast.error("Failed to perform this operation.", getToastOptions({}));
+    
+    await toast.promise(
+      AdminServiceObj.bulkUpdate(updatedData),
+      {
+        pending: `Updating jobs to ${params.toLowerCase()}...`,
+        success: `Bulk jobs ${params.toLowerCase()} successfully.`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+    
     refetch();
   }
 
@@ -137,30 +144,42 @@ const AdminJobs = () => {
       status: type,
     };
     if (type === "CLOSED" && closeReason) {
-      //  "companyId": "string",
-      //   "shortSoftDeleteReason": "string",
-      //   "detailedSoftDeleteReason": "string" // optional
       delete payload.status;
       payload.shortSoftDeleteReason = closeReason.reason;
-      payload.detailedSoftDeleteReason = closeReason.note;
-    }
-    let response;
-    if (type === "CLOSED") {
-      response = await AdminServiceObj.deleteJob(payload, data.id);
-    } else {
-      if (payload.status) {
-        response = await AdminServiceObj.updateJob(
-          { ...payload, status: payload.status },
-          {},
-          data.id
-        );
+      if (closeReason.note && closeReason.note.trim()) {
+        payload.detailedSoftDeleteReason = closeReason.note;
       }
     }
-    if (response) {
-      toast.success(`Job ${type.toLocaleLowerCase()} successfully`, getToastOptions({}));
-    } else {
-      toast.error("Failed to perform this operation.", getToastOptions({}));
-    }
+
+    const updatePromise = async () => {
+      let response;
+      if (type === "CLOSED") {
+        response = await AdminServiceObj.deleteJob(payload, data.id);
+      } else {
+        if (payload.status) {
+          response = await AdminServiceObj.updateJob(
+            { ...payload, status: payload.status },
+            {},
+            data.id
+          );
+        }
+      }
+      if (!response) {
+        throw new Error("Failed to perform this operation.");
+      }
+      return response;
+    };
+
+    await toast.promise(
+      updatePromise(),
+      {
+        pending: `Updating job to ${type.toLowerCase()}...`,
+        success: `Job ${type.toLowerCase()} successfully`,
+        error: "Failed to perform this operation."
+      },
+      getToastOptions({})
+    );
+
     refetch();
   }
 
@@ -170,6 +189,7 @@ const AdminJobs = () => {
         <div className=" flex-1 flex flex-col gap-4">
           <div className="flex justify-between items-end gap-4">
             <SearchBar
+              placeholder="Search by job title, company name"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}

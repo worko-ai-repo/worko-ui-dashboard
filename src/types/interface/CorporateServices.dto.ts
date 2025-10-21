@@ -139,6 +139,20 @@ export interface BulkScreeningListItemDto {
     GSI1PK: string;
     GSI1SK: string;
   };
+  userDetails?: {
+    id: string;
+    name: string;
+    email: string;
+    userType: string;
+    companyId: string;
+    createdAt: string;
+    updatedAt: string;
+    isDeleted: boolean;
+    PK: string;
+    SK: string;
+    GSI1PK: string;
+    GSI1SK: string;
+  };
 }
 
 /**

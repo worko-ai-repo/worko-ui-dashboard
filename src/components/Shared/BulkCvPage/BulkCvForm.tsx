@@ -19,6 +19,7 @@ import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/B
 import { useDashboardContext } from "@Context/Dashboard.context";
 import { industryTypeOptions } from "@TypesAndConstants/common.constants";
 import SimpleSelectInput from "../PostJob/InputSelect";
+import { locationAssets } from "@AssetsFolder/jobs.assets";
 
 interface JobData {
   companyId: string;
@@ -61,6 +62,7 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
     setValue,
     watch,
     reset,
+    setError,
     formState: { errors },
   } = useForm<CorporateBulkScreenPayload>({
     defaultValues: {
@@ -85,6 +87,10 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
     value: industry.value.toLocaleLowerCase(),
     label: industry.name,
   }));
+  const locationSelectOptions = locationAssets.map(({ label }) => ({
+    label,
+    value: label, // store selected location as plain string
+  }));
   // Prefill form data when jobData is available
   useEffect(() => {
     try {
@@ -99,14 +105,14 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
         });
         setValue("mustHave", jobData.mustHaveSkills || []);
         setValue("goodToHave", jobData.goodToHaveSkills || []);
-        setValue("jobLocation", jobData.location !== "Not Mentioned" ? jobData.location : "");
+        // setValue("jobLocation", jobData.location !== "Not Mentioned" ? jobData.location : "");
 
         // setTechnicalSkills, coreSkills, softSkills to empty arrays as they are not provided in jobData
         setValue("technicalSkills", jobData.technicalSkills || []);
         setValue("coreSkills", jobData.coreSkills || []);
         setValue("softSkills", jobData.softSkills || []);
         setValue("goodToHave", jobData.goodToHaveSkills || []);
-        setValue("industryPreference", jobData.department || "");
+        // setValue("industryPreference", jobData.department || "");
       }
     } catch (error) {
       console.error("Error pre-filling form data:", error);
@@ -237,6 +243,17 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
   };
 
   async function onSubmit(data: CorporateBulkScreenPayload) {
+    // Explicit guards for required fields
+    if (!data.industryPreference || data.industryPreference.trim() === "") {
+      setError("industryPreference", { type: "required", message: "Industry preference is required" });
+      toast.error("Industry preference is required", getToastOptions({}));
+      return;
+    }
+    if (!data.jobLocation || data.jobLocation.trim() === "") {
+      setError("jobLocation", { type: "required", message: "Job location is required" });
+      toast.error("Job location is required", getToastOptions({}));
+      return;
+    }
     if (uploadedFiles.length === 0) {
       setUploadError("Please upload at least one CV");
       return;
@@ -574,7 +591,9 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                         )}
                       />
                       {errors.mustNotHaveSkills && (
-                        <p className="text-red-500 text-sm mt-1">{errors.mustNotHaveSkills.message}</p>
+                        <p className="text-red-500 text-sm mt-1">
+                          {errors.mustNotHaveSkills.message}
+                        </p>
                       )}
                     </div>
 
@@ -603,12 +622,10 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
 
                     {/* Industry Preference (not array) */}
                     <div>
-                    {/*   <label className="block font-medium mb-1">
-                        Industry preference<span className="text-red-500 ml-1">*</span>
-                      </label> */}
                       <Controller
                         name="industryPreference"
                         control={control}
+                        rules={{ required: "Industry preference is required" }}
                         render={({ field }) => {
                           return (
                             <SimpleSelectInput
@@ -622,12 +639,23 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                           );
                         }}
                       />
-                      {/* <input
+                    </div>
+                    <div>
+                      <Controller
+                        name="jobLocation"
+                        control={control}
+                        rules={{ required: "Job location is required" }}
+                        render={({ field }) => (
+                          <SimpleSelectInput
+                            label="Job Location"
                             {...field}
-                            type="text"
-                            placeholder="Write industry here"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          /> */}
+                            error={errors.jobLocation?.message as string}
+                            options={locationSelectOptions}
+                            placeholder="Select location"
+                            required
+                          />
+                        )}
+                      />
                     </div>
                   </div>
 
@@ -671,24 +699,6 @@ const BulkCvForm: React.FC<BulkCvFormProps> = ({ isOpen, onClose, jobData, dropD
                           <span>{uploadError}</span>
                         </div>
                       )}
-                    </div>
-
-                    <div>
-                      <label className="block font-medium mb-1">
-                        Job Location<span className="text-red-500 ml-1">*</span>
-                      </label>
-                      <Controller
-                        name="jobLocation"
-                        control={control}
-                        render={({ field }) => (
-                          <input
-                            {...field}
-                            type="text"
-                            placeholder="Write Job Location here"
-                            className="w-full px-4 py-3 bg-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        )}
-                      />
                     </div>
                   </div>
 

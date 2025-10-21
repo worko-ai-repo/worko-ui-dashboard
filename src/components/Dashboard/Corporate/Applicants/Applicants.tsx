@@ -56,22 +56,26 @@ export async function handleJobApplicationStatusUpdate(
   jobId: string,
   refetch?: () => void
 ): Promise<boolean> {
+  const updatePromise = CorporateServiceObj.updateApplicationStatus(payload, jobId);
+
+  toast.promise(
+    updatePromise,
+    {
+      pending: "Updating application status...",
+      success: `Application status updated to ${payload.status.toLowerCase()}`,
+      error: "Failed to update application status",
+    },
+    getToastOptions({})
+  );
+
   try {
-    // Here you would typically make an API call to update the status
-    const response = await CorporateServiceObj.updateApplicationStatus(payload, jobId);
+    const response = await updatePromise;
     if (!response) {
       throw new Error("Failed to update application status");
     }
-    if (refetch)
-      toast.success(
-        `Application status updated to ${payload.status.toLocaleLowerCase()}`,
-        getToastOptions({})
-      );
     return true;
-    // Optionally, you can refresh the data or perform other actions after updating
   } catch (error) {
     console.error("Error updating status:", error);
-    if (refetch) toast.error(`Failed to update application status: ${error}`, getToastOptions({}));
     return false;
   } finally {
     if (refetch) refetch(); // Refetch the data to reflect the changes
@@ -90,15 +94,15 @@ export const checkIsWorkoJobFromSelected = (
   applications: JobApplicationDetailsDto[]
 ): boolean => {
   if (selectedRows.length === 0) return false;
-  
-  const selectedIds = selectedRows.map(row => row.jobApplicationId);
+
+  const selectedIds = selectedRows.map((row) => row.jobApplicationId);
   // Consider selection as Worko only if ALL selected are Worko jobs.
   // If any external job is selected, treat as external (i.e., not Worko).
   const isWorko = (app?: JobApplicationDetailsDto) =>
     Boolean(app && !app.jobCreatedByCorporateUserId && app.jobCreatedByUserId != null);
 
-  return selectedIds.every(id => {
-    const application = applications.find(app => app.id === id);
+  return selectedIds.every((id) => {
+    const application = applications.find((app) => app.id === id);
     return isWorko(application);
   });
 };
@@ -185,21 +189,35 @@ const Applicants = () => {
   }, [activeTab, searchBarText, pageSize, apiStatus]);
 
   const onBulkUpdate = async (type: JobApplicationStatusType) => {
+    if (ListSelection.selectedRows.length === 0) {
+      toast.error("Please select at least one application to update.", getToastOptions({}));
+      return;
+    }
+
+    const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map((row) => {
+      const { id, applicantUserId, ...rest } = row;
+      return {
+        ...rest,
+        status: type, // Set the new status based on the dropdown selection
+      };
+    });
+
+    const updatePromise = CorporateServiceObj.postBulkApplicationUpdate({
+      bulkJobApplicationUpdate: payload,
+    });
+
+    toast.promise(
+      updatePromise,
+      {
+        pending: "Updating applications...",
+        success: "Applications updated successfully!",
+        error: "Failed to update applications",
+      },
+      getToastOptions({})
+    );
+
     try {
-      if (ListSelection.selectedRows.length === 0) {
-        toast.error("Please select at least one application to update.", getToastOptions({}));
-        return;
-      }
-      const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
-        (row) => {
-          const { id, applicantUserId, ...rest } = row;
-          return {
-            ...rest,
-            status: type, // Set the new status based on the dropdown selection
-          };
-        }
-      );
-      await CorporateServiceObj.postBulkApplicationUpdate({ bulkJobApplicationUpdate: payload });
+      await updatePromise;
     } catch (error) {
       console.error("Error in bulk update:", error);
     } finally {
@@ -228,6 +246,7 @@ const Applicants = () => {
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Applied", onClick: () => setApiStatus("APPLIED") },
     { label: "Accepted", onClick: () => setApiStatus("ACCEPTED") },
+    { label: "CV Downloaded", onClick: () => setApiStatus("CV_DOWNLOADED") },
     { label: "Under Evaluation", onClick: () => setApiStatus("UNDER_EVALUATION") },
     { label: "Processing Interview", onClick: () => setApiStatus("PROCESSING_INTERVIEW") },
     { label: "Interview Done", onClick: () => setApiStatus("INTERVIEW_DONE") },
@@ -275,9 +294,39 @@ const Applicants = () => {
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex  flex-col mt-2">
+        <div className="flex flex-wrap  gap-4">
+            <HeaderDetails />
+            <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+              <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
+              <InteractiveInput
+                data={data && data.length > 0 ? data[0].jobUrl : ""}
+                isLoading={queryIsJobsLoading}
+                variant="copy"
+                placeholder="No job URL available"
+                width="w-auto"
+              />
+            </div>
+            <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+              <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
+              <span
+              onClick={() => {
+                window.open(data && data.length > 0 ? data[0].jobUrl : "", "_blank");
+              }}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content= {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
+              className="cursor-pointer text-sm capitalize font-semibold text-[#101828] truncate">
+                {queryIsJobsLoading ? "Loading..." : data && data.length > 0 ? data[0].jobTitle : ""}
+              </span>
+            </div>
+            {/*      <div className="flex flex-col gap-2 mt-4 h-min bg-white rounded-xl px-7 py-3 shadow-md">
+              <span className="text-sm text-[#64748B] font-semibold  text-nowrap">Job Status</span>
+              <span className="text-2xl text-blue-500 font-semibold">{getJobStatus(data)}</span>
+            </div> */}
+          </div>
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
             {/* Search Bar */}
             <SearchBar
+              placeholder="Search by company name, email"
               searchBarText={searchBarText}
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
@@ -291,7 +340,7 @@ const Applicants = () => {
               />
               <BulkStatusDropDown
                 options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
+                  { label: "Accept", onClick: () => onBulkUpdate("ACCEPTED") },
                   {
                     label: "Send to evaluator",
                     onClick: () => {

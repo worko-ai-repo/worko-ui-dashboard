@@ -129,15 +129,12 @@ class CorporateService {
    *
    * @description -  This api is used to update a job
    *
-   * @param {JobFormSchema} payload for the job Api
+   * @param {JobFormSchema | any} payload for the job Api - Can be full job data or partial update
    *
    * @return {Promise<JobDto>} -= Common job data that will be listed in the corporate dashboard.
    */
   async updateJob(
-    payload: {
-      companyId: string;
-      status: string;
-    },
+    payload: JobFormSchema | any, // Accept full job data or partial updates
     params: object,
     jobId: string
   ): Promise<JobDto | null> {
