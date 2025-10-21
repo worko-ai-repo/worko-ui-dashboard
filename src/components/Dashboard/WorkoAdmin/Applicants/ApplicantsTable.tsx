@@ -137,7 +137,7 @@ export default function ApplicationTable({
   isBulkEvaluation,
   refetch,
   onBulkUpdate,
-  isAllApplicants
+  isAllApplicants,
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -556,18 +556,16 @@ export default function ApplicationTable({
         </span>
       ),
     },
-   jobProfile: {
-    key: "jobTitle",
-    label: "Job Profile",
-    sortable: true,
-    render: (row: JobApplicationDetailsDto) => (
-      <span
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={row?.jobTitle|| "NA"}>
-        {row?.jobTitle || "NA"}{" "}
-      </span>
-    ),
-  },
+    jobProfile: {
+      key: "jobTitle",
+      label: "Job Profile",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span data-tooltip-id="my-tooltip" data-tooltip-content={row?.jobTitle || "NA"}>
+          {row?.jobTitle || "NA"}{" "}
+        </span>
+      ),
+    },
     currentPosition: {
       key: "currentPosition",
       label: "Current Position",
@@ -613,7 +611,7 @@ export default function ApplicationTable({
       case "All":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
@@ -632,7 +630,7 @@ export default function ApplicationTable({
       case "Hired":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
@@ -648,7 +646,7 @@ export default function ApplicationTable({
       case "Joined":
         return [
           commonColumns.name,
-          ...isAllApplicants ? [commonColumns.jobProfile] : [],
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           { key: "applicantDetails_CTC", label: "CTC", sortable: true },
           {
             key: "applicantDetails_candidateExperience_designation",
@@ -659,20 +657,31 @@ export default function ApplicationTable({
           {
             key: "status_actionDate",
             label: "Joining Date",
-            render: (row: JobApplicationDetailsDto) => (
-              <div className="flex items-center justify-center gap-2">
-                <span>
-                  {new Date(getLatestOfferLetterIssueRaisedDetails(row).date).toLocaleDateString(
-                    "en-GB",
-                    {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                    }
-                  )}
-                </span>
-              </div>
-            ),
+            render: (row: JobApplicationDetailsDto) => {
+              // Find the JOINED status in the status tracker
+              const joinedStatus = row.statusTracker
+                ?.slice()
+                .reverse()
+                .find((tracker) => tracker.newStatus === "JOINED");
+
+              const joiningDate = joinedStatus?.actionDate
+                ? new Date(joinedStatus.actionDate)
+                : null;
+
+              return (
+                <div className="flex items-center justify-center gap-2">
+                  <span>
+                    {joiningDate
+                      ? joiningDate.toLocaleDateString("en-GB", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                        })
+                      : "N/A"}
+                  </span>
+                </div>
+              );
+            },
           },
           /*     {
             key: "actions",
@@ -793,7 +802,9 @@ export default function ApplicationTable({
                 <div>
                   <span className="font-semibold text-gray-500">Rejected Date</span>
                   <p>
-                    {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString("en-GB", {
+                    {new Date(
+                      row?.rejectedByUserId?.actionDate || row?.updatedAt
+                    ).toLocaleDateString("en-GB", {
                       day: "numeric",
                       month: "short",
                       year: "numeric",
