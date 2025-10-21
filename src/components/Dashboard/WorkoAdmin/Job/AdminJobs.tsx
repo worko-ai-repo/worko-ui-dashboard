@@ -19,8 +19,9 @@ import HeaderDetails from "@Components/Shared/Stats";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import Modal from "@Components/Shared/Modal";
 import { CursorPaginationAdminJobDataParams } from "@Interfaces/AdminServices.dto";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useUrlState } from "@Hooks/useUrlState.hook";
 
-// Header Switch button constant to loop
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
 export type SelectedRow = {
   companyId: string;
@@ -30,7 +31,28 @@ export type SelectedRow = {
 
 const AdminJobs = () => {
   const { userDetails } = useAppContext();
-
+  const queryClient = useQueryClient();
+  // Replace all your URL state management with this hook
+  const {
+    activeTab,
+    setActiveTab: handleTabChange,
+    searchText: searchBarText,
+    setSearchText: handleSearchChange,
+    pageSize,
+    setPageSize: handlePageSizeChange,
+  } = useUrlState<JobStatusType>({
+    tab: {
+      defaultValue: "PUBLISHED",
+      validValues: [...tabs] as JobStatusType[],
+    },
+    search: {
+      defaultValue: null,
+    },
+    pageSize: {
+      defaultValue: 100,
+      validValues: [ 10, 25, 50, 100 , 150 , 200],
+    },
+  });
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
   const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
   const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
@@ -57,19 +79,17 @@ const AdminJobs = () => {
     keySelector: (job) => job.jobId,
   });
 
-  // Api States
-  const [activeTab, setActiveTab] = useState<JobStatusType>("PUBLISHED");
-  const [pageSize, setPageSize] = useState(10);
-  const [searchBarText, setSearchBarText] = useState<string | null>(null);
+
   const params: Omit<CursorPaginationAdminJobDataParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "desc",
     dashboard: "ADMIN",
     status: activeTab,
     includeCompanyDetails: true,
-    // Add search text if it exists and is not empty
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
+
+  const queryKey = ["AdminJobsQuery", activeTab, !!searchBarText, JSON.stringify(params)];
 
   const {
     data,
@@ -81,40 +101,174 @@ const AdminJobs = () => {
     refetch,
     reset,
   } = useCursorPagination<JobData, CursorPaginationAdminJobDataParams>({
-    queryKey: ["AdminJobsQuery", activeTab, !!searchBarText, JSON.stringify(params)],
+    queryKey: queryKey,
     queryFn: AdminServiceObj.fetchJobs,
     baseParams: params,
   });
 
-  /**
-   * UseEffect to reset selected rows when the active tab changes
-   * This ensures that when switching tabs, the selected rows are cleared
-   */
+  // Mutation for updating single job status
+  const updateJobMutation = useMutation({
+    mutationFn: async ({
+      payload,
+      jobId,
+      isDelete,
+    }: {
+      payload: any;
+      jobId: string;
+      isDelete: boolean;
+    }) => {
+      if (isDelete) {
+        return await AdminServiceObj.deleteJob(payload, jobId);
+      }
+      return await AdminServiceObj.updateJob(payload, {}, jobId);
+    },
+    onMutate: async ({ payload, jobId, isDelete }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey });
+
+      // Snapshot the previous value
+      const previousData = queryClient.getQueryData(queryKey);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((job: JobData) => {
+              if (job.id === jobId) {
+                // If closing, update with close reason
+                if (isDelete) {
+                  return {
+                    ...job,
+                    status: "CLOSED",
+                    shortSoftDeleteReason: payload.shortSoftDeleteReason,
+                    ...(payload.detailedSoftDeleteReason &&
+                      payload.detailedSoftDeleteReason.trim() && {
+                        detailedSoftDeleteReason: payload.detailedSoftDeleteReason,
+                      }),
+                    updatedAt: new Date().toISOString(),
+                  };
+                }
+                // Otherwise just update status
+                return {
+                  ...job,
+                  status: payload.status,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return job;
+            }),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Failed to perform this operation.", getToastOptions({}));
+    },
+    onSuccess: (data, variables) => {
+      const statusText = variables.isDelete ? "closed" : variables.payload.status?.toLowerCase();
+      toast.success(`Job ${statusText} successfully`, getToastOptions({}));
+    },
+  });
+
+  // Mutation for bulk updates
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async (updatedData: { bulkJobUpdate: SelectedRow[] }) => {
+      return await AdminServiceObj.bulkUpdate(updatedData);
+    },
+    onMutate: async (updatedData) => {
+      await queryClient.cancelQueries({ queryKey });
+
+      const previousData = queryClient.getQueryData(queryKey);
+
+      // Create a map of jobId -> new status for quick lookup
+      const statusMap = new Map(updatedData.bulkJobUpdate.map((row) => [row.jobId, row.status]));
+
+      // Optimistically update all affected jobs
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((job: JobData) => {
+              const newStatus = statusMap.get(job.id);
+              if (newStatus) {
+                return {
+                  ...job,
+                  status: newStatus,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return job;
+            }),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Failed to perform this operation.", getToastOptions({}));
+    },
+    onSuccess: (data, variables) => {
+      const status = variables.bulkJobUpdate[0]?.status.toLowerCase();
+      toast.success(`Bulk jobs ${status} successfully.`, getToastOptions({}));
+    },
+  });
+
   useEffect(() => {
-    reset(); // Reset pagination when active tab changes
-    resetSelection(); // Reset selected rows when active tab changes
-    refetch(); // Refetch data when active tab changes @TODO:Make sure to refetch only when necessary
+    reset();
+    resetSelection();
+    refetch();
   }, [activeTab, searchBarText, pageSize]);
 
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
-    // update status of selectedRows element status with the params
     const updatedData = { bulkJobUpdate: [...selectedRows] };
     for (let row of updatedData.bulkJobUpdate) {
       row.status = params;
     }
-    
+
     await toast.promise(
-      AdminServiceObj.bulkUpdate(updatedData),
+      bulkUpdateMutation.mutateAsync(updatedData),
       {
         pending: `Updating jobs to ${params.toLowerCase()}...`,
-        success: `Bulk jobs ${params.toLowerCase()} successfully.`,
-        error: "Failed to perform this operation."
       },
       getToastOptions({})
     );
-    
-    refetch();
+
+    // Optional: Background refetch to ensure consistency
+    // Only refetch after delay to avoid disrupting UX
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey });
+    }, 2000);
   }
+  
+
+  // this useEffect to handle URL changes (back/forward navigation)
+/*   useEffect(() => {
+    const tabFromUrl = searchParams.get("tab") as JobStatusType;
+    if (tabFromUrl && tabs.includes(tabFromUrl as any) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+    const pageSizeFromUrl = searchParams.get("pageSize");
+    if(pageSizeFromUrl && parseInt(pageSizeFromUrl) !== pageSize){
+      setPageSize(parseInt(pageSizeFromUrl));
+    }
+  }, [searchParams,pageSize]); */
 
   function handleJobCreation(mode: "UPDATE" | "DUPLICATE", job: any) {
     const mappedMode = mode === "UPDATE" ? "UPDATE" : "DUPLICATE";
@@ -133,7 +287,6 @@ const AdminJobs = () => {
     },
     closeReason?: { reason: string; note: string }
   ) {
-    // construct the payload
     const payload: {
       companyId: string;
       status?: JobStatusType;
@@ -143,60 +296,50 @@ const AdminJobs = () => {
       companyId: data.companyId,
       status: type,
     };
+
+    let isDelete = false;
+
     if (type === "CLOSED" && closeReason) {
       delete payload.status;
       payload.shortSoftDeleteReason = closeReason.reason;
       if (closeReason.note && closeReason.note.trim()) {
         payload.detailedSoftDeleteReason = closeReason.note;
       }
+      isDelete = true;
     }
 
-    const updatePromise = async () => {
-      let response;
-      if (type === "CLOSED") {
-        response = await AdminServiceObj.deleteJob(payload, data.id);
-      } else {
-        if (payload.status) {
-          response = await AdminServiceObj.updateJob(
-            { ...payload, status: payload.status },
-            {},
-            data.id
-          );
-        }
-      }
-      if (!response) {
-        throw new Error("Failed to perform this operation.");
-      }
-      return response;
-    };
+    if (type === "CLOSED" && !closeReason) {
+      // If closing without reason, skip
+      return;
+    }
 
-    await toast.promise(
-      updatePromise(),
-      {
-        pending: `Updating job to ${type.toLowerCase()}...`,
-        success: `Job ${type.toLowerCase()} successfully`,
-        error: "Failed to perform this operation."
-      },
-      getToastOptions({})
-    );
+    await updateJobMutation.mutateAsync({
+      payload,
+      jobId: data.id,
+      isDelete,
+    });
 
-    refetch();
+    // Optional: Background refetch after delay
+    setTimeout(() => {
+      queryClient.invalidateQueries({ queryKey });
+    }, 2000);
   }
 
   return (
     <div className="flex flex-col gap-[35px] mt-2 w-full px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
         <div className=" flex-1 flex flex-col gap-4">
+          <div className="flex flex-wrap  gap-4">
+            <HeaderDetails key="admin-job-stats" pageType="corporateJobs" />
+          </div>
           <div className="flex justify-between items-end gap-4">
             <SearchBar
-              placeholder="Search by job title, company name"
               searchBarText={searchBarText}
-              setSearchBarText={setSearchBarText}
+              setSearchBarText={handleSearchChange}
               handleClick={() => refetch()}
             />
             <div className="flex w-3/12 flex-shrink-0  gap-4 justify-center lg:items-end">
               <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
-                {/* <FilterToggle /> */}
                 <BulkOption
                   options={[
                     activeTab != "PUBLISHED"
@@ -212,7 +355,7 @@ const AdminJobs = () => {
                     (option): option is { label: string; onClick: () => Promise<void> } =>
                       option !== null
                   )}
-                  disabled={selectedRows.length === 0}
+                  disabled={selectedRows.length === 0 || bulkUpdateMutation.isPending}
                 />
               </div>
               <div className="flex">
@@ -227,7 +370,6 @@ const AdminJobs = () => {
         </div>
       </div>
 
-      {/* Container to render top 3 switch buttions  */}
       <div className="flex justify-center gap-[57px]">
         {tabs.map((tab) => (
           <button
@@ -237,7 +379,7 @@ const AdminJobs = () => {
                 ? "border-blue-500 text-blue-700 font-semibold"
                 : "border-transparent text-gray-500"
             }`}
-            onClick={() => setActiveTab(tab)}>
+            onClick={() => handleTabChange(tab)}>
             {tab === "PUBLISHED" ? "Open" : tab === "ARCHIVED" ? "Archived" : "Closed"}
           </button>
         ))}
@@ -260,8 +402,9 @@ const AdminJobs = () => {
           fetchNextPage={goToNextPage}
           fetchPreviousPage={goToPreviousPage}
           pageSize={pageSize}
-          setPageSize={setPageSize}
+          setPageSize={handlePageSizeChange}
           getAllSelected={getAllSelected}
+          isUpdating={updateJobMutation.isPending}
         />
       )}
       <Modal

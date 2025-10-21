@@ -12,11 +12,28 @@ import { useEffect, useState } from "react";
 import AdminServiceObj from "../Services/Admin.service";
 import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import GuidancePageTable from "./GuidanceTable";
+import { useUrlState } from "@Hooks/useUrlState.hook";
+import { useQueryClient } from "@tanstack/react-query";
 
 const AdminGuidance = () => {
-  const [pageSize, setPageSize] = useState(25);
+  const queryClient = useQueryClient();
   const [status, setStatus] = useState<ReferralStatusType | "">("");
-  const [searchBarText, setSearchBarText] = useState<string | null>(null);
+
+  // Use URL state management for persistence
+  const {
+    searchText: searchBarText,
+    setSearchText: setSearchBarText,
+    pageSize,
+    setPageSize,
+  } = useUrlState({
+    search: {
+      defaultValue: null,
+    },
+    pageSize: {
+      defaultValue: 25,
+      validValues: [10, 25, 50, 100, 150, 200],
+    },
+  });
 
   const params: Omit<CursorPaginationGuidanceDataAdminParams, "lastKey"> = {
     pageSize: pageSize,
@@ -24,6 +41,9 @@ const AdminGuidance = () => {
     actionByUserType: "ADMIN",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
+
+  // Stable query key
+  const queryKey = ["AdminGuidanceQuery", !!searchBarText, JSON.stringify(params)];
 
   const {
     data,
@@ -35,7 +55,7 @@ const AdminGuidance = () => {
     refetch,
     reset,
   } = useCursorPagination<GuidanceRequestDto, CursorPaginationGuidanceDataAdminParams>({
-    queryKey: ["AdminGuidanceQuery", !!searchBarText, params],
+    queryKey: queryKey,
     queryFn: AdminServiceObj.fetchGuidance,
     baseParams: params,
     enabled: !!params,
@@ -47,7 +67,6 @@ const AdminGuidance = () => {
   useEffect(() => {
     reset(); // Reset pagination when active tab changes
   }, [searchBarText, pageSize]);
-
 
   return (
     <div>
@@ -74,6 +93,7 @@ const AdminGuidance = () => {
           <GuidancePageTable
             data={data}
             fetchGuidance={refetch}
+            queryKey={queryKey}
             pagination={{
               goToNextPage,
               goToPreviousPage,

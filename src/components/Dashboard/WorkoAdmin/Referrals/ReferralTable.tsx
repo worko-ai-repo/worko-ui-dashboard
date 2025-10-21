@@ -4,7 +4,7 @@ import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 
-import { Eye, Link } from "lucide-react";
+import { Eye, Link, Loader2 } from "lucide-react";
 import { useState } from "react";
 import ProgressCircle from "@Components/Shared/CircularBar";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
@@ -18,19 +18,42 @@ import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewE
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import ScorePointsModal from "@Components/Shared/DetailedAnalysis";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface ReferralTableProps {
   data: ReferralDetailsDto[];
   fetchReferrals: () => void;
+  queryKey: any[];
   pagination: CommonCursorPaginationProp;
 }
-const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
-  const keyFallbacks = {};
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+const ReferralTable: React.FC<ReferralTableProps> = ({
+  data,
+  fetchReferrals,
+  queryKey,
+  pagination,
+}) => {
+  const queryClient = useQueryClient();
+  const keyFallbacks = {
+    matchingScore: ["matchingScore"],
+    userDetails_name: ["userDetails.name"],
+    employeeDetails_name: ["employeeDetails.name"],
+    status: ["status"],
+  };
+
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "referrals",
+    persistInUrl: true,
+    persistInLocalStorage: false,
+    defaultSort: null,
+  });
+
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState(false);
+  const [updatingReferralId, setUpdatingReferralId] = useState<string | null>(null);
   const [scorePointsModal, setScorePointsModal] = useState<{
     title: string;
     data: any;
@@ -45,19 +68,21 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
     user: ReferralDetailsDto | {};
-    key?: number; // Add a unique key to force re-render
+    key?: number;
   }>({ isOpen: false, type: "EMAIL", user: {} });
+
   const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
     isOpen: boolean;
     details: ExtraReferralDetailsResponse | null;
     key?: string;
   }>({ isOpen: false, details: null, key: undefined });
+
   const handleVerifyClick = (type: "EMAIL" | "MOBILE", user: ReferralDetailsDto) => {
     setVerifyModalOpen({
       isOpen: true,
       type,
       user,
-      key: Date.now(), // Add a unique timestamp
+      key: Date.now(),
     });
   };
 
@@ -66,9 +91,54 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
     setOpenExtraDetailsModal({
       isOpen: true,
       details,
-      key: row.PK, // Use row ID as key to force re-render when different row is clicked
+      key: row.PK,
     });
   };
+
+  // Mutation for updating referral status (example for future use)
+  const updateReferralMutation = useMutation({
+    mutationFn: async ({
+      referralId,
+      updates,
+    }: {
+      referralId: string;
+      updates: Partial<ReferralDetailsDto>;
+    }) => {
+      // Replace with actual API call
+      // return await AdminServiceObj.updateReferral(referralId, updates);
+      throw new Error("Update API not implemented");
+    },
+    onMutate: async ({ referralId, updates }) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((referral: ReferralDetailsDto) =>
+              referral.PK === referralId ? { ...referral, ...updates } : referral
+            ),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Failed to update referral", getToastOptions({}));
+    },
+    onSuccess: () => {
+      toast.success("Referral updated successfully", getToastOptions({}));
+    },
+  });
 
   const columns = [
     { key: "employeeDetails_name", label: "Employee Name", sortable: true },
@@ -94,7 +164,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       label: "Matching Score",
       sortable: true,
       render: (row: ReferralDetailsDto) => (
-        <div className="flex justify-center">
+        <div className="flex justify-center items-center gap-2">
           <ProgressCircle
             onClick={() => {
               setFeedbackModalOpen(true);
@@ -103,17 +173,19 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
               if (application === null) return;
               setScorePointsModal({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
-                data: application.feedback, // Assuming matchingScore is an object with details
+                data: application.feedback,
                 matchingScore: row.matchingScore ?? 0,
                 candidateName: row.userDetails.name,
                 details: true,
                 showCloseButton: true,
                 onClose: () => setFeedbackModalOpen(false),
               });
-              // console.log("Matching Score Details:", scorePointsModal);
             }}
             value={row.matchingScore}
           />
+          {updatingReferralId === row.PK && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          )}
         </div>
       ),
     },
@@ -128,7 +200,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row.emailFeedback}
               className="text-wrap line-clamp-4">
-              {row.emailFeedback}
+              {row.emailFeedback || "-"}
             </p>
           </div>
         </div>
@@ -139,7 +211,6 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       label: "Status",
       sortable: true,
       render: (row: ReferralDetailsDto) => {
-        // Status color mapping
         const statusColors = CommonDashboardServicesObj.getReferralStatusColor;
         const statusAliases = CommonDashboardServicesObj.getReferralStatusAlias;
         const colorClass =
@@ -169,6 +240,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       ),
     },
   ];
+
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
     const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
       row.status
@@ -182,12 +254,10 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
     );
   };
 
-  /**
-   * Toggle row expansion
-   */
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
   };
+
   return (
     <>
       <DynamicTable<ReferralDetailsDto>
@@ -212,7 +282,6 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
             setOpenExtraDetailsModal({ isOpen: false, details: null, key: undefined });
         }}
         className="w-[800px]  py-8">
-        {/* <ViewExtraReferralDetailsModal */}
         <CVPreviewRaw
           key={OpenExtraDetailsModal.key}
           pdfUrl={OpenExtraDetailsModal.details?.viewCvLink || ""}

@@ -22,7 +22,6 @@ const onSubmit = async (data: RejectionFormData, onSuccessCallback: () => void) 
     const { jobId, ...dataWithoutJobId } = data;
     dataWithoutJobId.status = "REJECTED";
     // console.log("[Submit] Payload being sent:", dataWithoutJobId);
-
     const response = await CorporateServiceObj.updateApplicationStatus(dataWithoutJobId, jobId);
     if (!response) throw new Error("Failed to update application status");
     toast.success(`Application Rejected Successfully`, getToastOptions({}));
@@ -37,7 +36,8 @@ const onSubmit = async (data: RejectionFormData, onSuccessCallback: () => void) 
 const RejectionForm: React.FC<{
   payload: JobApplicationUpdatePayloadDto;
   jobId: string;
-}> = ({ payload, jobId }) => {
+  onClose: () => void
+}> = ({ payload, jobId, onClose }) => {
   const queryClient = useQueryClient();
 
   const {
@@ -62,6 +62,7 @@ const RejectionForm: React.FC<{
     RBAC.can("play_admin")
       ? queryClient.invalidateQueries({ queryKey: ["AdminJobsApplicationQuery"] })
       : queryClient.invalidateQueries({ queryKey: ["CorporateJobsApplicationQuery"] });
+    onClose();
   };
 
   // Use the correct hook from the first file

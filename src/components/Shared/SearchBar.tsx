@@ -4,7 +4,7 @@ import React, { useCallback, useRef } from "react";
 interface SearchBarProps {
   placeholder?:string;
   searchBarText: string | null;
-  setSearchBarText: React.Dispatch<React.SetStateAction<string | null>>;
+  setSearchBarText: any;
   handleClick: (value?: string | null) => void;
 }
 

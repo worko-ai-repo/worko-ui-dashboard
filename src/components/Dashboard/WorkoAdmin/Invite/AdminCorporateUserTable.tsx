@@ -62,7 +62,7 @@ export const handleInvitePatch = async (
   action: "RESEND" | "GRANT_DUPLICACY_ACCESS" | "DELETE_CORPORATE_USER",
   onSuccessCallback: () => void
 ) => {
-  try {
+  const apiCall = async () => {
     if (action === "RESEND") {
       const data = await AdminServiceObj.updateCorporateUserInviteStatus(id, {
         inviteStatus: "AWAITING",
@@ -70,8 +70,7 @@ export const handleInvitePatch = async (
       if (!data) {
         throw new Error("Failed to resend invite");
       }
-      // Show success message or toast
-      toast.success("Invite resent successfully", getToastOptions({}));
+      return data;
     } else if (action === "GRANT_DUPLICACY_ACCESS") {
       const data = await AdminServiceObj.updateCorporateUserInviteStatus(id, {
         cvDuplicacyAccess: true,
@@ -79,21 +78,51 @@ export const handleInvitePatch = async (
       if (!data) {
         throw new Error("Failed to grant duplicacy access");
       }
-      // Show success message or toast
-      toast.success("Duplicacy access granted successfully", getToastOptions({}));
+      return data;
     } else if (action === "DELETE_CORPORATE_USER") {
       const data = await AdminServiceObj.deleteCorporateUser(id);
       if (!data) {
         throw new Error("Failed to delete corporate user");
       }
-      // Show success message or toast
-      toast.success("Corporate user deleted successfully", getToastOptions({}));
+      return data;
     }
+  };
+
+  const getMessages = () => {
+    switch (action) {
+      case "RESEND":
+        return {
+          pending: "Resending invite...",
+          success: "Invite resent successfully",
+          error: "Failed to resend invite. Please try again.",
+        };
+      case "GRANT_DUPLICACY_ACCESS":
+        return {
+          pending: "Granting duplicacy access...",
+          success: "Duplicacy access granted successfully",
+          error: "Failed to grant duplicacy access. Please try again.",
+        };
+      case "DELETE_CORPORATE_USER":
+        return {
+          pending: "Deleting user...",
+          success: "Corporate user deleted successfully",
+          error: "Failed to delete corporate user. Please try again.",
+        };
+      default:
+        return {
+          pending: "Processing...",
+          success: "Action completed successfully",
+          error: "Something went wrong. Please try again.",
+        };
+    }
+  };
+
+  try {
+    await toast.promise(apiCall(), getMessages(), getToastOptions({}));
+    onSuccessCallback();
   } catch (error) {
-    // Handle error, show error message or toast
-    toast.error("Something went wrong. Please try again.", getToastOptions({}));
-  } finally {
-    return onSuccessCallback();
+    // Error already handled by toast.promise
+    console.error("Error in handleInvitePatch:", error);
   }
 };
 
@@ -110,9 +139,18 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     fetchCorporateUsers: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data, {
-    companyDetails_name: ["companyDetails.name"],
-  });
+  const { sortedData, onSortChange } = useSortableData(
+    data,
+    {
+      companyDetails_name: ["companyDetails.name"],
+    },
+    {
+      tableId: "corporate-users_table",
+      defaultSort: null,
+      persistInLocalStorage: false,
+      persistInUrl: true,
+    }
+  );
   const [subDataCompanyId, setSubDataCompanyId] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
@@ -125,15 +163,24 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   };
 
   const handleDeleteUser = async (userId: string) => {
-    await handleInvitePatch(userId, "DELETE_CORPORATE_USER", fetchCorporateUsers);
+    await handleInvitePatch(userId, "DELETE_CORPORATE_USER", () => {
+      fetchCorporateUsers(); // Refresh main table
+      refetch(); // Refresh sub-table
+    });
   };
 
   const handleResendInvite = (inviteId: string) => {
-    handleInvitePatch(inviteId, "RESEND", fetchCorporateUsers);
+    handleInvitePatch(inviteId, "RESEND", () => {
+      fetchCorporateUsers(); // Refresh main table
+      refetch(); // Refresh sub-table
+    });
   };
 
   const handleGrantDuplicacyAccess = (inviteId: string) => {
-    handleInvitePatch(inviteId, "GRANT_DUPLICACY_ACCESS", fetchCorporateUsers);
+    handleInvitePatch(inviteId, "GRANT_DUPLICACY_ACCESS", () => {
+      fetchCorporateUsers(); // Refresh main table
+      refetch(); // Refresh sub-table
+    });
   };
 
   const handleRevokeInvite = (row: CorporateUserPageRecDataDto, inviteId: string) => {
@@ -160,7 +207,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     if (row) {
       handleRevokeInvite(row, inviteId);
     }
-  }
+  };
 
   const {
     data: subData,
@@ -424,11 +471,17 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
       <Modal
         isOpen={modalState.activeModal === "revoke"}
-        onClose={() => {dispatch({ type: "CLOSE" })}}
+        onClose={() => {
+          dispatch({ type: "CLOSE" });
+        }}
         className="h-52">
         <RevokeForm
           inviteId={modalState.key as string}
-          onClose={() => {dispatch({ type: "CLOSE" }); refetch()}}
+          onClose={() => {
+            dispatch({ type: "CLOSE" });
+            fetchCorporateUsers(); // Refresh main table data
+            refetch(); // Refresh sub table data
+          }}
         />
       </Modal>
     </>

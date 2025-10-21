@@ -89,7 +89,12 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     referrerDetails_email: ["email", "referrerDetails.email"],
     jobDetails_title: ["title", "jobDetails.title"],
   };
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks,{
+    tableId:"Refer-n-earn",
+    defaultSort:null,
+    persistInLocalStorage:false,
+    persistInUrl:true
+  });
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [modalState, dispatch] = useReducer(modalReducer, {
     activeModal: null,

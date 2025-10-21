@@ -2,9 +2,7 @@ import SearchBar from "@Components/Shared/SearchBar";
 import SkeletonLoader from "@Components/Shared/SkeletonLoader";
 import HeaderDetails from "@Components/Shared/Stats";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import {
-  CursorPaginationReferralsDataAdminParams,
-} from "@Interfaces/AdminServices.dto";
+import { CursorPaginationReferralsDataAdminParams } from "@Interfaces/AdminServices.dto";
 import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useEffect, useState } from "react";
 
@@ -13,9 +11,8 @@ import ReferralTable from "./ReferralTable";
 import CorporateServiceObj from "../Services/Corporate.service";
 import { useAppContext } from "@Context/App.context";
 
-
 const CorporateReferrals = () => {
-  const {userDetails} = useAppContext();
+  const { userDetails } = useAppContext();
   const [pageSize, setPageSize] = useState(25);
   const [status, setStatus] = useState<ReferralStatusType | "">("");
   const [searchBarText, setSearchBarText] = useState<string | null>(null);
@@ -56,7 +53,7 @@ const CorporateReferrals = () => {
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
-            <HeaderDetails />
+            <HeaderDetails key={`header-details-${companyId}`} pageType="referrals" />
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
@@ -66,9 +63,7 @@ const CorporateReferrals = () => {
               setSearchBarText={setSearchBarText}
               handleClick={() => refetch()}
             />
-            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-             
-            </div>
+            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end"></div>
           </div>
         </div>
         {queryIsJobsLoading ? (

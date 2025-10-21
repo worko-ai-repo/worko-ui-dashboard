@@ -8,7 +8,10 @@ import {
   CursorPaginationInviteDataParams,
 } from "@Interfaces/CorporateServices.dto";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
-import { CorporateUserPageAdminDataDto, CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
+import {
+  CorporateUserPageAdminDataDto,
+  CorporateUserPageRecDataDto,
+} from "@Interfaces/AdminServices.dto";
 import AdminServiceObj from "../Services/Admin.service";
 import SearchBar from "@Components/Shared/SearchBar";
 import AdminCorporateUserTable from "./AdminCorporateUserTable";
@@ -72,7 +75,7 @@ const AdminCorporateInvites = () => {
           </div>
         </div>
       </div>
-      {queryIsJobsLoading ? (
+      {queryIsJobsLoading && (!data || data.length === 0) ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <AdminCorporateUserTable // Switch the order to match the state
@@ -97,7 +100,7 @@ const AdminCorporateInvites = () => {
           onRefetch={refetch}
           compId={"ADMIN"} // Pass the company ID here
           onClose={() => {
-            refetch;
+            refetch(); // Fixed: Actually call the refetch function
             setIsSendInviteModalOpen(false);
           }}
         />
