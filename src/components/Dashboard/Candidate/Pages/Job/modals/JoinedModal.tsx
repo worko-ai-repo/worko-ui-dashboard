@@ -81,8 +81,8 @@ export default function JoinedModal({
       return;
     }
 
-    if (!message || !joiningDate || !hrName) {
-      toast.error("HR Name, Message, and Date are required", getToastOptions());
+    if (!joiningDate || !hrName) {
+      toast.error("HR Name, and Date are required", getToastOptions());
       setLoading(false);
       return;
     }
@@ -184,7 +184,7 @@ export default function JoinedModal({
             {/* Message */}
             <div className="mb-6">
               <label className="block text-gray-700 mb-2">
-                Message <span className="text-red-500">*</span>
+                Message <span className="text-red-500"></span>
               </label>
               <textarea
                 value={message}

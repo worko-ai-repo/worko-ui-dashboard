@@ -13,7 +13,7 @@ interface RaiseIssueModalProps {
   isOpen: boolean;
   referralData: any;
   // onRefresh: () => void;
-  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
+  // onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
   isCandidate: boolean;
 }
 
@@ -22,7 +22,7 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
   isOpen,
   referralData,
   // onRefresh,
-  onLocalUpdate,
+  // onLocalUpdate,
   isCandidate,
 }) => {
   let options;
@@ -85,7 +85,7 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
         // onLocalUpdate(referralData.id, { 
         //    status: "ISSUE_RAISED" as ReferralStatus
         //  });
-        onClose();
+        onClose();  
       }
       if (error) {
         toast.error("Cannot raise issue not something went wrong", getToastOptions({}));

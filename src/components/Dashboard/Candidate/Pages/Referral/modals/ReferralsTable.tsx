@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo } from "./ReferralTypes";
+import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo, ReferralStatus } from "./ReferralTypes";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import { chat } from "@AssetsFolder/assets";
 import WithdrawRefferralModal from "./WithdrawRefferralModal";
@@ -81,7 +81,10 @@ const ReferralsTable = memo(
           setSelectedRow(null);
           setWithdrawComments("");
           setWithdrawReason("");
-          onRefresh();
+          onLocalUpdate(id || "" , { 
+            status: "WITHDRAWN" as ReferralStatus
+          });
+          // onRefresh();
         } else if (error) {
           toast.error("Something went wrong please try again", getToastOptions({}));
         }
@@ -410,7 +413,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowRaiseIssueModal(false)}
               isOpen={showRaiseIssueModal}
               referralData={referralData}
-              onLocalUpdate={onLocalUpdate}
+              // onLocalUpdate={onLocalUpdate}
               // onRefresh={onRefresh}
               isCandidate={true}
             />
@@ -449,6 +452,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onSubmit={handleWithdrawReferral}
               onClose={() => setShowWithdrawModal(false)}
               isOpen={showWithdrawModal}
+              onLocalUpdate={onLocalUpdate}
             />
           )}
           {/* {showChatWindow && ( */}

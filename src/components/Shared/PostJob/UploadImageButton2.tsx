@@ -127,7 +127,9 @@ const UploadImageButton2: React.FC<UploadImageButton2Props> = ({ onUploadSuccess
 
             toast.success("Profile image uploaded successfully", getToastOptions());
 
-            if (onUploadSuccess) onUploadSuccess(cloudFileName);
+            if (onUploadSuccess) onUploadSuccess(
+                (patchResult.response as { profileImageAwsS3SignedUrl: string })?.profileImageAwsS3SignedUrl
+            );
         } catch (err: any) {
             console.error(err);
             setError("Something went wrong while uploading.");
