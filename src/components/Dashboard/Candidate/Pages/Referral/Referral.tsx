@@ -178,21 +178,6 @@ const fetchReferrals = useCallback(
     });
   }, []);
 
-  const handleLocalUpdate = useCallback((referralId: string, updatedData: Partial<ReferralDetailsDto>) => {
-    setData(prevData => {
-      if (!prevData) return prevData;
-      
-      return {
-        ...prevData,
-        data: prevData.data.map(referral => 
-          referral.id === referralId 
-            ? { ...referral, ...updatedData }
-            : referral
-        )
-      };
-    });
-  }, []);
-
   const fetchCounts = async()=>{
     if(!userDetails?.email) return
       const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");

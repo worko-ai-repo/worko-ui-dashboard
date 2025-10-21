@@ -32,6 +32,7 @@ interface JobsTableProps {
   hasNextPage?: boolean; // Add this prop
   onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
   handleFollowUpRequestUpdate: (jobId: string, newFollowUps: { actionDate: string }[]) => void;
+  fetchCounts:() => void;
 }
 
 interface StepperProps {
@@ -48,6 +49,7 @@ const JobsTable = memo(({
   hasNextPage, // Add this to destructured props
   onLocalUpdate,
   handleFollowUpRequestUpdate,
+  fetchCounts,
 }: JobsTableProps) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
@@ -379,7 +381,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 });
 
 
-  const ActionButton = memo(({ type, job }: { type: string, job: JobApplicationDetailsDto }) => {
+  const ActionButton = memo(({ type, job, fetchCounts }: { type: string, job: JobApplicationDetailsDto, fetchCounts: () => void}) => {
     // console.log(job)
     const isProcessing = processingJobId === job.id;
     
@@ -427,7 +429,12 @@ const StatusBadge = memo(({ status }: { status: string }) => {
     return (
       <button 
         className={`w-36 rounded-xl ${config.color} h-11 flex items-center justify-center py-2 px-4 gap-0.5 text-white ${isProcessing ? 'opacity-75 cursor-not-allowed' : ''}`}
-        onClick={() => !isProcessing && handleActionClick(type, job)}
+        onClick={() => {
+          if (!isProcessing) {
+            handleActionClick(type, job);
+            // fetchCounts();
+          }
+        }}
         disabled={isProcessing}
       >
         {isProcessing ? (
@@ -502,7 +509,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
       sortable: true,
       render: (row: JobApplicationDetailsDto) => row.action ? 
         <div className="flex justify-center m-auto w-[150px]">
-        <ActionButton type={row.action} job={row} />
+        <ActionButton type={row.action} job={row} fetchCounts={fetchCounts}/>
         </div> :null
     },
     {
@@ -688,6 +695,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
           onSubmit={handleSubmitDocs}
           onSuccess={() => {
             setShowDocumentUploadModal(false);
+            fetchCounts()
             // onRefresh();
           }}
           userID={user?.sub ?? ""}
@@ -703,6 +711,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
             onSuccess={() => {
               // onRefresh();
               setShowCheckAcceptModal(false);
+              fetchCounts()
             }}
             onLocalUpdate={onLocalUpdate}
             // onConfirm={async () => {
@@ -724,6 +733,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
           onSuccess={() => {
             // onRefresh();
             setShowJoinedModal(false);
+            fetchCounts()
           }}
           onLocalUpdate={onLocalUpdate}
           // onSubmit={(data) => {

@@ -404,6 +404,7 @@ const handleFollowUpRequestUpdate = useCallback(
           hasNextPage={!!paginationInfo?.lastKey} // This is the key change
           onLocalUpdate={handleLocalUpdate}
           handleFollowUpRequestUpdate={handleFollowUpRequestUpdate}
+          fetchCounts={fetchCounts}
         />
       )}
     </div>

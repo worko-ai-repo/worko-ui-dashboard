@@ -233,20 +233,6 @@ const fetchReferrals = useCallback(
     ]);
   }
 
-  //Fetch Counts
-  const fetchCounts = async()=>{
-  if(!userDetails?.email) return
-    const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");
-    // console.log(response)
-    setStats([
-      // { label: 'Total Applicants', value: response?.employeeReferralCounts?.total ?? null },
-      { label: 'Accepted', value: response?.employeeReferralCounts?.accepted ?? null },
-      // { label: 'Awaiting', value: response?.employeeReferralCounts?.awaiting ?? null },
-      { label: 'Done', value: response?.employeeReferralCounts?.done ?? null },
-      { label: 'Rejected', value: response?.employeeReferralCounts?.rejected ?? null },
-    ]);
-  }
-
     const handleLocalUpdate = useCallback((referralId: string, updatedData: Partial<ReferralDetailsDto>) => {
       setData((prevData:any) => {
         if (!prevData) return prevData;
