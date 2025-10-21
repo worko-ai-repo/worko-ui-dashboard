@@ -18,6 +18,7 @@ interface CountsProps{
     accepted: number,
     awaiting: number,
     rejected:number,
+    done:number,
   },
   employeeReferralCounts: {
     total: number,
@@ -52,6 +53,7 @@ const Referrals = () => {
   { label: "Total Referrals", value: null },
   { label: "Accepted", value: null },
   { label: "Pending", value: null },
+  { label: "Done", value: null },
   { label: "Rejected", value: null },
 ])
   const StatusFilterDropdown = [
@@ -165,9 +167,10 @@ const fetchReferrals = useCallback(
       const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");
       // console.log(response)
       setStats([
-        { label: 'Total Applicants', value: response?.candidateReferralCounts?.total ?? null },
+        { label: 'Total Referrals', value: response?.candidateReferralCounts?.total ?? null },
         { label: 'Accepted', value: response?.candidateReferralCounts?.accepted ?? null },
         { label: 'Awaiting', value: response?.candidateReferralCounts?.awaiting ?? null },
+        { label: "Done", value: response?.candidateReferralCounts?.done ?? null },
         { label: 'Rejected', value: response?.candidateReferralCounts?.rejected ?? null },
       ]);
   }

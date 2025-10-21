@@ -55,7 +55,7 @@ interface Stat {
     const [stats, setStats] = useState<Stat[]>([
       { label: 'Total Applicants', value: null },
       { label: 'Rejected', value: null },
-      { label: 'Reviewed', value: null },
+      { label: 'Pending', value: null },
       { label: 'New Applicants', value: null },
       { label: 'Hired', value: null },
     ]);
@@ -154,7 +154,7 @@ interface Stat {
         setStats([
         { label: 'Total Applicants', value: response?.referAndEarnJobApplicationCounts?.total ?? null },
         { label: 'Rejected', value: response?.referAndEarnJobApplicationCounts?.rejected ?? null },
-        { label: 'Reviewed', value: response?.referAndEarnJobApplicationCounts?.pending ?? null },
+        { label: 'Pending', value: response?.referAndEarnJobApplicationCounts?.pending ?? null },
         { label: 'New Applicants', value: response?.referAndEarnJobApplicationCounts?.applied ?? null },
         { label: 'Hired', value: response?.referAndEarnJobApplicationCounts?.hired ?? null },
       ]);
