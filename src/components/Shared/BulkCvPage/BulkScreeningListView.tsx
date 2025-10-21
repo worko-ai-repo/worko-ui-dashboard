@@ -95,7 +95,14 @@ const ScreeningListView: FunctionComponent = () => {
       return [];
     }
   }, [data]); // Only recalculate when data changes
-  const { sortedData, onSortChange } = useSortableData(transformedData, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(transformedData, keyFallbacks,
+    {
+      tableId:"screening-applicant-view",
+      defaultSort:null,
+      persistInLocalStorage:false,
+      persistInUrl:true
+    }
+  );
   const renderActions = useCallback(
     (row: ScreeningRecord) => (
       <div className="flex  items-center">

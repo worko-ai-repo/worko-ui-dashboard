@@ -1,10 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { useAppContext } from "@Context/App.context";
-
 import SkeletonLoader from "../../../Shared/SkeletonLoader";
 import { clipboard } from "@Assets";
 import { toast } from "react-toastify";
@@ -23,12 +22,16 @@ import BulkStatusDropDown from "@Components/Shared/ApplicantsPage/BulkStatusDrop
 import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
 import { useParams } from "react-router-dom";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
-import {
-  checkIsWorkoJobFromSelected,
-  handleJobApplicationStatusUpdate,
-} from "@Components/Dashboard/Corporate/Applicants/Applicants";
+import { checkIsWorkoJobFromSelected } from "@Components/Dashboard/Corporate/Applicants/Applicants";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { TabType } from "@Utils/ApplicationButtonVisibility.utils";
+import { useUrlState } from "@Hooks/useUrlState.hook";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import ApplicantFilters, {
+  ApplicantFilterValues,
+} from "@Components/Shared/ApplicantsPage/ApplicantFilters";
+import { filterApplicants } from "@Utils/ApplicantFilter.utils";
 
 export interface JobApplicationUpdatePayloadDto {
   applicantName: string;
@@ -47,22 +50,67 @@ export interface ApplicationListSelectionDto {
   getAllSelected: (items: JobApplicationDetailsDto[]) => boolean;
   reset: () => void;
 }
+
 interface ApplicantsProps {
   isAllApplicants?: boolean;
 }
 
 const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
   const { userDetails } = useAppContext();
+  const queryClient = useQueryClient();
+
+  // Initialize apiStatus based on activeTab to prevent double API calls
+  const getInitialApiStatus = (tab: TabType): JobApplicationStatusType | undefined => {
+    switch (tab) {
+      case "All":
+        return undefined;
+      case "Hired":
+        return "HIRING_IN_PROCESS";
+      case "Joined":
+        return "JOINED";
+      default:
+        return undefined;
+    }
+  };
+
+  const {
+    activeTab,
+    setActiveTab: setActiveTabUrl,
+    searchText: searchBarText,
+    setSearchText: handleSearchChange,
+    pageSize,
+    setPageSize: handlePageSizeChange,
+  } = useUrlState<TabType>({
+    tab: {
+      defaultValue: "All",
+      validValues: [...tabs] as TabType[],
+    },
+    search: {
+      defaultValue: null,
+    },
+    pageSize: {
+      defaultValue: isAllApplicants ? 25 : 200,
+      validValues: [10, 25, 50, 100, 150, 200],
+    },
+  });
+
+  // Custom tab change handler that updates both tab and status together
+  const handleTabChange = (tab: TabType) => {
+    const newStatus = getInitialApiStatus(tab);
+    setApiStatus(newStatus);
+    setActiveTabUrl(tab);
+  };
+
   const [isAddEvaluatorModalOpen, setIsAddEvaluatorModalOpen] = useState(false);
   const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
-  // Extract the job Id from the URL using useParams
+  const [updatingApplicationId, setUpdatingApplicationId] = useState<string | null>(null);
   const { id: jobId } = useParams<{ id: string }>();
+  const [apiStatus, setApiStatus] = useState<JobApplicationStatusType | undefined>(
+    getInitialApiStatus(activeTab)
+  );
 
-  //Api states
-  const [activeTab, setActiveTab] = useState<"All" | "Hired" | "Joined">("All");
-  const [pageSize, setPageSize] = useState(isAllApplicants ? 25 : 200);
-  const [searchBarText, setSearchBarText] = useState<string | null>(null);
-  const [apiStatus, setApiStatus] = useState<JobApplicationStatusType>();
+  // Add filter state
+  const [filters, setFilters] = useState<ApplicantFilterValues>({});
 
   const ListSelection: ApplicationListSelectionDto = useListSelection({
     limit: 30,
@@ -75,13 +123,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       userType: "ADMIN",
       applicantName: application.applicantDetails.name,
       oldStatusTracker: application.statusTracker ?? [],
-      applicantUserId: application.applicantDetails.userId, // ForBulk
+      applicantUserId: application.applicantDetails.userId,
     }),
     keySelector: (application: BulkJobApplicationUpdateItem) => application.jobApplicationId,
   });
 
   const params: Omit<CursorPaginationApplicationDataAdminParams, "lastKey"> = {
-    //@TODO: Tally the params
     ...(apiStatus !== undefined ? { status: apiStatus } : {}),
     ...(searchBarText?.trim() ? { searchText: searchBarText } : {}),
     userType: "ADMIN",
@@ -89,6 +136,15 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     sortOrder: "descending",
     ...(isAllApplicants ? {} : { jobId: jobId ?? undefined }),
   };
+
+  // Stable query key
+  const queryKey = [
+    "AdminJobsApplicationQuery",
+    activeTab,
+    !!searchBarText,
+    JSON.stringify(params),
+    isAllApplicants,
+  ];
 
   const {
     data,
@@ -100,25 +156,120 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     refetch,
     reset,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataAdminParams>({
-    queryKey: [
-      "AdminJobsApplicationQuery",
-      activeTab,
-      !!searchBarText,
-      JSON.stringify(params),
-      isAllApplicants,
-    ],
+    queryKey: queryKey,
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
     enabled: isAllApplicants ? true : !!jobId,
   });
 
-  /**
-   * UseEffect to reset selected rows when the active tab changes
-   */
+  // Apply filters to the data locally
+  const filteredData = useMemo(() => {
+    if (!data) return data;
+    return filterApplicants(data, filters);
+  }, [data, filters]);
+
+  const updateApplicationMutation = useMutation({
+    mutationFn: async ({
+      payload,
+      applicationId,
+    }: {
+      payload: JobApplicationUpdatePayloadDto;
+      applicationId: string;
+    }) => {
+      const result = await AdminServiceObj.updateApplicationStatus(payload, applicationId);
+      if (!result) {
+        throw new Error("Failed to update application status");
+      }
+      return result;
+    },
+
+    // Optimistically update local data only
+    onMutate: async () => {
+      // Stop any refetching (optional)
+      await queryClient.cancelQueries({ queryKey });
+    },
+
+    onError: (err) => {
+      console.error(" Failed to update application status:", err);
+      toast.error("Failed to update application status.", getToastOptions({}));
+    },
+
+    // When API returns fresh data, replace only the target record
+    onSuccess: (updatedApplication: JobApplicationDetailsDto) => {
+      toast.success("Application status updated successfully", getToastOptions({}));
+      debugger;
+      if (!data || !Array.isArray(data)) {
+        console.warn(" Data is not an array or empty:", data);
+        return;
+      }
+
+      const index = data.findIndex(
+        (app: JobApplicationDetailsDto) => app.id === updatedApplication.id
+      );
+
+      if (index === -1) {
+        console.warn("Application not found in local data:", updatedApplication.id);
+        return;
+      }
+
+      data[index] = { ...data[index], ...updatedApplication };
+      console.log(`Updated application ${updatedApplication.id} in local data.`);
+    },
+  });
+
+  // Mutation for bulk application updates
+  const bulkUpdateMutation = useMutation({
+    mutationFn: async (payload: {
+      bulkJobApplicationUpdate: BulkJobApplicationUpdatePayloadItem[];
+    }) => {
+      return await AdminServiceObj.postBulkApplicationUpdate(payload);
+    },
+    onMutate: async (payload) => {
+      await queryClient.cancelQueries({ queryKey });
+      const previousData = queryClient.getQueryData(queryKey);
+
+      const statusMap = new Map(
+        payload.bulkJobApplicationUpdate.map((item) => [item.jobApplicationId, item.status])
+      );
+
+      queryClient.setQueryData(queryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((application: JobApplicationDetailsDto) => {
+              const newStatus = statusMap.get(application.id);
+              if (newStatus) {
+                return {
+                  ...application,
+                  status: newStatus,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return application;
+            }),
+          })),
+        };
+      });
+
+      return { previousData };
+    },
+    onError: (err, variables, context) => {
+      if (context?.previousData) {
+        queryClient.setQueryData(queryKey, context.previousData);
+      }
+      toast.error("Failed to update applications", getToastOptions({}));
+    },
+    onSuccess: () => {
+      toast.success("Applications updated successfully!", getToastOptions({}));
+      ListSelection.reset();
+    },
+  });
+
   useEffect(() => {
-    refetch();
-    reset(); // Reset pagination when active tab changes
-    ListSelection.reset(); // Reset selected rows when active tab changes
+    ListSelection.reset();
   }, [activeTab, searchBarText, pageSize, apiStatus]);
 
   const onBulkUpdate = async (type: JobApplicationStatusType) => {
@@ -127,54 +278,34 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         toast.error("Please select at least one application to update.", getToastOptions({}));
         return;
       }
+
       const payload: BulkJobApplicationUpdatePayloadItem[] = ListSelection.selectedRows.map(
         (row) => {
           const { id, applicantUserId, ...rest } = row;
           return {
             ...rest,
-            status: type, // Set the new status based on the dropdown selection
+            status: type,
           };
         }
       );
 
-      const updatePromise = AdminServiceObj.postBulkApplicationUpdate({
-        bulkJobApplicationUpdate: payload,
-      });
-
-      toast.promise(
-        updatePromise,
+      await toast.promise(
+        bulkUpdateMutation.mutateAsync({
+          bulkJobApplicationUpdate: payload,
+        }),
         {
           pending: "Updating applications...",
-          success: "Applications updated successfully!",
-          error: "Failed to update applications",
         },
         getToastOptions({})
       );
 
-      const data = await updatePromise; //@TODO-Use the data somewhere atleast in both corporate and admin component
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 2000);
     } catch (error) {
       console.error("Error in bulk update:", error);
-    } finally {
-      refetch(); // Refetch the data to reflect the changes
-      ListSelection.reset(); // Reset the selection after bulk update
     }
   };
-
-  useEffect(() => {
-    switch (activeTab) {
-      case "All":
-        setApiStatus(undefined);
-        break;
-      case "Hired":
-        setApiStatus("HIRING_IN_PROCESS");
-        break;
-      case "Joined":
-        setApiStatus("JOINED");
-        break;
-      default:
-        setApiStatus(undefined);
-    }
-  }, [activeTab]);
 
   const StatusFilterDropdown = [
     { label: "All", onClick: () => setApiStatus(undefined) },
@@ -239,23 +370,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       },
       formLimit: 10,
     });
-    //@TODO:Update the status
   };
 
-  /**
-   * handleSendToRecruiter - Function to handle sending application to recruiter
-   *
-   * @description This function sends the selected application to the recruiter for further processing.
-   *
-   * @param {string} applicationId - The ID of the application to be sent to the recruiter.
-   * @param {Function} refetch - Function to refetch the application data after sending to recruiter.
-   */
   const handleSendToRecruiter = async (applicationId: string, refetch: () => void) => {
     try {
-      // Create the promise for sending application to recruiter
       const sendPromise = AdminServiceObj.sendApplicationToRecruiters(applicationId);
 
-      // Use toast.promise to handle pending, success, and error states
       toast.promise(
         sendPromise,
         {
@@ -271,9 +391,24 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         throw new Error("Failed to send application to recruiter");
       }
 
-      refetch(); // Refetch the data to reflect the changes
+      refetch();
     } catch (error) {
       console.error("Error sending application to recruiter:", error);
+    }
+  };
+
+  // Wrapper function to use mutation
+  const handleUpdateWithMutation = (
+    payload: JobApplicationUpdatePayloadDto,
+    applicationId: string,
+    hasRefetch: boolean
+  ) => {
+    updateApplicationMutation.mutate({ payload, applicationId });
+
+    if (hasRefetch) {
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 2000);
     }
   };
 
@@ -282,7 +417,15 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
-            <HeaderDetails />
+            <HeaderDetails
+              {...(!isAllApplicants &&
+                data &&
+                data.length > 0 &&
+                data[0].companyId && { companyId: data[0].companyId })}
+              {...(!isAllApplicants && jobId && { jobId: jobId })}
+              key={jobId || "all-applicants"}
+              pageType={isAllApplicants ? "corporateApplicants" : "applicant"}
+            />
             <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <InteractiveInput
@@ -324,14 +467,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
           </div>
 
           <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            {/* Search Bar */}
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}
-              setSearchBarText={setSearchBarText}
+              setSearchBarText={handleSearchChange}
               handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
+              <ApplicantFilters onFilterChange={setFilters} className="min-w-fit" />
               <GenericDropdown
                 selectTitle="Status"
                 tooltipMessage="Select Status to filter applications"
@@ -355,12 +498,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                   { label: "Interview Done", onClick: () => onBulkUpdate("INTERVIEW_DONE") },
                   { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
                   { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                  /*  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") }, */
                 ]}
-                apiStatus={apiStatus} // Change this to test
+                apiStatus={apiStatus}
                 isWorkoJob={checkIsWorkoJobFromSelected(ListSelection.selectedRows, data)}
                 disabled={
-                  apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"
+                  apiStatus === undefined ||
+                  apiStatus === "ON_HOLD" ||
+                  apiStatus === "REJECTED" ||
+                  bulkUpdateMutation.isPending
                 }
                 tooltipMessage="Select a bulk status update"
                 selectTitle="Bulk"
@@ -377,12 +522,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                   ? "border-blue-500 text-blue-700 font-semibold"
                   : "border-transparent text-gray-500"
               }`}
-              onClick={() => setActiveTab(tab)}>
+              onClick={() => handleTabChange(tab)}>
               {tab === "All" ? "All" : tab === "Hired" ? "Hired" : "Joined"}
             </button>
           ))}
         </div>
-        {queryIsJobsLoading ? (
+        {queryIsJobsLoading && (!data || data.length === 0) ? (
           <SkeletonLoader
             showTableHeader={true}
             showTableRows={true}
@@ -392,11 +537,9 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         ) : (
           <ApplicationTable
             activeTab={activeTab}
-            setActiveTab={setActiveTab}
-            data={data}
-            handleUpdate={(payload, jobId, hasRefetch) =>
-              handleJobApplicationStatusUpdate(payload, jobId, hasRefetch ? refetch : undefined)
-            }
+            setActiveTab={handleTabChange}
+            data={filteredData}
+            handleUpdate={handleUpdateWithMutation}
             userType={"ADMIN"}
             Pagination={{
               hasNextPage,
@@ -404,7 +547,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
               goToNextPage,
               goToPreviousPage,
               pageSize,
-              setPageSize,
+              setPageSize: handlePageSizeChange,
             }}
             refetch={refetch}
             EvaluatorFormProps={EvaluatorFormProps}
@@ -419,6 +562,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
             onBulkUpdate={onBulkUpdate}
             isAllApplicants={isAllApplicants}
+            isUpdating={updateApplicationMutation.isPending}
           />
         )}
       </div>

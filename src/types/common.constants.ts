@@ -21,7 +21,7 @@ export const CommonPaginationPageSizeOptions = [
   { label: "150 items", value: 150 },
   { label: "200 items", value: 200 },
 ];
-
+export type CommonPaginationPageSizeOptionsType = 10 | 25 | 50 | 100 | 150 | 200;
 /**
  * STATUS_LABELS
  *

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Filter, X, Link, Building2 } from "lucide-react";
+import { Filter, X, Link, Building2, Loader2 } from "lucide-react";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
@@ -35,9 +35,11 @@ interface JobsTableProps {
   fetchNextPage: () => void;
   fetchPreviousPage: () => void;
   pageSize: number;
-  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageSize: any;
   getAllSelected: (item: JobData[]) => boolean;
+  isUpdating?: boolean; // New prop to track mutation state
 }
+
 export const keyFallbacksforJobs = {};
 
 const JobTableWrapper: React.FC<JobsTableProps> = ({
@@ -56,15 +58,39 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   pageSize,
   setPageSize,
   getAllSelected,
+  isUpdating = false,
 }) => {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isCloseJobModalOpen, setIsCloseJobModalOpen] = useState<{
     id: string;
     companyId: string;
   } | null>(null);
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacksforJobs);
-  //hook
+  const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
+  const { sortedData, onSortChange } = useSortableData(
+    data, 
+    keyFallbacksforJobs,
+    {
+      tableId: 'admin-jobs-table',
+      persistInUrl: true,
+      persistInLocalStorage: false,
+      defaultSort: null,
+    }
+  );
   const nav = useNavigate();
+
+  // Wrapper to track which job is being updated
+  const handleUpdateJobStatus = async (
+    status: JobStatusType,
+    data: { id: string; companyId: string },
+    closeReason?: { reason: string; note: string }
+  ) => {
+    setUpdatingJobId(data.id);
+    try {
+      await updateJobStatus(status, data, closeReason);
+    } finally {
+      setUpdatingJobId(null);
+    }
+  };
 
   const columns: Column<JobData>[] = [
     {
@@ -72,16 +98,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       label: "Job Title",
       sortable: true,
       render: (row: JobData) => (
-        <span
-          onClick={() => nav(`/admin/aApplicants/${row.id}`)}
-          className="w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={row.jobTitle}
-          data-tooltip-place="top"
-          data-tooltip-delay-show={500}
-          data-tooltip-delay-hide={500}>
-          {row.jobTitle}
-        </span>
+        <div className="flex items-center gap-2">
+          <span
+            onClick={() => nav(`/admin/aApplicants/${row.id}`)}
+            className="w-full capitalize truncate block max-w-[99.3%] cursor-pointer"
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={row.jobTitle}
+            data-tooltip-place="top"
+            data-tooltip-delay-show={500}
+            data-tooltip-delay-hide={500}>
+            {row.jobTitle}
+          </span>
+          {updatingJobId === row.id && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          )}
+        </div>
       ),
     },
     {
@@ -210,6 +241,8 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       label: "Actions",
       contentWidth: `max-w-none ${activeTab !== "CLOSED" ? "!min-w-96" : ""} `,
       render: (row: JobData) => {
+        const isRowUpdating = updatingJobId === row.id;
+        
         const tabButtonConfig: Record<
           string,
           {
@@ -217,6 +250,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             className: string;
             onClick?: () => void;
             tooltip: string;
+            disabled?: boolean;
           }[]
         > = {
           PUBLISHED: [
@@ -225,6 +259,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               className: "btn-sky shrink-0",
               tooltip: "View Applicants",
               onClick: () => nav(`/admin/aApplicants/${row.id}`),
+              disabled: isRowUpdating,
             },
             {
               icon: <Filter className="w-5 h-5" />,
@@ -234,18 +269,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                 nav(`/admin/aBulkCVCheck`, {
                   state: { jobDesc: row.jobDescription },
                 }),
+              disabled: isRowUpdating,
             },
             {
               icon: <img src={Duplicate} className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "Duplicate Job",
               onClick: () => handleJobCreation("DUPLICATE", row),
+              disabled: isRowUpdating,
             },
             {
               icon: <img src={Edit} className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "Update Job",
               onClick: () => handleJobCreation("UPDATE", row),
+              disabled: isRowUpdating,
             },
             {
               icon: <Link className="w-5 h-5" />,
@@ -256,42 +294,64 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   `${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`,
                   "_blank"
                 ),
+              disabled: isRowUpdating,
             },
             {
-              icon: <X className="w-5 h-5" />,
+              icon: isRowUpdating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <X className="w-5 h-5" />
+              ),
               className: "btn-blue shrink-0",
               tooltip: "Close Job",
               onClick: () =>
                 setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
+              disabled: isRowUpdating,
             },
             {
-              icon: <img src={Archive} className="w-5 h-5" />,
+              icon: isRowUpdating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <img src={Archive} className="w-5 h-5" />
+              ),
               className: "btn-blue shrink-0",
               tooltip: "Archive Job",
               onClick: () =>
-                updateJobStatus("ARCHIVED", { id: row.id, companyId: row?.companyDetails?.id }),
+                handleUpdateJobStatus("ARCHIVED", { id: row.id, companyId: row?.companyDetails?.id }),
+              disabled: isRowUpdating,
             },
           ],
           ARCHIVED: [
             {
-              icon: <X className="w-5 h-5" />,
+              icon: isRowUpdating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <X className="w-5 h-5" />
+              ),
               className: "btn-blue shrink-0",
               tooltip: "Close Job",
               onClick: () =>
                 setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
+              disabled: isRowUpdating,
             },
             {
-              icon: <img src={Repost} className="w-5 h-5" />,
+              icon: isRowUpdating ? (
+                <Loader2 className="w-5 h-5 animate-spin" />
+              ) : (
+                <img src={Repost} className="w-5 h-5" />
+              ),
               className: "btn-sky shrink-0",
               tooltip: "Repost Job",
               onClick: () =>
-                updateJobStatus("PUBLISHED", { id: row.id, companyId: row?.companyDetails?.id }),
+                handleUpdateJobStatus("PUBLISHED", { id: row.id, companyId: row?.companyDetails?.id }),
+              disabled: isRowUpdating,
             },
             {
               icon: <img src={Duplicate} className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "Duplicate",
               onClick: () => handleJobCreation("DUPLICATE", row),
+              disabled: isRowUpdating,
             },
           ],
           CLOSED: [
@@ -300,6 +360,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               className: "btn-sky shrink-0",
               tooltip: "Duplicate Job",
               onClick: () => handleJobCreation("DUPLICATE", row),
+              disabled: isRowUpdating,
             },
           ],
         };
@@ -311,7 +372,12 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         return (
           <div className="p-1 flex gap-2 items-center justify-center">
             {buttons.map((btn, idx) => (
-              <button key={idx} className={btn.className} onClick={btn.onClick} title={btn.tooltip}>
+              <button
+                key={idx}
+                className={`${btn.className} ${btn.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                onClick={btn.onClick}
+                title={btn.tooltip}
+                disabled={btn.disabled}>
                 {btn.icon}
               </button>
             ))}
@@ -392,15 +458,15 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         hasPrevPage={hasPrevPage}
         handleNextPage={fetchNextPage}
         handlePreviousPage={fetchPreviousPage}
-        pageSize={pageSize} // Default page size
-        setPageSize={setPageSize} // Replace with actual handler
+        pageSize={pageSize}
+        setPageSize={setPageSize}
       />
       <Modal isOpen={isCloseJobModalOpen != null} onClose={() => setIsCloseJobModalOpen(null)}>
         <CloseJob
           onClose={() => setIsCloseJobModalOpen(null)}
           onSubmit={(data: { note: string; reason: string }) => {
             if (isCloseJobModalOpen?.id && isCloseJobModalOpen?.companyId) {
-              updateJobStatus(
+              handleUpdateJobStatus(
                 "CLOSED",
                 {
                   id: isCloseJobModalOpen.id,
@@ -408,6 +474,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                 },
                 data
               );
+              setIsCloseJobModalOpen(null);
             } else {
               toast.error("Failed to perform this operation", getToastOptions({}));
               console.error("Missing id or companyId for closing job.");

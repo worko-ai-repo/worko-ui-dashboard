@@ -319,7 +319,7 @@ export interface CommonCursorPaginationProp {
   goToNextPage: () => void;
   goToPreviousPage: () => void;
   pageSize: number;
-  setPageSize: React.Dispatch<React.SetStateAction<number>>;
+  setPageSize: any;
 }
 
 /**
@@ -337,7 +337,7 @@ export interface CursorPaginationJobDataParams {
   companyId: string;
   corporateRecruiterUserId?: string;
   lastKey?: string | undefined;
-   includeCompanyDetails:boolean;
+  includeCompanyDetails: boolean;
 }
 
 /**
@@ -374,7 +374,7 @@ export interface CursorPaginationCorporateUserAdminDataParams {
   pageSize: number;
   sortOrder: "ascending" | "descending";
   searchText?: string;
-  corporateUserType: 'corporate-admin' | 'corporate-recruiter';
+  corporateUserType: "corporate-admin" | "corporate-recruiter";
   lastKey?: string | undefined;
 }
 
@@ -387,7 +387,7 @@ export interface CursorPaginationCorporateUserRecDataParams {
   searchText?: string;
   companyId?: string;
   includeCompanyDetails: boolean;
-  corporateUserType?: 'corporate-admin' | 'corporate-recruiter';
+  corporateUserType?: "corporate-admin" | "corporate-recruiter";
   includeRegisteredCorporateDetails: boolean;
   lastKey?: string | undefined;
 }

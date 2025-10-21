@@ -10,6 +10,7 @@ export type GenericDropdownProps = {
   disabled?: boolean;
   selectTitle?: string;
   tooltipMessage?: string;
+  value?: string | null; // Add value prop to control selected label
 };
 
 const GenericDropdown: React.FC<GenericDropdownProps> = ({
@@ -17,10 +18,16 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
   disabled = false,
   selectTitle = "Select",
   tooltipMessage = "Perform bulk actions on selected rows.",
+  value = null, // Add value prop
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedLabel, setSelectedLabel] = useState<string | null>(null);
+  const [selectedLabel, setSelectedLabel] = useState<string | null>(value);
   const wrapperRef = useRef<HTMLDivElement>(null);
+
+  // Sync selectedLabel with value prop
+  useEffect(() => {
+    setSelectedLabel(value);
+  }, [value]);
 
   const toggleDropdown = () => {
     if (!disabled) setIsOpen((prev) => !prev);
@@ -45,17 +52,17 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
   return (
     <div
       ref={wrapperRef}
-      className={`relative min-w-48  ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+      className={`relative min-w-48  ${
+        disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"
+      }`}
       data-tooltip-id="dropdown-tooltip"
-      data-tooltip-content={tooltipMessage}
-    >
+      data-tooltip-content={tooltipMessage}>
       {/* Trigger Button */}
       <div
         onClick={toggleDropdown}
         className={`flex justify-center text-left  min-w-48 h-10 bg-white px-2 py-2 items-center font-semibold  transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
-        } ${disabled ? "cursor-not-allowed" : ""}`}
-      >
+        } ${disabled ? "cursor-not-allowed" : ""}`}>
         <span>{selectedLabel || selectTitle}</span>
         <span className="ml-1">▾</span>
       </div>
@@ -75,11 +82,8 @@ const GenericDropdown: React.FC<GenericDropdownProps> = ({
                     setIsOpen(false);
                   }}
                   className={`text-left  border-b px-4 py-1  text-sm font-medium transition ${
-                    isSelected
-                      ? "text-blue-600 font-semibold"
-                      : "text-gray-600 hover:text-blue-600"
-                  }`}
-                >
+                    isSelected ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"
+                  }`}>
                   {option.label}
                 </button>
               );

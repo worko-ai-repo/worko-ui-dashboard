@@ -44,7 +44,10 @@ const AdminReferAndEarn = () => {
         <div className="flex gap-3">
           <div className="flex flex-1  flex-col ">
             <div className="flex flex-wrap  gap-4">
-              <HeaderDetails />
+            <HeaderDetails
+            key={`header-details-refer-and-earn` }
+            pageType="referr&earn"
+            />
             </div>
             <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
               {/* Search Bar */}
@@ -58,7 +61,7 @@ const AdminReferAndEarn = () => {
           </div>
           <EarningsCard />
         </div>
-        {queryIsJobsLoading ? (
+        {queryIsJobsLoading && (!data || data.length === 0) ? (
           <SkeletonLoader
             showTableHeader={true}
             showTableRows={true}
