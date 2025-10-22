@@ -613,7 +613,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
     const statusTracker = row.statusTracker;
     
-      if (statusTracker?.length > 1 && statusTracker[1].newStatus === "REJECTED") {
+      if (statusTracker?.length > 1 && statusTracker[statusTracker.length-1].newStatus === "REJECTED") {
         return null;
       }
       if (row.statusTracker && row.statusTracker.length > 0) {
