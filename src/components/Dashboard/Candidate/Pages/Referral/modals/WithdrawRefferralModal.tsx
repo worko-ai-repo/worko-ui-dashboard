@@ -68,7 +68,7 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
         <h2 className="text-lg font-semibold mb-4">Withdraw Request</h2>
 
         {/* Dropdown */}
-        <label className="block text-sm font-medium text-gray-700 mb-1">Reason</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Reason <span className="text-red-500">*</span></label>
         <select
           value={reason}
           onChange={(e) => setReason(e.target.value)}
@@ -81,7 +81,7 @@ const WithdrawRefferralModal: FC<WithdrawRefferralModalProps> = ({
         </select>
 
         {/* Textarea */}
-        <label className="block text-sm font-medium text-gray-700 mb-1">Comments (optional)</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">Comments <span className="text-red-500">*</span></label>
         <textarea
           value={comments}
           onChange={(e) => setComments(e.target.value)}

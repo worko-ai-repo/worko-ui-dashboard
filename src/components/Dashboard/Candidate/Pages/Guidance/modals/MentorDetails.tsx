@@ -31,18 +31,44 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleError, setRescheduleError] = useState('');
   const [linkedin,setLinkedin] = useState("")
+  const [github,setGithub] = useState("")
+  const [twitter,setTwitter] = useState("")
   const social = mentorDetails?.socialProfile || {};
   const about = mentorDetails?.about || '';
 
+  // useEffect(() => {
+  //   console.log(social)
+  //   Object.entries(social).forEach(([platform, links]) => {
+  //     if (platform.toLowerCase() === "linkedin" && Array.isArray(links) && links.length > 0) {
+  //       const rawLink = links[0];
+  //       const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+  //       setLinkedin(validLink);
+  //     }else if(platform.toLowerCase() === "github" && Array.isArray(links) && links.length > 0) {
+  //       const rawLink = links[0];
+  //       const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+  //       setGithub(validLink)
+  //     }else if(platform.toLowerCase() === "twitter" && Array.isArray(links) && links.length > 0) {
+  //       const rawLink = links[0];
+  //       const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+  //       setTwitter(validLink)
+  //     };
+  //   });
+  // }, [social]);
+
   useEffect(() => {
-    Object.entries(social).forEach(([platform, links]) => {
-      if (platform.toLowerCase() === "linkedin" && Array.isArray(links) && links.length > 0) {
-        const rawLink = links[0];
-        const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
-        setLinkedin(validLink);
-      }
-    });
+    if (social.linkedin && Array.isArray(social.linkedin) && social.linkedin[0]) {
+      setLinkedin(social.linkedin[0]);
+    }
+
+    if (social.github && Array.isArray(social.github) && social.github[0]) {
+      setGithub(social.github[0]);
+    }
+
+    if (social.twitter && Array.isArray(social.twitter) && social.twitter[0]) {
+      setTwitter(social.twitter[0]);
+    }
   }, [social]);
+
 
   const handleJoinClick = () => {
     window.open(figmaUrl, '_blank');
@@ -148,7 +174,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   return (
     <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
       <div className="flex justify-between items-center p-6 pb-4">
-        <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Candidate details</h2>
+        <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Mentor details</h2>
         {linkedin !== "" &&
         <div className="flex items-center gap-1.5 text-sm text-[#0a0a0a] font-['Poppins']">
           <div className="w-5 h-5 bg-[#316bff] rounded-sm flex items-center justify-center">
@@ -194,7 +220,49 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
               <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
                 Mentor Socials
               </span>
-              <div className="flex flex-wrap gap-2 text-[#0f172a]">
+              <div>
+                {!linkedin?.trim() && !twitter?.trim() && !github?.trim() ? (
+                  <span>NA</span>
+                ) : (
+                  <>
+                    {linkedin?.trim() && (
+                      <a
+                        href={linkedin}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        LinkedIn
+                      </a>
+                    )}
+                    &nbsp; &nbsp;
+                    {github?.trim() && (
+                      <a
+                        href={github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                    &nbsp; &nbsp;
+                    {twitter?.trim() && (
+                      <a
+                        href={twitter}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        Twitter
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+
+
+              {/* <div className="flex flex-wrap gap-2 text-[#0f172a]">
                 {Object.entries(social).flatMap(([platform, links]) => {
                   if (!Array.isArray(links) || links.length === 0) return [];
 
@@ -210,7 +278,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
                     </a>
                   ));
                 })}
-              </div>
+              </div> */}
             </div>
           )}
         </div>
