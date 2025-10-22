@@ -17,7 +17,7 @@ import WithdrawDialog from './WithdrawDialog';
         <div className="space-y-4">
           {/* Total earning */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">Total earning:</span>
+            <span className="text-xs font-semibold">Total earning:</span>
             <div className="border border-gray-300 rounded-lg px-3 py-1 flex items-center gap-1" style={{backgroundColor: '#f6f6f6', borderColor: '#c0b7b7'}}>
               
               <span className="font-semibold text-lg" style={{color: '#316bff'}}>Rs. 10,000</span>
@@ -26,7 +26,7 @@ import WithdrawDialog from './WithdrawDialog';
 
           {/* Potential earning */}
           <div className="flex items-center justify-between">
-            <span className="text-sm font-semibold">Potential earning</span>
+            <span className="text-xs font-semibold">Potential earning:</span>
             <div className="border border-gray-300 rounded-lg px-3 py-1 flex items-center gap-1" style={{backgroundColor: '#57e1e1', borderColor: '#c0b7b7'}}>
               
               <span className="font-semibold text-lg" style={{color: '#0048ff'}}>Rs. 2,000</span>
@@ -40,7 +40,7 @@ import WithdrawDialog from './WithdrawDialog';
             onClick={toggleExpanded}
             className="flex items-center justify-center w-full hover:opacity-80 transition-opacity duration-200"
           >
-            <span className="text-xs mr-2">Expand</span>
+            <span className="text-sm mr-2">Expand</span>
             <svg 
               width="15" 
               height="8" 

@@ -4,7 +4,7 @@ import JobService from '../../Service/JobsService';
 import { JobApiResponse, PaginationInfo, JobFilters, JobTypes } from './JobTypes';
 import { debounce, last } from 'lodash';
 import { useDashboardContext } from '@Context/Dashboard.context';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, X } from 'lucide-react';
 import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown';
 import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { useAppContext } from '@Context/App.context';
@@ -98,7 +98,7 @@ const StatusFilterDropdown = [
         lastKey,
         {
           ...searchFilters,
-          searchText: searchBarText || undefined
+          searchText: searchFilters.searchText
         }
       );
 
@@ -144,7 +144,7 @@ const StatusFilterDropdown = [
   };
   
   // Debounced search - will be triggered by onBlur or Enter key
-  const handleSearch = useCallback(() => {
+  const handleSearch = useCallback((searchValue: string = searchBarText) => {
     // Clear any pending debounce
     if (searchInputRef.current) {
       clearTimeout(searchInputRef.current);
@@ -153,7 +153,7 @@ const StatusFilterDropdown = [
     setCurrentPage(1);
     setPaginationInfo(prev => ({...prev, lastKey: ''}));
     paginationKeysRef.current = { 1: '' }; // Reset pagination keys
-    fetchJobs(1, pageSize, '', { ...filters, searchText: searchBarText }, true);
+    fetchJobs(1, pageSize, '', { ...filters, searchText: searchValue }, true);
   }, [fetchJobs, filters, pageSize, searchBarText]);
   
   // Debounced search with delay for onBlur events
@@ -329,12 +329,26 @@ const handleFollowUpRequestUpdate = useCallback(
               placeholder="Search by company name"
               value={searchBarText}
               onChange={handleSearchChange}
-              className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"
+              className="px-4 py-3 w-full outline-none focus:outline-none focus:ring-0 bg-[#FAFAFA] text-sm"
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
               onBlur={() => searchBarText && debouncedSearch()}
             />
+            {searchBarText && (
+              <button
+                  onClick={() => {
+                    if (searchInputRef.current) {
+                      clearTimeout(searchInputRef.current);
+                    }
+                    debouncedSearch.cancel();
+                    setSearchBarText("");
+                    handleSearch("");
+                  }}
+                className="scale-50 active:scale-[45%] right-[5%] h-full w-fit rounded-full">
+                <X className="p-1 text-white bg-blue-600 rounded-full w-10 h-auto relative" />
+              </button>
+            )}
             <button
-              onClick={handleSearch}
+              onClick={() => handleSearch(searchBarText)}
               className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none">
               Search
             </button>
@@ -373,7 +387,7 @@ const handleFollowUpRequestUpdate = useCallback(
               />
               </div>
             </div>
-              </div>
+            </div>
         </div>
 
         {/* <div className="flex flex-col gap-4 justify-center sm:items-end">
