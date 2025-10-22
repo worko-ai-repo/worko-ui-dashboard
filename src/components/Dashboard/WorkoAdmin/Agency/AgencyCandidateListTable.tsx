@@ -80,7 +80,14 @@ export default function AgencyCandidateListTable(props: any) {
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
   };
-  const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+//   const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+
+    const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: `agency`,
+    persistInUrl: true,
+    persistInLocalStorage: false,
+    defaultSort: null,
+    });
 
   // Helpers for status transitions
   const shouldShowUpdateIcon = (row: any) => {

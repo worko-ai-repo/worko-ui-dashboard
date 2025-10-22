@@ -11,7 +11,7 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 
 // Define dashboard types
-export type DashboardType = "CORPORATE" | "EMPLOYEE" | "CANDIDATE" | "ADMIN";
+export type DashboardType = "CORPORATE" | "EMPLOYEE" | "CANDIDATE" | "ADMIN" | "AGENCY";
 
 interface DashboardContextType {
   // Core dashboard properties

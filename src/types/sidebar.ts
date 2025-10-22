@@ -1,6 +1,6 @@
 import { ComponentType, SVGProps } from "react";
 
-export type DashboardType = 'CORPORATE' | 'EMPLOYEE' | 'CANDIDATE' | 'ADMIN';
+export type DashboardType = 'CORPORATE' | 'EMPLOYEE' | 'CANDIDATE' | 'ADMIN' | 'AGENCY';
 
 export type TabId =
 //Candidate Dashboard Tabs
@@ -46,7 +46,13 @@ export type TabId =
 | 'aPayments'
 | 'aCompanies'
 | 'Refer-n-Earn'
-| 'aPackages';
+| 'aPackages'
+// Agency dashboard tabs
+| 'agInvites'
+| 'agJobs'
+| 'agApplicants'
+| 'agBulkCVCheck'
+| 'agRecharge';
 export interface NavItem {
     id: TabId;
     label: string;

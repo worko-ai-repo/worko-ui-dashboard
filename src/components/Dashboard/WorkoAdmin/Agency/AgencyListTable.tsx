@@ -85,7 +85,13 @@ export default function AgencyListTable(props: any) {
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
   };
-  const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+  // const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+      const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+      tableId: `agency`,
+      persistInUrl: true,
+      persistInLocalStorage: false,
+      defaultSort: null,
+      });
 
   // Column definitions (kept same as previous "All" view)
   const columns = [
