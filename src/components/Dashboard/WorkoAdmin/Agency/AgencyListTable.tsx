@@ -15,6 +15,7 @@ import RemoveJobModal from "./modals/RemoveJobModal";
 import EditAgencyModal, { FormValues } from "./modals/EditAgencyModal";
 import PauseAgencyModal from "./modals/PauseAgencyModal";
 import DeleteAgencyModal from "./modals/DeleteAgencyModal";
+import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -475,7 +476,7 @@ const dummyJobData = [
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTable
+        <DynamicTableAgency
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

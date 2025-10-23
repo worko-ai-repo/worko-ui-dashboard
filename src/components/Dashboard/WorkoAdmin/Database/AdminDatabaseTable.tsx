@@ -11,6 +11,7 @@ import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
 import EditProfileModal from "./modals/EditProfileModal";
+import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -379,7 +380,7 @@ return (
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTable
+        <DynamicTableAgency
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

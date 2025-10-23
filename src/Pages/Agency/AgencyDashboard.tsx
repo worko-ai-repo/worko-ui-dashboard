@@ -6,7 +6,7 @@ import PageNotFound from "@Pages/errors/404/PageNotFound";
 
 const Invites = lazy(() => import("@Components/Dashboard/Agency/Pages/Invites/InvitesList"));
 const Jobs = lazy(() => import("@Components/Dashboard/Agency/Pages/Jobs/JobsList"));
-const Applicants = lazy(() => import("@Components/Dashboard/Agency/Pages/Applicants/Applicants"));
+const Applicants = lazy(() => import("@Components/Dashboard/Agency/Pages/Applicants/ApplicantsList"));
 const BulkCVCheck = lazy(() => import("@Components/Dashboard/Agency/Pages/BulkCVCheck/BulkCVCheck"));
 const Recharge = lazy(() => import("@Components/Dashboard/Agency/Pages/Recharge/Recharge"));
 

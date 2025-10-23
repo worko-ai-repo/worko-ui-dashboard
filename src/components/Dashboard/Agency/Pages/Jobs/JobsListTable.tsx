@@ -67,6 +67,7 @@ export default function JobsListTable(props: any) {
   const [editProfileData,setEditProfileData] = useState<AgencyJobsList | undefined>();
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false);
   const [isProfileUploadModalOpen,setIsProfileUploadModalOpen] = useState<boolean>(false);
+  const [selectedRow,setSelectedRow] = useState<AgencyJobsList | null>(null);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
 
@@ -223,11 +224,14 @@ const columns = [
     {
         key: "uploadProfile",
         label: "Upload Profile",
-        sortable: true,
+        sortable: false,
         render: (row: AgencyJobsList) => (
             <div className='flex justify-center m-auto w-[150px]'>
                 <button 
-                onClick={()=>setIsProfileUploadModalOpen(true)}
+                onClick={()=>{
+                  setSelectedRow(row)
+                  setIsProfileUploadModalOpen(true)
+                }}
                 className="bg-blue-500 p-3 text-white rounded-xl flex flex-row gap-1 justify-center items-center">
                     <Upload/>
                     Upload profile
@@ -241,7 +245,7 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyJobsList) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.candidatesUploaded ?? "NA"}</span>
             </div>
         ),
@@ -252,7 +256,7 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyJobsList) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.candidatesRejected ?? "NA"}</span>
             </div>
         ),
@@ -320,7 +324,7 @@ const columns = [
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTableAgency
+        <DynamicTable
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
@@ -350,7 +354,7 @@ const columns = [
         dashboardType={"AGENCY"}
         onClose= {()=>setIsProfileUploadModalOpen(false)}
         isOpen={isProfileUploadModalOpen}
-        userID={"12345"}
+        rowData={selectedRow}
     />
     </>
   );

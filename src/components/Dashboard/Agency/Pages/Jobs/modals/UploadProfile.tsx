@@ -1,12 +1,14 @@
+import { AgencyJobsList } from '@Interfaces/AgencyDashboardList.dto';
 import { SendIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
+import DuplicateModal from './DuplicateModal';
 
 interface UploadProfileProps{
     dashboardType:string;
     onClose: () => void;
     isOpen: boolean;
-    userID:string;
+    rowData: AgencyJobsList | null;
 }
 
 interface FormValues {
@@ -23,10 +25,11 @@ interface FormValues {
   relocate:string;
   noticePeriod:number | null;
   negotiable:boolean;
-  contractCopy: FileList;
+  cv: FileList;
+  comments:string;
 }
 
-const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpen,userID}) => {
+const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpen,rowData}) => {
   const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm<FormValues>({ mode: "onChange",
         defaultValues: {
           candidateName: "",
@@ -42,12 +45,14 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
           relocate:"",
           noticePeriod:null,
           negotiable:true,
+          comments:"",
         },
       });
       const [visible, setVisible] = useState(false);
       const [isAnimatingIn, setIsAnimatingIn] = useState(false);
       const [isSubmitting,setIsSubmitting]  = useState(false);
-      
+      const [isDuplicateModal,setIsDuplicateModal] = useState(false);
+
       useEffect(() => {
       if (isOpen) {
           setVisible(true);
@@ -66,6 +71,7 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
         console.log("Uploaded PDF File:", contractFile);
         reset()
         onClose()
+        setIsDuplicateModal(true)
       }
   
     return (
@@ -102,7 +108,7 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
               <div className='text-left'>
                   <label htmlFor="">Candidate email<span className='text-red-500'>*</span></label>
                   <input 
-                  placeholder='contact@apexmarketing.com'
+                  placeholder='rahulyadav@gmail.com'
                   type="text" 
                   className="input_primary auth_input"
                   {...register("candidateEmail", {
@@ -124,7 +130,7 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
                     type="text"
                     className="input_primary auth_input capitalize"
                     {...register("candidateContact", {
-                        required: "current company is required",
+                        required: "candidate contact number is required",
                         pattern: {
                         value: /^[0-9]{10}$/,
                         message: "Contact number must be exactly 10 digits",
@@ -137,14 +143,15 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
                     />
                   {errors.candidateContact && <p className="text-red-500 text-sm mt-1">{errors.candidateContact.message}</p>}
               </div>
-                    
+
+              {/* ask if current company is optional or manditory*/}
               <div className='text-left'>
                   <label htmlFor="">Current company<span className='text-red-500'>*</span></label>
                   <input 
-                  placeholder='Rahul Sharma'
+                  placeholder='Infosys'
                   type="text" 
                   className="input_primary auth_input"
-                  {...register("currentCompany",{required:"Contact number is required"})}
+                  {...register("currentCompany",{required:"Current company is required"})}
                   />
                   {errors.currentCompany && <p className="text-red-500 text-sm mt-1">{errors.currentCompany.message}</p>}
               </div>
@@ -152,40 +159,33 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
               <div className='text-left'>
                   <label htmlFor="">Current designation<span className='text-red-500'>*</span></label>
                   <input 
-                    placeholder='Enter registered GSTIN no'
+                    placeholder='sales manager'
                     type="text" 
-                    maxLength={15}
                     className="input_primary auth_input capitalize"
-                    {...register("currentDesignation", {
-                        required: "GSTIN no is required",
-                        pattern: {
-                            value: /^[A-Z0-9]{15}$/i,
-                            message: "GSTIN must be exactly 15 characters",
-                        },
-                        })}
+                    {...register("currentDesignation", {required: "please specify the designation"})}
                   />
                 {errors.currentDesignation && <p className="text-red-500 text-sm mt-1">{errors.currentDesignation.message}</p>}
               </div>
 
-            {/* total and relevant yoe */}
+            {/* ask if experience is in months how to handle and what is its a fresher*/} {/* total and relevant yoe */}
             <div className='flex flex-row gap-3'>
                 <div className='text-left'>
-                    <label htmlFor="">Total YOE<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Total YOE (in years)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Rahul Sharma'
-                    type="text" 
-                    className="input_primary auth_input"
-                    {...register("totalYOE",{required:"Contact number is required"})}
+                      placeholder='total experience'
+                      type="number" 
+                      className="input_primary auth_input"
+                      {...register("totalYOE",{required:"total experience must be filled"})}
                     />
                     {errors.totalYOE && <p className="text-red-500 text-sm mt-1">{errors.totalYOE.message}</p>}
                 </div>
                 <div className='text-left'>
-                    <label htmlFor="">Relevant YOE<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Relevant YOE (in years)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Rahul Sharma'
-                    type="text" 
+                    placeholder='relevant experience'
+                    type="number" 
                     className="input_primary auth_input"
-                    {...register("relevantYOE",{required:"Contact number is required"})}
+                    {...register("relevantYOE",{required:"relevant experience must be filled"})}
                     />
                     {errors.relevantYOE && <p className="text-red-500 text-sm mt-1">{errors.relevantYOE.message}</p>}
                 </div>
@@ -194,22 +194,22 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
             {/* current and expected ctc */}
             <div className='flex flex-row gap-3'>
                 <div className='text-left'>
-                    <label htmlFor="">Current CTC<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Current CTC (in LPA)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Rahul Sharma'
-                    type="text" 
+                    placeholder='5'
+                    type="number" 
                     className="input_primary auth_input"
-                    {...register("currentCTC",{required:"Contact number is required"})}
+                    {...register("currentCTC",{required:"current Ctc is required"})}
                     />
                     {errors.currentCTC && <p className="text-red-500 text-sm mt-1">{errors.currentCTC.message}</p>}
                 </div>
                 <div className='text-left'>
-                    <label htmlFor="">Expected CTC<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Expected CTC (in LPA)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Rahul Sharma'
-                    type="text" 
+                    placeholder='7'
+                    type="number" 
                     className="input_primary auth_input"
-                    {...register("expectedCTC",{required:"Contact number is required"})}
+                    {...register("expectedCTC",{required:"expected Ctc is required"})}
                     />
                     {errors.expectedCTC && <p className="text-red-500 text-sm mt-1">{errors.expectedCTC.message}</p>}
                 </div>
@@ -218,12 +218,12 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
             {/* location and preference */}
             <div className='flex flex-row gap-3'>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Location<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Location (current)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Rahul Sharma'
+                    placeholder='mumbai'
                     type="text" 
                     className="input_primary auth_input"
-                    {...register("location",{required:"Contact number is required"})}
+                    {...register("location",{required:"current location is required"})}
                     />
                     {errors.location && <p className="text-red-500 text-sm mt-1">{errors.location.message}</p>}
                 </div>
@@ -231,7 +231,7 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
                     <label htmlFor="">Ready to relocate<span className='text-red-500'>*</span></label>
                     <select
                         className="input_primary auth_input text-gray-300"
-                        {...register("relocate", { required: "Expected CTC selection is required" })}
+                        {...register("relocate", { required: "relocation preference is required" })}
                     >
                         <option value="">Choose</option>
                         <option value="Yes">Yes</option>
@@ -244,39 +244,37 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
             {/* notice period and negotiable */}
             <div className='flex flex-row gap-3 justify-center items-center'>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Notice period<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Notice period (in days)<span className='text-red-500'>*</span></label>
                     <input 
-                    placeholder='Notice Period in days'
-                    type="text" 
-                    className="input_primary auth_input"
-                    {...register("noticePeriod",{required:"Contact number is required"})}
+                      placeholder='Notice Period'
+                      type="number" 
+                      className="input_primary auth_input"
+                      {...register("noticePeriod",{required:"notice period is required"})}
                     />
                     {errors.noticePeriod && <p className="text-red-500 text-sm mt-1">{errors.noticePeriod.message}</p>}
                 </div>
                 <div className='text-left flex-1'>
-                <label htmlFor="negotiable" className="flex items-center gap-2">
+                    <label htmlFor="negotiable" className="flex items-center gap-2">
                     <input
-                    id="negotiable"
-                    type="checkbox"
-                    className="accent-blue-600 w-4 h-4"
-                    {...register("negotiable", {
-                        required: "Negotiable agreement is required",
-                    })}
+                      id="negotiable"
+                      type="checkbox"
+                      className="accent-blue-600 w-4 h-4"
+                      {...register("negotiable", {required: "negotiable agreement is required",})}
                     />
                     Negotiable<span className='text-red-500'>*</span>
-                </label>
-                {errors.negotiable && <p className="text-red-500 text-sm mt-1">{errors.negotiable.message}</p>}
+                    </label>
+                {errors.negotiable && <p className="text-red-500 text-[11px] mt-1">{errors.negotiable.message}</p>}
                 </div>
 
             </div>
 
             <div className='text-left mt-4'>
-            <label htmlFor="contractCopy">Upload Contract Copy (PDF only)<span className='text-red-500'>*</span></label>
+            <label htmlFor="cv">CV (PDF only)<span className='text-red-500'>*</span></label>
             <input
                 type="file"
                 accept="application/pdf"
-                {...register("contractCopy", {
-                required: "Please upload a contract copy.",
+                {...register("cv", {
+                required: "please upload candidate cv",
                 validate: {
                     isPdf: (value: FileList) =>
                     value?.[0]?.type === "application/pdf" || "Only PDF files are allowed.",
@@ -286,21 +284,32 @@ const UploadProfile:React.FC<UploadProfileProps> = ({dashboardType,onClose,isOpe
                 })}
                 className="input_primary auth_input"
             />
-            {errors.contractCopy && (
-                <p className="text-red-500 text-sm mt-1">{errors.contractCopy.message}</p>
+            {errors.cv && (
+                <p className="text-red-500 text-sm mt-1">{errors.cv.message}</p>
             )}
             </div>
 
+            <div className='text-left flex-1'>
+                <label htmlFor="">Any comments</label>
+                <textarea 
+                placeholder='comments'
+                className="input_primary auth_input"
+                {...register("comments")}
+                />
+            </div>
+
             <div className="flex justify-start mt-4">
-              <button
-                  className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
-              >
-                  <SendIcon className='h-4 w-4'/>
-                  {isSubmitting ? 'Submitting...' : 'Submit'}
+              <button className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700">
+                <SendIcon className='h-4 w-4'/>
+                {isSubmitting ? 'Submitting...' : 'Submit'}
               </button>
-              </div>
+            </div>
           </form>
         </div>
+        <DuplicateModal
+          onClose={()=>setIsDuplicateModal(false)}
+          isOpen={isDuplicateModal}
+          />
       </div>
     )
   }

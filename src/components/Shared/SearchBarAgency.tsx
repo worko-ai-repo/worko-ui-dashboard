@@ -34,7 +34,7 @@ const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSea
           placeholder="Search candidates"
           value={searchBarText ?? ""}
           onChange={(e) => setSearchBarText(e.target.value)}
-          className="px-3 py-3 relative w-full outline-none bg-[#FAFAFA] text-sm focus:outline-none focus:ring-neutral-50"
+          className="px-3 py-3 relative w-full outline-none bg-[#FAFAFA] text-xs focus:outline-none focus:ring-neutral-50"
         />
         {searchBarText && (
           <button onClick={onClear} className="scale-50 active:scale-[45%] absolute right-[5%] h-full w-fit rounded-full">

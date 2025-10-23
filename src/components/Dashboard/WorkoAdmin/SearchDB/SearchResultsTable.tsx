@@ -8,6 +8,7 @@ import { NormalizedUser } from "@Utils/NormalizeUser";
 import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { RefreshCcw, LogOut } from 'lucide-react';
 import { Edit, View } from "@AssetsFolder/assets";
+import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 
 
 export const getCvViewDate = (statusTracker: any[]) => {
@@ -74,7 +75,12 @@ export default function SearchResultsTable(props: any) {
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
   };
-  const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: `database`,
+    persistInUrl: true,
+    persistInLocalStorage: false,
+    defaultSort: null,
+  });
 
   // Helpers for status transitions
   const shouldShowUpdateIcon = (row: any) => {
@@ -358,7 +364,7 @@ const columns = [
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTable
+        <DynamicTableAgency
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

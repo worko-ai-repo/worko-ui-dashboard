@@ -57,7 +57,7 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
           isOpen ? "rounded-b-none rounded-lg text-blue-600" : "rounded-lg"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
-        <span className="font-thin text-gray-400 text-sm">{selectedLabel || selectTitle}</span>
+        <span className="font-thin text-gray-400 text-xs">{selectedLabel || selectTitle}</span>
         {/* <span className="ml-1">▾</span> */}
         <button
             type="button" 
@@ -81,7 +81,7 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
                     setSelectedLabel(option.label);
                     setIsOpen(false);
                   }}
-                  className={`text-left  border-b px-4 py-1  text-sm font-medium transition ${
+                  className={`text-left  border-b px-4 py-1  text-xs font-medium transition ${
                     isSelected
                       ? "text-blue-600 font-semibold"
                       : "text-gray-600 hover:text-blue-600"

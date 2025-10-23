@@ -79,14 +79,15 @@ export default function AgencyCandidateListTable(props: any) {
     current_CTC: ["applicantDetails.CTC"], //changed currentCTC to current_CTC
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
+    email: ["emailId", "data.emailId", "email"],
   };
 //   const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
 
     const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
-    tableId: `agency`,
-    persistInUrl: true,
-    persistInLocalStorage: false,
-    defaultSort: null,
+        tableId: `agency`,
+        persistInUrl: true,
+        persistInLocalStorage: false,
+        defaultSort: null,
     });
 
   // Helpers for status transitions
@@ -147,7 +148,7 @@ const columns = [
         label: "Job Profile",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span 
                 title={row?.jobProfile}
                 className="truncate block w-full">{row?.jobProfile ?? "NA"}</span>
@@ -159,7 +160,7 @@ const columns = [
         label: "Agency Name",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-center'>
+            <div className='flex justify-center m-auto w-[100px] text-center'>
                 <span 
                 title={row?.agencyName}
                 className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
@@ -171,7 +172,7 @@ const columns = [
         label: "Date Submitted",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
+        <div className='flex justify-center m-auto w-[100px]'>
             <span>{row?.dateSubmitted ?? "NA"}</span>
         </div>
         ),
@@ -181,7 +182,7 @@ const columns = [
         label: "Applicant Name",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                <span 
                 title={row?.applicantName}
                 className="truncate block w-full">{row?.applicantName ?? "NA"}</span>
@@ -193,7 +194,7 @@ const columns = [
         label: "Email ID",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-center'>
+            <div className='flex justify-center m-auto w-[100px] text-center'>
                 <span 
                 title={row?.emailId}
                 className="truncate block w-full">{row?.emailId ?? "NA"}</span>
@@ -205,17 +206,17 @@ const columns = [
         label: "Contact number",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span>{row?.contactNumber ?? "NA"}</span>
             </div>
         ),
     },
     {
         key: "currentCompany",
-        label: "Current Compnay",
+        label: "Current Company",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span>{row?.currentCompany ?? "NA"}</span>
             </div>
         ),
@@ -225,7 +226,7 @@ const columns = [
         label: "Current designation",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span 
                 title={row?.currentDesignation}
                 className="truncate block w-full">{row?.currentDesignation ?? "NA"}</span>
@@ -292,7 +293,7 @@ const columns = [
         label: "Location",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span>{row?.location ?? "NA"}</span>
             </div>
         ),
@@ -318,7 +319,7 @@ const columns = [
         label: "Any comment",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
+            <div className='flex justify-center m-auto w-[100px]'>
                 <span 
                 title={row?.comments}
                 className="truncate block w-full">{row?.comments ?? "NA"}</span>
@@ -344,7 +345,7 @@ const columns = [
         label: "Worko Score",
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[40px]'>
+        <div className='flex justify-center items-center m-auto'>
             <ProgressCircle
             onClick={() => {
                 setFeedbackModalOpen(true);
@@ -389,7 +390,7 @@ const columns = [
         label: "Current status",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => {
-            // <div className='flex justify-center m-auto w-[150px]'>
+            // <div className='flex justify-center m-auto w-[100px]'>
             //     <span>{row?.currentStatus ?? "NA"}</span>
             // </div>
             const colorClass =
@@ -412,51 +413,72 @@ const columns = [
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
   };
 
-//   const renderExpandedDetails = (row: any) => {
-// return (
-//     <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
-//       <div>
-//         <span className="font-semibold text-black">Last Rejection Date</span>
-//         <p>
-//           {row.lastRejectionDate
-//             ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
-//                 day: "numeric",
-//                 month: "short",
-//                 year: "numeric",
-//               })
-//             : "NA"}
-//         </p>
-//       </div>
+  const renderExpandedDetails = (row: any) => {
+    return (
+        <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
+        <div>
+            <span className="font-semibold text-black">Last Rejection Date</span>
+            <p>
+            {row.lastRejectionDate
+                ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                })
+                : "NA"}
+            </p>
+        </div>
 
-//       <div>
-//         <span className="font-semibold text-black">Rejected By</span>
-//         <p>{row.rejectedBy ?? "NA"}</p>
-//       </div>
+        <div>
+            <span className="font-semibold text-black">Rejected By</span>
+            <p>{row.rejectedBy ?? "NA"}</p>
+        </div>
 
-//       <div>
-//         <span className="font-semibold text-black">Cooling Period</span>
-//         <p>{row.coolingPeriod ?? "NA"}</p>
-//       </div>
+        <div>
+            <span className="font-semibold text-black">Cooling Period</span>
+            <p>{row.coolingPeriod ?? "NA"}</p>
+        </div>
 
-//       <div className="max-w-sm">
-//         <span className="font-semibold text-black">Rejection Reason</span>
-//         <p className="break-words">{row.rejectedReason ?? "NA"}</p>
-//       </div>
-//     </div>
-//   );
-// };
+        <div className="max-w-sm">
+            <span className="font-semibold text-black">Rejection Reason</span>
+            <p className="break-words">{row.rejectedReason ?? "NA"}</p>
+        </div>
+        </div>
+    );
+};
 
   return (
-    <>
-      {/* Deselect button - only show when rows are selected */}
-      <button
-        className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${ListSelection?.selectedRows?.length === 0 ? "hidden" : ""}`}
-        onClick={() => ListSelection.reset && ListSelection.reset()}
-      >
-        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
-        <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
-      </button>
+    <>  
+        <div className="flex flex-row gap-2">
+            <button
+                className={`text-sm text-blue-600 flex items-center gap-1 mb-2`}
+                onClick={() => {
+                      if (!toggleExpand) return;
+                      const allExpanded = sortedData.length > 0 && expandedRows.length === sortedData.length;
+                      if (allExpanded) {
+                        expandedRows.forEach((id) => toggleExpand(id));
+                      } else {
+                        sortedData.forEach((r:any) => {
+                          if (!expandedRows.includes(r.id)) toggleExpand(r.id);
+                        });
+                      }
+                    }}
+            >
+                <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">
+                {expandedRows.length === sortedData.length ? '-' : '+'}
+                </span>
+                <span>{expandedRows.length === sortedData.length ? 'Collapse all' : 'Expand all'}</span>
+            </button>
 
+            {/* Deselect button - only show when rows are selected */}
+            <button
+                className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${ListSelection?.selectedRows?.length === 0 ? "hidden" : ""}`}
+                onClick={() => ListSelection.reset && ListSelection.reset()}
+            >
+                <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
+                <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
+            </button>
+        </div>
         <DynamicTableAgency
         columns={columns}
         rows={sortedData ?? []}
@@ -473,7 +495,7 @@ const columns = [
         allSelected={
             ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)
         }
-        // renderExpandedDetails={renderExpandedDetails}
+        renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
         pageSize={10}

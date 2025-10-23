@@ -21,10 +21,13 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
   const color = getColor(safeValue);
 
   return (
-    <div className="flex flex-col items-center justify-center w-[60px]">
+    <div 
+      className="flex flex-col items-center justify-center w-[35px]"
+    >
       <CircularProgressbar
         value={safeValue}
         text={value !== undefined ? `${safeValue}%` : 'N/A'}
+        strokeWidth={8}
         styles={buildStyles({
           textColor: color,
           pathColor: color,
@@ -35,7 +38,7 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
       />
       <button
         onClick={onClick}
-        className="text-xs text-center text-gray-500 mt-2"
+        className="text-[7px] text-center text-gray-500"
       >
         View details
       </button>

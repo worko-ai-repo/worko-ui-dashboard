@@ -49,4 +49,5 @@ export interface AgencyDatabaseApplicantDetailsDto {
   totalCandidateHired:number;
   GSTIN:string;
   contractLink:string;
+  companyName:string;
 }
