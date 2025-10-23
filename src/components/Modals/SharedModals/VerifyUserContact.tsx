@@ -7,12 +7,19 @@ import { toast } from "react-toastify";
 
 interface VerifyUserContactProps {
   type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL";
-  user: ApplicantDetails ;
+  user: ApplicantDetails;
   onClose: () => void;
   refetch: () => void;
+  handleVerifyContact?: (userEmail: string, type: "EMAIL" | "MOBILE") => Promise<void>;
 }
 
-const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactProps) => {
+const VerifyUserContact = ({
+  type,
+  user,
+  onClose,
+  refetch,
+  handleVerifyContact,
+}: VerifyUserContactProps) => {
   const [inputValue, setInputValue] = useState(
     type === "EMAIL"
       ? (user as ApplicantDetails).email || ""
@@ -29,6 +36,17 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
    */
   const handleVerifyUserMutation = async () => {
     try {
+      // Use optimistic update handler if provided
+      if (handleVerifyContact && type !== "COMPANY_EMAIL") {
+        await handleVerifyContact(user.email, type);
+        setSuccesModalOpen(true);
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+        return;
+      }
+
+      // Fallback to direct API call for COMPANY_EMAIL or if handler not provided
       let payload = {};
       switch (type) {
         case "EMAIL":
@@ -44,25 +62,27 @@ const VerifyUserContact = ({ type, user, onClose, refetch }: VerifyUserContactPr
           console.error("Invalid type");
           return;
       }
-      const finalPath = type !== "COMPANY_EMAIL" ? 'details' : "experience";
-      const {response , error } = await httpServiceObj.patch(
+      const finalPath = type !== "COMPANY_EMAIL" ? "details" : "experience";
+      const { response, error } = await httpServiceObj.patch(
         `/user/${user.email}/${finalPath}`,
         payload,
         true,
         {},
         false,
-        "BASE")
-      if(error || !response){
-        toast.error("Failed to verify user",getToastOptions());
+        "BASE"
+      );
+      if (error || !response) {
+        toast.error("Failed to verify user", getToastOptions());
         throw new Error("Failed to verify user");
       }
       toast.success("User verified successfully", getToastOptions());
       setSuccesModalOpen(true);
     } catch (error) {
       console.error("Error verifying user:", error);
-    }
-    finally {
-      refetch();
+    } finally {
+      if (!handleVerifyContact) {
+        refetch();
+      }
       setTimeout(() => {
         onClose();
       }, 1500);

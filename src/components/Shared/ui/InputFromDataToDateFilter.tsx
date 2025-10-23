@@ -8,11 +8,17 @@ interface Props {
       toDate: string;
     }>
   >;
+  defaultFromDate?: string;
+  defaultToDate?: string;
 }
 
-const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
+const InputFromDataToDateFilter: React.FC<Props> = ({
+  onDateChange,
+  defaultFromDate = "",
+  defaultToDate = "",
+}) => {
+  const [fromDate, setFromDate] = useState<string>(defaultFromDate);
+  const [toDate, setToDate] = useState<string>(defaultToDate);
   const [isCalendarOpen, setIsCalendarOpen] = useState(false);
   const [selectingFrom, setSelectingFrom] = useState(true);
   const calendarRef = useRef<HTMLDivElement>(null);
@@ -28,17 +34,29 @@ const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Sync with external default values
+  useEffect(() => {
+    if (defaultFromDate !== fromDate) {
+      setFromDate(defaultFromDate);
+    }
+    if (defaultToDate !== toDate) {
+      setToDate(defaultToDate);
+    }
+  }, [defaultFromDate, defaultToDate]);
+
   const handleDateSelect = (date: string) => {
     if (selectingFrom || !fromDate) {
-      setFromDate(date);
+      // Selecting FROM date
+      const newFromDate = date;
+      const newToDate = toDate && date > toDate ? "" : toDate;
+      
+      setFromDate(newFromDate);
+      setToDate(newToDate);
       setSelectingFrom(false);
-      if (toDate && date > toDate) {
-        setToDate("");
-        onDateChange?.({ fromDate: date, toDate: "" });
-      } else {
-        onDateChange?.({ fromDate: date, toDate });
-      }
+      
+      onDateChange?.({ fromDate: newFromDate, toDate: newToDate });
     } else {
+      // Selecting TO date
       if (date >= fromDate) {
         setToDate(date);
         onDateChange?.({ fromDate, toDate: date });

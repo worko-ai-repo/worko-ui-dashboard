@@ -9,6 +9,8 @@ interface DeleteCompanyProps {
   companyId: string;
   onClose: () => void;
   fetchCompany: () => void;
+  handleCompanyDelete?: (companyId: string) => Promise<void>;
+  handleCompanyRequestDelete?: (companyId: string) => Promise<void>;
   isRequest: boolean;
 }
 
@@ -16,22 +18,46 @@ type FormData = {
   revokeReason: string;
 };
 
-const DeleteCompany: React.FC<DeleteCompanyProps> = ({ companyId, onClose, fetchCompany ,isRequest=false}) => {
+const DeleteCompany: React.FC<DeleteCompanyProps> = ({
+  companyId,
+  onClose,
+  fetchCompany,
+  handleCompanyDelete,
+  handleCompanyRequestDelete,
+  isRequest = false,
+}) => {
   const {
     handleSubmit,
     formState: { errors },
   } = useForm<FormData>();
 
   const onSubmit = async (formData: FormData) => {
-    const isDeleted: boolean = await (isRequest ? AdminServiceObj.deleteCompanyRequest(companyId):AdminServiceObj.deleteCompany(companyId));
-    if (isDeleted) {
-      toast.success("Company deleted successfully", getToastOptions({}));
+    try {
+      // Use the handler function if provided (optimistic update)
+      if (isRequest && handleCompanyRequestDelete) {
+        await handleCompanyRequestDelete(companyId);
+      } else if (!isRequest && handleCompanyDelete) {
+        await handleCompanyDelete(companyId);
+      } else {
+        // Fallback to direct API call
+        const isDeleted: boolean = await (isRequest
+          ? AdminServiceObj.deleteCompanyRequest(companyId)
+          : AdminServiceObj.deleteCompany(companyId));
+
+        if (isDeleted) {
+          toast.success("Company deleted successfully", getToastOptions({}));
+        } else {
+          toast.error("Failed to delete company", getToastOptions({ type: "error" }));
+        }
+      }
+
       onClose();
-      fetchCompany();
-    } else {
+      // Commented out refetch - using optimistic updates
+      // fetchCompany();
+    } catch (error) {
+      console.error("Error deleting company:", error);
       toast.error("Failed to delete company", getToastOptions({ type: "error" }));
       onClose();
-      fetchCompany();
     }
   };
 

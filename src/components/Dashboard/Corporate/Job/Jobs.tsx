@@ -51,7 +51,7 @@ const Jobs = () => {
     },
     pageSize: {
       defaultValue: 100,
-      validValues: [ 10, 25, 50, 100 , 150 , 200],
+      validValues: [10, 25, 50, 100, 150, 200],
     },
   });
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
@@ -73,6 +73,7 @@ const Jobs = () => {
     userRole: userType ? [userType] : undefined,
     status: activeTab,
     includeCompanyDetails: true,
+    includeCountCompanyJobEntityJobApplication:true,
     companyId: userDetails?.companyId ?? "",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     ...(userType && !userType.includes("corporate-admin") && userCognitoDetails?.sub
@@ -159,7 +160,7 @@ const Jobs = () => {
               if (job.id === jobId) {
                 // If closing, update with close reason
                 if (isDelete) {
-                  debugger
+                  // debugger;
                   return {
                     ...job,
                     status: "CLOSED",
@@ -399,7 +400,7 @@ const Jobs = () => {
         ))}
       </div>
 
-      {isLoading ? (
+      {isLoading && (!data || data.length === 0) ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <JobTableWrapper

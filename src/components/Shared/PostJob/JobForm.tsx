@@ -275,12 +275,24 @@ export default function JobForm({
       toast.error("Please make some changes before creating a duplicate job", getToastOptions());
       return;
     }
+
+    // Validate company selection for ADMIN users in CREATE mode
+    if (userRole.includes(UserRole.ADMIN) && mode === "CREATE" && !watch("companyId")) {
+      toast.error("Please select a company before proceeding", getToastOptions());
+      return;
+    }
   
     if (!watch("companyId")) {
       const userDetails = secureStorage.getItem<CorporateUserDetail>(
         SecureStorageKeyEnum.SIGNINDETAILS
       );
       setValue("companyId", userDetails?.companyId!);
+    }
+
+    // Final check to ensure companyId is present
+    if (!watch("companyId")) {
+      toast.error("Company information is required", getToastOptions());
+      return;
     }
   
     if (!selectedLocations.length) {

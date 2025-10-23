@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Upload, Send, ChevronDown, Eye } from "lucide-react";
 import ReusableInput from "../../Dashboard/Corporate/ReusableInput";
@@ -13,6 +13,8 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import { eyeIcon, viewFeedback } from "@AssetsFolder/assets";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
+import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
+import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
 
 export type HireFormInputs = {
   offerLetterRemarks: string;
@@ -192,8 +194,11 @@ export const handleViewDocumentClick = async (
   }
 };
 
-export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicationDetailsDto }) {
+export default function ResendOfferLetter({ jobData, onClose }: { jobData?: JobApplicationDetailsDto, onClose: () => void }) {
   const queryClient = useQueryClient();
+  const [hasJobFieldsChanged, setHasJobFieldsChanged] = useState(false);
+  const [initialJobFields, setInitialJobFields] = useState<string>("");
+
   const jobQuery = useQuery<JobDto>({
     queryKey: ["jobData", jobData?.jobId],
     queryFn: async () => {
@@ -224,23 +229,26 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
     register,
     handleSubmit,
     reset,
+    watch,
+    getValues,
     formState: { errors },
   } = useForm<HireFormInputs>({
     defaultValues: {
       offerLetterRemarks: latestOfferLetterIssueRaisedDetails.remarks,
-      jobTitle: jobResponse?.jobTitle,
-      workMode: jobResponse?.workMode,
-      location: jobResponse?.location?.city?.[0],
-      department: jobResponse?.department,
-      ctc: jobResponse?.salaryRange?.max ? jobResponse.salaryRange.max.toString() : "",
+      jobTitle: "",
+      workMode: "",
+      location: "",
+      department: "",
+      ctc: "",
       offerLetter: null,
       remarks: "",
     },
   });
+
   // Use useEffect to reset the form values when jobResponse changes
   useEffect(() => {
     if (jobResponse) {
-      reset({
+      const formData = {
         offerLetterRemarks: latestOfferLetterIssueRaisedDetails.remarks,
         jobTitle: jobResponse.jobTitle || "",
         workMode: jobResponse.workMode || "",
@@ -249,13 +257,110 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         ctc: jobResponse.salaryRange?.max ? jobResponse.salaryRange.max.toString() : "",
         offerLetter: null,
         remarks: "",
-      });
+      };
+      reset(formData);
+
+      // Set initial job fields after a brief delay
+      setTimeout(() => {
+        const jobFieldsData = JSON.stringify({
+          jobTitle: formData.jobTitle,
+          workMode: formData.workMode,
+          location: formData.location,
+          department: formData.department,
+          ctc: formData.ctc,
+        });
+        setInitialJobFields(jobFieldsData);
+        setHasJobFieldsChanged(false);
+      }, 100);
     }
-  }, [jobResponse, reset]);
+  }, [jobResponse, reset, latestOfferLetterIssueRaisedDetails.remarks]);
+
+  // Watch for changes in job-related fields
+  useEffect(() => {
+    const subscription = watch((value, { name }) => {
+      // Only track changes for job-related fields
+      const jobFields = ["jobTitle", "workMode", "location", "department", "ctc"];
+      if (name && jobFields.includes(name)) {
+        const currentJobFields = JSON.stringify({
+          jobTitle: value.jobTitle,
+          workMode: value.workMode,
+          location: value.location,
+          department: value.department,
+          ctc: value.ctc,
+        });
+
+        if (initialJobFields && currentJobFields !== initialJobFields) {
+          setHasJobFieldsChanged(true);
+        } else {
+          setHasJobFieldsChanged(false);
+        }
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [watch, initialJobFields]);
 
   /**
-   * Generate pre-signed URLs and open document in new tab
+   * Update job details if job fields have changed
    */
+  const updateJobIfNeeded = async () => {
+    if (!hasJobFieldsChanged || !jobResponse) {
+      return true; // No update needed
+    }
+
+    try {
+      const formValues = getValues();
+
+      // For corporate service, use the full payload structure
+      const corporatePayload = {
+        companyId: jobResponse.companyId,
+        jobTitle: formValues.jobTitle,
+        workMode: formValues.workMode,
+        department: formValues.department,
+        status: jobResponse.status,
+        numOfOpenings: jobResponse.numOfOpenings || 1,
+        noticePeriod: jobResponse.noticePeriod || 0,
+        location: {
+          city: [formValues.location],
+          country: jobResponse.location?.country || [],
+          fullLocation: [formValues.location],
+          state: jobResponse.location?.state || [],
+        },
+        experienceRange: jobResponse.experienceRange || { min: 0, max: 0 },
+        salaryRange: {
+          min: jobResponse.salaryRange?.min || 0,
+          max: parseFloat(formValues.ctc),
+        },
+        coreSkills: jobResponse.coreSkills || [],
+        technicalSkills: jobResponse.technicalSkills || [],
+        softSkills: jobResponse.softSkills || [],
+        miscellaneousSkills: jobResponse.miscellaneousSkills || [],
+        otherRequirements: jobResponse.otherRequirements || "",
+        typeofEmployment: jobResponse.typeofEmployment || "FULL_TIME",
+        htmlJobDescription: jobResponse.htmlJobDescription || "",
+      };
+
+      const response = await CorporateServiceObj.updateJob(corporatePayload, {}, jobResponse.id!);
+
+      if (!response || Array.isArray(response)) {
+        throw new Error("Failed to update job details");
+      }
+
+      toast.success("Job details updated successfully", getToastOptions({}));
+
+      // Invalidate job queries
+      const isAdmin = RBAC.can("play_admin");
+      queryClient.invalidateQueries({
+        queryKey: isAdmin ? ["AdminJobsQuery"] : ["CorporateJobsQuery"],
+      });
+
+      return true;
+    } catch (error) {
+      console.error("Error updating job:", error);
+      toast.error("Failed to update job details", getToastOptions({}));
+      return false;
+    }
+  };
 
   const onSubmit = async (data: HireFormInputs) => {
     try {
@@ -270,7 +375,17 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         return;
       }
 
-      // Step 1: Request pre-signed URL
+      // Step 1: Update job if needed
+      const jobUpdateSuccess = await updateJobIfNeeded();
+      if (!jobUpdateSuccess) {
+        toast.error(
+          "Failed to update job details. Offer letter upload cancelled.",
+          getToastOptions({})
+        );
+        return;
+      }
+
+      // Step 2: Request pre-signed URL
       if (!jobData?.id) {
         throw new Error("Job application ID is required");
       }
@@ -303,7 +418,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
       }
       const { awsS3SignedUrl, cloudFileName } = presignedUrlResponse;
 
-      // Step 2: Upload file to S3
+      // Step 3: Upload file to S3
       await fetch(awsS3SignedUrl, {
         method: "PUT",
         body: file,
@@ -312,7 +427,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         },
       });
 
-      // Step 3: Update job application status
+      // Step 4: Update job application status
       const updatePayload = {
         userId: jobData?.applicantDetails.name,
         status: "REVISED_OFFER_SENT",
@@ -334,7 +449,13 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
       if (!response) {
         throw new Error("Failed to update job application status");
       }
-      toast.success("Offer letter uploaded and status updated successfully.", getToastOptions({}));
+
+      toast.success(
+        hasJobFieldsChanged
+          ? "Job updated and offer letter resent successfully!"
+          : "Offer letter resent successfully!",
+        getToastOptions({})
+      );
     } catch (error) {
       console.error("Error:", error);
       toast.error("An error occurred. Please try again.", getToastOptions({}));
@@ -346,6 +467,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         : queryClient.invalidateQueries({
             queryKey: ["CorporateJobsApplicationQuery"],
           });
+      onClose();
     }
   };
 
@@ -364,6 +486,15 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         className="absolute top-3 right-2 px-3 py-2 btn_t1 bg-gradient-to-t rounded-xl w-36 items-center text-left bg-cyan-400 text-white flex gap-2">
         <img src={eyeIcon} alt="viewFeedback" className="w-5 h-5" /> View Offer Letter
       </button>
+
+      {hasJobFieldsChanged && (
+        <div className="col-span-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-blue-800 text-sm">
+            Job details will be updated when you submit the offer letter.
+          </p>
+        </div>
+      )}
+
       {/* Job Concern TextArea */}
       <div className=" col-span-2  ">
         <label className="block text-sm font-medium text-gray-700">
@@ -373,7 +504,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
           className="h-40  p-3 rounded-xl  bg-gray-200/90 font-light text-sm w-full capitalize"
           placeholder=""
           {...register("offerLetterRemarks")}
-          disabled={!!jobResponse?.jobTitle}
+          disabled
         />
       </div>
       {/* Job Title */}
@@ -385,9 +516,8 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
           className="capitalize"
           type="text"
           placeholder="Marketing manager"
-          register={register("jobTitle")}
+          register={register("jobTitle", { required: "Job title is required" })}
           error={errors?.jobTitle?.message}
-          disabled={!!jobResponse?.jobTitle}
         />
       </div>
 
@@ -396,14 +526,15 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Work mode
         </label>
-        <ReusableInput
-          className="capitalize"
-          type="text"
-          placeholder="Remote"
-          register={register("workMode")}
-          error={errors?.workMode?.message}
-          disabled={!!jobResponse?.workMode}
-        />
+        <select
+          {...register("workMode", { required: "Work mode is required" })}
+          className="w-full rounded-xl bg-gray-100 p-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 capitalize">
+          <option value="">Select work mode</option>
+          <option value="WFH">Work From Home</option>
+          <option value="WFO">Work From Office</option>
+          <option value="HYBRID">Hybrid</option>
+        </select>
+        {errors?.workMode && <p className="text-sm text-red-500 mt-1">{errors.workMode.message}</p>}
       </div>
 
       {/* Location */}
@@ -413,11 +544,10 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         </label>
         <ReusableInput
           className="capitalize"
-          register={register("location")}
+          register={register("location", { required: "Location is required" })}
           type="text"
           placeholder="Bangalore"
           error={errors?.location?.message}
-          disabled={!!jobResponse?.location?.city?.[0]}
         />
       </div>
 
@@ -426,17 +556,13 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         <label className="block text-sm font-medium text-gray-700">
           <span className="text-red-500 mr-1">*</span>Department
         </label>
-        <div className="relative">
-          <ReusableInput
-            className="capitalize"
-            register={register("department")}
-            type="text"
-            placeholder="Marketing"
-            error={errors?.department?.message}
-            disabled={!!jobResponse?.department}
-          />
-          <ChevronDown className="absolute cursor-pointer right-3 top-4 text-gray-400" size={18} />
-        </div>
+        <ReusableInput
+          className="capitalize"
+          register={register("department", { required: "Department is required" })}
+          type="text"
+          placeholder="Marketing"
+          error={errors?.department?.message}
+        />
       </div>
 
       {/* CTC */}
@@ -447,11 +573,16 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
         </label>
         <ReusableInput
           className="capitalize"
-          register={register("ctc")}
+          register={register("ctc", {
+            required: "CTC is required",
+            pattern: {
+              value: /^\d+(\.\d{1,2})?$/,
+              message: "Please enter a valid CTC amount",
+            },
+          })}
           type="text"
           placeholder="50,00,000.00"
           error={errors?.ctc?.message}
-          disabled={!!jobResponse?.salaryRange?.max}
         />
       </div>
 
@@ -475,7 +606,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
       <div className="flex flex-col gap-12 col-span-2">
         <div>
           <label className="block text-sm font-medium text-gray-700">
-            <span className="text-red-500 mr-1">*</span>Remarks
+            Remarks
           </label>
           <textarea
             placeholder="write here"
@@ -489,7 +620,7 @@ export default function ResendOfferLetter({ jobData }: { jobData?: JobApplicatio
           type="submit"
           className="flex place-self-center justify-center item-center items-center w-fit gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">
           <Send size={16} />
-          Re-Send
+          {hasJobFieldsChanged ? "Update Job & Re-Send" : "Re-Send"}
         </button>
       </div>
     </form>
