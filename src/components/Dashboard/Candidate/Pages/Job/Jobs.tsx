@@ -9,6 +9,7 @@ import GenericDropdown from '@Components/Shared/DropDown/GenericDropdown';
 import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { useAppContext } from '@Context/App.context';
 import httpServiceObj from '@Services/ApiHandler.service';
+import HeaderDetails from '@Components/Shared/Stats';
 
 interface CountsProps{
   PK: string,
@@ -310,15 +311,23 @@ const handleFollowUpRequestUpdate = useCallback(
         <div className="flex-1 flex flex-col gap-4">
           <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
             {stats.map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
-              >
-                <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+              // <div
+              //   key={stat.label}
+              //   className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
+              // >
+              //   <p className="text-sm text-[#64748B]">{stat.label}</p>
+              //   <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+              // </div>
+              <div className="flex flex-wrap gap-4 mt-4 mb-6">
+                  <div
+                    key={stat.label}
+                    className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
+                    <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
+                    <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+                  </div>
               </div>
-            ))}
-          </div>
+                ))}
+              </div>
 
           {/* search bar */}
             <div className="flex flex-col sm:flex-row justify-center gap-2">
