@@ -179,12 +179,12 @@ const HeaderDetails: React.FC<HeaderDetailsProps> = ({
           </div>
         ))
       ) : isError ? (
-        <p className="text-red-500">Failed to fetch counts</p>
+       null
       ) : (
         stats.map((stat) => (
           <div
             key={stat.label}
-            className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px] max-w-[150px] max-h-[150px]">
+            className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
             <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
             <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
           </div>

@@ -1,4 +1,3 @@
-
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
@@ -14,6 +13,14 @@ import CompanyLogoRender from "./CompanyLogoRender";
 interface CompanyTableProps {
   data: CompanyDto[];
   fetchCompany: () => void;
+  handleCompanyUpdate: (
+    companyId: string,
+    updateData: any,
+    successMessage?: string
+  ) => Promise<void>;
+  handleCompanyLogoUpdate: (companyId: string, logoData: any) => Promise<void>;
+  handleCompanyDelete: (companyId: string) => Promise<void>;
+  isUpdating: boolean;
   pagination: CommonCursorPaginationProp;
 }
 
@@ -49,7 +56,15 @@ function modalReducer(state: ModalState, despatchAction: despatchAction): ModalS
   }
 }
 
-const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, pagination }) => {
+const CompanyTable: React.FC<CompanyTableProps> = ({
+  data,
+  fetchCompany,
+  handleCompanyUpdate,
+  handleCompanyLogoUpdate,
+  handleCompanyDelete,
+  isUpdating,
+  pagination,
+}) => {
   // Modal state is the state in modalReducer and dispatch is the action dispatcher
   const [modalState, dispatch] = useReducer(modalReducer, {
     activeModal: null,
@@ -58,15 +73,19 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
     fetchCompany: undefined,
   });
 
-  const { sortedData, onSortChange } = useSortableData(data, {});
+  const { sortedData, onSortChange } = useSortableData(
+    data,
+    {},
+    {
+      tableId: "admin-company",
+      defaultSort: null,
+      persistInLocalStorage: false,
+      persistInUrl: true,
+    }
+  );
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
-  /*  const [OpenExtraDetailsModal, setOpenExtraDetailsModal] = useState<{
-    isOpen: boolean;
-    details: ExtraReferralDetailsResponse | null;
-    key?: string;
-  }>({ isOpen: false, details: null, key: undefined });
- */
+
   const columns = [
     { key: "name", label: "Company Name", sortable: true },
     {
@@ -129,42 +148,43 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
       key: "action",
       label: "Actions",
       render: (row: CompanyDto) => (
-      <div key={row.id} className="flex flex-col sm:flex-row gap-2">
-        <button
-        onClick={() =>
-          dispatch({
-          type: "OPEN",
-          modal: "updateCompany",
-          payload: { data: row, key: row.id, fetchCompany },
-          })
-        }
-        className="btn-sky grid grid-cols-[20px_auto] ">
-        <Edit className="h-4 w-4" />
-        Update Status
-        </button>
-        <button
-        onClick={() =>
-          dispatch({
-          type: "OPEN",
-          modal: "deleteCompany",
-          payload: { data: row, key: row.id, fetchCompany },
-          })
-        }
-        className="bg-red-500 rounded-lg w-9 items-center   h-9 flex justify-center">
-        <Trash2 className=" text-white p-1" />
-        </button>
-      </div>
+        <div key={row.id} className="flex flex-col sm:flex-row gap-2">
+          <button
+            disabled={isUpdating}
+            onClick={() =>
+              dispatch({
+                type: "OPEN",
+                modal: "updateCompany",
+                payload: { data: row, key: row.id, fetchCompany },
+              })
+            }
+            className="btn-sky grid grid-cols-[20px_auto] btn_disabled">
+            <Edit className="h-4 w-4" />
+            Update Status
+          </button>
+          <button
+            disabled={isUpdating}
+            onClick={() =>
+              dispatch({
+                type: "OPEN",
+                modal: "deleteCompany",
+                payload: { data: row, key: row.id, fetchCompany },
+              })
+            }
+            className="bg-red-500 rounded-lg w-9 items-center h-9 flex justify-center btn_disabled">
+            <Trash2 className=" text-white p-1" />
+          </button>
+        </div>
       ),
     },
-    ];
+  ];
+
   const renderExpandedDetails = (row: CompanyDto) => {
     return (
-
-      <div className="flex items-center gap-4 p-4 curs"
-      data-tooltip-id="my-tooltip"
-      data-tooltip-content={row.aboutCompany}
-
-      >
+      <div
+        className="flex items-center gap-4 p-4 curs"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={row.aboutCompany}>
         <span className="flex flex-col items-center mt-0 p-0 w-[800px]">
           <label className="font-semibold text-gray-500  ">About Company</label>
           <div
@@ -212,6 +232,8 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
             mode="UPDATE"
             onClose={() => dispatch({ type: "CLOSE" })}
             fetchCompany={modalState.fetchCompany!}
+            handleCompanyUpdate={handleCompanyUpdate}
+            handleCompanyLogoUpdate={handleCompanyLogoUpdate}
           />
         )}
       </Modal>
@@ -223,6 +245,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({ data, fetchCompany, paginat
           companyId={modalState.key!}
           onClose={() => dispatch({ type: "CLOSE" })}
           fetchCompany={modalState.fetchCompany!}
+          handleCompanyDelete={handleCompanyDelete}
           isRequest={false}
         />
       </Modal>

@@ -24,6 +24,23 @@ export interface ApiResponseDto<T> {
     pageSize: number;
   };
 }
+export interface CountCompanyJob {
+  GSI1PK: string;
+  GSI1SK: string;
+  PK: string;
+  SK: string;
+  companyId: string;
+  jobId: string;
+  entityType: "JOB_APPLICATION";
+  createdAt: string; // ISO timestamp
+  updatedAt: string; // ISO timestamp
+  allJobApplicationCounts: {
+    hired: number;
+    total: number;
+    processingInterview: number;
+    applied: number;
+  };
+}
 
 export interface JobData {
   status: string; //@TODO: Change to JobStatusType
@@ -34,6 +51,7 @@ export interface JobData {
     min: number;
     max: number;
   };
+  countCompanyJob?: CountCompanyJob;
   jobTitle: string;
   htmlJobDescription: string;
   location: {

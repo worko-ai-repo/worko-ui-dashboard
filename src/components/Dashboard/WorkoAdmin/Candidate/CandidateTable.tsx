@@ -9,7 +9,7 @@ import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { getToastOptions } from "@Utils/Toast.utils";
-import { AtSign, Eye } from "lucide-react";
+import { AtSign, Eye, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { handleDeleteUsers } from "../Employee/EmployeeTable";
@@ -18,16 +18,33 @@ import { getCurrentPositionCell } from "../Applicants/ApplicantsTable";
 interface CandidateTableProps {
   data: ApplicantDetails[];
   fetchEmployees: () => void;
+  handleVerifyContact?: (userEmail: string, type: "EMAIL" | "MOBILE") => Promise<void>;
+  handleDeleteUser?: (userId: string) => Promise<void>;
+  isUpdating?: boolean;
   pagination: CommonCursorPaginationProp;
 }
-const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, pagination }) => {
+
+const CandidateTable: React.FC<CandidateTableProps> = ({
+  data,
+  fetchEmployees,
+  handleVerifyContact,
+  handleDeleteUser,
+  isUpdating = false,
+  pagination,
+}) => {
   const keyFallbacks = {
     candidateExperience_companyName: ["companyName", "candidateExperience.companyName"],
     candidateExperience_department: ["department", "candidateExperience.department"],
     candidateExperience_designation: ["designation", "candidateExperience.designation"],
   };
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "admin-candidate",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
+  });
+
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
@@ -35,21 +52,21 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
     user: ApplicantDetails;
-    key?: number; // Add a unique key to force re-render
+    key?: number;
   }>({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
+  const [updatingUserId, setUpdatingUserId] = useState<string | null>(null);
 
   const handleVerifyClick = (type: "EMAIL" | "MOBILE", user: ApplicantDetails) => {
     setVerifyModalOpen({
       isOpen: true,
       type,
       user,
-      key: Date.now(), // Add a unique timestamp
+      key: Date.now(),
     });
   };
 
   const handleFetchAndOpenCV = async (row: ApplicantDetails) => {
     try {
-      //https://api.worko.ai/file/e1b35d9a-d0c1-70cc-1641-08179377a01a/01K3K5S4RJ56GJT2DMAQR12FDG.pdf/USER_RESUME
       const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
         `/file/${row?.userId}/${row?.CV}/USER_RESUME`,
         true,
@@ -68,12 +85,36 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       toast.error("Failed to fetch CV. Please try again.", getToastOptions({}));
     }
   };
+
+  const handleDeleteClick = async (row: ApplicantDetails) => {
+    if (!handleDeleteUser) {
+      // Fallback to old method if handler not provided
+      await handleDeleteUsers(row);
+      fetchEmployees();
+      return;
+    }
+
+    setUpdatingUserId(row.userId);
+    try {
+      await handleDeleteUser(row.userId);
+    } finally {
+      setUpdatingUserId(null);
+    }
+  };
+
   const columns: Column<ApplicantDetails>[] = [
     {
       key: "name",
       label: "Name",
       sortable: true,
-      render: (row: ApplicantDetails) => <span className="w-full capitalize">{row?.name}</span>,
+      render: (row: ApplicantDetails) => (
+        <div className="flex items-center gap-2">
+          <span className="w-full capitalize">{row?.name}</span>
+          {updatingUserId === row.userId && (
+            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
+          )}
+        </div>
+      ),
     },
     { key: "email", label: "Email", sortable: true },
     { key: "number", label: "Phone no", sortable: true },
@@ -136,43 +177,60 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
       label: "Actions",
       contentWidth: "max-w-none !min-w-96",
       render: (row: ApplicantDetails) => {
+        const isRowUpdating = updatingUserId === row.userId;
+
         return (
-          <div className="flex gap-3 px-2  justify-between">
+          <div className="flex gap-3 px-2 justify-between">
             <button
-              disabled={row.isNumberVerified === true}
+              disabled={row.isNumberVerified === true || isUpdating || isRowUpdating}
               onClick={() => {
                 handleVerifyClick("MOBILE", row);
               }}
-              className=" cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
-              <img src={mobile_install} alt="Verify Mobile" className="h-4 w-4 flex-shrink-0" />
+              className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
+              {isRowUpdating ? (
+                <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+              ) : (
+                <img src={mobile_install} alt="Verify Mobile" className="h-4 w-4 flex-shrink-0" />
+              )}
               <span className="w-full">
                 {row.isNumberVerified === false ? "Verify Mobile" : "Mobile Verified"}
               </span>
             </button>
 
             <button
-              disabled={row.isEmailVerified === true} //@TODO:ROHIT ADD ATTRB
+              disabled={row.isEmailVerified === true || isUpdating || isRowUpdating}
               onClick={() => {
                 handleVerifyClick("EMAIL", row);
               }}
               className="cursor-pointer text-white btn-sky py-2.5 btn_disabled flex items-center gap-2">
-              <AtSign className="h-4 w-4 flex-shrink-0" />
+              {isRowUpdating ? (
+                <Loader2 className="h-4 w-4 animate-spin flex-shrink-0" />
+              ) : (
+                <AtSign className="h-4 w-4 flex-shrink-0" />
+              )}
               <span className="w-full">
                 {row.isEmailVerified === false ? "Verify Email" : "Email Verified"}
               </span>
             </button>
+
             <button
               data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Archive Candidate"}
-              onClick={() => handleDeleteUsers(row)}
-              className=" cursor-pointer w-12 h-9.5  text-white bg-blue-600   rounded-xl">
-              <img src={Archive} alt="Archive Employee" className=" mx-auto w-6 flex-shrink-0" />
+              data-tooltip-content="Archive Candidate"
+              disabled={isUpdating || isRowUpdating}
+              onClick={() => handleDeleteClick(row)}
+              className="cursor-pointer w-12 h-9.5 text-white bg-blue-600 rounded-xl btn_disabled">
+              {isRowUpdating ? (
+                <Loader2 className="mx-auto w-6 flex-shrink-0 animate-spin" />
+              ) : (
+                <img src={Archive} alt="Archive Employee" className="mx-auto w-6 flex-shrink-0" />
+              )}
             </button>
           </div>
         );
       },
     },
   ];
+
   const renderExpandedDetails = (row: ApplicantDetails) => {
     return (
       <div className="p-4  flex justify-evenly gap-4">
@@ -260,6 +318,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({ data, fetchEmployees, p
           onClose={() => {
             setVerifyModalOpen({ isOpen: false, type: "EMAIL", user: {} as ApplicantDetails });
           }}
+          handleVerifyContact={handleVerifyContact}
           refetch={fetchEmployees}
         />
       </Modal>

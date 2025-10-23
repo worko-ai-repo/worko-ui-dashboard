@@ -37,7 +37,12 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
   const KeyFallback = {
     name: ["firstName", "lastName"],
   };
-  const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback);
+  const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback,{
+    defaultSort:null,
+    tableId: "invite-table",
+    persistInUrl: true,
+    persistInLocalStorage: false,
+  });
   const status: Record<string, string> = {
     ACCEPTED: "Joined",
     AWAITING: "Sent",

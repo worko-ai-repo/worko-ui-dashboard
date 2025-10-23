@@ -385,7 +385,7 @@ const AdminJobs = () => {
         ))}
       </div>
 
-      {isLoading ? (
+      {isLoading && (!data || data.length === 0) ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <JobTableWrapper

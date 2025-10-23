@@ -102,10 +102,10 @@ const ApplicantFilters: React.FC<ApplicantFiltersProps> = ({ onFilterChange, cla
             {/* Filter Toggle Button */}
             <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border transition-colors ${
+                className={`flex items-center gap-2 px-6 py-2  h-10 text-base font-semibold rounded-2xl transition-colors  ${
                     hasActiveFilters
                         ? "bg-blue-50 border-blue-500 text-blue-700"
-                        : "bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                        : "bg-white border-gray-300 text-gray-800 hover:bg-gray-50"
                 }`}
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content="Filter applications by CTC, Experience, Date, and Notice Period">

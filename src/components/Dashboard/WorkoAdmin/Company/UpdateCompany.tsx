@@ -21,6 +21,12 @@ interface UpdateCompanyProps {
   fetchCompany: () => void;
   companyData?: CompanyDto | null;
   mode: CompanyFormMode;
+  handleCompanyUpdate?: (
+    companyId: string,
+    updateData: any,
+    successMessage?: string
+  ) => Promise<void>;
+  handleCompanyLogoUpdate?: (companyId: string, logoData: any) => Promise<void>;
 }
 
 interface CompanyLogoUploadRequestDto {
@@ -81,6 +87,8 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
   fetchCompany,
   companyData,
   mode,
+  handleCompanyUpdate,
+  handleCompanyLogoUpdate,
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -267,12 +275,12 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
         return false;
       }
     }
-    
+
     // For UPDATE mode, check if logo exists or is being updated
     if (mode === "UPDATE") {
       const hasExistingLogo = companyData?.logoUrl || companyData?.logo;
       const hasNewLogo = logoFile || getValues("logoUrl");
-      
+
       if (!hasExistingLogo && !hasNewLogo) {
         setLogoError("Company logo is required. Please upload a file or provide a logo URL.");
         return false;
@@ -316,6 +324,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
         aboutCompany: data.aboutCompany,
         ...(mode === "REQUEST" && { isCompanyRequestPageFlag: true }),
       };
+
       const createPayload: CreateCompanyRequestDto = {
         name: formPayload.name,
         website: formPayload.website,
@@ -331,25 +340,43 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
 
       const payload = createPayload;
 
-      // console.log(`Company ${mode} Payload:`, payload);
-      // console.log("Company ID:", companyData?.id);
-      // console.log("Logo Cloud File Name:", logoCloudFileName);
-
-      // TODO: Replace with actual API calls
+      // Handle CREATE mode - no optimistic updates needed
       if (mode === "CREATE") {
         const createCompanyResponse = await AdminServiceObj.createCompany(payload);
         if (!createCompanyResponse) {
           toast.error("Failed to create company. Please try again.", getToastOptions({}));
+          return;
         }
         toast.success("Company created successfully!", getToastOptions());
       } else {
-        const companyId = companyData?.id; // Extract companyId from SK for REQUEST mode
+        // Handle UPDATE and REQUEST modes - use optimistic updates
+        const companyId = companyData?.id;
         if (!companyId) {
           throw new Error("Company ID is missing for update");
         }
-        const response = await AdminServiceObj.putCompanyDetails(companyId, payload);
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        toast.success("Company updated successfully!", getToastOptions());
+
+        // Use the handler function if provided (optimistic update)
+        if (handleCompanyUpdate) {
+          await handleCompanyUpdate(
+            companyId,
+            payload,
+            `Company ${mode === "REQUEST" ? "created" : "updated"} successfully!`
+          );
+        } else {
+          // Fallback to direct API call
+          const response = await AdminServiceObj.putCompanyDetails(companyId, payload);
+          if (!response) {
+            toast.error(
+              `Failed to ${mode === "REQUEST" ? "create" : "update"} company. Please try again.`,
+              getToastOptions({})
+            );
+            return;
+          }
+          toast.success(
+            `Company ${mode === "REQUEST" ? "created" : "updated"} successfully!`,
+            getToastOptions()
+          );
+        }
       }
 
       // Update logo if uploaded
@@ -358,16 +385,23 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
           companyLogoCloudFileName: logoCloudFileName,
         };
 
-        const patchResult = await AdminServiceObj.patchCompanyLogo(companyData.id, logoPayload);
-        if (!patchResult) {
-          toast.error("Failed to update company logo. Please try again.", getToastOptions({}));
+        // Use the handler function if provided (optimistic update)
+        if (handleCompanyLogoUpdate) {
+          await handleCompanyLogoUpdate(companyData.id, logoPayload);
+        } else {
+          // Fallback to direct API call
+          const patchResult = await AdminServiceObj.patchCompanyLogo(companyData.id, logoPayload);
+          if (!patchResult) {
+            toast.error("Failed to update company logo. Please try again.", getToastOptions({}));
+            return;
+          }
+          toast.success("Company logo updated successfully!", getToastOptions());
         }
-        // console.log("Logo Update Payload:", logoPayload);
-        toast.success("Company logo updated successfully!", getToastOptions());
       }
 
       // Refresh company data and close modal
-      fetchCompany();
+      // Commented out refetch - using optimistic updates
+      // fetchCompany();
       onClose();
     } catch (error) {
       console.error(`Error ${mode.toLowerCase()}ing company:`, error);
@@ -472,36 +506,37 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
             )}
           />
 
-            {/* Upload Logo */}
-            <div className="md:col-span-1 space-y-2">
-            <label className="block text-sm font-medium mt-0 text-gray-700">Company Logo <span className="text-red-500">*</span></label>
+          {/* Upload Logo */}
+          <div className="md:col-span-1 space-y-2">
+            <label className="block text-sm font-medium mt-0 text-gray-700">
+              Company Logo <span className="text-red-500">*</span>
+            </label>
             <div className="space-y-1">
               <div className="relative w-full">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleLogoChange}
-                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                id="logo-upload-input"
-              />
-              <div className={`w-full rounded-xl p-1.5 text-sm text-gray-500 bg-gray-100 border cursor-pointer ${
-                  logoError ? 'border-red-300 bg-red-50' : 'border-gray-300'
-                }`}>
-                <div className="flex items-center justify-between">
-                <span 
-                className="truncate max-w-[200px]"
-                >{logoFile ? logoFile.name : "Click to upload or drag and drop"}</span>
-                <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-md">  
-                    <Upload className="w-5 h-5 text-blue-500" />
-                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleLogoChange}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                  id="logo-upload-input"
+                />
+                <div
+                  className={`w-full rounded-xl p-1.5 text-sm text-gray-500 bg-gray-100 border cursor-pointer ${
+                    logoError ? "border-red-300 bg-red-50" : "border-gray-300"
+                  }`}>
+                  <div className="flex items-center justify-between">
+                    <span className="truncate max-w-[200px]">
+                      {logoFile ? logoFile.name : "Click to upload or drag and drop"}
+                    </span>
+                    <div className="w-8 h-8 flex items-center justify-center rounded-lg bg-white shadow-md">
+                      <Upload className="w-5 h-5 text-blue-500" />
+                    </div>
+                  </div>
                 </div>
               </div>
-              </div>
-              {logoError && (
-                <p className="text-sm text-red-500 mt-1">{logoError}</p>
-              )}
+              {logoError && <p className="text-sm text-red-500 mt-1">{logoError}</p>}
             </div>
-            </div>
+          </div>
 
           <Controller
             name="logoUrl"
@@ -522,7 +557,6 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
               />
             )}
           />
-
 
           {/* Team Size */}
           <Controller

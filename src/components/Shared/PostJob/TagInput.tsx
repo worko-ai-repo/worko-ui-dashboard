@@ -19,12 +19,12 @@ export default function TagInput({ label, tags, onAddTag, onRemoveTag,required }
         {tags && (
           <div className="  flex flex-wrap gap-2 max-h-[60px] overflow-y-auto no-scrl no-scrl-web ">
             {tags.map((tag, i) => (
-              <span key={i} className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium  items-center gap-1 truncate block max-w-[33.3%] cursor-pointer "
+              <span key={i} className="bg-blue-600 text-white px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 max-w-[33.3%] cursor-pointer "
               data-tooltip-id="my-tooltip" data-tooltip-content={tag} data-tooltip-place="top"  data-tooltip-delay-show={500} data-tooltip-delay-hide={500}
               >
-                {tag}
+                <span className="truncate">{tag}</span>
                 {onRemoveTag && (
-                  <button onClick={() => onRemoveTag(tag)} className="text-white text-xs hover:text-gray-200">
+                  <button onClick={() => onRemoveTag(tag)} className="text-white text-xs hover:text-gray-200 flex-shrink-0">
                     ×
                   </button>
                 )}

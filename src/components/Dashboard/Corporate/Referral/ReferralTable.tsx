@@ -24,7 +24,11 @@ interface ReferralTableProps {
 const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
   const keyFallbacks = {};
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks,{
+    tableId: "referral-table",
+    persistInUrl: true,
+    persistInLocalStorage: true,
+  });
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
