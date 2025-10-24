@@ -6,6 +6,7 @@ import ProtectedRoute from "@Services/SessionValidator.service";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import AdminDashboard from "@Pages/WorkoAdmin/AdminDashboard";
 import EmployeeDashboard from "@Pages/Employee/EmployeeDashboard";
+import Interview from "@Pages/Interview/Interview";
 
 
 const EvaluatorDashboard = lazy(() => import("@Components/EvaluatorDashboard/EvaluatorDashboard"));
@@ -50,6 +51,14 @@ const AppRoutes = createBrowserRouter(
           element: (
             <Suspense fallback={<MainLoader />}>
               <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<CandidateDashboard />} />
+            </Suspense>
+          ),
+        },
+        {
+          path: "interview/*",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<Interview />} />
             </Suspense>
           ),
         },
