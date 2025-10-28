@@ -563,6 +563,11 @@ export default function ApplicationTable({
             </div>
 
             <div className="">
+              <span className="font-semibold text-gray-500">Email ID</span>
+              <p>{row.applicantDetails?.email}</p>
+            </div>
+            
+            <div className="">
               <span className="font-semibold text-gray-500">Application Date</span>
               <div className="flex items-center justify-center">
                 <span>

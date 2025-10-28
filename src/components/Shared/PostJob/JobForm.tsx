@@ -290,7 +290,7 @@ export default function JobForm({
     }
 
     // Final check to ensure companyId is present
-    if (!watch("companyId")) {
+    if (!watch("companyId") && userRole.includes(UserRole.ADMIN) ) {
       toast.error("Company information is required", getToastOptions());
       return;
     }
@@ -306,7 +306,7 @@ export default function JobForm({
       for (const location of selectedLocations) {
         const payload = { ...jobData, location: location.value };
   
-        // 🔥 Wrap API call in toast.promise
+        //  Wrap API call in toast.promise
         await toast.promise(
           (async () => {
             let response;

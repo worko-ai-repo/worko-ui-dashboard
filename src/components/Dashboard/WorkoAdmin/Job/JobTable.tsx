@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Filter, X, Link, Building2, Loader2 } from "lucide-react";
 import CloseJob from "./CloseJob";
@@ -161,7 +162,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     { key: "department", label: "Department", sortable: true },
     { key: "totalApplicants", label: "Total Applicants", sortable: true },
     { key: "newApplicants", label: "New Applicants", sortable: true },
-    { key: "pendingApplicants", label: "Pending", sortable: true },
+    // { key: "pendingApplicants", label: "Pending", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [
           {

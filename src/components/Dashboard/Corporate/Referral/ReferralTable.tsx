@@ -145,7 +145,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   ];
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
     const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
-      row.status
+      row
     );
     return timeLineProps ? (
       <div className="p-4 flex justify-evenly gap-4">
