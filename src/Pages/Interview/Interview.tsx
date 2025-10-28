@@ -25,11 +25,12 @@ function Interview() {
   const [transcription, setTranscription] = useState<string>("");
   const [transcriptHistory, setTranscriptHistory] = useState<TranscriptEntry[]>([]);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [answerVideos, setAnswerVideos] = useState<Blob[]>([]);
 
   const interviewStartTime = useRef<number>(0);
   const isSubmittingRef = useRef<boolean>(false);
 
-  const { isRecording, startRecording, stopRecording, error } = useMediaRecorder();
+  const { isRecording, startRecording, stopRecording, captureSegment, error } = useMediaRecorder();
   const {
     transcript,
     isListening,
@@ -41,23 +42,27 @@ function Interview() {
   } = useSpeechToText();
 
   const handleQuestionStartSpeaking = useCallback(() => {
-    // Start transcription when question starts being spoken
+    // Pause/disable listening while TTS narrates the question to avoid capturing it
+    if (isSpeechSupported && isListening) {
+      stopListening();
+    }
+    resetTranscript();
+    setIsTranscribing(false);
+  }, [isSpeechSupported, isListening, stopListening, resetTranscript]);
+
+  const handleQuestionEndSpeaking = useCallback(() => {
+    // Start listening only after the question narration ends
     if (isSpeechSupported && !isListening) {
-      resetTranscript();
       startListening();
       setIsTranscribing(true);
     }
-  }, [isSpeechSupported, isListening, resetTranscript, startListening]);
-
-  const handleQuestionEndSpeaking = useCallback(() => {
-    // Keep transcription running after question ends so user can answer
-    // The transcription will continue until user submits answer
-  }, []);
+  }, [isSpeechSupported, isListening, startListening]);
 
   const startInterview = async () => {
     resetInterviewAPI();
     setInterviewState("intro");
     isSubmittingRef.current = false;
+    setAnswerVideos([]);
 
     await startRecording();
     interviewStartTime.current = Date.now();
@@ -95,6 +100,15 @@ function Interview() {
 
     setTranscription(finalTranscript);
 
+    // Capture per-question video segment while recording continues
+    // Capture per-question video segment while recording continues
+    (async () => {
+      const segment = await captureSegment?.();
+      if (segment) {
+        setAnswerVideos(prev => [...prev, segment]);
+      }
+    })();
+
     console.log("Submitting answer:", {
       transcript: finalTranscript,
       timestamp,
@@ -121,7 +135,7 @@ function Interview() {
       // Reset submission flag if no next question
       isSubmittingRef.current = false;
     }
-  }, [transcript, currentQuestion, stopListening, resetTranscript]);
+  }, [transcript, currentQuestion, stopListening, resetTranscript, captureSegment]);
 
   const handleInterviewEnd = async (closingMessage: string) => {
     setEndMessage(closingMessage);
@@ -160,6 +174,7 @@ function Interview() {
     setRecordedBlob(null);
     setTranscription("");
     setTranscriptHistory([]);
+    setAnswerVideos([]);
     setIsTranscribing(false);
     stopListening();
     resetTranscript();
@@ -210,7 +225,7 @@ function Interview() {
 
         {(interviewState === "intro" || interviewState === "active") && (
           <>
-            <RecorderStatus isRecording={isRecording} />
+            <RecorderStatus isRecording={isRecording} isTranscribing={isTranscribing} />
 
             {interviewState === "intro" && <IntroCard />}
 
@@ -266,7 +281,9 @@ function Interview() {
               isProcessing={isProcessing}
             />
 
-            {!isProcessing && <TranscriptHistory transcripts={transcriptHistory} />}
+            {!isProcessing && (
+              <TranscriptHistory transcripts={transcriptHistory} answerVideos={answerVideos} />
+            )}
 
             {!isProcessing && (
               <div className="flex justify-center mt-6">

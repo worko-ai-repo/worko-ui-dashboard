@@ -1,4 +1,5 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
+import { Button } from "@Components/ui/button";
 import { MessageSquare, User } from "lucide-react";
 
 export interface TranscriptEntry {
@@ -9,10 +10,29 @@ export interface TranscriptEntry {
 
 interface TranscriptHistoryProps {
   transcripts: TranscriptEntry[];
+  answerVideos?: Blob[];
 }
 
-export const TranscriptHistory = ({ transcripts }: TranscriptHistoryProps) => {
+export const TranscriptHistory = ({ transcripts, answerVideos }: TranscriptHistoryProps) => {
   if (transcripts.length === 0) return null;
+
+  const downloadBlob = (blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const openBlobInNewTab = (blob: Blob) => {
+    const url = URL.createObjectURL(blob);
+    window.open(url, "_blank", "noopener,noreferrer");
+    // We cannot revoke immediately; give the new tab time to load
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+  };
 
   return (
     <Card className="mt-6 bg-white border-blue-200">
@@ -42,6 +62,25 @@ export const TranscriptHistory = ({ transcripts }: TranscriptHistoryProps) => {
                   <p className="text-sm leading-relaxed text-gray-700">{entry.answer}</p>
                 </div>
               </div>
+
+              {answerVideos?.[index] && (
+                <div className="pt-1 flex items-center gap-2">
+                  <span className="text-xs text-gray-600">Q{index + 1} → A{index + 1} → D{index + 1}</span>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => openBlobInNewTab(answerVideos[index]!)}
+                  >
+                    View
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => downloadBlob(answerVideos[index]!, `answer-${index + 1}.webm`)}
+                  >
+                    Download {index + 1}
+                  </Button>
+                </div>
+              )}
             </div>
           ))}
         </div>
