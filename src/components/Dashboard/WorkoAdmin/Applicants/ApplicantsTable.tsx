@@ -725,6 +725,11 @@ export default function ApplicationTable({
             </div>
 
             <div className="">
+              <span className="font-semibold text-gray-500">Email ID</span>
+              <p>{row.applicantDetails?.email}</p>
+            </div>
+
+            <div className="">
               <span className="font-semibold text-gray-500">Location</span>
               <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
             </div>

@@ -64,6 +64,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   const keyFallbacks = {
     userDetails_name: ["name", "userDetails.name"],
     userDetails_about: ["about", "userDetails.about"],
+    dateNeededBy: ["guidanceRequestDeadline"],
   };
 
   const [modalState, dispatch] = useReducer(modalReducer, {
@@ -151,6 +152,14 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       ),
     },
     {
+      key: "dateNeededBy",
+      label: "Date Needed By",
+      sortable: true,
+      render: (row: GuidanceRequestDto) => (
+        <span>{new Date(row?.guidanceRequestDeadline).toLocaleDateString()}</span>
+      ),
+    },
+    {
       key: "userDetails_about",
       label: "About Candidate",
       sortable: true,
@@ -193,6 +202,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       sortable: true,
       render: (row: GuidanceRequestDto) => <span>{new Date(row.createdAt).toLocaleString()}</span>,
     },
+
     {
       key: "action",
       label: "Actions",

@@ -509,7 +509,7 @@ const Applicants = () => {
               </span>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}
