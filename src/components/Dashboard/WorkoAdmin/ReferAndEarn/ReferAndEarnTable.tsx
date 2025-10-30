@@ -123,7 +123,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       sortable: true,
     },
     {
-      key: "recipientDetails_email",
+      key: "referrerDetails_email",
       label: "Email",
       sortable: true,
     },
@@ -289,16 +289,16 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
         </span>
         <span>
           <label>Referral name</label>
-          <p className="capitalize">{row?.referrerDetails?.name}</p>
+          <p className="capitalize">{row?.recipientDetails?.name}</p>
         </span>
         <span>
           <label>Referral email id</label>
-          <p>{row.recipientDetails.email}</p>
+          <p>{row?.recipientDetails.email}</p>
         </span>
         <span>
           <label>Referral number</label>
           <p>
-            +{row.recipientDetails.phoneCountryCode} {row.recipientDetails.phoneNumber}
+            +{row?.recipientDetails.phoneCountryCode} {row?.recipientDetails.phoneNumber}
           </p>
         </span>
       </div>
