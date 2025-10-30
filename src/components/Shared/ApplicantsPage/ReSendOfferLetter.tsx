@@ -432,7 +432,7 @@ export default function ResendOfferLetter({ jobData, onClose }: { jobData?: JobA
         userId: jobData?.applicantDetails.name,
         status: "REVISED_OFFER_SENT",
         offerLetterCloudFileName: cloudFileName,
-        offerLetterRemarks: data.remarks,
+        ...(data.remarks && { offerLetterRemarks: data.remarks }),
         emailId: jobData?.applicantDetails.email,
         userType: userType,
         applicantName: jobData?.applicantDetails.name || "Applicant",
