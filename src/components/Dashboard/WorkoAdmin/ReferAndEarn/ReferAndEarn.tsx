@@ -127,6 +127,9 @@ const AdminReferAndEarn = () => {
       if (index !== -1) {
         data[index] = { ...data[index], ...updatedItem };
       }
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "referr&earn"] });
     },
   });
 

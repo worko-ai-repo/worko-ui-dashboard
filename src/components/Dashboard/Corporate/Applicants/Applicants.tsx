@@ -2,10 +2,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
-import {
-  CompanyDetails,
-  JobApplicationDetailsDto,
-} from "@Interfaces/CorporateDashboard.dto";
+import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 
@@ -299,6 +296,9 @@ const Applicants = () => {
       if (index !== -1) {
         data[index] = { ...data[index], ...updatedApplication };
       }
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "applicant"] });
     },
   });
 
@@ -351,6 +351,9 @@ const Applicants = () => {
     },
     onSuccess: () => {
       toast.success("Applications updated successfully!", getToastOptions({}));
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "applicant"] });
     },
   });
 

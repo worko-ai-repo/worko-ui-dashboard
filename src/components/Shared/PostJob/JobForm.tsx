@@ -317,13 +317,13 @@ export default function JobForm({
             }
   
             if (!response || Array.isArray(response)) {
-              throw new Error(`Job operation failed for: ${location.label}`);
+              throw new Error(`Job operation failed for: ${payload.jobTitle} at ${location.label}`);
             }
   
             return response;
           })(),
           {
-            pending: `Processing job for ${location.label}...`,
+            pending: `Processing job for ${payload.jobTitle} at ${location.label}...`,
             success:
               mode === "DUPLICATE"
                 ? "Job duplicated successfully"
@@ -332,7 +332,7 @@ export default function JobForm({
                 : "Job created successfully",
             error: {
               render({ data }: any) {
-                return data?.message || `Job operation failed for ${location.label}`;
+                return data?.message || `Job operation failed for ${payload.jobTitle} at ${location.label}`;
               },
               autoClose: false,
             },
@@ -816,10 +816,17 @@ export default function JobForm({
               Other mandatory requirements
               <span className="text-red-500">*</span> (Will not be visible to candidates)
             </label>
-            <BulletTextarea
-              {...register("otherRequirements", validationRules.defaultTextarea)}
-              placeholder={`Bachelor's degree required\n2+ years experience\nStrong communication skills`}
-              error={errors.otherRequirements?.message}
+            <Controller
+              name="otherRequirements"
+              control={control}
+              rules={validationRules.defaultTextarea}
+              render={({ field }) => (
+                <BulletTextarea
+                  {...field}
+                  placeholder={`Bachelor's degree required\n2+ years experience\nStrong communication skills`}
+                  error={errors.otherRequirements?.message}
+                />
+              )}
             />
           </div>
         </div>

@@ -137,6 +137,9 @@ const ReferralTable: React.FC<ReferralTableProps> = ({
     },
     onSuccess: () => {
       toast.success("Referral updated successfully", getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "referrals"] });
     },
   });
 

@@ -250,7 +250,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
 
       // Patch the updated data into local array
       data[index] = { ...data[index], ...updatedApplication };
-      console.log(`✅ Patched application ${updatedApplication.id} in local data.`);
+      // console.log(`✅ Patched application ${updatedApplication.id} in local data.`);
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({
+        queryKey: ["counts", isAllApplicants ? "corporateApplicants" : "applicant"],
+      });
     },
   });
 
@@ -304,6 +309,11 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     onSuccess: () => {
       toast.success("Applications updated successfully!", getToastOptions({}));
       ListSelection.reset();
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({
+        queryKey: ["counts", isAllApplicants ? "corporateApplicants" : "applicant"],
+      });
     },
   });
 
