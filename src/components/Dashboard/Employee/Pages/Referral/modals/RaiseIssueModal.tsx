@@ -5,12 +5,15 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { ReferralDetailsDto,ReferralStatus } from "./ReferralTypes";
+
 
 interface RaiseIssueModalProps {
   onClose: () => void;
   isOpen: boolean;
   referralData: any;
-  onRefresh: () => void;
+  // onRefresh: () => void;
+  // onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
   isCandidate: boolean;
 }
 
@@ -18,7 +21,8 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh,
+  // onRefresh,
+  // onLocalUpdate,
   isCandidate,
 }) => {
   let options;
@@ -77,8 +81,11 @@ const RaiseIssueModal: FC<RaiseIssueModalProps> = ({
       if (response) {
         toast.success("Issue has been Raised", getToastOptions({}));
         setIsError("");
-        onRefresh();
-        onClose();
+        // onRefresh();
+        // onLocalUpdate(referralData.id, { 
+        //    status: "ISSUE_RAISED" as ReferralStatus
+        //  });
+        onClose();  
       }
       if (error) {
         toast.error("Cannot raise issue not something went wrong", getToastOptions({}));

@@ -12,6 +12,7 @@ import {
   JobApplicationDocumentStatusType,
 } from "@Interfaces/CorporateDashboard.dto";
 import { newDate } from "react-datepicker/dist/date_utils";
+import { JobTypes } from "../JobTypes";
 
 interface SubmitDocumentModalProps {
   userDetails: any;
@@ -22,6 +23,7 @@ interface SubmitDocumentModalProps {
   onSuccess: () => void;
   userID: string;
   jobId: string;
+  onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
 }
 
 interface DocumentItem {
@@ -48,6 +50,7 @@ const SubmitDocumentModal = ({
   jobId,
   onSuccess,
   userDetails,
+  onLocalUpdate,
 }: SubmitDocumentModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -251,7 +254,6 @@ const SubmitDocumentModal = ({
   // Form submission handler
   const onFormSubmit = async (formData: FormData) => {
     setIsUploading(true);
-
     try {
       const userId = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID);
       const email = secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL);
@@ -375,9 +377,12 @@ const SubmitDocumentModal = ({
         return { status, documentMapping };
       });
 
-      await Promise.all(updatePromises);
+      const results = await Promise.all(updatePromises);
 
       toast.success("Documents uploaded successfully!", getToastOptions({}));
+      results.forEach(({ status }) => {
+        onLocalUpdate(jobId, { status: status as JobTypes["status"] });
+      });
       onSuccess?.();
       onClose();
     } catch (error) {

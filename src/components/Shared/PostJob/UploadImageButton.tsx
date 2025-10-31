@@ -7,6 +7,7 @@ import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useAppContext } from "@Context/App.context";
+import { NormalizedUser } from "@Utils/NormalizeUser";
 
 interface UploadImageButtonProps {
     detailsData?:any,
@@ -17,7 +18,7 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const {userDetails} = useAppContext()
+    const {setUserDetails,userDetails} = useAppContext()
     const handleClick = () => {
         fileInputRef.current?.click();
     };
@@ -120,8 +121,17 @@ const UploadImageButton: React.FC<UploadImageButtonProps> = ({ onUploadSuccess,d
             }
 
             toast.success("Profile image uploaded successfully", getToastOptions());
-
-            if (onUploadSuccess) onUploadSuccess(cloudFileName);
+            // below is to update in context
+            setUserDetails((prev: NormalizedUser | null) => {
+                if (!prev) return prev;
+                const updatedUser = { ...prev, profileImageAwsS3SignedUrl: (patchResult.response as { profileImageAwsS3SignedUrl: string })?.profileImageAwsS3SignedUrl };
+                secureStorage.setItem<NormalizedUser>(SecureStorageKeyEnum.LOGINDETAILS, updatedUser);
+                return updatedUser;
+            });
+            // below is to update in profile page
+            if (onUploadSuccess) onUploadSuccess(
+                (patchResult.response as { profileImageAwsS3SignedUrl: string })?.profileImageAwsS3SignedUrl
+            );
         } catch (err: any) {
             console.error(err);
             setError("Something went wrong while uploading.");

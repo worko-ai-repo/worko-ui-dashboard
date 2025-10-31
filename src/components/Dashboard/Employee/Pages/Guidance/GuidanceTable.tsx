@@ -14,7 +14,8 @@ interface GuidanceTableProps {
   currentPage: number;
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
-  onRefresh: () => void;
+  // onRefresh: () => void;
+  onLocalUpdate:((guidanceId: string, updatedData: Partial<GuidanceRequest>)=>void);
 }
 
 interface MentorMergedData {
@@ -26,7 +27,11 @@ interface StepperProps{
   guidanceRequestDescription:string;
 }
 
-const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChange, onPageSizeChange, onRefresh}: GuidanceTableProps) => {
+const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChange, 
+  onPageSizeChange, 
+  // onRefresh,
+  onLocalUpdate,
+}: GuidanceTableProps) => {
   const [processingRequestId, setProcessingRequestId] = useState<string | null>(null);
   const [modalState, setModalState] = useState<{
     isOpen: boolean;
@@ -136,6 +141,31 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
   }, [openModal]);
 
 
+    // color theme for status
+  const getStatusColor = (status?: string) => {
+    const statusColors: Record<string, { bg: string; text: string; label: string }> = {
+      "PENDING": { bg: "bg-gray-200", text: "text-gray-900", label: "Pending" },
+      "MENTOR_ASSIGNED": { bg: "bg-blue-100", text: "text-blue-600", label: "Mentor Assigned" },
+      "CANCELLED": { bg: "bg-red-100", text: "text-red-600", label: "Cancelled" },
+      "PAYMENT_CONFIRMATION_PENDING": { bg: "bg-yellow-100", text: "text-yellow-600", label: "Payment Confirmation Pending" },
+      "PAYMENT_CONFIRMATION_DONE": { bg: "bg-green-100", text: "text-green-600", label: "Payment Done" },
+      "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Candidate" },
+      "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR": { bg: "bg-orange-100", text: "text-orange-600", label: "Reschedule Requested by Mentor" },
+      "MEETING_CONFIRMED": { bg: "bg-orange-200", text: "text-orange-600", label: "Meeting Confirmed" },
+      "MEETING_RESCHEDULE_CONFIRMED": { bg: "bg-teal-100", text: "text-teal-600", label: "Meeting Re-scheduled Confirmed" },
+      "PROJECT_COMPLETED": { bg: "bg-teal-400", text: "text-teal-800", label: "Project Completed" },
+      "REJECTED": { bg: "bg-red-100", text: "text-red-600", label: "Rejected" },
+    };
+
+    return (
+      statusColors[status || ""] || {
+        bg: "bg-gray-100",
+        text: "text-gray-600",
+        label: status || "Unknown",
+      }
+    );
+  };
+  
   const columns = [
         {
       key: "candidateName",
@@ -204,26 +234,21 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
     //     </div>
     //   )
     // },
-{
-  key: "status",
-  label: 'Status',
-  sortable: true,
-  render: (row: GuidanceRequest) => (
-    <div
-      className={`w-32 rounded-full px-1 py-3 text-sm font-medium
-        inline-flex items-center justify-center
-        truncate
-        ${row.statusColor?.bg || 'bg-gray-200'}
-        ${row.statusColor?.text || 'text-gray-900'}
-        max-w-[200px]
-        text-xs
-      `}
-      title={row.statusColor?.label}
-    >
-        <span className="truncate block max-w-full text-center">
-          {row.statusColor?.label || row.status}
-        </span>
-    </div>
+    {
+      key: "status",
+      label: 'Status',
+      sortable: true,
+      render: (row:GuidanceRequest) => {
+        const color = getStatusColor(row.status);
+        return (
+          <div 
+            className={`w-32 rounded-full px-1 py-3 text-xs font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`
+            }
+            title={color.label}>
+            <span className="truncate block max-w-full text-center">
+                {color.label}
+            </span>
+          </div>
 
           //     <div className="flex justify-center ">
           // <div
@@ -243,6 +268,7 @@ const GuidanceTable = memo(({ mentorID,data, pagination, currentPage, onPageChan
           // </div>
           // </div>
   )
+}
 },
     {
       key: "dateAndTime",
@@ -397,7 +423,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 request={modalState.selectedRequest}
                 mentorDetails={mentorDataLoading ? null : currentMentorData || null}
                 closeModal={closeModal}
-                onRefresh={onRefresh}
+                // onRefresh={onRefresh}
+                onLocalUpdate={onLocalUpdate}
                 mentorID={mentorID}
               />
             ) : null}

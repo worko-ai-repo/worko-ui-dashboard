@@ -4,19 +4,22 @@ import { getToastOptions } from "@Utils/Toast.utils";
 import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import { ReferralDetailsDto, ReferralStatus } from "./ReferralTypes";
 
 interface AcceptReferralModalProps {
   onClose: () => void;
   isOpen: boolean;
   referralData: any;
-  onRefresh: () => void;
+  // onRefresh: () => void;
+  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
 }
 
 const AcceptReferralModal: FC<AcceptReferralModalProps> = ({
   onClose,
   isOpen,
   referralData,
-  onRefresh,
+  // onRefresh,
+  onLocalUpdate,
 }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -61,7 +64,10 @@ const AcceptReferralModal: FC<AcceptReferralModalProps> = ({
       if (response) {
         toast.success("Referral accepted", getToastOptions({}));
         setIsError("");
-        onRefresh();
+        onLocalUpdate(referralData.id, { 
+           status: "ACCEPTED" as ReferralStatus
+         });
+        // onRefresh();
         onClose();
       }
     } catch (error: any) {

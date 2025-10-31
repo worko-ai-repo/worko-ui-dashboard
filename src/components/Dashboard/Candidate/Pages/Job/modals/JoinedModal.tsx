@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 
 import { joining_success_img } from "@Assets";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { JobTypes } from "../JobTypes";
 
 interface JoinedModalProps {
   isOpen: boolean;
@@ -13,6 +14,18 @@ interface JoinedModalProps {
   userDetails: any;
   job: JobApplicationDetailsDto | null;
   onSuccess: () => void;
+  onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
+}
+
+interface Payload {
+  applicantName: string;
+  userId: string;
+  emailId: string;
+  userType: string;
+  status: string;
+  joiningDate: string;
+  joiningHrName: string;
+  joiningApplicantMessage?: string; // optional
 }
 
 export default function JoinedModal({
@@ -21,6 +34,7 @@ export default function JoinedModal({
   userDetails,
   job,
   onSuccess,
+  onLocalUpdate,
 }: JoinedModalProps) {
   const [joiningDate, setJoiningDate] = useState<string>("");
   const [hrName, setHrName] = useState<string>("");
@@ -81,8 +95,8 @@ export default function JoinedModal({
       return;
     }
 
-    if (!message || !joiningDate || !hrName) {
-      toast.error("HR Name, Message, and Date are required", getToastOptions());
+    if (!joiningDate || !hrName) {
+      toast.error("HR Name, and Date are required", getToastOptions());
       setLoading(false);
       return;
     }
@@ -99,16 +113,19 @@ export default function JoinedModal({
     }
 
     try {
-      const payload = {
-        applicantName:userDetails.name,
-        userId: userDetails?.sub,
-        emailId: userDetails?.email,
-        userType: "CAND",
-        status: "JOINED",
-        joiningDate,
-        joiningHrName: hrName,
-        joiningApplicantMessage: message,
-      };
+      let payload: Payload = {
+      applicantName: userDetails.name,
+      userId: userDetails?.sub,
+      emailId: userDetails?.email,
+      userType: "CAND",
+      status: "JOINED",
+      joiningDate,
+      joiningHrName: hrName,
+    };
+
+    if (message && message.trim() !== "") {
+      payload.joiningApplicantMessage = message;
+    }
 
       const { response, error } = await httpServiceObj.patch(
         `/job-application/${job.id}/applicant-action`,
@@ -123,7 +140,7 @@ export default function JoinedModal({
         setError("Failed to submit. Please try again.");
         return;
       }
-
+      onLocalUpdate(job.id,{status:"JOINED"})
       // console.log("Submitted successfully:", response);
       showSuccessAndClear();
     } catch (err) {
@@ -184,7 +201,7 @@ export default function JoinedModal({
             {/* Message */}
             <div className="mb-6">
               <label className="block text-gray-700 mb-2">
-                Message <span className="text-red-500">*</span>
+                Message <span className="text-red-500"></span>
               </label>
               <textarea
                 value={message}
@@ -220,7 +237,7 @@ export default function JoinedModal({
       {/* Success Modal */}
       {showSuccessModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
-          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full flex flex-col items-center">
+          <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full flex flex-col items-center">
             <img
               src={joining_success_img}
               alt="success"
