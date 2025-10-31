@@ -1,4 +1,4 @@
-import React, { SetStateAction, useEffect, useState } from "react";
+import React, { SetStateAction } from "react";
 import { ChevronDownIcon, ChevronUpIcon, ChevronLeft, ChevronRight } from "lucide-react";
 import CustomDropdown from "@Components/Shared/DropDown/CustomDropDown";
 import { CommonPaginationPageSizeOptions } from "../../types/common.constants";
@@ -10,6 +10,11 @@ export interface Column<T> {
   sortable?: boolean;
   contentWidth?: string; // e.g., "w-32", "w-48"
   render?: (row: T) => React.ReactNode;
+}
+
+interface SplitColumns<T> {
+  visibleColumns: Column<T>[];
+  expandedColumns: Column<T>[];
 }
 
 interface DynamicTableAgencyProps<T extends { id: string }> {
@@ -37,6 +42,8 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   sortField?: string;
   sortOrder?: "asc" | "desc";
   hideChevronForRejected?: boolean;
+    mainColumns?: string[]; // list of keys for main view
+  expandedColumns?: string[]; 
 }
 
 export function DynamicTableAgency<T extends { id: string }>({
@@ -61,27 +68,11 @@ export function DynamicTableAgency<T extends { id: string }>({
   //  Destructured empty state props with defaults
   emptyStateMessage = "No data available",
   emptyStateSubMessage = "There are no items to display at the moment.",
-  hideChevronForRejected = false
+  hideChevronForRejected = false,
+    mainColumns = [],
+  expandedColumns = [],
 }: DynamicTableAgencyProps<T>) {
   const totalCols = columns.length + (enableSelect ? 1 : 0);
-  const [visibleRows, setVisibleRows] = useState<T[]>([]);
-const [hiddenRows, setHiddenRows] = useState<T[]>([]);
-
-// Use effect to split rows based on the current page and page size
-useEffect(() => {
-  const startIdx = 0; // Start index of current page
-  const endIdx = pageSize; // End index for current page (based on pagination)
-  const visible = rows.slice(startIdx, endIdx); // Rows for current page
-  const hidden = rows.slice(endIdx); // Rows not visible on screen (pagination)
-  setVisibleRows(visible);
-  setHiddenRows(hidden);
-}, [rows, pageSize]);
-const handleExpandAll = () => {
-  // On expand all, push hidden rows to the expanded content
-  rows.forEach((row) => {
-    if (!expandedRows.includes(row.id)) toggleExpand?.(row.id);
-  });
-};
   function getNestedValue(obj: any, path: string): any {
     return path
       .replace(/\$/g, "_")
@@ -153,6 +144,21 @@ const handleExpandAll = () => {
     );
   }
 
+  const areAllExpanded = rows.length > 0 && expandedRows.length === rows.length;
+
+  // 🆕 If parent provided column split, use that. Otherwise fallback to auto split.
+  const { visibleColumns, extraExpandedColumns } = React.useMemo(() => {
+  if (areAllExpanded && (mainColumns.length || expandedColumns.length)) {
+    return {
+      visibleColumns: columns.filter(col => mainColumns.includes(col.key)),
+      extraExpandedColumns: columns.filter(col => expandedColumns.includes(col.key))
+    };
+  }
+
+    return { visibleColumns: columns, extraExpandedColumns: [] };
+  }, [columns, mainColumns, expandedColumns, areAllExpanded]);
+
+
   return (
     <div className="bg-white overflow-x-auto flex flex-col justify-between rounded-lg p-2 md:p-2 max-w-[94vw] h-[calc(100vh-80px)] max-h-[calc(100vh-80px)]">
       {/* Scroll wrapper */}
@@ -215,7 +221,7 @@ const handleExpandAll = () => {
                 </div>
               </th>
             )}
-              {columns.map((col) => {
+              {visibleColumns.map((col) => {
                 return (
                   <th
                     key={col.key}
@@ -246,117 +252,164 @@ const handleExpandAll = () => {
           </thead>
 
           <tbody className="">
-  <tr>
-    <td colSpan={totalCols} className="h-2" />
-  </tr>
+            <tr>
+              <td colSpan={totalCols} className="h-2" />
+            </tr>
+            {rows.map((row, rowIndex) => {
+              const isSelected = selectedRows.includes(row.id);
+              const isExpanded = expandedRows.includes(row.id);
+              const baseBg = isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]";
 
-  {(() => {
-    // minimal logic to detect "Expand All" from parent:
-    const expandAllActive = renderExpandedDetails && rows.length > 0 && expandedRows.length === rows.length;
-    // when expand-all is active, only show the first `pageSize` rows as regular rows
-    const visibleRows = expandAllActive ? rows.slice(0, pageSize) : rows;
-    const hiddenRows = expandAllActive ? rows.slice(pageSize) : [];
+              return (
+                <React.Fragment key={row.id}>
+                  {rowIndex > 0 && (
+                    <tr>
+                      <td colSpan={totalCols} className="h-2" />
+                    </tr>
+                  )}
 
-    return (
-      <>
-        {visibleRows.map((row, rowIndex) => {
-          const isSelected = selectedRows.includes(row.id);
-          const isExpanded = expandedRows.includes(row.id);
-          const baseBg = isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]";
-
-          return (
-            <React.Fragment key={row.id}>
-              {rowIndex > 0 && (
-                <tr>
-                  <td colSpan={totalCols} className="h-2" />
-                </tr>
-              )}
-
-              <tr className="h-[56px]">
-                {/* Single sticky column containing chevron and checkbox (unchanged) */}
-                {(enableSelect || renderExpandedDetails) && (
-                  <td
-                    className={`p-1 text-center border-b sticky left-0 bg-white z-20 ${baseBg} rounded-tl-xl
-                      ${isSelected ? "before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-blue-500 border-b-gray-200" : ""}`}
-                  >
-                    <div className="flex items-center justify-end gap-1">
-                      {(renderExpandedDetails && !hideChevronForRejected || (row as any).currentStatus !== "REJECTED") && (
-                        <button
-                          type="button"
-                          onClick={() => toggleExpand?.(row.id)}
-                          className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border-2 border-gray-300 rounded-full"
-                          aria-label={expandedRows.includes(row.id) ? "Collapse" : "Expand"}
-                        >
-                          {expandedRows.includes(row.id) ? <ChevronUpIcon /> : <ChevronDownIcon />}
-                        </button>
-                      )}
-                      {enableSelect && (
+                  <tr className="h-[56px]">
+                    {/* Checkbox column */}
+                    {/* {enableSelect && (
+                      <td
+                        className={`p-3 text-center border-b rounded-tl-xl sticky left-0 bg-white z-10 ${baseBg} ${
+                          isSelected ? "border-l-4 border-blue-500 border-b-gray-200" : ""
+                        }`}
+                      >
                         <input
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleRow?.(row.id)}
                           className="w-4 h-4"
-                          aria-label="Select row"
                         />
-                      )}
-                    </div>
-                  </td>
-                )}
+                      </td>
+                    )} */}
 
-                {/* Data columns (unchanged) */}
-                {columns.map((col, index) => {
-                  const isFirstVisibleColumn = !enableSelect && index === 0;
-                  return (
-                    <td
-                      key={col.key}
-                      className={`w-min max-w-60 ${col.contentWidth || ""} px-4 border-b py-1 text-xs whitespace-nowrap ${col.key !== "email" ? "capitalize" : ""} ${baseBg} ${index === columns.length - 1 ? "rounded-tr-xl" : ""} ${isFirstVisibleColumn ? "rounded-tl-xl" : ""} ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""}`}
-                    >
-                      <div
-                        className=" truncate cursor-pointer"
-                        onDoubleClick={(e) => navigator.clipboard.writeText(getCellValue(row, col) as string)}
-                        {...(typeof getCellValue(row, col) === "string"
-                          ? {
-                              "data-tooltip-id": "my-tooltip",
-                              "data-tooltip-content": getCellValue(row, col) as string,
+                    {/* Single sticky column containing chevron and checkbox */}
+                    {(enableSelect || renderExpandedDetails) && (
+                      <td
+                        className={`p-1 text-center border-b sticky left-0 bg-white z-20 ${baseBg} rounded-tl-xl
+                            ${isSelected ? "before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-blue-500 border-b-gray-200" : ""}
+                          `}
+                        >
+                        <div className="flex items-center justify-end gap-1">
+                          {/* chevron */}
+                          {(renderExpandedDetails && !hideChevronForRejected || (row as any).currentStatus !== "REJECTED") && (
+                            <button
+                              type="button"
+                              onClick={() => toggleExpand?.(row.id)}
+                              className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border-2 border-gray-300 rounded-full"
+                              aria-label={expandedRows.includes(row.id) ? "Collapse" : "Expand"}
+                            >
+                              {expandedRows.includes(row.id) ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                            </button>
+                          )}
+                          {/* checkbox */}
+                          {enableSelect && (
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleRow?.(row.id)}
+                            className="w-4 h-4"
+                            aria-label="Select row"
+                          />
+                          )}
+                        </div>
+                      </td>
+                    )}
+
+
+                    {/* Data columns */}
+                    {visibleColumns.map((col, index) => {
+                      const isFirstVisibleColumn = !enableSelect && index === 0;
+                      return (
+                        <td
+                          key={col.key}
+                          className={`w-min max-w-60 ${
+                            col.contentWidth || ""
+                          }  px-4 border-b py-1 text-xs whitespace-nowrap ${
+                            col.key !== "email" ? "capitalize" : ""
+                          } ${baseBg}
+                          ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
+                          ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
+                          ${
+                            isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          }`}>
+                          <div
+                            className=" truncate cursor-pointer  "
+                            onDoubleClick={(e) =>
+                              navigator.clipboard.writeText(getCellValue(row, col) as string)
                             }
-                          : {})}
-                      >
-                        {getCellValue(row, col)}
-                      </div>
-                    </td>
-                  );
-                })}
-              </tr>
+                            {...(typeof getCellValue(row, col) === "string"
+                              ? {
+                                  "data-tooltip-id": "my-tooltip",
+                                  "data-tooltip-content": getCellValue(row, col) as string,
+                                }
+                              : {})}>
+                            {getCellValue(row, col)}
+                          </div>
+                        </td>
+                      );
+                    })}
+                  </tr>
 
-              {/* Expanded details for this visible row (unchanged behavior) */}
-              {renderExpandedDetails?.(row) && isExpanded && (
-                <tr>
-                  <td colSpan={totalCols} className="relative">
-                    <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
-                  </td>
-                </tr>
-              )}
-            </React.Fragment>
-          );
-        })}
+                  {/* Expand Button */}
+                  {renderExpandedDetails?.(row) && !isExpanded && (
+                    <tr className="relative h-0">
+                      <td colSpan={totalCols} className="p-0 border-t-0">
+                        <div
+                          onClick={() => toggleExpand?.(row.id)}
+                            // just remove opacity and events-none and it will show the chevron in center of table and clickable
+                          className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer opacity-0 pointer-events-none">
+                          <ChevronDownIcon />
+                        </div>
+                      </td>
+                    </tr>
+                  )}
 
-        {/* Hidden rows (only relevant when expandAllActive) */}
-        {hiddenRows.map((row) => {
-          // only render expanded details for hidden rows if they are expanded
-          if (!expandedRows.includes(row.id) || !renderExpandedDetails) return null;
-          return (
-            <tr key={row.id}>
-              <td colSpan={totalCols}>
-                <div className="p-4 border border-t-0 rounded-b-xl">{renderExpandedDetails(row)}</div>
-              </td>
-            </tr>
-          );
-        })}
-      </>
-    );
-  })()}
-</tbody>
+                  {renderExpandedDetails && isExpanded && (
+                    <>
+                      <tr>
+                        <td colSpan={totalCols} className="relative bg-white p-0 text-xs text-gray-600">
+                          <div className="p-4 border border-t-0 rounded-b-xl">
+                            {extraExpandedColumns.length > 0 && (
+                            <div className="grid grid-cols-7 gap-2 mb-4 w-full">
+                              {extraExpandedColumns.map((col) => (
+                                <div
+                                  key={col.key}
+                                  className="flex flex-col items-start justify-start gap-2 text-start"
+                                >
+                                  <span className="font-medium text-blue-400 text-nowrap text-start">
+                                    {col.label}
+                                  </span>
+                                  <span className="!text-start !text-gray-900">
+                                    {getCellValue(row, col)}
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
 
+                            {/* Then render the original expanded details */}
+                            {renderExpandedDetails(row)}
+                          </div>
+                          <div
+                            onClick={() => toggleExpand?.(row.id)}
+                            // just remove opacity and events-none and it will show the chevron in center of table and clickable
+                            className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer opacity-0 pointer-events-none">
+                            <ChevronUpIcon />
+                          </div>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={totalCols} className="h-4" />
+                      </tr>
+                    </>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
         </table>
       </div>
       {/*  Added pagination controls container */}

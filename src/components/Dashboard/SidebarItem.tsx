@@ -16,17 +16,23 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, isActive, activeTab, co
   const [open, setOpen] = useState(false);
 
   const handleClick = () => {
-    onClick(item);
-    if (expandable) setOpen((v) => !v); // only toggle when expandable
-  };
+  onClick(item);
+  // if(expandable) setOpen((v)=>!v)
+  // return
+  // just uncomment above and comment below if thats not the bevaiour we want and also remove handleClickArrow function
+  if (expandable && !open) setOpen(true); // only open
+};
 
+const handleClickArrow = (e: React.MouseEvent) => {
+  e.stopPropagation();
+  if (expandable) setOpen((v) => !v); // open and close both
+};
 
   return (
 <div>
       <button
         onClick={handleClick}
-        className={`
-          w-full flex items-center gap-3 p-2 transition-all duration-200 rounded-lg
+        className={`w-full flex items-center gap-3 p-2 transition-all duration-200 rounded-lg
           ${isActive ? "bg-white text-[#316bff] shadow-sm" : "hover:bg-blue-600"}
           ${collapsed ? "justify-center" : "justify-between"}
         `}
@@ -40,7 +46,8 @@ const SidebarItem: React.FC<SidebarItemProps> = ({ item, isActive, activeTab, co
           {!collapsed && <span className="text-[11px] font-medium whitespace-nowrap">{item.label}</span>}
         </div>
         {!collapsed && (
-          <span className={`${isActive ? "bg-gray-100 rounded-md p-1" : ""}`}>
+          <span onClick={handleClickArrow}
+          className={`${isActive ? "bg-gray-100 rounded-md p-1" : ""}`}>
             <ChevronRight
               className={`w-4 h-4 transform transition-transform duration-200 ${
                 open ? "rotate-90" : ""

@@ -59,7 +59,13 @@ export interface NavItem {
     icon: ComponentType<SVGProps<SVGSVGElement>> | React.ReactNode; //<i class="fa-solid fa-left-right"></i>
     dashboardTypes?: DashboardType[];
     expandable?: boolean;
-    child?: { label: string; id: TabId }[];
+    child?: { 
+        id: TabId;
+        label: string; 
+        icon?: ComponentType<SVGProps<SVGSVGElement>> | React.ReactNode;
+        dashboardTypes?: DashboardType[];
+        expandable?: boolean;
+    }[];
 }
 
 export interface UserDetails {

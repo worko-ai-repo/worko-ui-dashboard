@@ -28,7 +28,7 @@ const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicant
 const AdminCandidate = lazy(() => import("@Components/Dashboard/WorkoAdmin/Candidate/AdminCandidate"));
 const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
 const SearchDB = lazy(() => import ("@Components/Dashboard/WorkoAdmin/SearchDB/SearchDB"));
-const AllCandidateList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
+const AgencyCandidateList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
 const AgencyList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyList"));
 
 const AdminDashboard = () => {
@@ -141,7 +141,7 @@ const AdminDashboard = () => {
           path: "aAgency/allCandidates",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <AllCandidateList />
+              <AgencyCandidateList />
             </Suspense>
           ),
         },

@@ -16,6 +16,7 @@ import EditAgencyModal, { FormValues } from "./modals/EditAgencyModal";
 import PauseAgencyModal from "./modals/PauseAgencyModal";
 import DeleteAgencyModal from "./modals/DeleteAgencyModal";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
+import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -157,7 +158,7 @@ export default function AgencyListTable(props: any) {
         sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.assignedJobs ?? "NA"}</span>
             </div>
         ),
@@ -168,7 +169,7 @@ export default function AgencyListTable(props: any) {
         sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateSubmitted ?? "NA"}</span>
             </div>
         ),
@@ -179,7 +180,7 @@ export default function AgencyListTable(props: any) {
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateRejected ?? "NA"}</span>
             </div>
         ),
@@ -190,7 +191,7 @@ export default function AgencyListTable(props: any) {
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateHired ?? "NA"}</span>
             </div>
         ),
@@ -476,7 +477,7 @@ const dummyJobData = [
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTableAgency
+        <DynamicTableTwo
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

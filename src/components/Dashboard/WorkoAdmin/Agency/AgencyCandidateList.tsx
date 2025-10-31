@@ -4,6 +4,7 @@ import React, { useState } from 'react'
 import AgencyCandidateListTable from './AgencyCandidateListTable'
 import GenericDropdownAgency from '@Components/Shared/DropDown/GenericDropdownAgency'
 import SearchBarAgency from '@Components/Shared/SearchBarAgency'
+import { LogOut } from 'lucide-react'
 
 const AgencyCandidateList = () => {
   const [searchBarText,setSearchBarText] = useState<string|null>("")
@@ -33,7 +34,8 @@ const dummyData = [
     comments: "Certified AWS Solutions Architect.",
     cvLink: "https://calibre-ebook.com/downloads/demos/demo.pdf",
     score: 80.5,
-    currentStatus: "APPLIED"
+    currentStatus: "APPLIED",
+    achievements:"Successfully led a small team to develop a cross-platform app that gained over 10,000 downloads within three months, while optimizing performance by 35% through efficient API integration. Automated multiple workflows, saving more than 20 hours per week and improving overall productivity. Recognized as “Developer of the Month” for outstanding innovation, leadership, and consistent delivery of high-quality results.",
   },
   {
     id: "ref-11",
@@ -201,7 +203,8 @@ const dummyData = [
     comments: "Strong portfolio and Figma skills.",
     cvLink: "https://example.com/cv/tanvi-kapoor.pdf",
     score: 10.3,
-    currentStatus: "DOCUMENT_REQUESTED"
+    currentStatus: "DOCUMENT_REQUESTED",
+    achievements:"Successfully led a small team to develop a cross-platform app that gained over 10,000 downloads within three months, while optimizing performance by 35% through efficient API integration. Automated multiple workflows, saving more than 20 hours per week and improving overall productivity. Recognized as “Developer of the Month” for outstanding innovation, leadership, and consistent delivery of high-quality results.",
   },
   {
     id: "ref-18",

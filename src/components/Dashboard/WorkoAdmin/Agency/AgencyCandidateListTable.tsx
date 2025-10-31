@@ -14,6 +14,7 @@ import ProgressCircle from "@Components/Shared/CircularBarAgency";
 import { newDisplayStatus, statusColors } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 import { JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
+import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 
 
 export const getCvViewDate = (statusTracker: any[]) => {
@@ -65,6 +66,7 @@ export default function AgencyCandidateListTable(props: any) {
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
+  const [isAllExpanded, setIsAllExpanded] = React.useState(false);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
 
@@ -216,8 +218,13 @@ const columns = [
         label: "Current Company",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[100px]'>
-                <span>{row?.currentCompany ?? "NA"}</span>
+            // <div className='flex justify-center m-auto w-[100px]'>
+            //     <span>{row?.currentCompany ?? "NA"}</span>
+            // </div>
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                title={row?.currentCompany}
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.currentCompany ?? "NA"}</span>
             </div>
         ),
     },
@@ -239,8 +246,12 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
-                <span>{row?.totalYOE ?? "NA"}</span>
+            // <div className='flex justify-center w-[100px]'>
+            //     <span>{row?.totalYOE ?? "NA"}</span>
+            // </div>
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.totalYOE ?? "NA"}</span>
             </div>
         ),
     },
@@ -250,8 +261,12 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
-                <span>{row?.relevantYOE ?? "NA"}</span>
+            // <div className='flex justify-center m-auto w-[100px]'>
+            //     <span>{row?.relevantYOE ?? "NA"}</span>
+            // </div>
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.relevantYOE ?? "NA"}</span>
             </div>
         ),
     },
@@ -261,9 +276,13 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto'>
-                <span>{row?.currentCTC ?? "NA"}</span>
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.currentCTC ?? "NA"}</span>
             </div>
+            // <div className='flex w-[100px]'>
+            //     <span>{row?.currentCTC ?? "NA"}</span>
+            // </div>
         ),
     },
     {
@@ -272,8 +291,12 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto'>
-                <span>{row?.expectedCTC ?? "NA"}</span>
+            // <div className='flex justify-center w-[100px]'>
+            //     <span>{row?.expectedCTC ?? "NA"}</span>
+            // </div>
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.expectedCTC ?? "NA"}</span>
             </div>
         ),
     },
@@ -283,7 +306,7 @@ const columns = [
         contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto  w-[100px]'>
                 <span>{row?.noticePeriod ?? "NA"}</span>
             </div>
         ),
@@ -304,7 +327,7 @@ const columns = [
         sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto bc'>
+        <div className='flex justify-center m-auto '>
             <span>{row?.readyToRelocate === true
                 ? "Yes"
                 : row?.readyToRelocate === false
@@ -314,18 +337,18 @@ const columns = [
         </div>
         ),
     },
-    {
-        key: "anyComment",
-        label: "Any comment",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[100px]'>
-                <span 
-                title={row?.comments}
-                className="truncate block w-full">{row?.comments ?? "NA"}</span>
-            </div>
-        ),
-    },
+    // {
+    //     key: "anyComment",
+    //     label: "Any comment",
+    //     sortable: true,
+    //     render: (row: AgencyDatabaseApplicantDetailsDto) => (
+    //         <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+    //             <span 
+    //             title={row?.comments}
+    //             className={isAllExpanded ? "": "truncate block w-full"}>{row?.comments ?? "NA"}</span>
+    //         </div>
+    //     ),
+    // },
     {
         key: "viewCV",
         label: "CV",
@@ -406,6 +429,19 @@ const columns = [
             );
         },
     },
+    // {
+    //     key: "achievements",
+    //     label: "Achievements",
+    //     sortable: true,
+    //     render: (row: AgencyDatabaseApplicantDetailsDto) => (
+    //         <div className={`flex justify-center m-auto ${isAllExpanded ? "" : "w-[100px]"}`}>
+    //             <span 
+    //             title={row?.achievements}
+    //             className={isAllExpanded ? "": "truncate block w-full"}>{row?.achievements ?? "NA"}</span>
+    //         </div>
+    //     ),
+    // },
+
 ];
 
   // Toggle row expansion
@@ -415,42 +451,50 @@ const columns = [
 
   const renderExpandedDetails = (row: any) => {
     return (
-        <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
-        <div>
-            <span className="font-semibold text-black">Last Rejection Date</span>
-            <p>
-            {row.lastRejectionDate
-                ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                })
-                : "NA"}
-            </p>
-        </div>
+    <div className="flex justify-start items-start gap-8 bg-gray-50 rounded-lg">
+    {/* <div>
+        <span className="font-semibold text-black">Last Rejection Date</span>
+        <p>
+        {row.lastRejectionDate
+            ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
+                day: "numeric",
+                month: "short",
+                year: "numeric",
+            })
+            : "NA"}
+        </p>
+    </div>
 
-        <div>
-            <span className="font-semibold text-black">Rejected By</span>
-            <p>{row.rejectedBy ?? "NA"}</p>
-        </div>
+    <div>
+        <span className="font-semibold text-black">Rejected By</span>
+        <p>{row.rejectedBy ?? "NA"}</p>
+    </div>
 
-        <div>
-            <span className="font-semibold text-black">Cooling Period</span>
-            <p>{row.coolingPeriod ?? "NA"}</p>
-        </div>
+    <div>
+        <span className="font-semibold text-black">Cooling Period</span>
+        <p>{row.coolingPeriod ?? "NA"}</p>
+    </div>
 
-        <div className="max-w-sm">
-            <span className="font-semibold text-black">Rejection Reason</span>
-            <p className="break-words">{row.rejectedReason ?? "NA"}</p>
-        </div>
-        </div>
+    <div className="max-w-sm">
+        <span className="font-semibold text-black">Rejection Reason</span>
+        <p className="break-words">{row.rejectedReason ?? "NA"}</p>
+    </div> */}
+    <div className="text-left">
+        <span className="font-semibold text-blue-400 text-left">Achivements</span>
+        <p className="break-words text-start w-[30em]">{row.achievements ?? "NA"}</p>
+    </div>
+    <div className="text-left">
+        <span className="font-semibold text-blue-400 text-left">Any comments</span>
+        <p className="break-words text-start w-[30em]">{row.comments ?? "NA"}</p>
+    </div>
+    </div>
     );
 };
 
   return (
     <>  
         <div className="flex flex-row gap-2">
-            <button
+            {/* <button
                 className={`text-sm text-blue-600 flex items-center gap-1 mb-2`}
                 onClick={() => {
                       if (!toggleExpand) return;
@@ -462,13 +506,14 @@ const columns = [
                           if (!expandedRows.includes(r.id)) toggleExpand(r.id);
                         });
                       }
+                      setIsAllExpanded(!allExpanded);
                     }}
             >
                 <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">
                 {expandedRows.length === sortedData.length ? '-' : '+'}
                 </span>
                 <span>{expandedRows.length === sortedData.length ? 'Collapse all' : 'Expand all'}</span>
-            </button>
+            </button> */}
 
             {/* Deselect button - only show when rows are selected */}
             <button
@@ -479,7 +524,7 @@ const columns = [
                 <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
             </button>
         </div>
-        <DynamicTableAgency
+        <DynamicTableTwo
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
@@ -495,7 +540,7 @@ const columns = [
         allSelected={
             ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)
         }
-        renderExpandedDetails={renderExpandedDetails}
+        // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
         pageSize={10}
@@ -504,6 +549,8 @@ const columns = [
         hasNextPage={false}
         handlePreviousPage={() => {}}
         handleNextPage={() => {}}
+        // mainColumns={["jobProfile","agencyName",'applicantName','email',"viewCV","workoScore","action","currentStatus"]}
+        // expandedColumns={['currentCompany',"currentDesignation",'currentCTC','expectedCTC', 'totalYOE','relevantYOE', 'readyToRelocate','anyComment','achievements']}
         />
     </>
   );
