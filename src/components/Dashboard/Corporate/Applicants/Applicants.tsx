@@ -1,12 +1,8 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
-import {
-  CompanyDetails,
-  JobApplicationDetailsDto,
-  JobData,
-} from "@Interfaces/CorporateDashboard.dto";
+import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import secureStorage from "@Utils/SecureStorage.utils";
 
@@ -20,8 +16,6 @@ import {
   BulkJobApplicationUpdatePayloadItem,
   CursorPaginationApplicationDataParams,
 } from "src/types/interface/CorporateServices.dto";
-import Modal from "../../../Shared/Modal";
-import ResponseEvaluation from "../../../Shared/ApplicantsPage/ViewEvaluation";
 import BulkStatusDropDown from "../../../Shared/ApplicantsPage/BulkStatusDropDown";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 import { BulkJobApplicationUpdateItem } from "@Interfaces/CorporateServices.dto";
@@ -116,6 +110,7 @@ export const checkIsWorkoJobFromSelected = (
 const Applicants = () => {
   const { userDetails, fetchCorporateCompanyDetails } = useAppContext();
   const queryClient = useQueryClient();
+  const currentPageIndexRef = useRef(0);
 
   const {
     activeTab,
@@ -200,7 +195,7 @@ const Applicants = () => {
     sortOrder: "descending",
   };
 
-  const queryKey = [
+  const baseQueryKey = [
     "CorporateJobsApplicationQuery",
     userDetails?.companyId || "defaultCompanyId",
     activeTab,
@@ -218,12 +213,18 @@ const Applicants = () => {
     goToPreviousPage,
     refetch,
     reset,
+    currentPage,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataParams>({
-    queryKey,
+    queryKey: baseQueryKey,
     queryFn: CorporateServiceObj.fetchApplications,
     baseParams: params,
     enabled: !!jobId && !!userDetails?.companyId && !!userType,
   });
+
+  // Update current page index ref whenever page changes
+  useEffect(() => {
+    currentPageIndexRef.current = currentPage - 1;
+  }, [currentPage]);
 
   // Apply filters to the data locally
   const filteredData = useMemo(() => {
@@ -244,18 +245,47 @@ const Applicants = () => {
       }
       return result;
     },
-    onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey });
+    onMutate: async (payload) => {
+      const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
+      await queryClient.cancelQueries({ queryKey: actualQueryKey });
+      const previousData = queryClient.getQueryData(actualQueryKey);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(actualQueryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((application: JobApplicationDetailsDto) => {
+              if (application.id === payload.applicationId) {
+                return {
+                  ...application,
+                  status: payload.status,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return application;
+            }),
+          })),
+        };
+      });
+
+      return { previousData, actualQueryKey };
     },
-    onError: (err) => {
-      console.error(" Failed to update application status:", err);
+    onError: (err, variables, context) => {
+      if (context?.previousData && context?.actualQueryKey) {
+        queryClient.setQueryData(context.actualQueryKey, context.previousData);
+      }
+      console.error("Failed to update application status:", err);
       toast.error("Failed to update application status.", getToastOptions({}));
     },
     onSuccess: (updatedApplication: JobApplicationDetailsDto) => {
       toast.success("Application status updated successfully", getToastOptions({}));
 
       if (!data || !Array.isArray(data)) {
-        console.warn(" Data is not an array or empty:", data);
         return;
       }
 
@@ -263,13 +293,12 @@ const Applicants = () => {
         (app: JobApplicationDetailsDto) => app.id === updatedApplication.id
       );
 
-      if (index === -1) {
-        console.warn("Application not found in local data:", updatedApplication.id);
-        return;
+      if (index !== -1) {
+        data[index] = { ...data[index], ...updatedApplication };
       }
 
-      data[index] = { ...data[index], ...updatedApplication };
-      console.log(`Updated application ${updatedApplication.id} in local data.`);
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "applicant"] });
     },
   });
 
@@ -281,14 +310,16 @@ const Applicants = () => {
       return await CorporateServiceObj.postBulkApplicationUpdate(payload);
     },
     onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey });
-      const previousData = queryClient.getQueryData(queryKey);
+      const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
+      await queryClient.cancelQueries({ queryKey: actualQueryKey });
+      const previousData = queryClient.getQueryData(actualQueryKey);
 
       const statusMap = new Map(
         payload.bulkJobApplicationUpdate.map((item) => [item.jobApplicationId, item.status])
       );
 
-      queryClient.setQueryData(queryKey, (oldData: any) => {
+      queryClient.setQueryData(actualQueryKey, (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
         return {
@@ -310,16 +341,19 @@ const Applicants = () => {
         };
       });
 
-      return { previousData };
+      return { previousData, actualQueryKey };
     },
     onError: (err, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
+      if (context?.previousData && context?.actualQueryKey) {
+        queryClient.setQueryData(context.actualQueryKey, context.previousData);
       }
       toast.error("Failed to update applications", getToastOptions({}));
     },
     onSuccess: () => {
       toast.success("Applications updated successfully!", getToastOptions({}));
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "applicant"] });
     },
   });
 
@@ -347,7 +381,7 @@ const Applicants = () => {
     // Optional background refetch after delay
     if (hasRefetch) {
       setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
+        queryClient.invalidateQueries({ queryKey: baseQueryKey });
       }, 2000);
     }
   };
@@ -380,7 +414,7 @@ const Applicants = () => {
 
     // Optional background refetch
     setTimeout(() => {
-      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: baseQueryKey });
     }, 2000);
   };
 
@@ -478,7 +512,7 @@ const Applicants = () => {
               </span>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}

@@ -24,7 +24,11 @@ interface ReferralTableProps {
 const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
   const keyFallbacks = {};
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks,{
+    tableId: "referral-table",
+    persistInUrl: true,
+    persistInLocalStorage: true,
+  });
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
@@ -141,7 +145,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   ];
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
     const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
-      row.status
+      row
     );
     return timeLineProps ? (
       <div className="p-4 flex justify-evenly gap-4">

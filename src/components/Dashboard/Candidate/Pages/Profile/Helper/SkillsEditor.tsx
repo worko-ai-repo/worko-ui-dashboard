@@ -22,7 +22,7 @@ const SkillsEditor: React.FC<SkillsEditorProps> = ({
       typeof skill === 'string' 
         ? { 
             skillName: skill, 
-            timestamps: { createdAt: new Date().toISOString() },
+            // timestamps: { createdAt: new Date().toISOString() },
             canRemove: true
           } 
         : skill
@@ -41,11 +41,11 @@ const SkillsEditor: React.FC<SkillsEditorProps> = ({
       ? { 
           skillName: newSkill.trim(), 
           years: newSkillYears ? parseInt(newSkillYears, 10) : 0,
-          timestamps: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+          // timestamps: { createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
         }
       : { 
           skillName: newSkill.trim(),
-          timestamps: { createdAt: new Date().toISOString() },
+          // timestamps: { createdAt: new Date().toISOString() },
         };
     
     setEditedSkills([...editedSkills, skillToAdd]);
@@ -68,7 +68,7 @@ const SkillsEditor: React.FC<SkillsEditorProps> = ({
         if (typeof skill === 'string') {
           return {
             skillName: skill,
-            timestamps: { createdAt: new Date().toISOString() }
+            // timestamps: { createdAt: new Date().toISOString() }
           };
         }
         
@@ -76,7 +76,7 @@ const SkillsEditor: React.FC<SkillsEditorProps> = ({
         if (!skill.timestamps) {
           return {
             ...skill,
-            timestamps: { createdAt: new Date().toISOString() }
+            // timestamps: { createdAt: new Date().toISOString() }
           };
         }
         

@@ -12,6 +12,9 @@ import UpdateCompany from "./UpdateCompany";
 interface CompanyRequestTableProps {
   data: CompanyRequestDto[];
   fetchCompany: () => void;
+  handleCompanyUpdate: (companyId: string, updateData: any, successMessage?: string) => Promise<void>;
+  handleCompanyRequestDelete: (companyId: string) => Promise<void>;
+  isUpdating: boolean;
   pagination: CommonCursorPaginationProp;
 }
 
@@ -50,6 +53,9 @@ function modalReducer(state: ModalState, despatchAction: despatchAction): ModalS
 const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   data,
   fetchCompany,
+  handleCompanyUpdate,
+  handleCompanyRequestDelete,
+  isUpdating,
   pagination,
 }) => {
   // Modal state is the state in modalReducer and dispatch is the action dispatcher
@@ -59,15 +65,22 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
     data: null,
     fetchCompany: undefined,
   });
+  
   const keyFallbacks = {
     companyDetail_industry:["companyDetail.industry",]
   };
-  let { sortedData, onSortChange } = useSortableData(data, keyFallbacks);
+  
+  let { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "admin-company-request",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
+  });
 
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
   const columns: Column<CompanyRequestDto>[] = [
-    { key: "userName", label: "Requested By", sortable: true /* className: "w-40"  */ },
+    { key: "userName", label: "Requested By", sortable: true },
     { key: "companyDetail_name", label: "Company Name", sortable: true },
 
     {
@@ -128,7 +141,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       render: (row: CompanyRequestDto) => (
         <div className="flex flex-col sm:flex-row gap-2">
           <button
-            disabled={row.status === "denied" || row.status === "approved"}
+            disabled={row.status === "denied" || row.status === "approved" || isUpdating}
             onClick={() => {
               //form the companyrequest data to company data type
               const rowAsCompany: CompanyDto = {
@@ -157,11 +170,11 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
                 payload: { data: rowAsCompany, key: rowAsCompany.SK, fetchCompany },
               });
             }}
-            className="bg-green-500 rounded-lg w-9 items-center   h-9 flex justify-center btn_disabled">
+            className="bg-green-500 rounded-lg w-9 items-center h-9 flex justify-center btn_disabled">
             <CheckCircle2Icon className=" text-white p-1" />
           </button>
           <button
-            disabled={row.status === "denied" || row.status === "approved"}
+            disabled={row.status === "denied" || row.status === "approved" || isUpdating}
             onClick={() =>
               dispatch({
                 type: "OPEN",
@@ -169,7 +182,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
                 payload: { data: row, key: row.companyId, fetchCompany },
               })
             }
-            className="bg-red-500 rounded-lg w-9 items-center   h-9 flex justify-center btn_disabled">
+            className="bg-red-500 rounded-lg w-9 items-center h-9 flex justify-center btn_disabled">
             <Trash2 className=" text-white p-1" />
           </button>
         </div>
@@ -215,6 +228,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   };
   // use sk as id in sorted data and data
   sortedData = sortedData?.map((item) => ({ ...item, id: item.SK }));
+  
   return (
     <>
       <DynamicTable<CompanyRequestDto>
@@ -242,6 +256,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
             mode="REQUEST"
             onClose={() => dispatch({ type: "CLOSE" })}
             fetchCompany={modalState.fetchCompany!}
+            handleCompanyUpdate={handleCompanyUpdate}
           />
         )}
       </Modal>
@@ -253,6 +268,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
           companyId={modalState.key!}
           onClose={() => dispatch({ type: "CLOSE" })}
           fetchCompany={modalState.fetchCompany!}
+          handleCompanyRequestDelete={handleCompanyRequestDelete}
           isRequest={true}
         />
       </Modal>

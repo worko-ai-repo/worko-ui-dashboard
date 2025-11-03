@@ -1,4 +1,4 @@
-import { ChevronDownIcon, Mic, MicOff, RotateCcw, AlertCircle } from "lucide-react";
+import { ChevronDownIcon, Mic, MicOff, RotateCcw, AlertCircle, StopCircle, Square } from "lucide-react";
 import React, { useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { SubmitButton } from "../../Dashboard/Corporate/SubmitButton";
@@ -153,46 +153,40 @@ const RejectionForm: React.FC<{
             )}
           </div>
 
-          <div className="relative">
-            <textarea
-              {...register("userComment", {
-                validate: (value) =>
-                  selectedReason === "other" && !value?.trim()
-                    ? "Please provide a comment when selecting 'Other'"
-                    : true,
-              })}
-              placeholder={
-                isSupported
-                  ? "Click the microphone to start dictating, or type your feedback manually..."
-                  : "Please type your feedback manually..."
-              }
-              className={`w-full h-[231px] rounded-xl p-3 text-sm focus:outline-none transition-all duration-200 ${
-                isListening
-                  ? 'border-2 border-blue-400 bg-blue-50'
-                  : 'border border-gray-300 bg-gray-100'
-              }`}
-              rows={4}
-              onFocus={() => {
-                if (isListening) {
-                  stopListening();
+          <div className="relative ">
+            <div className="relative">
+              <textarea
+                {...register("userComment", {
+                  validate: (value) =>
+                    (selectedReason === "other" || selectedReason === "Experience Expectation Mismatch") && !value?.trim()
+                      ? "Please provide a comment when selecting 'Other or Experience Expectation Mismatch'"
+                      : true,
+                })}
+                placeholder={
+                  isSupported
+                    ? "Click the microphone to start dictating, or type your feedback manually..."
+                    : "Please type your feedback manually..."
                 }
-              }}
-            />
-            {errors.userComment && (
-              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
-                <AlertCircle size={14} />
-                {errors.userComment.message}
-              </p>
-            )}
-            
-            {/* Mic controls */}
+                className={`relative w-full h-[231px] rounded-xl p-3 text-sm focus:outline-none transition-all duration-200 ${
+                  isListening
+                    ? 'border-2 border-blue-400 bg-blue-50'
+                    : 'border border-gray-300 bg-gray-100'
+                }`}
+                rows={4}
+                onFocus={() => {
+                  if (isListening) {
+                    stopListening();
+                  }
+                }}
+              />
+                          {/* Mic controls */}
             {isSupported && (
               <button
                 type="button"
                 onClick={handleMicToggle}
-                disabled={!!error}
+                // disabled={!!error}
                 className={`
-                  absolute bottom-3 right-3 w-12 h-12 flex items-center justify-center rounded-full
+                  absolute  bottom-4 right-3 w-12 h-12 flex items-center justify-center rounded-full
                   transition-all duration-300 text-white shadow-lg hover:shadow-xl transform hover:scale-105
                   ${isListening 
                     ? "bg-red-500 hover:bg-red-600 animate-pulse" 
@@ -200,9 +194,18 @@ const RejectionForm: React.FC<{
                   }
                   ${error ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
                 `}>
-                {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+                {isListening ? <Square size={16} /> : <Mic size={16} />}
               </button>
             )}
+            </div>
+            {errors.userComment && (
+              <p className="text-red-500 text-xs mt-1 flex items-center gap-1">
+                <AlertCircle size={14} />
+                {errors.userComment.message}
+              </p>
+            )}
+            
+
           </div>
 
           {/* Speech Recognition Status */}

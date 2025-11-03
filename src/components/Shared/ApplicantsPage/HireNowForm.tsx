@@ -40,7 +40,7 @@ export interface JobOfferLetterDynamoResponseDto {
   awsS3SignedUrl: string;
 }
 
-export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetailsDto }) {
+export default function HireNowForm({ jobData,onClose }: { jobData?: JobApplicationDetailsDto , onClose: () => void}) {
   const queryClient = useQueryClient();
   const [hasJobFieldsChanged, setHasJobFieldsChanged] = useState(false);
   const [initialJobFields, setInitialJobFields] = useState<string>("");
@@ -162,36 +162,35 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       const isAdmin = RBAC.can("play_admin");
       let response;
 
-
-        // For corporate service, use the full payload structure
-        const corporatePayload = {
-          companyId: jobResponse.companyId,
-          jobTitle: formValues.jobTitle,
-          workMode: formValues.workMode,
-          department: formValues.department,
-          status: jobResponse.status,
-          numOfOpenings: jobResponse.numOfOpenings || 1,
-          noticePeriod: jobResponse.noticePeriod || 0,
-          location: {
-            city: [formValues.location],
-            country: jobResponse.location?.country || [],
-            fullLocation: [formValues.location],
-            state: jobResponse.location?.state || [],
-          },
-          experienceRange: jobResponse.experienceRange || { min: 0, max: 0 },
-          salaryRange: {
-            min: jobResponse.salaryRange?.min || 0,
-            max: parseFloat(formValues.ctc),
-          },
-          coreSkills: jobResponse.coreSkills || [],
-          technicalSkills: jobResponse.technicalSkills || [],
-          softSkills: jobResponse.softSkills || [],
-          miscellaneousSkills: jobResponse.miscellaneousSkills || [],
-          otherRequirements: jobResponse.otherRequirements || "",
-          typeofEmployment: jobResponse.typeofEmployment || "FULL_TIME",
-          htmlJobDescription: jobResponse.htmlJobDescription || "",
-        };
-        response = await CorporateServiceObj.updateJob(corporatePayload, {}, jobResponse.id!);
+      // For corporate service, use the full payload structure
+      const corporatePayload = {
+        companyId: jobResponse.companyId,
+        jobTitle: formValues.jobTitle,
+        workMode: formValues.workMode,
+        department: formValues.department,
+        status: jobResponse.status,
+        numOfOpenings: jobResponse.numOfOpenings || 1,
+        noticePeriod: jobResponse.noticePeriod || 0,
+        location: {
+          city: [formValues.location],
+          country: jobResponse.location?.country || [],
+          fullLocation: [formValues.location],
+          state: jobResponse.location?.state || [],
+        },
+        experienceRange: jobResponse.experienceRange || { min: 0, max: 0 },
+        salaryRange: {
+          min: jobResponse.salaryRange?.min || 0,
+          max: parseFloat(formValues.ctc),
+        },
+        coreSkills: jobResponse.coreSkills || [],
+        technicalSkills: jobResponse.technicalSkills || [],
+        softSkills: jobResponse.softSkills || [],
+        miscellaneousSkills: jobResponse.miscellaneousSkills || [],
+        otherRequirements: jobResponse.otherRequirements || "",
+        typeofEmployment: jobResponse.typeofEmployment || "FULL_TIME",
+        htmlJobDescription: jobResponse.htmlJobDescription || "",
+      };
+      response = await CorporateServiceObj.updateJob(corporatePayload, {}, jobResponse.id!);
 
       if (!response || Array.isArray(response)) {
         throw new Error("Failed to update job details");
@@ -279,10 +278,10 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
 
       // Step 4: Update job application status
       const updatePayload = {
+        ...(data.remarks && { offerLetterRemarks: data.remarks }),
         userId: jobData?.applicantDetails.name,
         status: "OFFER_SENT",
         offerLetterCloudFileName: cloudFileName,
-        offerLetterRemarks: data.remarks,
         emailId: jobData?.applicantDetails.email,
         userType: userType,
         applicantName: jobData?.applicantDetails.name || "Applicant",
@@ -319,6 +318,7 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
             queryKey: ["CorporateJobsApplicationQuery"],
           });
     }
+    onClose();
   };
 
   return (
@@ -445,12 +445,10 @@ export default function HireNowForm({ jobData }: { jobData?: JobApplicationDetai
       {/* Remarks */}
       <div className="flex flex-col gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            <span className="text-red-500 mr-1">*</span>Remarks
-          </label>
+          <label className="block text-sm font-medium text-gray-700">Remarks</label>
           <textarea
             placeholder="write here"
-            {...register("remarks", { required: "Remarks are required" })}
+            {...register("remarks")}
             className="mt-1 h-[95px] w-full px-4 py-2 pl-[26px] border rounded-lg bg-[#EBEFF3] focus:outline-none"
           />
           {errors?.remarks && <p className="text-sm text-red-500 mt-1">{errors.remarks.message}</p>}

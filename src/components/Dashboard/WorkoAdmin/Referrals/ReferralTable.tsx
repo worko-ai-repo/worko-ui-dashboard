@@ -137,6 +137,9 @@ const ReferralTable: React.FC<ReferralTableProps> = ({
     },
     onSuccess: () => {
       toast.success("Referral updated successfully", getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "referrals"] });
     },
   });
 
@@ -243,7 +246,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({
 
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
     const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
-      row.status
+      row
     );
     return timeLineProps ? (
       <div className="p-4 flex justify-evenly gap-4">

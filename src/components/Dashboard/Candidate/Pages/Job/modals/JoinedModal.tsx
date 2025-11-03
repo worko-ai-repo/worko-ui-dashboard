@@ -17,6 +17,17 @@ interface JoinedModalProps {
   onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
 }
 
+interface Payload {
+  applicantName: string;
+  userId: string;
+  emailId: string;
+  userType: string;
+  status: string;
+  joiningDate: string;
+  joiningHrName: string;
+  joiningApplicantMessage?: string; // optional
+}
+
 export default function JoinedModal({
   isOpen,
   onClose,
@@ -102,16 +113,19 @@ export default function JoinedModal({
     }
 
     try {
-      const payload = {
-        applicantName:userDetails.name,
-        userId: userDetails?.sub,
-        emailId: userDetails?.email,
-        userType: "CAND",
-        status: "JOINED",
-        joiningDate,
-        joiningHrName: hrName,
-        joiningApplicantMessage: message,
-      };
+      let payload: Payload = {
+      applicantName: userDetails.name,
+      userId: userDetails?.sub,
+      emailId: userDetails?.email,
+      userType: "CAND",
+      status: "JOINED",
+      joiningDate,
+      joiningHrName: hrName,
+    };
+
+    if (message && message.trim() !== "") {
+      payload.joiningApplicantMessage = message;
+    }
 
       const { response, error } = await httpServiceObj.patch(
         `/job-application/${job.id}/applicant-action`,

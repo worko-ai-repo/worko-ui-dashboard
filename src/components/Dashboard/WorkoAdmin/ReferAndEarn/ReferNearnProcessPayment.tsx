@@ -60,6 +60,7 @@ const ReferNearnProcessPayment: React.FC<ReferNearnProcessPaymentProps> = ({
 
       const response = await AdminServiceObj.patchReferAndEarnStatus(data.id, {
         paymentDoneDetails: formData,
+        status: "PAYMENT_COMPLETED",
       });
       if (!response) {
         throw new Error("No response from server");

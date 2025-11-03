@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
@@ -9,7 +9,6 @@ import { clipboard } from "@Assets";
 import { toast } from "react-toastify";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
 import { CursorPaginationApplicationDataAdminParams } from "@Interfaces/AdminServices.dto";
-import Modal from "../../../Shared/Modal";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 import {
   BulkJobApplicationUpdateItem,
@@ -58,6 +57,7 @@ interface ApplicantsProps {
 const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
   const { userDetails } = useAppContext();
   const queryClient = useQueryClient();
+  const currentPageIndexRef = useRef(0);
 
   // Initialize apiStatus based on activeTab to prevent double API calls
   const getInitialApiStatus = (tab: TabType): JobApplicationStatusType | undefined => {
@@ -137,11 +137,11 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     ...(isAllApplicants ? {} : { jobId: jobId ?? undefined }),
   };
 
-  // Stable query key
-  const queryKey = [
+  // Base query key without the dynamic currentPageIndex
+  const baseQueryKey = [
     "AdminJobsApplicationQuery",
     activeTab,
-    !!searchBarText,
+    searchBarText || "",
     JSON.stringify(params),
     isAllApplicants,
   ];
@@ -155,12 +155,18 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     goToPreviousPage,
     refetch,
     reset,
+    currentPage,
   } = useCursorPagination<JobApplicationDetailsDto, CursorPaginationApplicationDataAdminParams>({
-    queryKey: queryKey,
+    queryKey: baseQueryKey,
     queryFn: AdminServiceObj.fetchApplications,
     baseParams: params,
     enabled: isAllApplicants ? true : !!jobId,
   });
+
+  // Update current page index ref whenever page changes
+  useEffect(() => {
+    currentPageIndexRef.current = currentPage - 1;
+  }, [currentPage]);
 
   // Apply filters to the data locally
   const filteredData = useMemo(() => {
@@ -183,23 +189,53 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       return result;
     },
 
-    // Optimistically update local data only
-    onMutate: async () => {
-      // Stop any refetching (optional)
-      await queryClient.cancelQueries({ queryKey });
+    onMutate: async ({ payload, applicationId }) => {
+      // The actual query key used by useInfiniteQuery includes the currentPageIndex
+      const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
+      await queryClient.cancelQueries({ queryKey: actualQueryKey });
+      const previousData = queryClient.getQueryData(actualQueryKey);
+
+      // Optimistically update the cache
+      queryClient.setQueryData(actualQueryKey, (oldData: any) => {
+        if (!oldData?.pages) return oldData;
+
+        return {
+          ...oldData,
+          pages: oldData.pages.map((page: any) => ({
+            ...page,
+            data: page.data.map((application: JobApplicationDetailsDto) => {
+              if (application.id === applicationId) {
+                return {
+                  ...application,
+                  status: payload.status,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return application;
+            }),
+          })),
+        };
+      });
+
+      return { previousData, actualQueryKey };
     },
 
-    onError: (err) => {
-      console.error(" Failed to update application status:", err);
+    onError: (err, variables, context) => {
+      if (context?.previousData && context?.actualQueryKey) {
+        queryClient.setQueryData(context.actualQueryKey, context.previousData);
+      }
+      console.error("Failed to update application status:", err);
       toast.error("Failed to update application status.", getToastOptions({}));
     },
 
     // When API returns fresh data, replace only the target record
     onSuccess: (updatedApplication: JobApplicationDetailsDto) => {
       toast.success("Application status updated successfully", getToastOptions({}));
-      debugger;
+
+      // Update local data array with fresh data from API
       if (!data || !Array.isArray(data)) {
-        console.warn(" Data is not an array or empty:", data);
+        console.warn("Data is not an array or empty:", data);
         return;
       }
 
@@ -212,8 +248,14 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         return;
       }
 
+      // Patch the updated data into local array
       data[index] = { ...data[index], ...updatedApplication };
-      console.log(`Updated application ${updatedApplication.id} in local data.`);
+      // console.log(`✅ Patched application ${updatedApplication.id} in local data.`);
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({
+        queryKey: ["counts", isAllApplicants ? "corporateApplicants" : "applicant"],
+      });
     },
   });
 
@@ -225,14 +267,16 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       return await AdminServiceObj.postBulkApplicationUpdate(payload);
     },
     onMutate: async (payload) => {
-      await queryClient.cancelQueries({ queryKey });
-      const previousData = queryClient.getQueryData(queryKey);
+      const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
+      await queryClient.cancelQueries({ queryKey: actualQueryKey });
+      const previousData = queryClient.getQueryData(actualQueryKey);
 
       const statusMap = new Map(
         payload.bulkJobApplicationUpdate.map((item) => [item.jobApplicationId, item.status])
       );
 
-      queryClient.setQueryData(queryKey, (oldData: any) => {
+      queryClient.setQueryData(actualQueryKey, (oldData: any) => {
         if (!oldData?.pages) return oldData;
 
         return {
@@ -254,17 +298,22 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         };
       });
 
-      return { previousData };
+      return { previousData, actualQueryKey };
     },
     onError: (err, variables, context) => {
-      if (context?.previousData) {
-        queryClient.setQueryData(queryKey, context.previousData);
+      if (context?.previousData && context?.actualQueryKey) {
+        queryClient.setQueryData(context.actualQueryKey, context.previousData);
       }
       toast.error("Failed to update applications", getToastOptions({}));
     },
     onSuccess: () => {
       toast.success("Applications updated successfully!", getToastOptions({}));
       ListSelection.reset();
+
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({
+        queryKey: ["counts", isAllApplicants ? "corporateApplicants" : "applicant"],
+      });
     },
   });
 
@@ -299,9 +348,10 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         getToastOptions({})
       );
 
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-      }, 2000);
+      // Optional background refetch after delay
+      // setTimeout(() => {
+      //   queryClient.invalidateQueries({ queryKey: baseQueryKey });
+      // }, 2000);
     } catch (error) {
       console.error("Error in bulk update:", error);
     }
@@ -405,11 +455,12 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
   ) => {
     updateApplicationMutation.mutate({ payload, applicationId });
 
-    if (hasRefetch) {
-      setTimeout(() => {
-        queryClient.invalidateQueries({ queryKey });
-      }, 2000);
-    }
+    // Commented out refetch - using optimistic updates with API response patching instead
+    // if (hasRefetch) {
+    //   setTimeout(() => {
+    //     queryClient.invalidateQueries({ queryKey: baseQueryKey });
+    //   }, 2000);
+    // }
   };
 
   return (
@@ -466,7 +517,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             </div> */}
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}

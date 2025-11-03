@@ -57,7 +57,7 @@ class CommonDashboardServices {
   }
 
   // Method to fetch extra referral details (stub implementation)
-  public getReferralTimeline(currentStatus: ReferralStatusType): TimelineStep[] {
+  public getReferralTimeline(currentStatus: ReferralDetailsDto): TimelineStep[] {
     // define the "positive" sequence of statuses
     const POSITIVE_FLOW: ReferralStatusEnum[] = [
       ReferralStatusEnum.AWAITING,
@@ -66,7 +66,7 @@ class CommonDashboardServices {
     ];
 
     // find index of the current status in the positive flow
-    const currentIndex = POSITIVE_FLOW.indexOf(currentStatus as ReferralStatusEnum);
+    const currentIndex = POSITIVE_FLOW.indexOf(currentStatus?.status as ReferralStatusEnum);
 
     // if status not part of positive flow (rejected, withdrawn, cancelled)
     if (currentIndex === -1) {
@@ -80,7 +80,7 @@ class CommonDashboardServices {
 
       return {
         label,
-        date: new Date().toISOString(), // you can replace with real date from row if available
+        date: new Date(currentStatus.updatedAt).toISOString(), // you can replace with real date from row if available
         status: index < currentIndex ? "success" : type, // mark previous as completed (success), current as its mapped type
       };
     });

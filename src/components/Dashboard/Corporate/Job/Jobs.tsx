@@ -51,7 +51,7 @@ const Jobs = () => {
     },
     pageSize: {
       defaultValue: 100,
-      validValues: [ 10, 25, 50, 100 , 150 , 200],
+      validValues: [10, 25, 50, 100, 150, 200],
     },
   });
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
@@ -73,6 +73,7 @@ const Jobs = () => {
     userRole: userType ? [userType] : undefined,
     status: activeTab,
     includeCompanyDetails: true,
+    includeCountCompanyJobEntityJobApplication:true,
     companyId: userDetails?.companyId ?? "",
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
     ...(userType && !userType.includes("corporate-admin") && userCognitoDetails?.sub
@@ -159,7 +160,7 @@ const Jobs = () => {
               if (job.id === jobId) {
                 // If closing, update with close reason
                 if (isDelete) {
-                  debugger
+                  // debugger;
                   return {
                     ...job,
                     status: "CLOSED",
@@ -197,6 +198,9 @@ const Jobs = () => {
     onSuccess: (data, variables) => {
       const statusText = variables.isDelete ? "closed" : variables.payload.status?.toLowerCase();
       toast.success(`Job ${statusText} successfully`, getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "jobs"] });
     },
   });
 
@@ -247,17 +251,34 @@ const Jobs = () => {
     onSuccess: (data, variables) => {
       const status = variables.bulkJobUpdate[0]?.status.toLowerCase();
       toast.success(`Bulk jobs ${status} successfully.`, getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "jobs"] });
     },
   });
 
   /**
    * Reset pagination and selections when server-side filters change
    */
-  useEffect(() => {
+  /* useEffect(() => {
     resetSelection(); // Reset selected rows
     // Note: useCursorPagination will auto-reset when baseParams change
   }, [activeTab, searchBarText, pageSize]);
+ */
+  useEffect(() => {
+    reset();
+    resetSelection();
+    // Invalidate queries to force a fresh fetch when tab changes
+    queryClient.invalidateQueries({ queryKey });
+  }, [activeTab]);
 
+  // Separate effect for search and page size changes
+  useEffect(() => {
+    reset();
+    resetSelection();
+    refetch();
+  }, [searchBarText, pageSize]);
+  
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
     const updatedData = { bulkJobUpdate: [...selectedRows] };
     for (let row of updatedData.bulkJobUpdate) {
@@ -399,7 +420,7 @@ const Jobs = () => {
         ))}
       </div>
 
-      {isLoading ? (
+      {isLoading && (!data || data.length === 0) ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <JobTableWrapper

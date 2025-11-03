@@ -12,7 +12,6 @@ import { useNavigate } from "react-router-dom";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
-import { keyFallbacksforJobs } from "@Components/Dashboard/WorkoAdmin/Job/JobTable";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -67,7 +66,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     companyId: string;
   } | null>(null);
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
-
+  const keyFallbacksforJobs = {
+    countCompanyJob_allJobApplicationCounts_total: ["countCompanyJob.allJobApplicationCounts.total"],
+    countCompanyJob_allJobApplicationCounts_applied: ["countCompanyJob.allJobApplicationCounts.applied"],
+  };
   // Enhanced sortable data hook with URL params persistence
   const { sortedData, sortConfig, onSortChange } = useSortableData(
     data,
@@ -140,9 +142,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       },
     },
     { key: "department", label: "Department", sortable: true },
-    { key: "totalApplicants", label: "Total Applicants", sortable: true },
-    { key: "newApplicants", label: "New Applicants", sortable: true },
-    { key: "pendingApplicants", label: "Pending", sortable: true },
+    { key: "countCompanyJob_allJobApplicationCounts_total", label: "Total Applicants", sortable: true,render: (row: JobData) => <div>{row?.countCompanyJob?.allJobApplicationCounts?.total || 0}</div> },
+    { key: "countCompanyJob_allJobApplicationCounts_applied", label: "New Applicants", sortable: true, render: (row: JobData) => <div>{row?.countCompanyJob?.allJobApplicationCounts?.applied || 0}</div> },
+    // { key: "pendingApplicants", label: "Pending", sortable: true },
     { key: "department", label: "Department", sortable: true },
     ...(activeTab === "PUBLISHED"
       ? [
@@ -291,18 +293,22 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             },
           ],
           ARCHIVED: [
-            {
-              icon: isRowUpdating ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <X className="w-5 h-5" />
-              ),
-              className: "btn-blue shrink-0",
-              tooltip: "Close Job",
-              onClick: () =>
-                setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
-              disabled: isRowUpdating,
-            },
+            ...(isCorporateAdmin
+              ? [
+                  {
+                    icon: isRowUpdating ? (
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                    ) : (
+                      <X className="w-5 h-5" />
+                    ),
+                    className: "btn-blue shrink-0",
+                    tooltip: "Close Job",
+                    onClick: () =>
+                      setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),
+                    disabled: isRowUpdating,
+                  },
+                ]
+              : []),
             {
               icon: isRowUpdating ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

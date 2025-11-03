@@ -173,6 +173,9 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
   const [isLoadingNextPage, setIsLoadingNextPage] = useState(false);
   const [isLoadingPreviousPage, setIsLoadingPreviousPage] = useState(false);
 
+  // Flag to prevent multiple simultaneous navigation actions
+  const isNavigatingRef = useRef(false);
+
   // React Query for data fetching
   const {
     data: queryData,
@@ -223,10 +226,12 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
    * Adds the next page's cursor to the navigation stack and updates the current page index.
    */
   const goToNextPage = useCallback(async () => {
-    if (!pagination?.lastKey || isLoadingNextPage) {
+    // Prevent multiple simultaneous navigation actions
+    if (!pagination?.lastKey || isNavigatingRef.current || isLoadingNextPage || isFetching) {
       return;
     }
 
+    isNavigatingRef.current = true;
     setIsLoadingNextPage(true);
 
     try {
@@ -235,31 +240,41 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
         cursorStackRef.current.push(pagination.lastKey);
       }
 
+      // Update page index - this will trigger the query to refetch automatically
       setCurrentPageIndex((prev) => prev + 1);
-      await refetchQuery();
+
+      // Wait for the query to settle
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } finally {
       setIsLoadingNextPage(false);
+      isNavigatingRef.current = false;
     }
-  }, [pagination?.lastKey, currentPageIndex, refetchQuery, isLoadingNextPage]);
+  }, [pagination?.lastKey, currentPageIndex, isLoadingNextPage, isFetching]);
 
   /**
    * Navigate to the previous page if available.
    * Uses the navigation stack to return to the previously visited page.
    */
   const goToPreviousPage = useCallback(async () => {
-    if (currentPageIndex === 0 || isLoadingPreviousPage) {
+    // Prevent multiple simultaneous navigation actions
+    if (currentPageIndex === 0 || isNavigatingRef.current || isLoadingPreviousPage || isFetching) {
       return;
     }
 
+    isNavigatingRef.current = true;
     setIsLoadingPreviousPage(true);
 
     try {
+      // Update page index - this will trigger the query to refetch automatically
       setCurrentPageIndex((prev) => prev - 1);
-      await refetchQuery();
+
+      // Wait for the query to settle
+      await new Promise((resolve) => setTimeout(resolve, 100));
     } finally {
       setIsLoadingPreviousPage(false);
+      isNavigatingRef.current = false;
     }
-  }, [currentPageIndex, refetchQuery, isLoadingPreviousPage]);
+  }, [currentPageIndex, isLoadingPreviousPage, isFetching]);
 
   /**
    * Reset pagination state to the first page.
@@ -270,6 +285,7 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
     setCurrentPageIndex(0);
     setIsLoadingNextPage(false);
     setIsLoadingPreviousPage(false);
+    isNavigatingRef.current = false;
   }, []);
 
   /**
@@ -277,6 +293,9 @@ export function useCursorPagination<TData, TParams extends CursorPaginationParam
    * Useful for refreshing data after mutations or manual refresh requests.
    */
   const refetch = useCallback(async () => {
+    if (isNavigatingRef.current) {
+      return;
+    }
     await refetchQuery();
   }, [refetchQuery]);
 

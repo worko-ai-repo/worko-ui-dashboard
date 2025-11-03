@@ -225,8 +225,7 @@ export default function ApplicationTable({
     defaultSort: null,
   });
 
-
-// Wrapper to track which application is being updated
+  // Wrapper to track which application is being updated
   const handleStatusUpdate = async (
     status: JobApplicationStatusType,
     row: JobApplicationDetailsDto,
@@ -606,7 +605,18 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           ...(isAllApplicants ? [commonColumns.jobProfile] : []),
-          { key: "applicantDetails_CTC", label: "CTC", sortable: true },
+          {
+            key: "applicantDetails_CTC",
+            label: "CTC",
+            sortable: true,
+            render: (row: JobApplicationDetailsDto) => (
+              <span>
+                {typeof row.applicantDetails?.CTC === "number"
+                  ? `${row.applicantDetails.CTC} LPA`
+                  : "-"}
+              </span>
+            ),
+          },
           {
             key: "applicantDetails_candidateExperience_designation",
             label: "Designation",
@@ -712,6 +722,11 @@ export default function ApplicationTable({
                   {row.applicantDetails.about ?? "--------"}
                 </p>
               </div>
+            </div>
+
+            <div className="">
+              <span className="font-semibold text-gray-500">Email ID</span>
+              <p>{row.applicantDetails?.email}</p>
             </div>
 
             <div className="">
@@ -905,7 +920,11 @@ export default function ApplicationTable({
         onClose={() => setIsRejectModalOpen(null)}
         className="w-[90vw] sm:w-[455px] h-auto">
         {isRejectModalOpen && (
-          <RejectionForm payload={isRejectModalOpen.payload} jobId={isRejectModalOpen.jobId} onClose={()=>  setIsRejectModalOpen(null)} />
+          <RejectionForm
+            payload={isRejectModalOpen.payload}
+            jobId={isRejectModalOpen.jobId}
+            onClose={() => setIsRejectModalOpen(null)}
+          />
         )}
       </Modal>
 
@@ -930,7 +949,9 @@ export default function ApplicationTable({
           setIsHireNowModalOpen({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
         }
         className="w-[90vw] sm:w-[532px] h-[95vh] ">
-        <HireNowForm jobData={isHireNowModalOpen.jobData} />
+        <HireNowForm jobData={isHireNowModalOpen.jobData}  onClose={() =>
+          setIsHireNowModalOpen({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
+        }/>
       </Modal>
 
       <Modal
@@ -939,7 +960,9 @@ export default function ApplicationTable({
           setIsViewOfferIssue({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
         }
         className="w-[90vw] sm:w-[532px] h-[95vh] ">
-        <ResendOfferLetter jobData={isViewOfferIssue.jobData} />
+        <ResendOfferLetter jobData={isViewOfferIssue.jobData}  onClose={() =>
+          setIsViewOfferIssue({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
+        }/>
       </Modal>
 
       <Modal

@@ -70,43 +70,9 @@ const AdminReferrals = () => {
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
-        <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails key={`referrals`} pageType="referrals" />
           </div>
-
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            {/* Search Bar */}
-            <SearchBar
-              placeholder="Search by company name"
-              searchBarText={searchBarText}
-              setSearchBarText={setSearchBarText}
-              handleClick={() => refetch()}
-            />
-            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              {/*  <BulkStatusDropDown
-                options={[
-                  { label: "Accept", onClick: () => onBulkUpdate("CV_DOWNLOADED") },
-                  {
-                    label: "Send to evaluator",
-                    onClick: () => {
-                      handleBulkEvaluatorUpdate();
-                    },
-                  },
-                  { label: "Initiate Interview", onClick: () => onBulkUpdate("PROCESSING_INTERVIEW") },
-                  { label: "Hired", onClick: () => onBulkUpdate("HIRED") },
-                  { label: "Joined", onClick: () => onBulkUpdate("JOINED") },
-                  { label: "On Hold", onClick: () => onBulkUpdate("ON_HOLD") },
-                  { label: "Reject", onClick: () => onBulkUpdate("REJECTED") },
-                ]}
-                apiStatus={apiStatus} // Change this to test
-                disabled={apiStatus === undefined || apiStatus === "ON_HOLD" || apiStatus === "REJECTED"}
-                tooltipMessage="Select a bulk status update"
-                selectTitle="Bulk"
-              /> */}
-            </div>
-          </div>
-        </div>
         {queryIsJobsLoading ? (
           <SkeletonLoader
             showTableHeader={true}

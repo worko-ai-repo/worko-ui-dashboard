@@ -4,7 +4,7 @@ import { useState, useEffect, useReducer } from "react";
 import Table from "@Components/Dashboard/Candidate/SharedComponents/Table";
 import WithdrawDialog from "./WithdrawDialog";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
-import { ReferAndEarnDto } from "@Interfaces/AdminServices.dto";
+import { ReferAndEarnDto, ReferAndEarnUpdateApiDto } from "@Interfaces/AdminServices.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { ReferAndEarnStatusType } from "src/types/JobsAndApplication.type";
 import {
@@ -24,6 +24,13 @@ import { getToastOptions } from "@Utils/Toast.utils";
 interface ReferAndEarnTableProps {
   data: ReferAndEarnDto[];
   fetchRefernEarn: () => void;
+  handleReferAndEarnUpdate: (
+    id: string,
+    updateData: ReferAndEarnUpdateApiDto,
+    successMessage?: string,
+    hasRefetch?: boolean
+  ) => Promise<void>;
+  isUpdating: boolean;
   pagination: CommonCursorPaginationProp;
 }
 type ModalType = "processPayment" | "reject" | "updateStatus" | null;
@@ -33,8 +40,6 @@ type modalState = {
   data?: ReferAndEarnDto | null;
   fetchRefernEarn?: () => void;
 };
-
-// 3. Actions for reducer
 type despatchAction =
   | {
       type: "OPEN";
@@ -54,33 +59,31 @@ const modalReducer = (state: modalState, action: despatchAction): modalState => 
   }
 };
 
-
-  /**
-   * Handle handleAcceptWithdrawal
-   */
-  const handleAcceptWithdrawal = async (id:string,callbackFn:()=>void) => {
-    try {
-
-      const response = await AdminServiceObj.patchReferAndEarnStatus(id, {
-        status: "WITHDRAWAL_ACCEPTED",
-      });
-      if (!response) {
-        throw new Error("No response from server");
-      }
-      toast.success("Withdrawal request accepted successfully!", getToastOptions());
-    } catch (error) {
-      console.error("Error making request:", error);
-      toast.error("Failed to update referral. Please try again.", getToastOptions());
-    } finally {
-      callbackFn();
-    }
-  };
-
-
+/**
+ * Handle handleAcceptWithdrawal
+ */
+const handleAcceptWithdrawal = async (
+  id: string,
+  handleUpdate: (
+    id: string,
+    updateData: ReferAndEarnUpdateApiDto,
+    successMessage?: string,
+    hasRefetch?: boolean
+  ) => Promise<void>
+) => {
+  await handleUpdate(
+    id,
+    { status: "WITHDRAWAL_ACCEPTED" },
+    "Withdrawal request accepted successfully!",
+    false
+  );
+};
 
 const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
   data,
   fetchRefernEarn,
+  handleReferAndEarnUpdate,
+  isUpdating,
   pagination,
 }) => {
   const { user } = useDashboardContext();
@@ -89,11 +92,11 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     referrerDetails_email: ["email", "referrerDetails.email"],
     jobDetails_title: ["title", "jobDetails.title"],
   };
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks,{
-    tableId:"Refer-n-earn",
-    defaultSort:null,
-    persistInLocalStorage:false,
-    persistInUrl:true
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+    tableId: "Refer-n-earn",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
   });
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [modalState, dispatch] = useReducer(modalReducer, {
@@ -113,22 +116,19 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       : "text-yellow-600";
 
   // Define columns for the table
-  const columns:Column<ReferAndEarnDto>[] = [
-
+  const columns: Column<ReferAndEarnDto>[] = [
     {
       key: "referrerDetails_name",
       label: "Referred by",
       sortable: true,
-      // className: "capitalize font-semibold text-sm text-nowrap",
     },
     {
-      key: "recipientDetails_email",
+      key: "referrerDetails_email",
       label: "Email",
       sortable: true,
     },
     {
       key: "referrerDetails_phoneNumber",
-      // className: "text-sm",
       label: "Phone",
       render: (row: ReferAndEarnDto) => (
         <span>
@@ -139,7 +139,6 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "createdAt",
-      // className: "text-sm",
       label: "Date referred",
       sortable: true,
       render: (row: ReferAndEarnDto) =>
@@ -153,7 +152,6 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "jobAppliedDate",
-      // className: "text-sm",
       label: "Date applied",
       sortable: true,
       render: (row: ReferAndEarnDto) =>
@@ -171,12 +169,9 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       key: "jobDetails_title",
       label: "Job title",
       sortable: true,
-      // className: "capitalize text-sm",
     },
-
     {
       key: "jobApplicationStatus",
-      // className: "text-xs",
       label: "Referral Status",
       sortable: true,
       render: (row: ReferAndEarnDto) => {
@@ -194,7 +189,6 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "referralBonus",
-      // className: "text-sm",
       label: "Referral bonus",
       sortable: true,
       render: (row: ReferAndEarnDto) => (
@@ -205,7 +199,6 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
     },
     {
       key: "status",
-      // className: "text-xs",
       label: "Withdrawal Status",
       sortable: true,
       render: (row: ReferAndEarnDto) => {
@@ -224,51 +217,53 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       label: "Actions",
       contentWidth: "max-w-none",
       render: (row: ReferAndEarnDto) => {
-        // 3 Buttons: Reject Referrals, Process Payment, Update Status
         const rejectBtnNotVisible = !["WITHDRAWAL_REQUESTED"].includes(row.status);
         return (
           <div className="flex gap-2 justify-center">
-           {!rejectBtnNotVisible && (
-            <>
+            {!rejectBtnNotVisible && (
+              <>
+                <button
+                  disabled={rejectBtnNotVisible || isUpdating}
+                  className="btn-reject flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-lg btn_disabled"
+                  onClick={async () =>
+                    await handleAcceptWithdrawal(row.id, handleReferAndEarnUpdate)
+                  }>
+                  <Check className="mr-2 h-4 w-4" />
+                  Accept
+                </button>
+                <button
+                  disabled={rejectBtnNotVisible || isUpdating}
+                  className="btn-reject flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg btn_disabled"
+                  onClick={() =>
+                    dispatch({
+                      type: "OPEN",
+                      modal: "reject",
+                      payload: { data: row, fetchRefernEarn },
+                    })
+                  }>
+                  <X className="mr-2 h-4 w-4" />
+                  Reject
+                </button>
+              </>
+            )}
+            {row.status === "WITHDRAWAL_ACCEPTED" && (
               <button
-                 disabled={rejectBtnNotVisible}
-                className="btn-reject flex items-center justify-center bg-green-500 text-white px-4 py-2 rounded-lg btn_disabled"
-                onClick={async () =>
-                  await handleAcceptWithdrawal(row.id,fetchRefernEarn)
-                }>
-                <Check className="mr-2 h-4 w-4" />
-                Accept
-              </button>
-              <button
-                 disabled={rejectBtnNotVisible}
-                className="btn-reject flex items-center justify-center bg-red-500 text-white px-4 py-2 rounded-lg btn_disabled"
+                disabled={row.status !== "WITHDRAWAL_ACCEPTED" || isUpdating}
+                className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg btn_disabled"
                 onClick={() =>
                   dispatch({
                     type: "OPEN",
-                    modal: "reject",
+                    modal: "processPayment",
                     payload: { data: row, fetchRefernEarn },
                   })
                 }>
-                <X className="mr-2 h-4 w-4" />
-                Reject
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Process Payment
               </button>
-            </>
-           )}
-            {row.status === "WITHDRAWAL_ACCEPTED" && <button
-               disabled={row.status !== "WITHDRAWAL_ACCEPTED"}
-              className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg btn_disabled"
-              onClick={() =>
-                dispatch({
-                  type: "OPEN",
-                  modal: "processPayment",
-                  payload: { data: row, fetchRefernEarn },
-                })
-              }>
-              <RefreshCcw className="mr-2 h-4 w-4" />
-              Process Payment
-            </button>}
+            )}
             <button
-              className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg"
+              disabled={isUpdating}
+              className="btn-sky flex items-center justify-center text-white px-4 py-2 rounded-lg btn_disabled"
               onClick={() =>
                 dispatch({
                   type: "OPEN",
@@ -288,36 +283,35 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
   const renderExpandedDetails = (row: ReferAndEarnDto) => {
     return (
       <div className="p-4  flex justify-start gap-12">
-
         <span>
           <label>Referral Id</label>
           <p className="capitalize">{row.id}</p>
         </span>
         <span>
           <label>Referral name</label>
-          <p className="capitalize">{row?.referrerDetails?.name}</p>
+          <p className="capitalize">{row?.recipientDetails?.name}</p>
         </span>
-
         <span>
           <label>Referral email id</label>
-          <p>{row.recipientDetails.email}</p>
+          <p>{row?.recipientDetails.email}</p>
         </span>
-
         <span>
           <label>Referral number</label>
           <p>
-            +{row.recipientDetails.phoneCountryCode} {row.recipientDetails.phoneNumber}
+            +{row?.recipientDetails.phoneCountryCode} {row?.recipientDetails.phoneNumber}
           </p>
         </span>
       </div>
     );
   };
+
   /**
    * Toggle row expansion
    */
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
   };
+
   return (
     <>
       <DynamicTable<ReferAndEarnDto>

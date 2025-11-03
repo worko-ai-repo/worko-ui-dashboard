@@ -177,6 +177,9 @@ const AdminJobs = () => {
     onSuccess: (data, variables) => {
       const statusText = variables.isDelete ? "closed" : variables.payload.status?.toLowerCase();
       toast.success(`Job ${statusText} successfully`, getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "corporateJobs"] });
     },
   });
 
@@ -227,14 +230,25 @@ const AdminJobs = () => {
     onSuccess: (data, variables) => {
       const status = variables.bulkJobUpdate[0]?.status.toLowerCase();
       toast.success(`Bulk jobs ${status} successfully.`, getToastOptions({}));
+      
+      // Invalidate counts to refresh stats
+      queryClient.invalidateQueries({ queryKey: ["counts", "corporateJobs"] });
     },
   });
 
   useEffect(() => {
     reset();
     resetSelection();
+    // Invalidate queries to force a fresh fetch when tab changes
+    queryClient.invalidateQueries({ queryKey });
+  }, [activeTab]);
+
+  // Separate effect for search and page size changes
+  useEffect(() => {
+    reset();
+    resetSelection();
     refetch();
-  }, [activeTab, searchBarText, pageSize]);
+  }, [searchBarText, pageSize]);
 
   async function callBulkUpdate(params: "ARCHIVED" | "CLOSED" | "PUBLISHED") {
     const updatedData = { bulkJobUpdate: [...selectedRows] };
@@ -385,7 +399,7 @@ const AdminJobs = () => {
         ))}
       </div>
 
-      {isLoading ? (
+      {isLoading && (!data || data.length === 0) ? (
         <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
       ) : (
         <JobTableWrapper
