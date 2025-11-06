@@ -55,7 +55,7 @@ const AppRoutes = createBrowserRouter(
           ),
         },
         {
-          path: "interview/*",
+          path: "interview/:emailId",
           element: (
             <Suspense fallback={<MainLoader />}>
               <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<Interview />} />
