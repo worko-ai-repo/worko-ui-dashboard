@@ -78,4 +78,6 @@ export interface InterviewDto {
   createdBy?: string;
   retryCount?: number;
   initiatedAt?: string;
+  createdAt: string;
+  updatedAt: string;
 }

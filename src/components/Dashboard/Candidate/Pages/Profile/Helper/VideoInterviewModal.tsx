@@ -18,11 +18,11 @@ import {
   InterviewStatusType,
   InterviewRequestDto,
 } from "@TypesAndConstants/Interview.dto";
-import httpServiceObj from "@Services/ApiHandler.service";
 import { useAppContext } from "@Context/App.context";
 import { useInterview } from "@Context/Interview.context";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import SmallGauge from "@Components/Shared/SmallGauge";
+import interviewServiceObj from "@Services/Interview.service";
 
 interface VideoInterviewModalProps {
   onClose: () => void;
@@ -40,13 +40,10 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
   const fetchInterviews = async (): Promise<InterviewDto[]> => {
     if (!userDetails?.email) throw new Error("User email not found");
 
-    const { response, error } = await httpServiceObj.get<{ data: InterviewDto[] }>(
-      `/user/interview/list/${userDetails.email}`,
-      true
-    );
+    const { response, error } = await interviewServiceObj.fetchInterviewList(userDetails.email);
 
     if (error) throw error;
-    return response?.data || [];
+    return response || [];
   };
 
   const {
@@ -151,10 +148,8 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
     setIsInitiating(true);
     try {
-      const { response, error } = await httpServiceObj.post<{ data: InterviewDto }>(
-        "/user/interview/initiate",
-        { candidateEmail: userDetails.email },
-        true
+      const { response: initiatedInterview, error } = await interviewServiceObj.initiateInterview(
+        userDetails.email
       );
 
       if (error) {
@@ -163,9 +158,9 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
         return;
       }
 
-      if (response?.data) {
+      if (initiatedInterview) {
         // Navigate with interview data in state and ID in URL
-        navigate(`/interview/${interviewId}`, { state: { interviewData: response.data } });
+        navigate(`/interview/${interviewId}`, { state: { interviewData: initiatedInterview } });
         onClose();
       }
     } catch (error) {
@@ -203,7 +198,8 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     const hasRequests = interview.requestedBy && interview.requestedBy.length > 0;
     const questionsAttempted = interview.interviewHistory?.length || 0;
     const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
-    const canContinue = (interview.status === "PENDING" || interview.status === "IN_PROGRESS") && hasPartialProgress;
+    const canContinue =
+      (interview.status === "PENDING" || interview.status === "IN_PROGRESS") && hasPartialProgress;
 
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
@@ -452,11 +448,11 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
                 disabled={isInitiating}
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Play className="w-5 h-5 mr-2" />
-                {isInitiating 
-                  ? "Starting Interview..." 
-                  : pendingInterviews.length > 0 
-                    ? "Continue Interview" 
-                    : "Start New Interview"}
+                {isInitiating
+                  ? "Starting Interview..."
+                  : pendingInterviews.length > 0
+                  ? "Continue Interview"
+                  : "Start New Interview"}
               </button>
             </div>
           </div>

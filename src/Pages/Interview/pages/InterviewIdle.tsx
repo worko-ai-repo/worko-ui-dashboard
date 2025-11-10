@@ -5,7 +5,7 @@ import { useInterview } from "../../../context/Interview.context";
 import { useEffect, useState } from "react";
 import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
-import httpServiceObj from "@Services/ApiHandler.service";
+import interviewServiceObj from "@Services/Interview.service";
 import { useAppContext } from "@Context/App.context";
 import { logo_text } from "@AssetsFolder/assets";
 import InterviewIdelFragment from "@Components/Interview/InterviewIdelFragment";
@@ -75,7 +75,7 @@ const InterviewIdle = () => {
   // Handle interview initiation or loading from state
   useEffect(() => {
     const initializeInterview = async () => {
-      // If we have interview data in state (continuing), load it
+      // If we have interview data in state (from modal), load it
       if (interviewDataFromState) {
         console.log("Loading interview from state with ID:", interviewIdParam);
         loadExistingInterview(
@@ -86,47 +86,10 @@ const InterviewIdle = () => {
         );
         return;
       }
-
-      // If we're not continuing and don't have an interview in context, initiate a new one
-      if (!currentInterview && !isInitiating && userDetails?.email && interviewIdParam) {
-        setIsInitiating(true);
-        setInitError(null);
-
-        try {
-          console.log("Initiating new interview with ID:", interviewIdParam);
-          const { response, error } = await httpServiceObj.post<{ data: InterviewDto }>(
-            "/user/interview/initiate",
-            { candidateEmail: userDetails.email },
-            true
-          );
-
-          if (error) {
-            console.error("Failed to initiate interview:", error);
-            setInitError("Failed to initiate interview. Please try again.");
-            setIsInitiating(false);
-            return;
-          }
-
-          if (response?.data) {
-            loadExistingInterview(
-              response.data,
-              testStream || undefined,
-              interviewIdParam,
-              interviewStage
-            );
-          }
-        } catch (error) {
-          console.error("Error initiating interview:", error);
-          setInitError("An error occurred while initiating the interview.");
-        } finally {
-          setIsInitiating(false);
-        }
-      }
     };
 
     initializeInterview();
   }, [
-    userDetails?.email,
     interviewDataFromState,
     currentInterview,
     loadExistingInterview,
@@ -144,6 +107,49 @@ const InterviewIdle = () => {
       }
     };
   }, [testStream]);
+
+  useEffect(() => {
+    const initializeInterview = async () => {
+
+      // If we don't have interview data and need to fetch it
+      if (!currentInterview && !isInitiating && interviewIdParam) {
+        setIsInitiating(true);
+        setInitError(null);
+
+        try {
+          console.log("Fetching interview details for ID:", interviewIdParam);
+
+          // Try to fetch existing interview details first
+          const { response: fetchedInterview, error: fetchError } =
+            await interviewServiceObj.fetchInterviewDetails(interviewIdParam);
+
+          if (fetchError) {
+            console.error("Failed to fetch interview:", fetchError);
+            setInitError(fetchError);
+            setIsInitiating(false);
+            return;
+          }
+
+          if (fetchedInterview) {
+            console.log("Successfully fetched interview, loading it...");
+            loadExistingInterview(
+              fetchedInterview,
+              testStream || undefined,
+              interviewIdParam,
+              interviewStage
+            );
+          }
+        } catch (error) {
+          console.error("Error during interview initialization:", error);
+          setInitError("An error occurred while loading the interview.");
+        } finally {
+          setIsInitiating(false);
+        }
+      }
+    };
+
+    initializeInterview();
+  }, []);
 
   const requestAllPermissions = async () => {
     setIsRequestingPermissions(true);
