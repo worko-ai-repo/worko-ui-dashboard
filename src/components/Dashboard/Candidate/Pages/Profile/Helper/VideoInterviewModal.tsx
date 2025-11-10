@@ -20,6 +20,7 @@ import {
 } from "@TypesAndConstants/Interview.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useAppContext } from "@Context/App.context";
+import { useInterview } from "@Context/Interview.context";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import SmallGauge from "@Components/Shared/SmallGauge";
 
@@ -32,6 +33,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [expandedRequests, setExpandedRequests] = useState<Record<string, boolean>>({});
+  const [isInitiating, setIsInitiating] = useState(false);
   const navigate = useNavigate();
   const { userDetails } = useAppContext();
 
@@ -141,8 +143,41 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     });
   };
 
-  const handleInitiateInterview = () => {
-    navigate("/interview");
+  const handleInitiateInterview = async (interviewId: string) => {
+    if (!userDetails?.email) {
+      console.error("User email not found");
+      return;
+    }
+
+    setIsInitiating(true);
+    try {
+      const { response, error } = await httpServiceObj.post<{ data: InterviewDto }>(
+        "/user/interview/initiate",
+        { candidateEmail: userDetails.email },
+        true
+      );
+
+      if (error) {
+        console.error("Failed to initiate interview:", error);
+        setIsInitiating(false);
+        return;
+      }
+
+      if (response?.data) {
+        // Navigate with interview data in state and ID in URL
+        navigate(`/interview/${interviewId}`, { state: { interviewData: response.data } });
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error initiating interview:", error);
+    } finally {
+      setIsInitiating(false);
+    }
+  };
+
+  const handleContinueInterview = (interview: InterviewDto) => {
+    // Navigate with interview data in state and ID in URL
+    navigate(`/interview/${interview.id}?stage=continue`, { state: { interviewData: interview } });
     onClose();
   };
 
@@ -167,6 +202,8 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     const isExpanded = expandedRequests[interview.id] || false;
     const hasRequests = interview.requestedBy && interview.requestedBy.length > 0;
     const questionsAttempted = interview.interviewHistory?.length || 0;
+    const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
+    const canContinue = (interview.status === "PENDING" || interview.status === "IN_PROGRESS") && hasPartialProgress;
 
     return (
       <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow duration-200">
@@ -306,12 +343,17 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
           {/* Right side - Action Button */}
           <div className="flex-shrink-0">
-            {isPending && interview.status === "PENDING" ? (
+            {isPending && (interview.status === "PENDING" || interview.status === "IN_PROGRESS") ? (
               <button
-                onClick={handleInitiateInterview}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                onClick={() =>
+                  canContinue
+                    ? handleContinueInterview(interview)
+                    : handleInitiateInterview(interview.id)
+                }
+                disabled={isInitiating}
+                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Play className="w-4 h-4 mr-1" />
-                Start
+                {isInitiating ? "Starting..." : canContinue ? "Continue" : "Start"}
               </button>
             ) : !isPending ? (
               <button
@@ -362,10 +404,11 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
             <NoDataPresent />
             <div className="flex justify-center pt-4">
               <button
-                onClick={handleInitiateInterview}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                onClick={() => handleInitiateInterview("")}
+                disabled={isInitiating}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Play className="w-5 h-5 mr-2" />
-                Start Interview
+                {isInitiating ? "Starting Interview..." : "Start Interview"}
               </button>
             </div>
           </div>
@@ -398,10 +441,22 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
             {/* Initiate Interview Button */}
             <div className="flex justify-center pt-4 border-t border-gray-200">
               <button
-                onClick={handleInitiateInterview}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200">
+                onClick={() => {
+                  // If there's a pending/in-progress interview, continue it
+                  if (pendingInterviews.length > 0) {
+                    handleContinueInterview(pendingInterviews[0]);
+                  } else {
+                    handleInitiateInterview("");
+                  }
+                }}
+                disabled={isInitiating}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                 <Play className="w-5 h-5 mr-2" />
-                Start New Interview
+                {isInitiating 
+                  ? "Starting Interview..." 
+                  : pendingInterviews.length > 0 
+                    ? "Continue Interview" 
+                    : "Start New Interview"}
               </button>
             </div>
           </div>

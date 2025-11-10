@@ -9,9 +9,9 @@ interface SubmitAnswerButtonProps {
 export const SubmitAnswerButton = ({ onClick, disabled }: SubmitAnswerButtonProps) => {
   return (
     <div className="flex justify-center mb-6">
-      <Button onClick={onClick} disabled={disabled} size="lg" className="min-w-[200px]">
+      <Button onClick={onClick} disabled={disabled} size="lg" className="btn_primary min-w-[200px]">
         <Send className="w-4 h-4 mr-2" />
-        Submit Answer
+        End Response
       </Button>
     </div>
   );

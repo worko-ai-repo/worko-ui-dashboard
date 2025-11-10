@@ -8,7 +8,6 @@ import AdminDashboard from "@Pages/WorkoAdmin/AdminDashboard";
 import EmployeeDashboard from "@Pages/Employee/EmployeeDashboard";
 import Interview from "@Pages/Interview/Interview";
 
-
 const EvaluatorDashboard = lazy(() => import("@Components/EvaluatorDashboard/EvaluatorDashboard"));
 const CorporateDashboard = lazy(() => import("@Pages/Corporate/CorporateDashboard"));
 const PageNotFound = lazy(() => import("@Pages/errors/404/PageNotFound"));
@@ -34,7 +33,10 @@ const AppRoutes = createBrowserRouter(
           path: "corporate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.CORPORATE]} element={<CorporateDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.CORPORATE]}
+                element={<CorporateDashboard />}
+              />
             </Suspense>
           ),
         },
@@ -50,15 +52,21 @@ const AppRoutes = createBrowserRouter(
           path: "candidate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<CandidateDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<CandidateDashboard />}
+              />
             </Suspense>
           ),
         },
         {
-          path: "interview/:emailId",
+          path: "interview/:id/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<Interview />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<Interview />}
+              />
             </Suspense>
           ),
         },
@@ -66,7 +74,10 @@ const AppRoutes = createBrowserRouter(
           path: "employee/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<EmployeeDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<EmployeeDashboard />}
+              />
             </Suspense>
           ),
         },

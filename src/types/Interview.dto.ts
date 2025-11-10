@@ -9,6 +9,7 @@ export interface InterviewHistoryEntryDto {
   questionText: string;
   userAnswer: string;
   feedback: string;
+  detailedFeedback?: string;
   isCorrect: boolean;
   timeTaken: number;
   chunkId: string;
@@ -45,20 +46,36 @@ export interface InterviewDto {
   status: InterviewStatusType;
   totalQuestions: number;
   currentQuestion: string;
-  requestedBy?: InterviewRequestDto[];
+  requestedBy?: Array<{
+    userId: string;
+    corporateUserId: string;
+    companyId: string;
+    positionId: string;
+    jobId: string;
+    requestedAt: string;
+  }>;
   score?: number;
   scoreBreakdown?: InterviewScoreBreakdownDto;
   duration?: number;
   avgResponseTime?: number;
-  interviewHistory?: InterviewHistoryEntryDto[];
+  interviewHistory?: Array<{
+    questionId: string;
+    questionText: string;
+    userAnswer: string;
+    feedback: string;
+    detailedFeedback?: string;
+    isCorrect: boolean;
+    timeTaken: number;
+    chunkId: string;
+    chunkUploadStatus: InterviewChunkUploadStatusType;
+    chunkFileMimeType: string;
+  }>;
   storagePath?: string;
   uploadStatus?: string;
   lastChunkUploaded?: string;
-  userFeedback?: InterviewUserFeedbackDto;
+  userFeedback?: { rating: number; comments?: string };
   updatedBy?: string;
   createdBy?: string;
   retryCount?: number;
   initiatedAt?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }

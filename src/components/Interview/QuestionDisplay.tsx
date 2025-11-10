@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
-import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
-import { MessageSquare, Volume2 } from "lucide-react";
+import { MessageSquare, Mic, Volume2 } from "lucide-react";
+import { useInterview } from "@Context/Interview.context";
 
 interface QuestionDisplayProps {
   question: string;
@@ -18,6 +18,7 @@ export const QuestionDisplay = ({
   const lastSpokenQuestionRef = useRef<string>("");
   const onStartRef = useRef(onQuestionStartSpeaking);
   const onEndRef = useRef(onQuestionEndSpeaking);
+  const { isTranscribing, transcript, aiName } = useInterview();
 
   // Update refs when callbacks change
   useEffect(() => {
@@ -64,23 +65,53 @@ export const QuestionDisplay = ({
   }, [question]); // Only depend on question, not the callbacks
 
   return (
-    <Card className="mb-6 bg-white border-blue-200">
-      <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-100 rounded-full">
-              <MessageSquare className="w-6 h-6 text-blue-600" />
+    <div className="flex flex-col gap-1 h-[220px] max-h-[220px] overflow-y-auto pb-4">
+      {/* AI Message Bubble */}
+      <div className="flex justify-start ">
+        <div className="max-w-2xl">
+          <div className="flex items-end gap-2 mb-1">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                <MessageSquare className="w-3 h-3 text-white" />
+              </div>
+              <span className="text-xs font-semibold text-gray-700">{aiName}</span>
             </div>
-            <CardTitle className="text-xl text-black">
-              {isCrossQuestion ? "Follow-up Question" : "Interview Question"}
-            </CardTitle>
           </div>
-          <Volume2 className="w-5 h-5 text-gray-600" />
+          <div className="bg-blue-100 text-gray-900 rounded-2xl rounded-tl-none px-4 py-1 border border-blue-200 shadow-sm">
+            <p className="text-sm text-gray-500 font-semibold leading-relaxed">{question}</p>
+            {!isTranscribing && <div className="flex items-center gap-2 mt-1 pt-1 border-t border-blue-200">
+              <Volume2 className="w-3 h-3 text-blue-600" />
+              <span className="text-xs text-blue-600 font-medium">AI is speaking</span>
+            </div>}
+          </div>
+          <span className="text-xs text-left text-gray-500 mt-1 block">
+            {isCrossQuestion ? "Follow-up Question" : "Interview Question"}
+          </span>
         </div>
-      </CardHeader>
-      <CardContent>
-        <p className="text-lg leading-relaxed text-black">{question}</p>
-      </CardContent>
-    </Card>
+      </div>
+
+      {/* User Transcript Bubble */}
+      {isTranscribing && transcript && (
+        <div className="flex justify-end">
+          <div className="max-w-2xl text-right">
+            <div className="flex items-end gap-2 mb-1 justify-end">
+              <span className="text-xs font-semibold text-gray-700">You</span>
+            </div>
+            <div className="bg-green-100 text-gray-900 rounded-2xl rounded-tr-none px-4 py-3 border border-green-200 shadow-sm">
+              <div className="flex items-end gap-2">
+                <div className="p-1.5 bg-green-200 rounded-full mt-0.5 flex-shrink-0">
+                  <Mic className="w-3 h-3 text-green-600" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-xs font-semibold text-gray-600 mb-1">Live Transcript</p>
+                  <p className="text-xs text-gray-700 font-medium leading-relaxed ">{transcript}</p>
+                </div>
+              </div>
+            </div>
+            <span className="text-xs text-gray-500 mt-1 block text-right">Recording...</span>
+          </div>
+        </div>
+      )}
+    </div>
   );
 };
