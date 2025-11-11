@@ -29,6 +29,7 @@ interface InterviewContextType {
   interviewId: string | null;
   interviewStage: "new" | "continue" | null;
   aiName: string;
+  stream: MediaStream | null;
 
   // Recording hooks
   isRecording: boolean;
@@ -175,7 +176,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       if (stream) {
         // Clone provided stream so that unmount cleanup in InterviewIdle
         // (which stops original tracks) does not kill the recorder stream.
-        const clonedTracks = stream.getTracks().map(t => t.clone());
+        const clonedTracks = stream.getTracks().map((t) => t.clone());
         const clonedStream = new MediaStream(clonedTracks);
         setGrantedStream(clonedStream);
       }
@@ -390,6 +391,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     interviewId,
     interviewStage,
     aiName: AI_NAME,
+    stream: grantedStream,
     isRecording,
     error,
     transcript,

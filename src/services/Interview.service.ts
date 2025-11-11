@@ -12,18 +12,25 @@ class InterviewService {
    */
   async initiateInterview(candidateEmail: string): Promise<ApiResponse<InterviewDto>> {
     try {
-      const { response, error } = await httpServiceObj.post<{ data: InterviewDto }>(
+      const { response, error, status } = await httpServiceObj.post<InterviewDto>(
         "/user/interview/initiate",
         { candidateEmail },
         true
       );
+
+      if (status === 409) {
+        return {
+          response: null,
+          error: "You cannot start more than 1 interview within 3 months. Please try again later.",
+        };
+      }
 
       if (error) {
         console.error("Failed to initiate interview:", error);
         return { response: null, error: "Failed to initiate interview. Please try again." };
       }
 
-      return { response: response?.data || null, error: null };
+      return { response: response || null, error: null };
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : "An error occurred while initiating the interview.";
@@ -61,7 +68,7 @@ class InterviewService {
    */
   async fetchInterviewDetails(interviewId: string): Promise<ApiResponse<InterviewDto>> {
     try {
-      const { response, error } = await httpServiceObj.get<[InterviewDto] >(
+      const { response, error } = await httpServiceObj.get<[InterviewDto]>(
         `/user/interview/details/${interviewId}`,
         true
       );

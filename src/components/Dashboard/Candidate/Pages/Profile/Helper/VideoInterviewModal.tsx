@@ -1,6 +1,7 @@
 import { FC, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import {
   Calendar,
   Clock,
@@ -23,6 +24,7 @@ import { useInterview } from "@Context/Interview.context";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import SmallGauge from "@Components/Shared/SmallGauge";
 import interviewServiceObj from "@Services/Interview.service";
+import { getToastOptions } from "@Utils/Toast.utils";
 
 interface VideoInterviewModalProps {
   onClose: () => void;
@@ -143,10 +145,12 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
   const handleInitiateInterview = async (interviewId: string) => {
     if (!userDetails?.email) {
       console.error("User email not found");
+      toast.error("User email not found. Please log in again.");
       return;
     }
 
     setIsInitiating(true);
+    debugger;
     try {
       const { response: initiatedInterview, error } = await interviewServiceObj.initiateInterview(
         userDetails.email
@@ -154,18 +158,22 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
       if (error) {
         console.error("Failed to initiate interview:", error);
+        toast.error(error);
         setIsInitiating(false);
         return;
       }
 
       if (initiatedInterview) {
-        // Navigate with interview data in state and ID in URL
-        navigate(`/interview/${interviewId}`, { state: { interviewData: initiatedInterview } });
+        console.log("Interview initiated successfully:", initiatedInterview);
+        // Navigate to idle page with interview data - the idle page will load it into context
+        navigate(`/interview/${initiatedInterview.id}`, {
+          state: { interviewData: initiatedInterview },
+        });
         onClose();
       }
     } catch (error) {
       console.error("Error initiating interview:", error);
-    } finally {
+      toast.error("An unexpected error occurred. Please try again.");
       setIsInitiating(false);
     }
   };
