@@ -16,6 +16,23 @@ export const useMediaRecorder = (): UseMediaRecorderReturn => {
   const segmentsRef = useRef<Blob[]>([]); // completed segment blobs
   const streamsRef = useRef<MediaStream[]>([]);
   const combinedStreamRef = useRef<MediaStream | null>(null);
+  const usedMimeTypeRef = useRef<string>("");
+
+  const pickSupportedMimeType = () => {
+    const candidates = [
+      "video/webm;codecs=vp9,opus",
+      "video/webm;codecs=vp9",
+      "video/webm;codecs=vp8,opus",
+      "video/webm;codecs=vp8",
+      "video/webm",
+    ];
+    for (const type of candidates) {
+      if ((window as any).MediaRecorder && MediaRecorder.isTypeSupported(type)) {
+        return type;
+      }
+    }
+    return "";
+  };
 
   const startRecording = useCallback(async (existingStream?: MediaStream) => {
     try {
@@ -46,6 +63,8 @@ export const useMediaRecorder = (): UseMediaRecorderReturn => {
             setIsRecording(false);
           };
         }
+        // Track provided stream for cleanup symmetry
+        streamsRef.current = [existingStream];
       } else {
         // Fallback: Request permissions (this shouldn't happen in normal flow)
         const webcamStream = await navigator.mediaDevices.getUserMedia({
@@ -117,9 +136,12 @@ export const useMediaRecorder = (): UseMediaRecorderReturn => {
 
       combinedStreamRef.current = combinedStream;
 
-      const mediaRecorder = new MediaRecorder(combinedStream, {
-        mimeType: "video/webm;codecs=vp9",
-      });
+      const mimeType = pickSupportedMimeType();
+      const mediaRecorder = new MediaRecorder(
+        combinedStream,
+        mimeType ? { mimeType } : undefined
+      );
+      usedMimeTypeRef.current = mimeType;
 
       mediaRecorder.ondataavailable = (event) => {
         if (event.data.size > 0) {
@@ -181,43 +203,76 @@ export const useMediaRecorder = (): UseMediaRecorderReturn => {
   }, []);
 
   const captureSegment = useCallback(async (): Promise<Blob | null> => {
-    return new Promise((resolve) => {
-      if (!mediaRecorderRef.current) {
-        console.warn("MediaRecorder not initialized, cannot capture segment");
-        resolve(null);
-        return;
-      }
+    // End the current segment to create a standalone WebM, then immediately start a new segment
+    const recorder = mediaRecorderRef.current;
+    const combined = combinedStreamRef.current;
+    if (!recorder || !combined) {
+      console.warn("MediaRecorder not initialized, cannot capture segment");
+      return null;
+    }
 
-      if (mediaRecorderRef.current.state === "inactive") {
-        console.warn("MediaRecorder is inactive, cannot capture segment");
-        resolve(null);
-        return;
+    if (recorder.state === "inactive") {
+      console.warn("MediaRecorder is inactive, cannot capture segment");
+      return null;
+    }
+
+    const localChunks: BlobPart[] = [];
+
+    const handleData = (event: BlobEvent) => {
+      if (event.data && event.data.size > 0) {
+        localChunks.push(event.data);
       }
+    };
+
+    const segmentBlob = await new Promise<Blob | null>((resolve) => {
+      const handleStop = () => {
+        // Some browsers fire dataavailable after stop; defer by one tick to ensure all chunks collected
+        setTimeout(() => {
+          const blob = new Blob(localChunks, {
+            type: usedMimeTypeRef.current || "video/webm",
+          });
+          recorder.removeEventListener("dataavailable", handleData);
+          recorder.removeEventListener("stop", handleStop);
+          // Also reset global currentChunks for the new segment
+          currentChunksRef.current = [];
+          if (blob.size > 0) segmentsRef.current.push(blob);
+          resolve(blob.size > 0 ? blob : null);
+        }, 0);
+      };
+
+      recorder.addEventListener("dataavailable", handleData);
+      recorder.addEventListener("stop", handleStop);
 
       try {
-        const chunks: BlobPart[] = [];
-
-        const dataavailableHandler = (event: BlobEvent) => {
-          chunks.push(event.data);
-        };
-
-        const stopHandler = () => {
-          const blob = new Blob(chunks, { type: "video/webm" });
-          mediaRecorderRef.current?.removeEventListener("dataavailable", dataavailableHandler);
-          mediaRecorderRef.current?.removeEventListener("stop", stopHandler);
-          resolve(blob);
-        };
-
-        mediaRecorderRef.current.addEventListener("dataavailable", dataavailableHandler);
-        mediaRecorderRef.current.addEventListener("stop", stopHandler);
-
-        mediaRecorderRef.current.stop();
+        recorder.stop();
       } catch (err) {
-        console.error("Error capturing segment:", err);
+        console.error("Error stopping recorder for segment:", err);
+        recorder.removeEventListener("dataavailable", handleData);
+        recorder.removeEventListener("stop", handleStop);
         resolve(null);
       }
     });
-  }, []);
+
+    // Immediately start a new recorder on the same combined stream to continue recording
+    if (isRecording && combinedStreamRef.current) {
+      const mimeType = usedMimeTypeRef.current || pickSupportedMimeType();
+      const newRecorder = new MediaRecorder(
+        combinedStreamRef.current,
+        mimeType ? { mimeType } : undefined
+      );
+      newRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) currentChunksRef.current.push(event.data);
+      };
+      mediaRecorderRef.current = newRecorder;
+      try {
+        newRecorder.start();
+      } catch (err) {
+        console.error("Failed to restart recorder after segment capture:", err);
+      }
+    }
+
+    return segmentBlob;
+  }, [isRecording]);
 
   return {
     isRecording,

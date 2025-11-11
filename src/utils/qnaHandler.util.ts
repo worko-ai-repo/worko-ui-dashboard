@@ -53,6 +53,7 @@ class QnaHandler {
    * Matches the current question from interviewDTO and sets up the question list
    */
   initialize(interview: InterviewDto): { currentQuestion: string; acknowledgement: string } {
+    debugger;
     if (!interview.interviewHistory || interview.interviewHistory.length === 0) {
       return {
         currentQuestion: "No questions available",
@@ -61,7 +62,6 @@ class QnaHandler {
     }
 
     this.questions = interview.interviewHistory;
-    debugger;
     // Find the current question index based on interviewHistory
     if (interview.interviewHistory && interview.interviewHistory.length > 0) {
       this.currentQuestionIndex = interview.interviewHistory.findIndex(

@@ -173,7 +173,11 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       setCurrentInterview(interview);
 
       if (stream) {
-        setGrantedStream(stream);
+        // Clone provided stream so that unmount cleanup in InterviewIdle
+        // (which stops original tracks) does not kill the recorder stream.
+        const clonedTracks = stream.getTracks().map(t => t.clone());
+        const clonedStream = new MediaStream(clonedTracks);
+        setGrantedStream(clonedStream);
       }
 
       if (id) {
@@ -232,39 +236,69 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
         let segment: Blob | null = null;
 
         try {
+          console.log("Attempting to capture video segment...");
           segment = await captureSegment?.();
+
+          if (segment) {
+            console.log("Video segment captured successfully:", {
+              size: segment.size,
+              sizeKB: (segment.size / 1024).toFixed(2) + " KB",
+              type: segment.type,
+            });
+          } else {
+            console.warn("captureSegment returned null");
+          }
         } catch (captureError) {
-          console.warn("Failed to capture video segment, continuing without video:", captureError);
+          console.error("Failed to capture video segment:", captureError);
           // Continue without video segment instead of failing entirely
         }
 
-        if (segment || !segment) {
-          // Proceed with answer submission regardless of video capture success
-          if (interviewId && currentInterview) {
-            const result = await qnaHandler.handleAnswerSubmission(
-              interviewId,
-              segment || new Blob(),
-              finalTranscript,
-              timestamp,
-              chunkSequence
-            );
+        // Store the video blob in answerVideos array (only if valid and non-empty)
+        if (segment && segment.size > 0) {
+          setAnswerVideos((prev) => {
+            const newVideos = [...prev, segment];
+            console.log("Updated answerVideos array:", {
+              totalVideos: newVideos.length,
+              sizes: newVideos.map((v) => v.size),
+            });
+            return newVideos;
+          });
+        }
 
-            if (result.isFinal) {
-              handleInterviewEnd("Interview completed successfully");
-            } else if (result.nextQuestion) {
-              setCurrentQuestion(result.nextQuestion);
-              setIsCrossQuestion(false);
-              setTranscription("");
-              resetTranscript();
-              setChunkSequence((prev) => prev + 1);
-              isSubmittingRef.current = false;
-            } else {
-              isSubmittingRef.current = false;
-            }
+        // Update transcript history
+        setTranscriptHistory((prev) => [
+          ...prev,
+          {
+            question: currentQuestion,
+            answer: finalTranscript,
+            timestamp,
+          },
+        ]);
+
+        if (interviewId && currentInterview) {
+          const result = await qnaHandler.handleAnswerSubmission(
+            interviewId,
+            segment || new Blob(),
+            finalTranscript,
+            timestamp,
+            chunkSequence
+          );
+
+          if (result.isFinal) {
+            handleInterviewEnd("Interview completed successfully");
+          } else if (result.nextQuestion) {
+            setCurrentQuestion(result.nextQuestion);
+            setIsCrossQuestion(false);
+            setTranscription("");
+            resetTranscript();
+            setChunkSequence((prev) => prev + 1);
+            isSubmittingRef.current = false;
           } else {
-            console.error("Missing interviewId or currentInterview");
             isSubmittingRef.current = false;
           }
+        } else {
+          console.error("Missing interviewId or currentInterview");
+          isSubmittingRef.current = false;
         }
       } catch (error) {
         console.error("Error handling answer submission:", error);
@@ -299,7 +333,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       setRecordedBlob(blob);
       setIsProcessing(false);
       setInterviewState("completed");
-      navigate("/interview/completed");
+      navigate(`/interview/${interviewId}/completed`);
       isSubmittingRef.current = false;
     }, 2000);
   };
