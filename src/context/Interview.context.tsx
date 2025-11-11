@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useRef, useCallback, ReactNode } from "react";
 
 import { useSpeechToText } from "@Hooks/useSpeechToText.hook";
-import { mockInterviewAPI, resetInterviewAPI } from "@Utils/mockInterviewAPI";
+import { qnaHandler } from "@Utils/qnaHandler.util";
 import { TranscriptEntry } from "@Components/Interview/TranscriptHistory";
 import { useNavigate } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
@@ -96,6 +96,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   const [grantedStream, setGrantedStream] = useState<MediaStream | null>(null);
   const [interviewId, setInterviewId] = useState<string | null>(null);
   const [interviewStage, setInterviewStage] = useState<"new" | "continue" | null>(null);
+  const [chunkSequence, setChunkSequence] = useState<number>(1);
 
   const interviewStartTime = useRef<number>(0);
   const isSubmittingRef = useRef<boolean>(false);
@@ -130,33 +131,28 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     try {
       console.log("Starting interview with ID:", interviewId, "Stage:", interviewStage);
 
-      resetInterviewAPI();
+      qnaHandler.reset();
       setInterviewState("intro");
       isSubmittingRef.current = false;
       setAnswerVideos([]);
+      setChunkSequence(1);
 
       // Start recording with already-granted stream
       await startRecording(grantedStream || undefined);
       interviewStartTime.current = Date.now();
 
-      const response = mockInterviewAPI();
-      if (response.nextQuestion) {
-        setCurrentQuestion(response.nextQuestion);
-        setIsCrossQuestion(false);
-        setAcknowledgement(response.acknowledgement || "");
+      // Get initial question from current interview if available
+      if (currentInterview) {
+        const { currentQuestion: question, acknowledgement: ack } =
+          qnaHandler.initialize(currentInterview);
+        setCurrentQuestion(question);
+        setAcknowledgement(ack);
       }
 
       // Navigate using stored interviewId with absolute paths
       const introPath = interviewId ? `/interview/${interviewId}/active` : "/interview/active";
       console.log("Navigating to:", introPath);
       navigate(introPath);
-
-      /*   setTimeout(() => {
-        setInterviewState("active");
-        const activePath = interviewId ? `/interview/${interviewId}/active` : "/interview/active";
-        console.log("Navigating to:", activePath);
-        navigate(activePath);
-      }, 8000); */
     } catch (err) {
       // If recording fails, reset to idle state
       console.error("Failed to start interview:", err);
@@ -194,11 +190,12 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
         console.warn("No stage provided to loadExistingInterview");
       }
 
-      if (interview.currentQuestion) {
-        setCurrentQuestion(interview.currentQuestion);
-      }
+      // Initialize qnaHandler with interview data
+      const { currentQuestion: question, acknowledgement: ack } = qnaHandler.initialize(interview);
+      setCurrentQuestion(question);
+      setAcknowledgement(ack);
 
-      // Set up any other state based on the existing interview
+      // Set up transcript history from interview history
       if (interview.interviewHistory) {
         const history: TranscriptEntry[] = interview.interviewHistory.map((entry) => ({
           question: entry.questionText,
@@ -206,6 +203,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
           timestamp: entry.timeTaken,
         }));
         setTranscriptHistory(history);
+        setChunkSequence(interview.interviewHistory.length + 1);
       }
     },
     []
@@ -230,9 +228,47 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     setTranscription(finalTranscript);
 
     (async () => {
-      const segment = await captureSegment?.();
-      if (segment) {
-        setAnswerVideos((prev) => [...prev, segment]);
+      try {
+        let segment: Blob | null = null;
+
+        try {
+          segment = await captureSegment?.();
+        } catch (captureError) {
+          console.warn("Failed to capture video segment, continuing without video:", captureError);
+          // Continue without video segment instead of failing entirely
+        }
+
+        if (segment || !segment) {
+          // Proceed with answer submission regardless of video capture success
+          if (interviewId && currentInterview) {
+            const result = await qnaHandler.handleAnswerSubmission(
+              interviewId,
+              segment || new Blob(),
+              finalTranscript,
+              timestamp,
+              chunkSequence
+            );
+
+            if (result.isFinal) {
+              handleInterviewEnd("Interview completed successfully");
+            } else if (result.nextQuestion) {
+              setCurrentQuestion(result.nextQuestion);
+              setIsCrossQuestion(false);
+              setTranscription("");
+              resetTranscript();
+              setChunkSequence((prev) => prev + 1);
+              isSubmittingRef.current = false;
+            } else {
+              isSubmittingRef.current = false;
+            }
+          } else {
+            console.error("Missing interviewId or currentInterview");
+            isSubmittingRef.current = false;
+          }
+        }
+      } catch (error) {
+        console.error("Error handling answer submission:", error);
+        isSubmittingRef.current = false;
       }
     })();
 
@@ -240,26 +276,18 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       transcript: finalTranscript,
       timestamp,
       question: currentQuestion,
+      chunkSequence,
     });
-
-    const response = mockInterviewAPI(finalTranscript, timestamp);
-
-    if (response.isFinal) {
-      if (response.transcripts) {
-        setTranscriptHistory(response.transcripts);
-      }
-      handleInterviewEnd(response.acknowledgement || "");
-    } else if (response.nextQuestion) {
-      setCurrentQuestion(response.nextQuestion);
-      setIsCrossQuestion(!!response.crossQuestion);
-      setAcknowledgement(response.acknowledgement || "");
-      setTranscription("");
-      resetTranscript();
-      isSubmittingRef.current = false;
-    } else {
-      isSubmittingRef.current = false;
-    }
-  }, [transcript, currentQuestion, stopListening, resetTranscript, captureSegment, navigate]);
+  }, [
+    transcript,
+    currentQuestion,
+    stopListening,
+    resetTranscript,
+    captureSegment,
+    interviewId,
+    currentInterview,
+    chunkSequence,
+  ]);
 
   const handleInterviewEnd = async (closingMessage: string) => {
     setEndMessage(closingMessage);
@@ -304,9 +332,10 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     setCurrentInterview(null);
     setInterviewId(null);
     setInterviewStage(null);
+    setChunkSequence(1);
     stopListening();
     resetTranscript();
-    resetInterviewAPI();
+    qnaHandler.reset();
     isSubmittingRef.current = false;
     navigate("/interview");
   };

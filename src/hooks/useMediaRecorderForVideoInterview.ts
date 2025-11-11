@@ -181,37 +181,43 @@ export const useMediaRecorder = (): UseMediaRecorderReturn => {
   }, []);
 
   const captureSegment = useCallback(async (): Promise<Blob | null> => {
-    // End the current segment to create a standalone WebM, then immediately start a new segment
-    const mediaRecorder = mediaRecorderRef.current;
-    const combinedStream = combinedStreamRef.current;
-    if (!mediaRecorder || !combinedStream) return null;
-
-    const segmentBlob = await new Promise<Blob | null>((resolve) => {
-      if (mediaRecorder.state === "inactive") {
+    return new Promise((resolve) => {
+      if (!mediaRecorderRef.current) {
+        console.warn("MediaRecorder not initialized, cannot capture segment");
         resolve(null);
         return;
       }
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(currentChunksRef.current, { type: "video/webm" });
-        if (blob.size > 0) segmentsRef.current.push(blob);
-        currentChunksRef.current = [];
-        resolve(blob);
-      };
-      mediaRecorder.stop();
+
+      if (mediaRecorderRef.current.state === "inactive") {
+        console.warn("MediaRecorder is inactive, cannot capture segment");
+        resolve(null);
+        return;
+      }
+
+      try {
+        const chunks: BlobPart[] = [];
+
+        const dataavailableHandler = (event: BlobEvent) => {
+          chunks.push(event.data);
+        };
+
+        const stopHandler = () => {
+          const blob = new Blob(chunks, { type: "video/webm" });
+          mediaRecorderRef.current?.removeEventListener("dataavailable", dataavailableHandler);
+          mediaRecorderRef.current?.removeEventListener("stop", stopHandler);
+          resolve(blob);
+        };
+
+        mediaRecorderRef.current.addEventListener("dataavailable", dataavailableHandler);
+        mediaRecorderRef.current.addEventListener("stop", stopHandler);
+
+        mediaRecorderRef.current.stop();
+      } catch (err) {
+        console.error("Error capturing segment:", err);
+        resolve(null);
+      }
     });
-
-    // Immediately start a new segment if still in overall recording mode
-    if (isRecording && combinedStreamRef.current) {
-      const newRecorder = new MediaRecorder(combinedStream, { mimeType: "video/webm;codecs=vp9" });
-      newRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) currentChunksRef.current.push(event.data);
-      };
-      mediaRecorderRef.current = newRecorder;
-      newRecorder.start();
-    }
-
-    return segmentBlob;
-  }, [isRecording]);
+  }, []);
 
   return {
     isRecording,
