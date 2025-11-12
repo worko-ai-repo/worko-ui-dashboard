@@ -6,6 +6,16 @@ interface ApiResponse<T> {
   error: string | null;
 }
 
+interface InterviewCompletionPayload {
+  candidateEmail: string;
+  status: "COMPLETED" | "CLOSED";
+  userFeedback: {
+    rating: number;
+    comments?: string;
+  };
+  lastChunkUploaded?: string;
+}
+
 class InterviewService {
   /**
    * Initiate a new interview for a candidate
@@ -83,6 +93,34 @@ class InterviewService {
       const errorMsg =
         err instanceof Error ? err.message : "An error occurred while fetching interview details.";
       console.error("Error fetching interview details:", err);
+      return { response: null, error: errorMsg };
+    }
+  }
+
+  /**
+   * Complete an interview with user feedback
+   */
+  async completeInterview(
+    interviewId: string,
+    payload: InterviewCompletionPayload
+  ): Promise<ApiResponse<InterviewDto>> {
+    try {
+      const { response, error, status } = await httpServiceObj.patch<InterviewDto>(
+        `/user/interview/complete/${interviewId}`,
+        payload,
+        true
+      );
+
+      if (error) {
+        console.error("Failed to complete interview:", error);
+        return { response: null, error: "Failed to complete interview. Please try again." };
+      }
+
+      return { response: response || null, error: null };
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "An error occurred while completing the interview.";
+      console.error("Error completing interview:", err);
       return { response: null, error: errorMsg };
     }
   }

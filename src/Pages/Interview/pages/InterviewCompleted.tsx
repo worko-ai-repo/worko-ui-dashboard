@@ -3,6 +3,8 @@ import { EndMessage } from "@Components/Interview/EndMessage";
 import { TranscriptHistory } from "@Components/Interview/TranscriptHistory";
 import { useInterview } from "../../../context/Interview.context";
 import { logo_text } from "@AssetsFolder/assets";
+import InterviewCompletionFeedback from "@Components/Interview/InterviewCompletionFeedback";
+import { useNavigate } from "react-router-dom";
 
 
 const InterviewCompleted = () => {
@@ -14,8 +16,9 @@ const InterviewCompleted = () => {
     answerVideos,
     downloadRecording,
     resetInterview,
+    interviewId,
   } = useInterview();
-
+  const nav = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
       {/* Header */}
@@ -26,17 +29,19 @@ const InterviewCompleted = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <EndMessage
+        {/* <EndMessage
           message={endMessage}
           onDownload={recordedBlob ? downloadRecording : undefined}
           isProcessing={isProcessing}
-        />
-
-        {!isProcessing && (
-          <TranscriptHistory transcripts={transcriptHistory} answerVideos={answerVideos} />
+        /> */}
+        {!isProcessing && interviewId && (
+          <InterviewCompletionFeedback interviewId={interviewId} onComplete={() =>
+            nav("v1/candidate/profiles", { replace: true })
+          } />
+          // <TranscriptHistory transcripts={transcriptHistory} answerVideos={answerVideos} />
         )}
 
-        {!isProcessing && (
+        {/* {!isProcessing && (
           <div className="flex justify-center mt-6">
             <Button
               onClick={resetInterview}
@@ -45,7 +50,7 @@ const InterviewCompleted = () => {
               Take Another Interview
             </Button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
