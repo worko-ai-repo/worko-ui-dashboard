@@ -1,24 +1,40 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Maximize } from "lucide-react";
+import InterviewService from "@Services/Interview.service";
 
 interface VideoSegment {
   url: string;
   duration?: number; // Optional now
+  questionNumber?: number;
+  questionText?: string;
+  questionId?: string;
 }
 
 interface MultiSegmentVideoPlayerProps {
-  videoSegments?: VideoSegment[];
-  onTimeUpdate?: (time: number) => void;
   className?: string;
+  interviewId: string;
+}
+interface InterviewData {
+  interviewId: string;
+  candidateEmail: string;
+  interviewStatus: "COMPLETED" | "IN_PROGRESS" | "PENDING" | "CANCELLED";
+  totalQuestions: number;
+  videos: VideoData[];
+}
+
+interface VideoData {
+  questionNumber: number;
+  questionId: string;
+  questionText: string;
+  chunkId: string;
+  chunkUrl: string;
+  uploadStatus: "UPLOADED" | "FAILED" | "PENDING";
+  feedback?: string; // Optional since not all videos might have feedback
 }
 
 export default function MultiSegmentVideoPlayer({
-  videoSegments = [
-    { url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4" },
-    { url: "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" },
-  ],
-  onTimeUpdate = () => {},
   className = "",
+  interviewId,
 }: MultiSegmentVideoPlayerProps) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
@@ -31,6 +47,9 @@ export default function MultiSegmentVideoPlayer({
   const [hasError, setHasError] = useState(false);
   const [detectedDurations, setDetectedDurations] = useState<number[]>([]);
   const [isDetecting, setIsDetecting] = useState(false);
+  const [videoSegments, setVideoSegments] = useState<VideoSegment[]>([]);
+  const [isFetchingVideos, setIsFetchingVideos] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -38,6 +57,44 @@ export default function MultiSegmentVideoPlayer({
   const controlsTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const preloadVideoRef = useRef<HTMLVideoElement | null>(null);
   const lastVideoSegmentsRef = useRef<string>("");
+
+  // Fetch interview videos on mount
+  useEffect(() => {
+    const fetchVideos = async () => {
+      if (!interviewId) {
+        setFetchError("Interview ID is required");
+        setIsFetchingVideos(false);
+        return;
+      }
+
+      setIsFetchingVideos(true);
+      setFetchError(null);
+
+      const { response, error } = await InterviewService.fetchInterviewVideos(interviewId);
+
+      if (error || !response) {
+        setFetchError(error || "Failed to load interview videos");
+        setIsFetchingVideos(false);
+        return;
+      }
+
+      // Sort videos by questionNumber in ascending order
+      const sortedVideos = (response.videos || [])
+        .filter((video: VideoData) => video.uploadStatus === "UPLOADED")
+        .sort((a: VideoData, b: VideoData) => a.questionNumber - b.questionNumber)
+        .map((video: VideoData) => ({
+          url: video.chunkUrl,
+          questionNumber: video.questionNumber,
+          questionText: video.questionText,
+          questionId: video.questionId,
+        }));
+
+      setVideoSegments(sortedVideos);
+      setIsFetchingVideos(false);
+    };
+
+    fetchVideos();
+  }, [interviewId]);
 
   // Calculate cumulative durations for timestamp mapping
   const cumulativeDurations = detectedDurations.reduce((acc: number[], duration, index) => {
@@ -168,7 +225,6 @@ export default function MultiSegmentVideoPlayer({
         (currentVideoIndex > 0 ? cumulativeDurations[currentVideoIndex - 1] : 0) + localTime;
       setCurrentTime(globalTime);
       setDuration(totalDuration);
-      onTimeUpdate(globalTime);
     }
   };
 
@@ -346,6 +402,36 @@ export default function MultiSegmentVideoPlayer({
 
   const progressPercentage = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
+  // Show loading while fetching videos from API
+  if (isFetchingVideos) {
+    return (
+      <div
+        className={`bg-gray-900 rounded-lg flex items-center justify-center min-h-[400px] ${className}`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-white text-sm">Loading interview videos...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error if API call failed
+  if (fetchError) {
+    return (
+      <div
+        className={`bg-gray-900 rounded-lg flex items-center justify-center min-h-[400px] ${className}`}>
+        <div className="text-center">
+          <p className="text-red-500 text-lg mb-4">{fetchError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (videoSegments.length === 0) {
     return (
       <div className={`bg-gray-900 rounded-lg flex items-center justify-center ${className}`}>
@@ -371,7 +457,6 @@ export default function MultiSegmentVideoPlayer({
     <div
       ref={containerRef}
       className={`relative bg-black rounded-lg overflow-hidden group max-h-[350px] ${className}`}
-
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {}} // Don't hide controls on mouse leave
     >

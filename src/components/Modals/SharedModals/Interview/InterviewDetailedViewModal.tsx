@@ -16,8 +16,6 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
 }) => {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
 
-
-
   const toggleQuestion = (index: number) => {
     setExpandedQuestion(expandedQuestion === index ? null : index);
   };
@@ -32,8 +30,8 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
         <div className="grid grid-cols-10  gap-6 mb-6">
           {/* Left side - Video player (70%) */}
           <div className="col-span-7 bg-gray-900 rounded-lg overflow-hidden relative h-[350px]">
-        <MultiSegmentVideoPlayer />
-           {/*  <div className="absolute inset-0 flex items-center justify-center">
+            <MultiSegmentVideoPlayer interviewId={interviewDetails.id} />
+            {/*  <div className="absolute inset-0 flex items-center justify-center">
               <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full p-4">
                 <div className="bg-gray-700 rounded-lg flex items-center justify-center">
                   <img
@@ -142,7 +140,8 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
               </tr>
             </thead>
             <tbody>
-              {interviewDetails?.interviewHistory && interviewDetails.interviewHistory.length > 0 ? (
+              {interviewDetails?.interviewHistory &&
+              interviewDetails.interviewHistory.length > 0 ? (
                 interviewDetails.interviewHistory.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors border-gray-200">
                     <td className="px-6 py-4 align-top border-r border-blue-300">

@@ -158,6 +158,30 @@ class InterviewService {
       };
     }
   }
+
+  /**
+   * Fetch interview videos
+   */
+  async fetchInterviewVideos(interviewId: string): Promise<ApiResponse<any>> {
+    try {
+      const { response, error } = await httpServiceObj.get<any>(
+        `/user/interview/${interviewId}/videos`,
+        true
+      );
+
+      if (error) {
+        console.error("Failed to fetch interview videos:", error);
+        return { response: null, error: "Failed to load interview videos. Please try again." };
+      }
+
+      return { response: response || null, error: null };
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "An error occurred while fetching interview videos.";
+      console.error("Error fetching interview videos:", err);
+      return { response: null, error: errorMsg };
+    }
+  }
 }
 
 export default new InterviewService();
