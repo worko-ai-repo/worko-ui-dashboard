@@ -50,37 +50,34 @@ const InterviewIdelFragment = () => {
 
   const reviews = [
     {
-      name: "Sarah Chen",
-      role: "Software Engineer at Google",
-      review:
-        "This AI interview prep helped me land my dream job! The feedback was incredibly detailed.",
-      avatar: "SC",
-    },
-    {
-      name: "Michael Rodriguez",
-      role: "Product Manager at Microsoft",
-      review:
-        "Practicing with the AI gave me the confidence I needed. Got an offer within 2 weeks!",
-      avatar: "MR",
+      name: "Arjun Patel",
+      role: "Software Engineer at TCS",
+      review: "AI feedback helped me crack technical rounds easily!",
+      avatar: "AP",
     },
     {
       name: "Priya Sharma",
-      role: "Data Scientist at Amazon",
-      review: "The real-time feedback feature is a game-changer. Highly recommend!",
+      role: "Product Manager at Flipkart",
+      review: "Got placed in 2 weeks after practicing here.",
       avatar: "PS",
     },
     {
-      name: "James Wilson",
-      role: "UX Designer at Apple",
-      review:
-        "Improved my interview skills dramatically. The AI feels like talking to a real interviewer.",
-      avatar: "JW",
+      name: "Rahul Kumar",
+      role: "Data Analyst at Infosys",
+      review: "Real-time suggestions boosted my confidence.",
+      avatar: "RK",
     },
     {
-      name: "Emily Taylor",
-      role: "Marketing Lead at Meta",
-      review: "Best investment for my career. Got 3 job offers after using this platform!",
-      avatar: "ET",
+      name: "Sneha Singh",
+      role: "UI/UX Designer at Zomato",
+      review: "Interview skills improved dramatically!",
+      avatar: "SS",
+    },
+    {
+      name: "Vikash Gupta",
+      role: "Marketing Executive at Paytm",
+      review: "Best platform for interview preparation.",
+      avatar: "VG",
     },
   ];
   // Floating reviews animation

@@ -13,6 +13,7 @@ export interface SignedUrlResponse {
 }
 
 export interface UploadChunkPayload {
+  userId: string;
   interviewId: string;
   chunkFileName: string;
   chunkFileMimeType: string;
@@ -53,7 +54,6 @@ class QnaHandler {
    * Matches the current question from interviewDTO and sets up the question list
    */
   initialize(interview: InterviewDto): { currentQuestion: string; acknowledgement: string } {
-    debugger;
     if (!interview.interviewHistory || interview.interviewHistory.length === 0) {
       return {
         currentQuestion: "No questions available",
@@ -112,10 +112,12 @@ class QnaHandler {
     interviewId: string,
     chunkFileName: string,
     chunkFileMimeType: string,
-    chunkSequence: number
+    chunkSequence: number,
+    userId: string 
   ): Promise<SignedUrlResponse> {
     try {
       const payload: UploadChunkPayload = {
+        userId,
         interviewId,
         chunkFileName,
         chunkFileMimeType,
@@ -193,7 +195,8 @@ class QnaHandler {
     videoBlob: Blob,
     userAnswer: string,
     timeTaken: number,
-    chunkSequence: number
+    chunkSequence: number,
+    userId: string
   ): Promise<{ success: boolean; nextQuestion: string | null; isFinal: boolean }> {
     try {
       // Step 1: Generate signed URL
@@ -201,7 +204,8 @@ class QnaHandler {
         interviewId,
         `chunk_${chunkSequence}.webm`,
         "application/webm",
-        chunkSequence
+        chunkSequence,
+        userId
       );
 
       // Step 2: Upload chunk to S3

@@ -17,21 +17,55 @@ import {
 import {
   InterviewDto,
   InterviewStatusType,
-  InterviewRequestDto,
 } from "@TypesAndConstants/Interview.dto";
 import { useAppContext } from "@Context/App.context";
-import { useInterview } from "@Context/Interview.context";
+
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import SmallGauge from "@Components/Shared/SmallGauge";
 import interviewServiceObj from "@Services/Interview.service";
-import { getToastOptions } from "@Utils/Toast.utils";
+
+import { formatObjectForDisplay } from "@Utils/FormatText.utils";
 
 interface VideoInterviewModalProps {
   onClose: () => void;
   isOpen: boolean;
+  handleViewDetails: (interview:InterviewDto) => void;
 }
 
-const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) => {
+/**
+ * formatInterviewDuration
+ * @param duration in milliseconds
+ * @returns
+ */
+export const formatInterviewDuration = (duration?: number): string => {
+  if (!duration) return "N/A";
+  const totalSeconds = Math.round(duration / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+  return `${seconds}s`;
+};
+
+/**
+ * formatInterviewDate
+ * @param dateString
+ * @returns
+ */
+export const formatInterviewDate = (dateString?: string): string => {
+  if (!dateString) return "N/A";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,handleViewDetails }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [expandedRequests, setExpandedRequests] = useState<Record<string, boolean>>({});
@@ -124,24 +158,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     }
   };
 
-  const formatDuration = (duration?: number): string => {
-    if (!duration) return "N/A";
-    const minutes = Math.floor(duration / 60);
-    const seconds = duration % 60;
-    return `${minutes}m ${seconds}s`;
-  };
-
-  const formatDate = (dateString?: string): string => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   const handleInitiateInterview = async (interviewId: string) => {
     if (!userDetails?.email) {
       console.error("User email not found");
@@ -150,7 +166,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     }
 
     setIsInitiating(true);
-    debugger;
     try {
       const { response: initiatedInterview, error } = await interviewServiceObj.initiateInterview(
         userDetails.email
@@ -184,16 +199,57 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
     onClose();
   };
 
-  const handleViewDetails = (interviewId: string) => {
-    navigate(`/interview/${interviewId}`);
-    onClose();
-  };
 
   const pendingInterviews = interviews.filter(
     (interview) => interview.status === "PENDING" || interview.status === "IN_PROGRESS"
   );
 
   const completedInterviews = interviews.filter((interview) => interview.status === "COMPLETED");
+
+  // Check if there's a pending interview that can be continued
+  const hasContinuableInterview = pendingInterviews.some((interview) => {
+    const questionsAttempted = interview.interviewHistory?.length || 0;
+    const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
+    return hasPartialProgress;
+  });
+
+  // Check if user has completed an interview within last 3 months
+  const canStartNewInterview = () => {
+    if (pendingInterviews.length > 0) {
+      // Has pending interview, can start/continue that one
+      return true;
+    }
+
+    // Check if any completed interview is within 3 months
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const recentCompletedInterview = completedInterviews.find((interview) => {
+      const completedDate = new Date(interview.updatedAt || interview.createdAt);
+      return completedDate > threeMonthsAgo;
+    });
+
+    return !recentCompletedInterview;
+  };
+
+  const getNextAvailableDate = () => {
+    if (completedInterviews.length === 0) return null;
+
+    const latestCompleted = completedInterviews.sort((a, b) => {
+      const dateA = new Date(a.updatedAt || a.createdAt).getTime();
+      const dateB = new Date(b.updatedAt || b.createdAt).getTime();
+      return dateB - dateA;
+    })[0];
+
+    const completedDate = new Date(latestCompleted.updatedAt || latestCompleted.createdAt);
+    const nextAvailableDate = new Date(completedDate);
+    nextAvailableDate.setMonth(nextAvailableDate.getMonth() + 3);
+
+    return nextAvailableDate;
+  };
+
+  const isButtonDisabled = !canStartNewInterview() || isInitiating;
+  const nextAvailableDate = getNextAvailableDate();
 
   const InterviewCard = ({
     interview,
@@ -242,10 +298,8 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
             {/* Company Requests Dropdown */}
             {hasRequests && (
-              <div className="mb-3">
-                <button
-                  onClick={() => toggleRequestExpansion(interview.id)}
-                  className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900 transition-colors w-full">
+              <div className="mb-3" onClick={() => toggleRequestExpansion(interview.id)}>
+                <button className="flex items-center gap-2 text-sm text-gray-700 hover:text-gray-900 transition-colors w-full">
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4 flex-shrink-0" />
                   ) : (
@@ -259,7 +313,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
                 {isExpanded && (
                   <div className="mt-2 ml-6 space-y-2">
-                    {interview.requestedBy!.map((request: InterviewRequestDto, index: number) => (
+                    {interview.requestedBy!.map((request, index: number) => (
                       <div key={index} className="bg-white rounded-md p-3 border border-gray-200">
                         <div className="flex items-start gap-2">
                           <Building2 className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
@@ -268,10 +322,10 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
                               {request.companyId || "Not Disclosed"}
                             </div>
                             <div className="text-gray-600 mt-1">
-                              Position: {request.positionId || "Not Disclosed"}
+                              Position: {request.position || "Not Disclosed"}
                             </div>
                             <div className="text-gray-500 text-xs mt-1">
-                              Requested: {formatDate(request.requestedAt)}
+                              Requested: {formatInterviewDate(request.requestedAt)}
                             </div>
                           </div>
                         </div>
@@ -286,25 +340,12 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
             {!isPending && interview.scoreBreakdown && (
               <div className="mb-3 bg-white rounded-md p-2 border border-gray-200">
                 <div className="text-xs text-gray-500 mb-1">Score Breakdown:</div>
-                <div className="flex gap-3 text-xs">
-                  {interview.scoreBreakdown.domainExpertise !== undefined && (
-                    <span className="text-gray-700">
-                      <span className="font-medium">Domain:</span>{" "}
-                      {interview.scoreBreakdown.domainExpertise}%
+                <div className="flex flex-wrap gap-3 text-xs">
+                  {formatObjectForDisplay(interview.scoreBreakdown).map(({ label, value }) => (
+                    <span key={label} className="text-gray-700">
+                      <span className="font-medium">{label}:</span> {value}%
                     </span>
-                  )}
-                  {interview.scoreBreakdown.attitude !== undefined && (
-                    <span className="text-gray-700">
-                      <span className="font-medium">Attitude:</span>{" "}
-                      {interview.scoreBreakdown.attitude}%
-                    </span>
-                  )}
-                  {interview.scoreBreakdown.achievement !== undefined && (
-                    <span className="text-gray-700">
-                      <span className="font-medium">Achievement:</span>{" "}
-                      {interview.scoreBreakdown.achievement}%
-                    </span>
-                  )}
+                  ))}
                 </div>
               </div>
             )}
@@ -315,27 +356,24 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
                 {interview.duration && (
                   <div>
                     <span className="text-gray-500">Duration:</span>{" "}
-                    <span className="font-medium">{formatDuration(interview.duration)}</span>
+                    <span className="font-medium">
+                      {formatInterviewDuration(interview.duration)}
+                    </span>
                   </div>
                 )}
-                {interview.avgResponseTime && (
-                  <div>
-                    <span className="text-gray-500">Avg Response:</span>{" "}
-                    <span className="font-medium">{formatDuration(interview.avgResponseTime)}</span>
-                  </div>
-                )}
+               <div className="flex items-center gap-1">
+                <Calendar className="w-3 h-3" />
+                <span>
+                  {isPending ? "Created" : "Completed"}:{" "}
+                  {formatInterviewDate(isPending ? interview.createdAt : interview.updatedAt)}
+                </span>
+              </div>
               </div>
             )}
 
             {/* Footer Info */}
             <div className="flex items-center gap-3 text-xs text-gray-500">
-              <div className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                <span>
-                  {isPending ? "Created" : "Completed"}:{" "}
-                  {formatDate(isPending ? interview.createdAt : interview.updatedAt)}
-                </span>
-              </div>
+              
               {interview.userFeedback && (
                 <div className="flex items-center gap-1">
                   <User className="w-3 h-3" />
@@ -347,24 +385,14 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
 
           {/* Right side - Action Button */}
           <div className="flex-shrink-0">
-            {isPending && (interview.status === "PENDING" || interview.status === "IN_PROGRESS") ? (
+            {isPending &&
+            (interview.status === "PENDING" ||
+              interview.status === "IN_PROGRESS") ? null : !isPending ? (
               <button
-                onClick={() =>
-                  canContinue
-                    ? handleContinueInterview(interview)
-                    : handleInitiateInterview(interview.id)
-                }
-                disabled={isInitiating}
-                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-                <Play className="w-4 h-4 mr-1" />
-                {isInitiating ? "Starting..." : canContinue ? "Continue" : "Start"}
-              </button>
-            ) : !isPending ? (
-              <button
-                onClick={() => handleViewDetails(interview.id)}
-                className="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
+                onClick={() => handleViewDetails(interview)}
+                className="inline-flex items-center px-4 py-2 border shadow-2xl bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
                 <Eye className="w-4 h-4 mr-1" />
-                View
+                View Details
               </button>
             ) : null}
           </div>
@@ -379,7 +407,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
-        className={`bg-white rounded-l-lg p-6 w-full max-w-3xl relative transform transition-transform duration-300 ease-in-out self-auto max-h-[90vh] overflow-y-auto ${
+        className={`bg-white rounded-l-lg p-6 w-full max-w-4xl relative transform transition-transform duration-300 ease-in-out self-auto max-h-[90vh] overflow-y-auto ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
         }`}>
         <button
@@ -443,23 +471,66 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen }) 
             )}
 
             {/* Initiate Interview Button */}
-            <div className="flex justify-center pt-4 border-t border-gray-200">
+            <div className="flex flex-col items-start pt-4 border-t border-gray-200 gap-3">
+              {!canStartNewInterview() && nextAvailableDate && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 w-full max-w-md">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <div className="text-sm">
+                      <p className="font-semibold text-yellow-800 mb-1">
+                        Interview Cooldown Period
+                      </p>
+                      <p className="text-yellow-700">
+                        You can take another interview after{" "}
+                        <span className="font-semibold">
+                          {nextAvailableDate.toLocaleDateString("en-US", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={() => {
-                  // If there's a pending/in-progress interview, continue it
-                  if (pendingInterviews.length > 0) {
-                    handleContinueInterview(pendingInterviews[0]);
+                  // Find the oldest pending/in-progress interview (by createdAt)
+                  const sortedPendingInterviews = [...pendingInterviews].sort(
+                    (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                  );
+
+                  const oldestPendingInterview = sortedPendingInterviews[0];
+
+                  // Check if this interview can be continued (has partial progress)
+                  if (oldestPendingInterview) {
+                    const questionsAttempted = oldestPendingInterview.interviewHistory?.length || 0;
+                    const hasPartialProgress =
+                      questionsAttempted > 0 || oldestPendingInterview.status === "IN_PROGRESS";
+
+                    if (hasPartialProgress) {
+                      // Continue the existing interview
+                      handleContinueInterview(oldestPendingInterview);
+                    } else {
+                      // Interview exists but no progress yet - initiate it
+                      handleInitiateInterview(oldestPendingInterview.id);
+                    }
                   } else {
+                    // No pending interviews - start a new one
                     handleInitiateInterview("");
                   }
                 }}
-                disabled={isInitiating}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
+                disabled={isButtonDisabled}
+                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400">
                 <Play className="w-5 h-5 mr-2" />
                 {isInitiating
                   ? "Starting Interview..."
                   : pendingInterviews.length > 0
-                  ? "Continue Interview"
+                  ? hasContinuableInterview
+                    ? "Continue Interview"
+                    : "Start Pending Interview"
                   : "Start New Interview"}
               </button>
             </div>

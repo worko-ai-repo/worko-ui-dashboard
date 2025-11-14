@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
 import { Button } from "@Components/ui/button";
-import { Play, Camera, Mic, Monitor, Check, AlertCircle } from "lucide-react";
+import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone } from "lucide-react";
 import { useInterview } from "../../../context/Interview.context";
 import { useEffect, useState } from "react";
 import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -43,6 +43,7 @@ const InterviewIdle = () => {
   const [isTesting, setIsTesting] = useState(false);
   const [micTestComplete, setMicTestComplete] = useState(false);
   const [testStream, setTestStream] = useState<MediaStream | null>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
 
   const stage = searchParams.get("stage");
   const interviewDataFromState = location.state?.interviewData as InterviewDto | undefined;
@@ -64,13 +65,8 @@ const InterviewIdle = () => {
     (currentInterview?.status === "PENDING" ||
       currentInterview?.status === "IN_PROGRESS" ||
       interviewDataFromState?.status === "PENDING");
-  const hasPartialProgress =
-    (currentInterview?.interviewHistory || interviewDataFromState?.interviewHistory) &&
-    ((currentInterview?.interviewHistory?.length || 0) > 0 ||
-      (interviewDataFromState?.interviewHistory?.length || 0) > 0);
 
   const allPermissionsGranted = permissions.camera && permissions.microphone && permissions.screen;
-  const canStartInterview = allPermissionsGranted && micTestComplete && currentInterview;
 
   // Handle interview initiation or loading from state
   useEffect(() => {
@@ -110,7 +106,6 @@ const InterviewIdle = () => {
 
   useEffect(() => {
     const initializeInterview = async () => {
-
       // If we don't have interview data and need to fetch it
       if (!currentInterview && !isInitiating && interviewIdParam) {
         setIsInitiating(true);
@@ -149,6 +144,33 @@ const InterviewIdle = () => {
     };
 
     initializeInterview();
+  }, []);
+
+  // Detect mobile or tablet device
+  useEffect(() => {
+    const checkDevice = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        userAgent
+      );
+      const isTablet =
+        /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(
+          userAgent
+        );
+
+      // Also check screen size as a fallback
+      const screenWidth = window.innerWidth;
+      const isMobileScreen = screenWidth < 768; // Less than tablet breakpoint
+      const isTabletScreen = screenWidth >= 768 && screenWidth < 1024;
+
+      setIsMobileOrTablet(isMobile || isTablet || isMobileScreen || isTabletScreen);
+    };
+
+    checkDevice();
+
+    // Re-check on window resize
+    window.addEventListener("resize", checkDevice);
+    return () => window.removeEventListener("resize", checkDevice);
   }, []);
 
   const requestAllPermissions = async () => {
@@ -304,7 +326,38 @@ const InterviewIdle = () => {
             </p>
           </CardHeader>
           <CardContent className="p-4">
-            {isInitiating ? (
+            {/* Mobile/Tablet Warning */}
+            {isMobileOrTablet ? (
+              <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-white">
+                <CardContent className="p-6 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                    <Smartphone className="w-8 h-8 text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-red-900 mb-3">Desktop Required</h3>
+                  <p className="text-gray-700 mb-4">
+                    Video interviews cannot be conducted on mobile devices or tablets.
+                  </p>
+                  <div className="bg-white border border-red-200 rounded-lg p-4 mb-4 text-left">
+                    <p className="font-semibold text-red-800 mb-2">Please use:</p>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      <li>• A desktop or laptop computer</li>
+                      <li>• A modern web browser (Chrome, Firefox, or Edge)</li>
+                      <li>• A stable internet connection</li>
+                      <li>• A quiet, well-lit environment</li>
+                    </ul>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    This ensures the best interview experience and allows us to properly verify your
+                    identity and monitor the session.
+                  </p>
+                  <Button
+                    onClick={() => navigate("/v1/candidate/profiles")}
+                    className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white">
+                    Go Back to Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : isInitiating ? (
               <div className="flex flex-col items-center gap-3 py-8">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
                 <p className="text-gray-600">Setting up your interview...</p>

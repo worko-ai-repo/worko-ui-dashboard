@@ -124,6 +124,40 @@ class InterviewService {
       return { response: null, error: errorMsg };
     }
   }
+
+  /**
+   * Update the status of an interview
+   */
+  async updateInterviewStatus(
+    interviewId: string,
+    data: {
+      candidateEmail: string;
+      status: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CLOSED";
+    }
+  ): Promise<ApiResponse<any>> {
+    try {
+      const { response, error } = await httpServiceObj.patch<any>(
+        `/user/interview/update/${interviewId}`,
+        data,
+        true,
+        {},
+        false,
+        "BASE"
+      );
+
+      if (error) {
+        return { response: null, error: error.toString() };
+      }
+
+      return { response, error: null };
+    } catch (error) {
+      console.error("Error updating interview status:", error);
+      return {
+        response: null,
+        error: "Failed to update interview status",
+      };
+    }
+  }
 }
 
 export default new InterviewService();

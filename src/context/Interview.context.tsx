@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useMediaRecorder } from "@Hooks/useMediaRecorderForVideoInterview";
+import { useAppContext } from "./App.context";
 
 type InterviewState = "idle" | "intro" | "active" | "completed";
 
@@ -81,7 +82,7 @@ interface InterviewProviderProps {
 
 export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   const navigate = useNavigate();
-
+  const {userDetails} = useAppContext();  
   const [interviewState, setInterviewState] = useState<InterviewState>("idle");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [isCrossQuestion, setIsCrossQuestion] = useState(false);
@@ -275,14 +276,15 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
             timestamp,
           },
         ]);
-
-        if (interviewId && currentInterview) {
+        const userId = userDetails?.id
+        if (interviewId && currentInterview && userId) {
           const result = await qnaHandler.handleAnswerSubmission(
             interviewId,
             segment || new Blob(),
             finalTranscript,
             timestamp,
-            chunkSequence
+            chunkSequence,
+            userId
           );
 
           if (result.isFinal) {

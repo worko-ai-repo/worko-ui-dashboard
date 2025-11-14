@@ -1,4 +1,5 @@
 import { Button } from "@Components/ui/button";
+import { ChevronDoubleRightIcon } from "@heroicons/react/24/outline";
 import { Send, Loader2 } from "lucide-react";
 
 interface SubmitAnswerButtonProps {
@@ -17,12 +18,12 @@ export const SubmitAnswerButton = ({
   const isLoading = isSubmitting || isUploading;
 
   return (
-    <div className="flex justify-center mb-6">
+    <div className="flex justify-center mb-2">
       <Button
         onClick={onClick}
         disabled={disabled || isLoading}
         size="lg"
-        className="btn_primary min-w-[200px]">
+        className="btn_primary h-8 min-w-[100px]">
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -30,7 +31,7 @@ export const SubmitAnswerButton = ({
           </>
         ) : (
           <>
-            <Send className="w-4 h-4 mr-2" />
+            <ChevronDoubleRightIcon className="w-4 h-4 mr-2" />
             End Response
           </>
         )}

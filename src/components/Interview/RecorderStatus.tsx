@@ -11,7 +11,7 @@ export const RecorderStatus = ({ isRecording, isTranscribing }: RecorderStatusPr
   return (
     <div className="">
       <>
-        <div className="flex items-center justify-between">
+        <div className="flex gap-4  items-center justify-between">
           <div className="flex items-center gap-3 p-2 rounded-lg border">
             <div className="relative">
               <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse" />

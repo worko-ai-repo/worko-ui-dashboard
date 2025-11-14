@@ -1,30 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import profileService from '../../Service/ProfileService';
-import { Group, eyeIcon, verified, gender, salary,cancel } from "@Assets";
-import {AtSign, Briefcase, Link, Linkedin, MapPin, PhoneCall, Plus, Video, X} from "lucide-react";
+import React, { useEffect, useState } from "react";
+import profileService from "../../Service/ProfileService";
+import { Group, eyeIcon, verified, gender, salary, cancel } from "@Assets";
+import { AtSign, Briefcase, Link, Linkedin, MapPin, PhoneCall, Plus, Video, X } from "lucide-react";
 import QuickLinks from "./QuickLinks";
 import { renderCard, renderSkillsSection, renderListSection } from "./Helper/ProfileHelper";
-import EditForm from './Helper/EditForm';
+import EditForm from "./Helper/EditForm";
 import SkillsEditor from "./Helper/SkillsEditor";
 import ListEditor from "./Helper/ListEditor";
 import UploadCVButton from "@Components/Shared/UploadCVButton";
-import UploadImageButton from '@Components/Shared/PostJob/UploadImageButton';
-import { useAppContext } from '@Context/App.context';
-import httpServiceObj from '@Services/ApiHandler.service';
-import PreferenceEditor from './Helper/PreferenceEditor';
-import { toTitleCase } from '@Utils/Titlecase.utils';
-import ResponsibilityEditor, { Responsibility } from './Helper/ResponsibilityEditor';
-import secureStorage from '@Utils/SecureStorage.utils';
-import { NormalizedUser } from '@Utils/NormalizeUser';
-import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum';
-import { verify } from 'crypto';
-import { toast } from 'react-toastify';
-import { getToastOptions } from 'lib-worko-ui';
-import ExperienceEditor from './Helper/ExperienceEditor';
-import AchievementsEditor from './Helper/AchievementsEditor';
-import SocialLinksEditor from './Helper/SocialLinksEditor';
-import VideoInterviewModal from './Helper/VideoInterviewModal';
-import EducationEditor from './Helper/EducationEditor';
+import UploadImageButton from "@Components/Shared/PostJob/UploadImageButton";
+import { useAppContext } from "@Context/App.context";
+import httpServiceObj from "@Services/ApiHandler.service";
+import PreferenceEditor from "./Helper/PreferenceEditor";
+import { toTitleCase } from "@Utils/Titlecase.utils";
+import ResponsibilityEditor, { Responsibility } from "./Helper/ResponsibilityEditor";
+import secureStorage from "@Utils/SecureStorage.utils";
+import { NormalizedUser } from "@Utils/NormalizeUser";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { verify } from "crypto";
+import { toast } from "react-toastify";
+import { getToastOptions } from "lib-worko-ui";
+import ExperienceEditor from "./Helper/ExperienceEditor";
+import AchievementsEditor from "./Helper/AchievementsEditor";
+import SocialLinksEditor from "./Helper/SocialLinksEditor";
+import VideoInterviewModal from "../../../../Modals/SharedModals/Interview/VideoInterviewModal";
+import EducationEditor from "./Helper/EducationEditor";
+import { InterviewDto } from "@TypesAndConstants/Interview.dto";
+import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
+import Modal from "@Components/Shared/Modal";
 
 interface ProfileSectionProps {
   title: string;
@@ -45,7 +48,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   onCancel,
   onSave,
   formFields,
-  formData
+  formData,
 }) => {
   if (editMode && formFields) {
     return (
@@ -64,7 +67,7 @@ const ProfileSection: React.FC<ProfileSectionProps> = ({
   return renderCard({
     title,
     children,
-    onEdit
+    onEdit,
   });
 };
 
@@ -81,7 +84,6 @@ const Profile = () => {
   const [skillsData, setSkillsData] = useState<any>(null);
   const [socialLinks, setSocialLinks] = useState<any>(null);
   const [preferenceData, setPreferenceData] = useState<any>(null);
-  
 
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(profileData?.data?.name || user?.name || "");
@@ -91,14 +93,20 @@ const Profile = () => {
   const [otpValue, setOtpValue] = useState("");
   const [resendCooldown, setResendCooldown] = useState(false);
   const [countdown, setCountdown] = useState(30);
-  const [initiateVideoInterview,setInitiateVideoInterview] = useState<boolean>(false)
-
+  const [initiateVideoInterview, setInitiateVideoInterview] = useState<boolean>(false);
+  const [viewInterviewModal, setViewInterviewModalOpen] = useState<{
+    isOpen: boolean;
+    data: InterviewDto;
+  }>({ isOpen: false, data: {} as InterviewDto });
 
   const [isEditingEducation, setIsEditingEducation] = useState(false);
-  const [editedEducation, setEditedEducation] = useState<{collage: string;degree: string;passingYear: number | null;}>({collage: "",degree: "",passingYear: null});
-  
-  const { setUserDetails } = useAppContext();
+  const [editedEducation, setEditedEducation] = useState<{
+    collage: string;
+    degree: string;
+    passingYear: number | null;
+  }>({ collage: "", degree: "", passingYear: null });
 
+  const { setUserDetails } = useAppContext();
 
   // State for loading and error
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -118,19 +126,18 @@ const Profile = () => {
     industries: false,
     locations: false,
     roles: false,
-    education:false,
-    socials:false,
-    profilePic:false,
+    education: false,
+    socials: false,
+    profilePic: false,
   });
 
   // Helper function to set edit mode for a specific section
   const setEditMode = (section: string, value: boolean) => {
-    setEditModeState(prev => ({
+    setEditModeState((prev) => ({
       ...prev,
-      [section]: value
+      [section]: value,
     }));
   };
-
 
   const fetchData = async () => {
     try {
@@ -149,27 +156,27 @@ const Profile = () => {
       const userData = await profileService.fetchAllUserData(currentUser.email);
 
       //combining both experience object and multiple experience array into one
-        const combinedExperience = [
-          // ...(userData.details[0].candidateExperience
-          //   ? [{
-          //       ...userData.details[0].candidateExperience,
-          //       YOE: userData.details[0].YOE || ""
-          //     }]
-          //   : []),
-          ...(userData.details[0].multipleCandidateExperience || [])
-        ];
+      const combinedExperience = [
+        // ...(userData.details[0].candidateExperience
+        //   ? [{
+        //       ...userData.details[0].candidateExperience,
+        //       YOE: userData.details[0].YOE || ""
+        //     }]
+        //   : []),
+        ...(userData.details[0].multipleCandidateExperience || []),
+      ];
 
       // Set state with the fetched data
       setProfileData(userData.profile);
       setDetailsData(userData.details);
       setEducationData(userData.education);
       setExperienceData(userData.experience);
-      setMultipleCandidateExperience(userData.multipleCandidateExperience)
-      setAllCandidateExperience(combinedExperience)
+      setMultipleCandidateExperience(userData.multipleCandidateExperience);
+      setAllCandidateExperience(combinedExperience);
       setSkillsData(userData.skills);
       setAchievementData(userData.achievement);
-      setSocialLinks(userData.socialprofile)
-      setPreferenceData(userData.preference || {})
+      setSocialLinks(userData.socialprofile);
+      setPreferenceData(userData.preference || {});
       // console.log(userData)
     } catch (err: any) {
       console.error("Error fetching profile data:", err);
@@ -186,21 +193,19 @@ const Profile = () => {
 
   // About section handlers
   const handleEditAbout = () => {
-    setEditMode('about', true);
+    setEditMode("about", true);
   };
 
   const handleCancelAbout = () => {
-    setEditMode('about', false);
+    setEditMode("about", false);
   };
 
   const handleSaveAbout = async (data: any) => {
     try {
       if (!user) return false;
-      const success = await profileService.updateDetailsData(
-        user.email,
-        detailsData,
-        { about: data.about }
-      );
+      const success = await profileService.updateDetailsData(user.email, detailsData, {
+        about: data.about,
+      });
       // console.log(data.about)
       if (success) {
         // Update local state to reflect changes
@@ -209,7 +214,7 @@ const Profile = () => {
           updatedData[0] = { ...updatedData[0], about: data.about };
           return updatedData;
         });
-        setEditMode('about', false);
+        setEditMode("about", false);
       }
 
       return success;
@@ -222,26 +227,22 @@ const Profile = () => {
   const handleSaveName = async () => {
     if (!user) return;
 
-    const success = await profileService.updateDetailsData2(
-      user.email,
-      detailsData,
-      {
-        name: editedName,
-        location: editedLocation,
-        gender: editedGender === "Male" ? "MALE" : editedGender === "Female" ? "FEMALE" : "OTHER",
-      }
-    );
+    const success = await profileService.updateDetailsData2(user.email, detailsData, {
+      name: editedName,
+      location: editedLocation,
+      gender: editedGender === "Male" ? "MALE" : editedGender === "Female" ? "FEMALE" : "OTHER",
+    });
     if (success) {
       setProfileData((prev: any) => ({
         ...prev,
         data: {
           ...prev.data,
           name: editedName,
-        }
+        },
       }));
       setDetailsData((prevData: any) => {
         const updatedData = [...prevData];
-        updatedData[0] = { ...updatedData[0], location: editedLocation, gender: editedGender, };
+        updatedData[0] = { ...updatedData[0], location: editedLocation, gender: editedGender };
         return updatedData;
       });
       setUserDetails((prev: NormalizedUser | null) => {
@@ -255,32 +256,28 @@ const Profile = () => {
       console.error("Failed to update name");
     }
   };
-// Educatin section handlers
+  // Educatin section handlers
   const handleEditEducation = () => {
-    setEditMode('education', true);
+    setEditMode("education", true);
   };
 
   const handleCancelEducation = () => {
-    setEditMode('education', false);
+    setEditMode("education", false);
   };
 
-  const handleSaveEducation = async (data:any) => {
+  const handleSaveEducation = async (data: any) => {
     if (!user) return false;
     try {
       const timestamp = new Date().toISOString();
-        const success = await profileService.updateEducationData(
-          user.email,
-          data,
-          null,
-        ); 
-    // we are not checking for success here because backend is sending no response 
+      const success = await profileService.updateEducationData(user.email, data, null);
+      // we are not checking for success here because backend is sending no response
       setEducationData(data);
-      setEditMode('education', false);
-      return true
-      } catch (error) {
-        console.error("Error while saving education:", error);
-        return false
-      }
+      setEditMode("education", false);
+      return true;
+    } catch (error) {
+      console.error("Error while saving education:", error);
+      return false;
+    }
   };
 
   //old education saving
@@ -304,7 +301,7 @@ const Profile = () => {
   //           createdAt:educationData[0].createdAt
   //         },
   //         null,
-  //         0                
+  //         0
   //       );
   //     } else {
   //       // console.log("new")
@@ -314,10 +311,10 @@ const Profile = () => {
   //           ...editedEducation,
   //         },
   //         null,
-  //       ); 
+  //       );
   //     }
 
-  //   // we are not checking for success here because backend is sending no response 
+  //   // we are not checking for success here because backend is sending no response
   //   // if (!success) {
   //     setEducationData([{
   //       ...editedEducation,
@@ -334,7 +331,7 @@ const Profile = () => {
   //     }
   // };
 
-  // handling otp 
+  // handling otp
   // Send OTP (GET request)
   const handleSendPhoneOtp = async () => {
     if (!user || resendCooldown) return;
@@ -346,8 +343,8 @@ const Profile = () => {
 
       const { response, error } = await httpServiceObj.get(
         `/user/${user.email}/request-otp`,
-        true,
-        // { id } 
+        true
+        // { id }
       );
 
       if (error) throw new Error(error.message);
@@ -356,13 +353,13 @@ const Profile = () => {
       setShowPhoneOtpInput(true);
       setResendCooldown(true);
       setCountdown(30);
-    } catch (err:any) {
+    } catch (err: any) {
       console.error("Failed to send OTP:", err.message);
     }
   };
 
   //contdown timer
-    useEffect(() => {
+  useEffect(() => {
     if (!resendCooldown) return;
 
     if (countdown === 0) {
@@ -375,8 +372,7 @@ const Profile = () => {
     return () => clearTimeout(timerId);
   }, [countdown, resendCooldown]);
 
-
-// Submit OTP (POST request)
+  // Submit OTP (POST request)
   const handleVerifyPhoneOtp = async () => {
     if (!user) return;
 
@@ -392,23 +388,21 @@ const Profile = () => {
       );
 
       if (error) {
-        toast.error("OTP verification failed. Please try again.",getToastOptions({}));
+        toast.error("OTP verification failed. Please try again.", getToastOptions({}));
         throw new Error(error.message);
       }
 
       if (response?.verificationStatus) {
-          const success = await profileService.updateDetailsData(
-          user.email,
-          detailsData,
-          {isNumberVerified:true},
-        );
-        if(success){
+        const success = await profileService.updateDetailsData(user.email, detailsData, {
+          isNumberVerified: true,
+        });
+        if (success) {
           setDetailsData((prevData: any) => {
-          const updatedData = [...prevData];
-          updatedData[0] = { ...updatedData[0], isNumberVerified: true };
-          return updatedData;
+            const updatedData = [...prevData];
+            updatedData[0] = { ...updatedData[0], isNumberVerified: true };
+            return updatedData;
           });
-          toast.success("Phone number verified successfully!",getToastOptions({}));
+          toast.success("Phone number verified successfully!", getToastOptions({}));
           setShowPhoneOtpInput(false);
           setOtpValue("");
           setCountdown(0);
@@ -417,39 +411,33 @@ const Profile = () => {
       } else {
         toast.error("Invalid OTP. Please try again.", getToastOptions({}));
       }
-
-    } catch (err:any) {
+    } catch (err: any) {
       console.error("OTP verification error:", err.message);
     }
   };
 
-
   // Work Experience handlers
   const handleEditWorkExperience = () => {
-    setEditMode('workExperience', true);
+    setEditMode("workExperience", true);
   };
 
   const handleCancelWorkExperience = () => {
-    setEditMode('workExperience', false);
+    setEditMode("workExperience", false);
   };
 
   const handleSaveWorkExperience = async (data: any) => {
     try {
       if (!user) return false;
       const updateData = {
-      multipleCandidateExperience: data,
-    };
+        multipleCandidateExperience: data,
+      };
       // console.log(updateData)
 
-      const success = await profileService.updateDetailsData(
-        user.email,
-        detailsData,
-        updateData
-      );
+      const success = await profileService.updateDetailsData(user.email, detailsData, updateData);
 
       if (success) {
-        setAllCandidateExperience(data)
-        setEditMode('workExperience', false);
+        setAllCandidateExperience(data);
+        setEditMode("workExperience", false);
       }
 
       return success;
@@ -461,11 +449,11 @@ const Profile = () => {
 
   // Core Skills handlers
   const handleEditCoreSkills = () => {
-    setEditMode('coreSkills', true);
+    setEditMode("coreSkills", true);
   };
 
   const handleCancelCoreSkills = () => {
-    setEditMode('coreSkills', false);
+    setEditMode("coreSkills", false);
   };
 
   const handleSaveCoreSkills = async (skills: any[]) => {
@@ -476,7 +464,7 @@ const Profile = () => {
         user.email,
         skillsData,
         { coreSkills: skills },
-        'coreSkills'
+        "coreSkills"
       );
       // console.log("handlesavecoreskills function", user.email,skillsData,skills,)
       if (success) {
@@ -486,7 +474,7 @@ const Profile = () => {
           updatedData[0] = { ...updatedData[0], coreSkills: skills };
           return updatedData;
         });
-        setEditMode('coreSkills', false);
+        setEditMode("coreSkills", false);
       }
 
       return success;
@@ -498,11 +486,11 @@ const Profile = () => {
 
   // Soft Skills handlers
   const handleEditSoftSkills = () => {
-    setEditMode('softSkills', true);
+    setEditMode("softSkills", true);
   };
 
   const handleCancelSoftSkills = () => {
-    setEditMode('softSkills', false);
+    setEditMode("softSkills", false);
   };
 
   const handleSaveSoftSkills = async (skills: any[]) => {
@@ -513,7 +501,7 @@ const Profile = () => {
         user.email,
         skillsData,
         { softSkills: skills },
-        'softSkills'
+        "softSkills"
       );
 
       if (success) {
@@ -523,7 +511,7 @@ const Profile = () => {
           updatedData[0] = { ...updatedData[0], softSkills: skills };
           return updatedData;
         });
-        setEditMode('softSkills', false);
+        setEditMode("softSkills", false);
       }
 
       return success;
@@ -535,11 +523,11 @@ const Profile = () => {
 
   // Technical Skills handlers
   const handleEditTechnicalSkills = () => {
-    setEditMode('technicalSkills', true);
+    setEditMode("technicalSkills", true);
   };
 
   const handleCancelTechnicalSkills = () => {
-    setEditMode('technicalSkills', false);
+    setEditMode("technicalSkills", false);
   };
 
   const handleSaveTechnicalSkills = async (skills: any[]) => {
@@ -550,7 +538,7 @@ const Profile = () => {
         user.email,
         skillsData,
         { technicalSkills: skills },
-        'technicalSkills'
+        "technicalSkills"
       );
 
       if (success) {
@@ -560,9 +548,9 @@ const Profile = () => {
           updatedData[0] = { ...updatedData[0], technicalSkills: skills };
           return updatedData;
         });
-        setEditMode('technicalSkills', false);
+        setEditMode("technicalSkills", false);
       }
-      
+
       return success;
     } catch (err) {
       console.error("Failed to update technical skills:", err);
@@ -574,11 +562,11 @@ const Profile = () => {
 
   //Roles
   const handleEditRoles = () => {
-    setEditMode('roles', true);
+    setEditMode("roles", true);
   };
 
   const handleCancelRoles = () => {
-    setEditMode('roles', false);
+    setEditMode("roles", false);
   };
 
   const handleSaveRoles = async (roles: any[]) => {
@@ -588,15 +576,15 @@ const Profile = () => {
         user.email,
         preferenceData,
         { userPreferredRoles: roles },
-        'userPreferredRoles'
+        "userPreferredRoles"
       );
-      
+
       if (success) {
         setPreferenceData((prevData: any) => ({
           ...prevData,
-          userPreferredRoles: roles
+          userPreferredRoles: roles,
         }));
-        setEditMode('roles', false);
+        setEditMode("roles", false);
       }
       return success;
     } catch (err) {
@@ -607,11 +595,11 @@ const Profile = () => {
 
   //Industries
   const handleEditIndustries = () => {
-    setEditMode('industries', true);
+    setEditMode("industries", true);
   };
 
   const handleCancelIndustries = () => {
-    setEditMode('industries', false);
+    setEditMode("industries", false);
   };
 
   const handleSaveIndustries = async (industries: any[]) => {
@@ -621,15 +609,15 @@ const Profile = () => {
         user.email,
         preferenceData,
         { userPreferredIndustries: industries },
-        'userPreferredIndustries'
+        "userPreferredIndustries"
       );
-      
+
       if (success) {
         setPreferenceData((prevData: any) => ({
           ...prevData,
-          userPreferredIndustries: industries
+          userPreferredIndustries: industries,
         }));
-        setEditMode('industries', false);
+        setEditMode("industries", false);
       }
       return success;
     } catch (err) {
@@ -640,11 +628,11 @@ const Profile = () => {
 
   //Departments
   const handleEditDepartments = () => {
-    setEditMode('departments', true);
+    setEditMode("departments", true);
   };
 
   const handleCancelDepartments = () => {
-    setEditMode('departments', false);
+    setEditMode("departments", false);
   };
 
   const handleSaveDepartments = async (departments: any[]) => {
@@ -654,15 +642,15 @@ const Profile = () => {
         user.email,
         preferenceData,
         { userPreferredDepartments: departments },
-        'userPreferredDepartments'
+        "userPreferredDepartments"
       );
-      
+
       if (success) {
         setPreferenceData((prevData: any) => ({
           ...prevData,
-          userPreferredDepartments: departments
+          userPreferredDepartments: departments,
         }));
-        setEditMode('departments', false);
+        setEditMode("departments", false);
       }
       return success;
     } catch (err) {
@@ -673,30 +661,30 @@ const Profile = () => {
 
   //Locations
   const handleEditLocations = () => {
-    setEditMode('locations', true);
+    setEditMode("locations", true);
   };
 
   const handleCancelLocations = () => {
-    setEditMode('locations', false);
+    setEditMode("locations", false);
   };
 
   const handleSaveLocations = async (locations: any[]) => {
-    console.log(preferenceData)
+    console.log(preferenceData);
     try {
       if (!user) return false;
       const success = await profileService.updatePreferenceData(
         user.email,
         preferenceData,
         { userPreferredlocations: locations },
-        'userPreferredlocations'
+        "userPreferredlocations"
       );
-      
+
       if (success) {
         setPreferenceData((prevData: any) => ({
           ...prevData,
-          userPreferredlocations: locations
+          userPreferredlocations: locations,
         }));
-        setEditMode('locations', false);
+        setEditMode("locations", false);
       }
       return success;
     } catch (err) {
@@ -707,11 +695,11 @@ const Profile = () => {
 
   // Achievements handlers
   const handleEditAchievements = () => {
-    setEditMode('achievements', true);
+    setEditMode("achievements", true);
   };
 
   const handleCancelAchievements = () => {
-    setEditMode('achievements', false);
+    setEditMode("achievements", false);
   };
 
   const handleSaveAchievements = async (items: string[]) => {
@@ -719,15 +707,15 @@ const Profile = () => {
       if (!user) return false;
 
       // Transform the items into achievement objects
-      const achievements = items.map(item => {
-        const parts = item.split(' - ');
-        const titlePart = parts[0] || '';
+      const achievements = items.map((item) => {
+        const parts = item.split(" - ");
+        const titlePart = parts[0] || "";
 
-        let acquiredFrom = '';
+        let acquiredFrom = "";
         let achievDate = new Date();
 
         if (parts.length > 1) {
-          const secondPart = parts[1] || '';
+          const secondPart = parts[1] || "";
           const matches = secondPart.match(/(.+) \((\d{4})\)/);
 
           if (matches && matches.length >= 3) {
@@ -741,7 +729,7 @@ const Profile = () => {
         return {
           title: titlePart,
           acquiredFrom,
-          achievDate
+          achievDate,
         };
       });
 
@@ -749,7 +737,7 @@ const Profile = () => {
         user.email,
         achievementData[0] || {},
         { achievements },
-        'achievement'
+        "achievement"
       );
 
       if (success) {
@@ -759,7 +747,7 @@ const Profile = () => {
           updatedData[0] = { ...updatedData[0], achievements };
           return updatedData;
         });
-        setEditMode('achievements', false);
+        setEditMode("achievements", false);
       }
 
       return success;
@@ -771,147 +759,138 @@ const Profile = () => {
 
   // Responsibilities handlers
   const handleEditResponsibilities = () => {
-    setEditMode('responsibilities', true);
+    setEditMode("responsibilities", true);
   };
 
   const handleCancelResponsibilities = () => {
-    setEditMode('responsibilities', false);
+    setEditMode("responsibilities", false);
   };
 
-const handleSaveResponsibilities = async (items: Responsibility[]) => {
-  // console.log(items)
-  try {
-    if (!user) return false;
+  const handleSaveResponsibilities = async (items: Responsibility[]) => {
+    // console.log(items)
+    try {
+      if (!user) return false;
 
-    // Assuming profileService.updateAchievementData expects a similar shape
-    const success = await profileService.updateDetailsData(
-      user.email,
-      detailsData[0],
-      { responsibilities: items },
-    );
-    if (success) {
-      // Update local state to reflect changes
-      setDetailsData((prevData: any) => {
-        const updatedData = [...prevData];
-        updatedData[0] = { ...updatedData[0], responsibilities: items };
-        return updatedData;
+      // Assuming profileService.updateAchievementData expects a similar shape
+      const success = await profileService.updateDetailsData(user.email, detailsData[0], {
+        responsibilities: items,
       });
-      setEditMode('responsibilities', false);
+      if (success) {
+        // Update local state to reflect changes
+        setDetailsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = { ...updatedData[0], responsibilities: items };
+          return updatedData;
+        });
+        setEditMode("responsibilities", false);
+      }
+
+      return success;
+    } catch (err) {
+      console.error("Failed to update responsibilities:", err);
+      return false;
     }
-
-    return success;
-  } catch (err) {
-    console.error("Failed to update responsibilities:", err);
-    return false;
-  }
-};
-
-
+  };
 
   // Social links handlers
   const handleEditSocials = () => {
-    setEditMode('socials', true);
+    setEditMode("socials", true);
   };
 
   const handleCancelSocials = () => {
-    setEditMode('socials', false);
+    setEditMode("socials", false);
   };
 
   const handleSaveSocials = async (social: string[]) => {
-    console.log(social)
-  try {
-    if (!user) return false;
+    console.log(social);
+    try {
+      if (!user) return false;
 
-    const KNOWN_PLATFORMS = ['twitter', 'github', 'linkedin'];
+      const KNOWN_PLATFORMS = ["twitter", "github", "linkedin"];
 
-    const mainPlatforms: Record<string, string[]> = {
-      twitter: [],
-      github: [],
-      linkedin: []
-    };
+      const mainPlatforms: Record<string, string[]> = {
+        twitter: [],
+        github: [],
+        linkedin: [],
+      };
 
-    const otherPlatforms: Record<string, string[]> = {};
+      const otherPlatforms: Record<string, string[]> = {};
 
-    social.forEach((entry) => {
-      const [key, value] = entry.split(" - ");
-      if (!key || !value) return;
+      social.forEach((entry) => {
+        const [key, value] = entry.split(" - ");
+        if (!key || !value) return;
 
-      const platform = key.trim().toLowerCase();
-      const url = value.trim();
+        const platform = key.trim().toLowerCase();
+        const url = value.trim();
 
-      if (KNOWN_PLATFORMS.includes(platform)) {
-        mainPlatforms[platform] = [url];
-      } else {
-        otherPlatforms[platform] = [url];
-      }
-    });
-    const updatedData = {
-      ...mainPlatforms,
-      otherSocialPlatForms: otherPlatforms,
-      PK: socialLinks[0]?.PK,
-      SK: socialLinks[0]?.SK,
-      createdAt: socialLinks[0]?.createdAt || new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+        if (KNOWN_PLATFORMS.includes(platform)) {
+          mainPlatforms[platform] = [url];
+        } else {
+          otherPlatforms[platform] = [url];
+        }
+      });
+      const updatedData = {
+        ...mainPlatforms,
+        otherSocialPlatForms: otherPlatforms,
+        PK: socialLinks[0]?.PK,
+        SK: socialLinks[0]?.SK,
+        createdAt: socialLinks[0]?.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
 
-    // console.log(updatedData,"updatedData")
+      // console.log(updatedData,"updatedData")
       const success = await profileService.updateSocialData(user.email, updatedData);
       if (success) {
         setSocialLinks([updatedData]);
-          setEditMode('socials', false);
+        setEditMode("socials", false);
       }
       return success;
     } catch (err) {
       console.error("Failed to update socials:", err);
       return false;
     }
-};
-
+  };
 
   // Salary handlers
   const handleEditSalary = () => {
-    setEditMode('salary', true);
+    setEditMode("salary", true);
   };
 
   const handleCancelSalary = () => {
-    setEditMode('salary', false);
+    setEditMode("salary", false);
   };
 
-const handleSaveSalary = async (data:any) => {
-  try {
-    if (!user) return false;
-    const isNegotiable = data.isNoticePeriodNegotiable === "negotiable";
-    const success = await profileService.updateDetailsData(
-      user.email,
-      detailsData,
-      {
+  const handleSaveSalary = async (data: any) => {
+    try {
+      if (!user) return false;
+      const isNegotiable = data.isNoticePeriodNegotiable === "negotiable";
+      const success = await profileService.updateDetailsData(user.email, detailsData, {
         CTC: data.CTC,
         ECTC: data.ECTC,
         noticePeriod: data.noticePeriod ? data.noticePeriod : 30,
-        isNoticePeriodNegotiable: isNegotiable
-      }
-    );
-
-    if (success) {
-      setDetailsData((prevData:any) => {
-        const updatedData = [...prevData];
-        updatedData[0] = {
-          ...updatedData[0],
-          CTC: data.CTC,
-          ECTC: data.ECTC,
-          noticePeriod: data.noticePeriod ? data.noticePeriod : 30,
-          isNoticePeriodNegotiable: isNegotiable
-        };
-        return updatedData;
+        isNoticePeriodNegotiable: isNegotiable,
       });
-      setEditMode('salary', false);
+
+      if (success) {
+        setDetailsData((prevData: any) => {
+          const updatedData = [...prevData];
+          updatedData[0] = {
+            ...updatedData[0],
+            CTC: data.CTC,
+            ECTC: data.ECTC,
+            noticePeriod: data.noticePeriod ? data.noticePeriod : 30,
+            isNoticePeriodNegotiable: isNegotiable,
+          };
+          return updatedData;
+        });
+        setEditMode("salary", false);
+      }
+      return success;
+    } catch (err) {
+      console.error("Failed to update salary information:", err);
+      return false;
     }
-    return success;
-  } catch (err) {
-    console.error("Failed to update salary information:", err);
-    return false;
-  }
-};
+  };
 
   // Retry fetching data function
   const retryFetchData = async () => {
@@ -931,26 +910,26 @@ const handleSaveSalary = async (data:any) => {
       const userData = await profileService.fetchAllUserData(user.email);
 
       const combinedExperience = [
-          // ...(userData.details[0].candidateExperience
-          //   ? [{
-          //       ...userData.details[0].candidateExperience,
-          //       YOE: userData.details[0].YOE || ""
-          //     }]
-          //   : []),
-          ...(userData.details[0].multipleCandidateExperience || [])
-        ];
+        // ...(userData.details[0].candidateExperience
+        //   ? [{
+        //       ...userData.details[0].candidateExperience,
+        //       YOE: userData.details[0].YOE || ""
+        //     }]
+        //   : []),
+        ...(userData.details[0].multipleCandidateExperience || []),
+      ];
 
       // Update all state variables with new data
       setProfileData(userData.profile);
       setDetailsData(userData.details);
       setEducationData(userData.education);
       setExperienceData(userData.experience);
-      setMultipleCandidateExperience(userData.multipleCandidateExperience)
-      setAllCandidateExperience(combinedExperience)
+      setMultipleCandidateExperience(userData.multipleCandidateExperience);
+      setAllCandidateExperience(combinedExperience);
       setSkillsData(userData.skills);
       setAchievementData(userData.achievement);
-      setSocialLinks(userData.socialprofile)
-      setPreferenceData(userData.preference || {})
+      setSocialLinks(userData.socialprofile);
+      setPreferenceData(userData.preference || {});
       setIsLoading(false);
     } catch (err: any) {
       console.error("Error retrying data fetch:", err);
@@ -960,28 +939,31 @@ const handleSaveSalary = async (data:any) => {
   };
 
   useEffect(() => {
-  if (detailsData?.[0]?.name) {
-    setEditedName(detailsData[0].name);
-  }
-}, [detailsData]);
+    if (detailsData?.[0]?.name) {
+      setEditedName(detailsData[0].name);
+    }
+  }, [detailsData]);
 
-  if (isLoading) return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
-    </div>
-  );
+  if (isLoading)
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+      </div>
+    );
 
-  if (error) return (
-    <div className="flex flex-col items-center justify-center min-h-screen px-4">
-      <div className="text-red-600 text-xl font-medium text-center">Error loading profile data</div>
-      <button
-        onClick={retryFetchData}
-        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-      >
-        Try Again
-      </button>
-    </div>
-  );
+  if (error)
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen px-4">
+        <div className="text-red-600 text-xl font-medium text-center">
+          Error loading profile data
+        </div>
+        <button
+          onClick={retryFetchData}
+          className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
+          Try Again
+        </button>
+      </div>
+    );
 
   return (
     <div className="flex flex-col lg:flex-row w-full min-h-screen">
@@ -997,81 +979,81 @@ const handleSaveSalary = async (data:any) => {
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">
               <div className="relative flex flex-col lg:flex-row lg:items-center justify-between w-full p-4 sm:py-5 sm:px-8">
-
                 {/* Profile Section */}
                 <div className="flex flex-col sm:flex-row w-full lg:flex-1">
                   {/* Profile Image */}
-                  <div className="flex flex-col items-center mb-4 sm:mb-0"> 
-                <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mb-4 sm:mb-0">         
-                {/* Edit Icon */}
-                {editMode.profilePic
-                ? <img
-                  className="absolute top-1 right-1 w-6 h-6 sm:w-7 sm:h-7 cursor-pointer bg-white rounded-full p-1 shadow-md"
-                  alt="Edit"
-                  src={cancel}
-                  onClick={() => setEditMode('profilePic', false)}
-                />
-              : <img
-                  className="absolute top-1 right-1 w-6 h-6 sm:w-7 sm:h-7 cursor-pointer bg-white rounded-full p-1 shadow-md"
-                  alt="Edit"
-                  src={Group}
-                  onClick={() => setEditMode('profilePic', true)}
-                />}
+                  <div className="flex flex-col items-center mb-4 sm:mb-0">
+                    <div className="relative w-20 h-20 sm:w-24 sm:h-24 lg:w-32 lg:h-32 mb-4 sm:mb-0">
+                      {/* Edit Icon */}
+                      {editMode.profilePic ? (
+                        <img
+                          className="absolute top-1 right-1 w-6 h-6 sm:w-7 sm:h-7 cursor-pointer bg-white rounded-full p-1 shadow-md"
+                          alt="Edit"
+                          src={cancel}
+                          onClick={() => setEditMode("profilePic", false)}
+                        />
+                      ) : (
+                        <img
+                          className="absolute top-1 right-1 w-6 h-6 sm:w-7 sm:h-7 cursor-pointer bg-white rounded-full p-1 shadow-md"
+                          alt="Edit"
+                          src={Group}
+                          onClick={() => setEditMode("profilePic", true)}
+                        />
+                      )}
 
-                {/* Avatar Image */}
-                <img
-                  className="w-full h-full object-cover rounded-full border-2"
-                  alt="Profile"
-                  src={
-                    detailsData[0]?.profileImageAwsS3SignedUrl ||
-                    "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png"
-                  }
-                />
-              </div>
-              {editMode.profilePic &&
-              <div className="mt-4 w-full">
-                <UploadImageButton 
-                detailsData={detailsData[0]}
-                onUploadSuccess={(url) => {
-                  // console.log("New image uploaded:", url);
-                  fetchData()
-                  setEditMode('profilePic', false)
-                }} />
-              </div>
-              }
-              </div>
+                      {/* Avatar Image */}
+                      <img
+                        className="w-full h-full object-cover rounded-full border-2"
+                        alt="Profile"
+                        src={
+                          detailsData[0]?.profileImageAwsS3SignedUrl ||
+                          "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png"
+                        }
+                      />
+                    </div>
+                    {editMode.profilePic && (
+                      <div className="mt-4 w-full">
+                        <UploadImageButton
+                          detailsData={detailsData[0]}
+                          onUploadSuccess={(url) => {
+                            // console.log("New image uploaded:", url);
+                            fetchData();
+                            setEditMode("profilePic", false);
+                          }}
+                        />
+                      </div>
+                    )}
+                  </div>
                   {/* Profile Info */}
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">
                       {isEditingName ? (
-                      <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">   
-                        <div>
-                          <input
-                            type="text"
-                            value={editedName}
-                            onChange={(e) => setEditedName(e.target.value)}
-                            className="text-xl sm:text-2xl font-semibold text-black border border-gray-300 rounded px-2 py-1"
-                          />
+                        <div className="flex flex-col justify-center items-center lg:flex-row lg:justify-start lg:items-center lg:flex-nowrap">
+                          <div>
+                            <input
+                              type="text"
+                              value={editedName}
+                              onChange={(e) => setEditedName(e.target.value)}
+                              className="text-xl sm:text-2xl font-semibold text-black border border-gray-300 rounded px-2 py-1"
+                            />
                           </div>
                           <div className="flex mt-2 lg:mt-0 lg:ml-4">
-                          <button
-                            onClick={handleSaveName}
-                            className="ml-2 text-blue-600 text-sm font-medium"
-                          >
-                            Save
-                          </button>
+                            <button
+                              onClick={handleSaveName}
+                              className="ml-2 text-blue-600 text-sm font-medium">
+                              Save
+                            </button>
 
-                          <button
-                            onClick={() => {
+                            <button
+                              onClick={() => {
                                 setEditedName(profileData?.data?.name || user?.name || "");
                                 setEditedLocation(detailsData[0]?.location || "");
                                 setEditedGender(detailsData[0]?.gender || "");
                                 setIsEditingName(false);
                               }}
-                            className="ml-2 text-gray-500 text-sm font-medium"
-                          >
-                            Cancel
-                          </button>
+                              className="ml-2 text-gray-500 text-sm font-medium">
+                              Cancel
+                            </button>
                           </div>
                         </div>
                       ) : (
@@ -1096,14 +1078,15 @@ const handleSaveSalary = async (data:any) => {
                     </div>
 
                     <div className="text-xs font-medium text-black text-center sm:text-left">
-                      Profile last updated - {new Date().toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
+                      Profile last updated -{" "}
+                      {new Date().toLocaleDateString("en-US", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
                       })}
                     </div>
 
-                  {/* <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
+                    {/* <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">
                     {isEditingEducation ? (
                       <>
                         <input
@@ -1171,133 +1154,134 @@ const handleSaveSalary = async (data:any) => {
                       </>
                     )}
                     </div> */}
-                    
+
                     <div className="border border-gray-300 opacity-50 w-full my-4"></div>
 
                     {/* Contact Info Grid */}
-                  <div className="grid grid-cols-[auto] sm:grid-cols-[150px_1fr] gap-x-4 gap-y-3 sm:gap-y-4 mt-2">
-                    {[
-                      {
-                        icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
-                        text: isEditingName ? (
-                          <input
-                            type="text"
-                            value={editedLocation}
-                            onChange={(e) => setEditedLocation(e.target.value)}
-                            className="border px-2 py-1 rounded text-sm w-full sm:w-auto font-semibold text-black"
-                            placeholder="Location"
-                          />
-                        ) : (
-                          toTitleCase(detailsData[0]?.location) || "Location"
-                        ),
-                      },
-                      {
-                        key: "phone",
-                        icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
-                        text: showPhoneOtpInput ? (
-                          <>
-                            {/* Phone icon, number, and OTP input in one row */}
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
-                              <input
-                                type="text"
-                                value={otpValue}
-                                maxLength={6}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  if (/^\d*$/.test(val)) {
-                                    setOtpValue(val);
-                                  }
-                                }}
-                                className="border px-2 py-1 rounded text-sm w-24"
-                                placeholder="Enter OTP"
-                              />
+                    <div className="grid grid-cols-[auto] sm:grid-cols-[150px_1fr] gap-x-4 gap-y-3 sm:gap-y-4 mt-2">
+                      {[
+                        {
+                          icon: <MapPin strokeWidth={1.75} className="h-4 w-4" />,
+                          text: isEditingName ? (
+                            <input
+                              type="text"
+                              value={editedLocation}
+                              onChange={(e) => setEditedLocation(e.target.value)}
+                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto font-semibold text-black"
+                              placeholder="Location"
+                            />
+                          ) : (
+                            toTitleCase(detailsData[0]?.location) || "Location"
+                          ),
+                        },
+                        {
+                          key: "phone",
+                          icon: <PhoneCall strokeWidth={1.75} className="h-4 w-4" />,
+                          text: showPhoneOtpInput ? (
+                            <>
+                              {/* Phone icon, number, and OTP input in one row */}
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm">
+                                  {detailsData[0]?.number || "Phone Number"}
+                                </span>
+                                <input
+                                  type="text"
+                                  value={otpValue}
+                                  maxLength={6}
+                                  onChange={(e) => {
+                                    const val = e.target.value;
+                                    if (/^\d*$/.test(val)) {
+                                      setOtpValue(val);
+                                    }
+                                  }}
+                                  className="border px-2 py-1 rounded text-sm w-24"
+                                  placeholder="Enter OTP"
+                                />
+                              </div>
+
+                              {/* Confirm OTP, Resend, Cancel on a separate row */}
+                              <div className="mt-2 flex items-center gap-4 flex-wrap">
+                                <button
+                                  className="text-xs font-medium text-green-600"
+                                  onClick={handleVerifyPhoneOtp}>
+                                  Confirm OTP
+                                </button>
+                                <button
+                                  className="text-xs font-medium text-gray-600"
+                                  onClick={handleSendPhoneOtp}
+                                  disabled={resendCooldown}>
+                                  {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
+                                </button>
+                                <button
+                                  className="text-xs font-medium text-red-600"
+                                  onClick={() => {
+                                    setShowPhoneOtpInput(false);
+                                    setOtpValue("");
+                                  }}>
+                                  Cancel
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2">
+                              <span className="text-sm">
+                                {detailsData[0]?.number || "Phone Number"}
+                              </span>
                             </div>
+                          ),
+                          verify: !detailsData[0]?.isNumberVerified && !showPhoneOtpInput,
+                          verified: detailsData[0]?.isNumberVerified,
+                        },
+                        {
+                          icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
+                          text: isEditingName ? (
+                            <select
+                              value={editedGender}
+                              onChange={(e) => setEditedGender(e.target.value)}
+                              className="border px-2 py-1 rounded text-sm w-full sm:w-auto">
+                              <option value="">Select Gender</option>
+                              <option value="Male">Male</option>
+                              <option value="Female">Female</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          ) : (
+                            toTitleCase(detailsData[0]?.gender) || "Add gender"
+                          ),
+                        },
+                        {
+                          icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
+                          text: detailsData[0]?.email || user?.email || "Email",
+                          verify: !detailsData[0]?.isEmailVerified,
+                          verified: detailsData[0]?.isEmailVerified,
+                        },
+                      ].map((item, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-center sm:justify-start">
+                          {item.icon}
+                          <span
+                            className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}>
+                            {item.text}
+                          </span>
 
-                            {/* Confirm OTP, Resend, Cancel on a separate row */}
-                            <div className="mt-2 flex items-center gap-4 flex-wrap">
-                              <button
-                                className="text-xs font-medium text-green-600"
-                                onClick={handleVerifyPhoneOtp}
-                              >
-                                Confirm OTP
-                              </button>
-                              <button
-                                className="text-xs font-medium text-gray-600"
-                                onClick={handleSendPhoneOtp}
-                                disabled={resendCooldown}
-                              >
-                                {resendCooldown ? `Resend OTP in ${countdown}s` : "Resend OTP"}
-                              </button>
-                              <button
-                                className="text-xs font-medium text-red-600"
-                                onClick={() => {
-                                  setShowPhoneOtpInput(false);
-                                  setOtpValue("");
-                                }}
-                              >
-                                Cancel
-                              </button>
-                            </div>
-                          </>
-                        ) : (
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span className="text-sm">{detailsData[0]?.number || "Phone Number"}</span>
-                          </div>
-                        ),
-                        verify: !detailsData[0]?.isNumberVerified && !showPhoneOtpInput,
-                        verified: detailsData[0]?.isNumberVerified,
-                      },
-                      {
-                        icon: <img className="w-4 h-4" alt="Gender" src={gender} />,
-                        text: isEditingName ? (
-                          <select
-                            value={editedGender}
-                            onChange={(e) => setEditedGender(e.target.value)}
-                            className="border px-2 py-1 rounded text-sm w-full sm:w-auto"
-                          >
-                            <option value="">Select Gender</option>
-                            <option value="Male">Male</option>
-                            <option value="Female">Female</option>
-                            <option value="Other">Other</option>
-                          </select>
-                        ) : (
-                          toTitleCase(detailsData[0]?.gender) || "Add gender"
-                        ),
-                      },
-                      {
-                        icon: <AtSign strokeWidth={1.75} className="h-4 w-4" />,
-                        text: detailsData[0]?.email || user?.email || "Email",
-                        verify: !detailsData[0]?.isEmailVerified,
-                        verified: detailsData[0]?.isEmailVerified,
-                      },
-                    ].map((item, index) => (
-                      <div key={index} className="flex items-center justify-center sm:justify-start">
-                        {item.icon}
-                        <span className={`text-sm ml-1 overflow-hidden text-ellipsis whitespace-nowrap`}>
-                          {item.text}
-                        </span>
+                          {item.verify && (
+                            <button
+                              className="text-xs font-medium text-blue-600 ml-1"
+                              onClick={() => {
+                                if (item.key === "phone") {
+                                  handleSendPhoneOtp();
+                                }
+                              }}>
+                              Verify
+                            </button>
+                          )}
 
-                        {item.verify && (
-                          <button
-                            className="text-xs font-medium text-blue-600 ml-1"
-                            onClick={() => {
-                              if (item.key === "phone") {
-                                handleSendPhoneOtp();
-                              }
-                            }}
-                          >
-                            Verify
-                          </button>
-                        )}
-
-                        {item.verified && (
-                          <img className="w-4 h-4 ml-1" alt="Verified" src={verified} />
-                        )}
-                      </div>
-                    ))}
-                  </div>
-
+                          {item.verified && (
+                            <img className="w-4 h-4 ml-1" alt="Verified" src={verified} />
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
@@ -1311,8 +1295,9 @@ const handleSaveSalary = async (data:any) => {
                       href={detailsData[0]?.cvAwsS3SignedUrl || "#"}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={!detailsData[0]?.cvAwsS3SignedUrl ? "cursor-not-allowed opacity-50" : ""}
-                    >
+                      className={
+                        !detailsData[0]?.cvAwsS3SignedUrl ? "cursor-not-allowed opacity-50" : ""
+                      }>
                       <img
                         className="w-8 h-8 rounded-md bg-[#57E1E1]"
                         src={eyeIcon}
@@ -1321,14 +1306,11 @@ const handleSaveSalary = async (data:any) => {
                     </a>
                   </div>
 
-                  <UploadCVButton
-                    onUploadSuccess={() => fetchData()}
-                  />
+                  <UploadCVButton onUploadSuccess={() => fetchData()} />
 
                   <button
-                    onClick={()=>setInitiateVideoInterview(true)}
-                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 mt-9"
-                  >
+                    onClick={() => setInitiateVideoInterview(true)}
+                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 mt-9">
                     <Video className="h-4 w-4 sm:h-5 sm:w-5" />
                     <span className="text-xs font-semibold">Initiate video interview</span>
                   </button>
@@ -1340,27 +1322,26 @@ const handleSaveSalary = async (data:any) => {
           {/* About Section */}
           {detailsData && (
             <div id="about">
-            <ProfileSection
-              title="About"
-              editMode={editMode.about || false}
-              onEdit={handleEditAbout}
-              onCancel={handleCancelAbout}
-              onSave={handleSaveAbout}
-              formFields={[
-                {
-                  name: "about",
-                  label: "About",
-                  type: "textarea",
-                  placeholder: "Tell us about yourself",
-                  required: true
-                }
-              ]}
-              formData={{ about: detailsData[0]?.about || "" }}
-            >
-              <p className="text-sm text-gray-800 leading-relaxed">
-                {detailsData[0]?.about || "No information provided."}
-              </p>
-            </ProfileSection>
+              <ProfileSection
+                title="About"
+                editMode={editMode.about || false}
+                onEdit={handleEditAbout}
+                onCancel={handleCancelAbout}
+                onSave={handleSaveAbout}
+                formFields={[
+                  {
+                    name: "about",
+                    label: "About",
+                    type: "textarea",
+                    placeholder: "Tell us about yourself",
+                    required: true,
+                  },
+                ]}
+                formData={{ about: detailsData[0]?.about || "" }}>
+                <p className="text-sm text-gray-800 leading-relaxed">
+                  {detailsData[0]?.about || "No information provided."}
+                </p>
+              </ProfileSection>
             </div>
           )}
 
@@ -1378,7 +1359,7 @@ const handleSaveSalary = async (data:any) => {
                 title: "Education",
                 items: educationData,
                 variant: "education",
-                onEdit: handleEditEducation
+                onEdit: handleEditEducation,
               })
             )}
           </div>
@@ -1397,7 +1378,7 @@ const handleSaveSalary = async (data:any) => {
                 title: "Work experience",
                 items: allCandidateExperience,
                 variant: "experience",
-                onEdit: handleEditWorkExperience
+                onEdit: handleEditWorkExperience,
               })
             )}
           </div>
@@ -1419,7 +1400,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Core skills",
                     skills: skillsData[0]?.coreSkills || [],
-                    onEdit: handleEditCoreSkills
+                    onEdit: handleEditCoreSkills,
                   })
                 )}
               </div>
@@ -1437,7 +1418,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Soft skills",
                     skills: skillsData[0]?.softSkills || [],
-                    onEdit: handleEditSoftSkills
+                    onEdit: handleEditSoftSkills,
                   })
                 )}
               </div>
@@ -1456,7 +1437,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Technical skills",
                     skills: skillsData[0]?.technicalSkills || [],
-                    onEdit: handleEditTechnicalSkills
+                    onEdit: handleEditTechnicalSkills,
                   })
                 )}
               </div>
@@ -1479,7 +1460,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Roles I am looking for",
                     skills: preferenceData?.userPreferredRoles || [],
-                    onEdit: handleEditRoles
+                    onEdit: handleEditRoles,
                   })
                 )}
               </div>
@@ -1497,7 +1478,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Industry preference",
                     skills: preferenceData?.userPreferredIndustries || [],
-                    onEdit: handleEditIndustries
+                    onEdit: handleEditIndustries,
                   })
                 )}
               </div>
@@ -1515,7 +1496,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Department preference",
                     skills: preferenceData?.userPreferredDepartments || [],
-                    onEdit: handleEditDepartments
+                    onEdit: handleEditDepartments,
                   })
                 )}
               </div>
@@ -1533,7 +1514,7 @@ const handleSaveSalary = async (data:any) => {
                   renderSkillsSection({
                     title: "Location preference",
                     skills: preferenceData?.userPreferredlocations || [],
-                    onEdit: handleEditLocations
+                    onEdit: handleEditLocations,
                   })
                 )}
               </div>
@@ -1545,11 +1526,16 @@ const handleSaveSalary = async (data:any) => {
             {editMode.achievements ? (
               <AchievementsEditor
                 title="Achievements"
-                items={(achievementData && achievementData[0]?.achievements?.map(
-                  (achievement: any) =>
-                    `${achievement.title} - ${achievement.acquiredFrom
-                    } (${new Date(achievement.achievDate).getFullYear()})`
-                )) || []}
+                items={
+                  (achievementData &&
+                    achievementData[0]?.achievements?.map(
+                      (achievement: any) =>
+                        `${achievement.title} - ${achievement.acquiredFrom} (${new Date(
+                          achievement.achievDate
+                        ).getFullYear()})`
+                    )) ||
+                  []
+                }
                 onSave={handleSaveAchievements}
                 onCancel={handleCancelAchievements}
               />
@@ -1560,85 +1546,71 @@ const handleSaveSalary = async (data:any) => {
                   (achievementData &&
                     achievementData[0]?.achievements?.map(
                       (achievement: any) =>
-                        `${achievement.title} - ${achievement.acquiredFrom
-                        } (${new Date(achievement.achievDate).getFullYear()})`
-                    )) || [],
-                onEdit: handleEditAchievements
+                        `${achievement.title} - ${achievement.acquiredFrom} (${new Date(
+                          achievement.achievDate
+                        ).getFullYear()})`
+                    )) ||
+                  [],
+                onEdit: handleEditAchievements,
               })
             )}
           </div>
 
           {/* Responsibilities */}
-            <div id="responsibilities">
-              {editMode.responsibilities ? (
-                <ResponsibilityEditor
-                  title= "Responsibilities"
-                  items={(detailsData && detailsData[0]?.responsibilities) || []}
-                  onSave={handleSaveResponsibilities}
-                  onCancel={handleCancelResponsibilities}
-                />
-              ) : (
-                renderListSection({
-                  title: "Responsibilities",
-                  items: (detailsData && detailsData[0]?.responsibilities) || [],
-                  onEdit: handleEditResponsibilities,
-                  variant: "responsibilities"
-                })
-              )}
-            </div>
+          <div id="responsibilities">
+            {editMode.responsibilities ? (
+              <ResponsibilityEditor
+                title="Responsibilities"
+                items={(detailsData && detailsData[0]?.responsibilities) || []}
+                onSave={handleSaveResponsibilities}
+                onCancel={handleCancelResponsibilities}
+              />
+            ) : (
+              renderListSection({
+                title: "Responsibilities",
+                items: (detailsData && detailsData[0]?.responsibilities) || [],
+                onEdit: handleEditResponsibilities,
+                variant: "responsibilities",
+              })
+            )}
+          </div>
 
           {/* Social Links */}
-        <div id="social-links">
-          {editMode.socials ? (
-            <SocialLinksEditor
-              title="Social Links"
-              itemsRaw={socialLinks && socialLinks[0] ? socialLinks[0] : null}
-              onSave={handleSaveSocials}
-              onCancel={handleCancelSocials}
-            />
-          ) : (
-            renderListSection({
-              title: "Social Links",
-              variant: "socials",
-              items: [
-                <div
-                  key="social-links"
-                  style={{ display: "flex", flexWrap: "wrap", gap: "16px", alignItems: "center" }}
-                >
-                  <Link strokeWidth={1.5} />
-                  {(() => {
-                    const validLinks = (socialLinks || []).flatMap((item: Record<string, string[]>, index:number) => {
-                      const links = Object.entries(item)
-                        .filter(
-                          ([key, value]) =>
-                            !["SK", "PK", "createdAt", "updatedAt", "otherSocialPlatForms"].includes(key) &&
-                            value &&
-                            value.length > 0 &&
-                            value[0] &&
-                            value[0] !== "undefined" &&
-                            value[0].trim() !== ""
-                        )
-                        .map(([key, value]) => (
-                          <a
-                            key={`${index}-${key}`}
-                            href={value[0]}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            style={{
-                              color: "blue",
-                              textDecoration: "underline",
-                              textTransform: "capitalize",
-                            }}
-                          >
-                            {key}
-                          </a>
-                        ));
-
-                      if (item.otherSocialPlatForms) {
-                        links.push(
-                          ...Object.entries(item.otherSocialPlatForms)
+          <div id="social-links">
+            {editMode.socials ? (
+              <SocialLinksEditor
+                title="Social Links"
+                itemsRaw={socialLinks && socialLinks[0] ? socialLinks[0] : null}
+                onSave={handleSaveSocials}
+                onCancel={handleCancelSocials}
+              />
+            ) : (
+              renderListSection({
+                title: "Social Links",
+                variant: "socials",
+                items: [
+                  <div
+                    key="social-links"
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "16px",
+                      alignItems: "center",
+                    }}>
+                    <Link strokeWidth={1.5} />
+                    {(() => {
+                      const validLinks = (socialLinks || []).flatMap(
+                        (item: Record<string, string[]>, index: number) => {
+                          const links = Object.entries(item)
                             .filter(
-                              ([_, value]) =>
+                              ([key, value]) =>
+                                ![
+                                  "SK",
+                                  "PK",
+                                  "createdAt",
+                                  "updatedAt",
+                                  "otherSocialPlatForms",
+                                ].includes(key) &&
                                 value &&
                                 value.length > 0 &&
                                 value[0] &&
@@ -1647,7 +1619,7 @@ const handleSaveSalary = async (data:any) => {
                             )
                             .map(([key, value]) => (
                               <a
-                                key={`${index}-other-${key}`}
+                                key={`${index}-${key}`}
                                 href={value[0]}
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -1655,28 +1627,58 @@ const handleSaveSalary = async (data:any) => {
                                   color: "blue",
                                   textDecoration: "underline",
                                   textTransform: "capitalize",
-                                }}
-                              >
+                                }}>
                                 {key}
                               </a>
-                            ))
-                        );
-                      }
+                            ));
 
-                      return links;
-                    });
+                          if (item.otherSocialPlatForms) {
+                            links.push(
+                              ...Object.entries(item.otherSocialPlatForms)
+                                .filter(
+                                  ([_, value]) =>
+                                    value &&
+                                    value.length > 0 &&
+                                    value[0] &&
+                                    value[0] !== "undefined" &&
+                                    value[0].trim() !== ""
+                                )
+                                .map(([key, value]) => (
+                                  <a
+                                    key={`${index}-other-${key}`}
+                                    href={value[0]}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    style={{
+                                      color: "blue",
+                                      textDecoration: "underline",
+                                      textTransform: "capitalize",
+                                    }}>
+                                    {key}
+                                  </a>
+                                ))
+                            );
+                          }
 
-                    return validLinks.length > 0 ? validLinks : <span className="text-gray-400">N/A</span>;
-                  })()}
-                </div>,
-              ],
-              onEdit: handleEditSocials,
-            })
-          )}
-        </div>
+                          return links;
+                        }
+                      );
 
-      {/* Social Links */}
-        {/* <div id="social-links">
+                      return validLinks.length > 0 ? (
+                        validLinks
+                      ) : (
+                        <span className="text-gray-400">N/A</span>
+                      );
+                    })()}
+                  </div>,
+                ],
+                onEdit: handleEditSocials,
+              })
+            )}
+          </div>
+
+          {/* Social Links */}
+          {/* <div id="social-links">
           {editMode.socials ? (
             <SocialLinksEditor
               title="Social Links"
@@ -1795,103 +1797,123 @@ const handleSaveSalary = async (data:any) => {
         </div> */}
 
           {/* Salary */}
-            {detailsData && (
-              <div id="salary-availability" className="scroll-mt-16">
-                <ProfileSection
-                  title="Salary & Availability"
-                  editMode={editMode.salary || false}
-                  onEdit={handleEditSalary}
-                  onCancel={handleCancelSalary}
-                  onSave={handleSaveSalary}
-                  formFields={[
-                    {
-                      name: "CTC",
-                      label: "Current CTC (LPA)",
-                      type: "number",
-                      placeholder: "Enter current CTC",
-                      required: true
-                    },
-                    {
-                      name: "ECTC",
-                      label: "Expected CTC (LPA)",
-                      type: "number",
-                      placeholder: "Enter expected CTC",
-                      required: true
-                    },
-                    {
-                      name: "noticePeriod",
-                      label: "Notice Period (in days)",
-                      type: "number",
-                      placeholder: "Enter notice period",
-                      required: false
-                    },
-                    {
-                        name: "isNoticePeriodNegotiable",
-                        label: "Is the notice period negotiable?",
-                        type: "select",
-                        options: [
-                          { label: "Negotiable", value: "negotiable" },
-                          { label: "Non-negotiable", value: "non-negotiable" }
-                        ],
-                        required: false,
-                      },
-                  ]}
-                    formData={{
-                      CTC: detailsData[0]?.CTC || "",
-                      ECTC: detailsData[0]?.ECTC || "",
-                      noticePeriod: detailsData[0]?.noticePeriod || "",
-                      isNoticePeriodNegotiable: detailsData[0]?.isNoticePeriodNegotiable ? "negotiable" : "non-negotiable",
-                    }}
-                >
-                  <div className="flex flex-col gap-4">
-                    {/* Salary Info */}
-                    <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-6 sm:gap-20">
-                      {[
-                        { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
-                        { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
-                        // { label: "Notice Period", value: `${detailsData[0]?.noticePeriod || "30"} days` },
-                        // { label: "Notice period Negotiable?", value: `${detailsData[0]?.isNoticePeriodNegotiable  || "Yes"}` },
-                      ].map((item, index) => (
-                        <div key={index} className="flex items-center gap-4">
-                          <img className="w-6 h-6" alt="Money" src={salary} />
-                          <div>
-                            <span className="font-medium">{item.label} - </span>
-                            <span className="font-semibold text-blue-600">
-                              {item.value}
-                            </span>
-                          </div>
+          {detailsData && (
+            <div id="salary-availability" className="scroll-mt-16">
+              <ProfileSection
+                title="Salary & Availability"
+                editMode={editMode.salary || false}
+                onEdit={handleEditSalary}
+                onCancel={handleCancelSalary}
+                onSave={handleSaveSalary}
+                formFields={[
+                  {
+                    name: "CTC",
+                    label: "Current CTC (LPA)",
+                    type: "number",
+                    placeholder: "Enter current CTC",
+                    required: true,
+                  },
+                  {
+                    name: "ECTC",
+                    label: "Expected CTC (LPA)",
+                    type: "number",
+                    placeholder: "Enter expected CTC",
+                    required: true,
+                  },
+                  {
+                    name: "noticePeriod",
+                    label: "Notice Period (in days)",
+                    type: "number",
+                    placeholder: "Enter notice period",
+                    required: false,
+                  },
+                  {
+                    name: "isNoticePeriodNegotiable",
+                    label: "Is the notice period negotiable?",
+                    type: "select",
+                    options: [
+                      { label: "Negotiable", value: "negotiable" },
+                      { label: "Non-negotiable", value: "non-negotiable" },
+                    ],
+                    required: false,
+                  },
+                ]}
+                formData={{
+                  CTC: detailsData[0]?.CTC || "",
+                  ECTC: detailsData[0]?.ECTC || "",
+                  noticePeriod: detailsData[0]?.noticePeriod || "",
+                  isNoticePeriodNegotiable: detailsData[0]?.isNoticePeriodNegotiable
+                    ? "negotiable"
+                    : "non-negotiable",
+                }}>
+                <div className="flex flex-col gap-4">
+                  {/* Salary Info */}
+                  <div className="flex flex-col sm:flex-row sm:flex-nowrap gap-6 sm:gap-20">
+                    {[
+                      { label: "Current CTC", value: `${detailsData[0]?.CTC || "0"} LPA` },
+                      { label: "Expected CTC", value: `${detailsData[0]?.ECTC || "0"} LPA` },
+                      // { label: "Notice Period", value: `${detailsData[0]?.noticePeriod || "30"} days` },
+                      // { label: "Notice period Negotiable?", value: `${detailsData[0]?.isNoticePeriodNegotiable  || "Yes"}` },
+                    ].map((item, index) => (
+                      <div key={index} className="flex items-center gap-4">
+                        <img className="w-6 h-6" alt="Money" src={salary} />
+                        <div>
+                          <span className="font-medium">{item.label} - </span>
+                          <span className="font-semibold text-blue-600">{item.value}</span>
                         </div>
-                      ))}
+                      </div>
+                    ))}
                     {/* Notice Period Info */}
-                      {detailsData ? (
-                        <div className="flex items-center gap-4">
-                          <img className="w-6 h-6" alt="Notice Period" src={salary} />
-                          <div>
-                            <span className="font-medium">Notice Period - </span>
-                            <span className="font-semibold text-blue-600">
-                              {detailsData[0]?.noticePeriod ?? "30"} days
-                            </span>
+                    {detailsData ? (
+                      <div className="flex items-center gap-4">
+                        <img className="w-6 h-6" alt="Notice Period" src={salary} />
+                        <div>
+                          <span className="font-medium">Notice Period - </span>
+                          <span className="font-semibold text-blue-600">
+                            {detailsData[0]?.noticePeriod ?? "30"} days
+                          </span>
                           <span className="ml-2 text-sm italic font-semibold text-blue-600">
-                          ({detailsData[0]?.isNoticePeriodNegotiable ? "Negotiable" : "Non-Negotiable"})
-                        </span>
-                          </div>
+                            (
+                            {detailsData[0]?.isNoticePeriodNegotiable
+                              ? "Negotiable"
+                              : "Non-Negotiable"}
+                            )
+                          </span>
                         </div>
-                      ) : (
-                        <div className="text-gray-500 italic">Loading notice period info...</div>
-                      )}
-                    </div>
+                      </div>
+                    ) : (
+                      <div className="text-gray-500 italic">Loading notice period info...</div>
+                    )}
                   </div>
-                </ProfileSection>
-              </div>
-            )}
-            <VideoInterviewModal
-              onClose={()=>setInitiateVideoInterview(false)}
-              isOpen={initiateVideoInterview}
-            />
+                </div>
+              </ProfileSection>
+            </div>
+          )}
+          <VideoInterviewModal
+            onClose={() => setInitiateVideoInterview(false)}
+            isOpen={initiateVideoInterview}
+            handleViewDetails={(interview: InterviewDto) => {
+              setInitiateVideoInterview(false);
+              setViewInterviewModalOpen({ isOpen: true, data: interview });
+            }}
+          />
+
+          {viewInterviewModal.isOpen && (
+            <Modal
+              isOpen={viewInterviewModal.isOpen}
+              onClose={() =>
+                setViewInterviewModalOpen({ isOpen: false, data: {} as InterviewDto })
+              }>
+              <InterviewDetailedViewModal
+                userName={profileData?.data?.name || user?.name || "User"}
+                interviewDetails={viewInterviewModal.data}
+              />
+            </Modal>
+          )}
         </div>
       </div>
     </div>
-  );;
+  );
 };
 
 export default Profile;

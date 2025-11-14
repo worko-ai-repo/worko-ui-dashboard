@@ -18,10 +18,11 @@ export interface InterviewHistoryEntryDto {
 }
 
 export interface InterviewRequestDto {
-  userId: string;
   corporateUserId: string;
+  companyName: string;
+  corporateUserName: string;
   companyId: string;
-  positionId: string;
+  position: string;
   jobId: string;
   requestedAt: string;
 }
@@ -46,14 +47,7 @@ export interface InterviewDto {
   status: InterviewStatusType;
   totalQuestions: number;
   currentQuestion: string;
-  requestedBy?: Array<{
-    userId: string;
-    corporateUserId: string;
-    companyId: string;
-    positionId: string;
-    jobId: string;
-    requestedAt: string;
-  }>;
+  requestedBy?: Array<InterviewRequestDto>;
   score?: number;
   scoreBreakdown?: InterviewScoreBreakdownDto;
   duration?: number;
