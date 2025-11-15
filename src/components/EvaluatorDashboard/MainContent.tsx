@@ -12,7 +12,11 @@ import { fetchAuthSession } from '@aws-amplify/auth';
 import { getToastOptions } from "@Utils/Toast.utils";
 import { toast } from "react-toastify";
 import { useAppContext } from 'lib-worko-ui';
-
+import { useQuery } from '@tanstack/react-query';
+import { InterviewDto } from '@TypesAndConstants/Interview.dto';
+import interviewServiceObj from "@Services/Interview.service";
+import { getLatestInterviewData } from '@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable';
+import { formatObjectForDisplay } from '@Utils/FormatText.utils';
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
   companyLogo: string;
@@ -53,7 +57,7 @@ const MainContent: React.FC<MainContentProps> = ({
   const [searchParams] = useSearchParams();
   const jobApplicationId = searchParams.get('jobApplicationId') || '';
   const evaluationRequestId = searchParams.get('evaluationRequestId') || '';
-
+  const { userDetails } = useAppContext();
   
   useEffect(() => {
     const fetchSocialLinks = async () => {
@@ -146,6 +150,44 @@ const MainContent: React.FC<MainContentProps> = ({
 
   checkSession();
 }, [evaluatorEmail, jobApplicationId, evaluationRequestId]);
+
+
+
+  const fetchInterviews = async (): Promise<InterviewDto[]> => {
+    if (!userDetails?.email) throw new Error("User email not found");
+
+    const { response, error } = await interviewServiceObj.fetchInterviewList(userDetails.email);
+
+    if (error) throw error;
+    return response || [];
+  };
+
+  const {
+    data: userInterviews = [],
+    isLoading,
+    error,
+  } = useQuery({
+    queryKey: ["interviews", userDetails?.email],
+    queryFn: fetchInterviews,
+    enabled: !!userDetails?.email,
+    staleTime: 5 * 60 * 1000, // 5 minutes - data stays fresh
+    gcTime: 10 * 60 * 1000, // 10 minutes - cache time (formerly cacheTime)
+    refetchOnWindowFocus: false, // Don't refetch on window focus
+    refetchOnMount: false, // Don't refetch on component mount if data exists
+  });
+
+  let { interviewDetails, isAlreadyRequested } = {} as { interviewDetails?: InterviewDto; isAlreadyRequested?: boolean };
+  useEffect(()=>{
+    if(userInterviews && userInterviews.length > 0){
+      const data = 
+      getLatestInterviewData(
+        userInterviews || [],
+        userDetails?.id
+      );
+      interviewDetails = data?.interviewDetails
+      isAlreadyRequested = data?.isAlreadyRequested
+    }
+  },[userInterviews])
 
 if (isLoadingData ) {
   return (
@@ -372,11 +414,10 @@ if(requests.length > 0 && !isLoadingData){
         </div> */}
 
         {/* Video Interview Card (disabled style) */}
-        <div className="bg-gray-100 border border-dashed border-gray-300 rounded-lg p-6 shadow-sm opacity-60 cursor-not-allowed">
+        <div className="bg-gray-100 border border-dashed border-gray-300 rounded-lg p-6 shadow-sm opacity-60">
           <div className="flex items-start justify-between mb-4">
             <h3 className="text-lg font-semibold text-slate-500">Video Interview</h3>
             <button
-              disabled
               className="flex items-center gap-2 px-4 py-2 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed"
               title="Video interview data not available"
             >
@@ -385,7 +426,21 @@ if(requests.length > 0 && !isLoadingData){
             </button>
           </div>
 
-          <p className="text-sm italic text-gray-500">Video interview data is currently not available.</p>
+        {interviewDetails 
+          ? (<div className="flex items-center  rounded-lg  p-6 mb-6">
+            <h3 className="text-lg font-semibold text-gray-700 ">Scores: &nbsp;</h3>
+            <div className="flex justify-evenly p-3 rounded-lg gap-6 bg-cyan-100 flex-1  ">
+              {formatObjectForDisplay(interviewDetails?.scoreBreakdown || {}).map(
+                ({ label, value }, index) => (
+                  <div key={index}>
+                    <span className="text-md font-semibold text-gray-400 mr-2">{label}</span>
+                    <span className={`text-sm text-blue-500 font-semibold`}>{value}%</span>
+                  </div>
+                )
+              )}
+            </div>
+          </div>)
+          :(null)}
         </div>
 
 
