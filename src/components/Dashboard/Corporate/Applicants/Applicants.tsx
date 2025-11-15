@@ -196,6 +196,7 @@ const Applicants = () => {
     jobId: jobId,
     pageSize: pageSize,
     sortOrder: "descending",
+    includeInterviewDetails: true,
   };
 
   const baseQueryKey = [

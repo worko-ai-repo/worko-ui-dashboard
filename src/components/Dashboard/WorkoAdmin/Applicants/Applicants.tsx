@@ -134,6 +134,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     userType: "ADMIN",
     pageSize: pageSize,
     sortOrder: "descending",
+    includeInterviewDetails: true,
     ...(isAllApplicants ? {} : { jobId: jobId ?? undefined }),
   };
 

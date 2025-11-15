@@ -21,7 +21,6 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
   };
 
   return (
-    <div className=" p-8">
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <h1 className="text-3xl font-bold text-gray-800 mb-6 capitalize">{userName}</h1>
@@ -31,46 +30,6 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
           {/* Left side - Video player (70%) */}
           <div className="col-span-7 bg-gray-900 rounded-lg overflow-hidden relative h-[350px]">
             <MultiSegmentVideoPlayer interviewId={interviewDetails.id} />
-            {/*  <div className="absolute inset-0 flex items-center justify-center">
-              <div className="grid grid-cols-2 grid-rows-2 gap-2 w-full h-full p-4">
-                <div className="bg-gray-700 rounded-lg flex items-center justify-center">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Avijit"
-                    alt="Participant 1"
-                    className="w-24 h-24 rounded-full"
-                  />
-                </div>
-                <div className="bg-gray-700 rounded-lg flex items-center justify-center">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Person2"
-                    alt="Participant 2"
-                    className="w-24 h-24 rounded-full"
-                  />
-                </div>
-                <div className="bg-gray-700 rounded-lg flex items-center justify-center">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Person3"
-                    alt="Participant 3"
-                    className="w-24 h-24 rounded-full"
-                  />
-                </div>
-                <div className="bg-gray-700 rounded-lg flex items-center justify-center">
-                  <img
-                    src="https://api.dicebear.com/7.x/avataaars/svg?seed=Person4"
-                    alt="Participant 4"
-                    className="w-24 h-24 rounded-full"
-                  />
-                </div>
-              </div>
-              <button className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-30 hover:bg-opacity-40 transition-all">
-                <div className="bg-blue-600 rounded-full p-6 hover:bg-blue-700 transition-all">
-                  <Play className="w-8 h-8 text-white fill-white" />
-                </div>
-              </button>
-            </div>
-            <div className="absolute bottom-4 left-4 text-white text-sm">
-              0:07 / 1:10:00 • Precap
-            </div> */}
           </div>
 
           {/* Right side - Overall Score (30%) */}
@@ -197,7 +156,6 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
           </table>
         </div>
       </div>
-    </div>
   );
 };
 

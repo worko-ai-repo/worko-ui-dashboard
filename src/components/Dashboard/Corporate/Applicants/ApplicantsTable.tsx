@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Eye, NotebookIcon, User, Loader2 } from "lucide-react";
+import { Eye, NotebookIcon, User, Loader2, Send } from "lucide-react";
 
 // Component imports
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
@@ -40,9 +40,15 @@ import {
   getCurrentPositionCell,
   getCvDownloadedById,
   getCvViewDate,
+  getLatestInterviewData,
   getRejectedById,
 } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
 import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedbackModal";
+import InterviewService from "@Services/Interview.service";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
+import { InterviewDto } from "@TypesAndConstants/Interview.dto";
+import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -141,6 +147,15 @@ export default function ApplicationTable({
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [updatingApplicationId, setUpdatingApplicationId] = useState<string | null>(null);
+  const [interviewDetailviewModal, setInterviewDetailviewModal] = useState<{
+    isOpen: boolean;
+    interviewDetails: any;
+    userName: string;
+  }>({
+    isOpen: false,
+    interviewDetails: null,
+    userName: "",
+  });
   const [isRejectModalOpen, setIsRejectModalOpen] = useState<{
     payload: JobApplicationUpdatePayloadDto;
     jobId: string;
@@ -316,6 +331,117 @@ export default function ApplicationTable({
         </div>
       ),
     },
+    interviewScoreDetails: {
+      key: "interviewScoreDetails",
+      label: "Interview Score",
+      render: (row: JobApplicationDetailsDto) => {
+        const hasInterviewDetails = row.applicantDetails?.interviewDetails?.length;
+
+        if (!hasInterviewDetails) {
+          // No interview details at all - show request button
+          return (
+            <div className="flex justify-center">
+              <button
+                className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                onClick={async () => {
+                  try {
+                    const payload = jobApplicationServiceObj.generateInterviewRequestPayload({
+                      candidateEmail: row.applicantDetails.email,
+                      jobId: row.jobId,
+                      candidateFullName: row.applicantDetails.name,
+                      companyId: row.companyId,
+                      companyName: row.companyName,
+                      position: row.jobTitle,
+                      requesterUserName: userDetails.fullName,
+                    });
+                    await InterviewService.requestInterview(
+                      payload
+                    );
+                    toast.success("Interview requested successfully", getToastOptions({}));
+                    // Update the row silently
+                    refetch();
+                  } catch (error) {
+                    toast.error("Failed to request interview", getToastOptions({}));
+                  }
+                }}
+                title="Request Interview">
+                <Send size={16} />
+                Request Interview
+              </button>
+            </div>
+          );
+        }
+
+        const { interviewDetails, isAlreadyRequested } = getLatestInterviewData(
+          row.applicantDetails?.interviewDetails || [],
+          userDetails?.id
+        );
+
+        // If interview has score, show the score
+        if (interviewDetails?.score) {
+          return (
+            <div className="flex justify-center">
+              <ProgressCircle
+                onClick={() => {
+                  const application = jobApplicationServiceObj.getScoreDetails(row);
+                  if (application === null) return;
+                  setInterviewDetailviewModal({
+                    isOpen: true,
+                    interviewDetails: interviewDetails,
+                    userName: row.applicantDetails.name,
+                  });
+                }}
+                value={interviewDetails.score}
+              />
+            </div>
+          );
+        }
+
+        // If interview is already requested (no score but requested by current user)
+        if (isAlreadyRequested) {
+          return (
+            <div className="flex justify-center">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">
+                Already Requested
+              </span>
+            </div>
+          );
+        }
+
+        // Interview exists but no score and not requested by current user - show request button
+        return (
+          <div className="flex justify-center">
+            <button
+              className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+              onClick={async () => {
+                try {
+                  const payload = jobApplicationServiceObj.generateInterviewRequestPayload({
+                    candidateEmail: row.applicantDetails.email,
+                    jobId: row.jobId,
+                    candidateFullName: row.applicantDetails.name,
+                    companyId: row.companyId,
+                    companyName: row.companyName,
+                    position: row.jobTitle,
+                    requesterUserName: userDetails.fullName,
+                  });
+                  await InterviewService.requestInterview(
+                    payload
+                  );
+                  toast.success("Interview requested successfully", getToastOptions({}));
+                  // Update the row silently
+                  refetch();
+                } catch (error) {
+                  toast.error("Failed to request interview", getToastOptions({}));
+                }
+              }}
+              title="Request Interview">
+              <Send size={16} />
+              Request Interview
+            </button>
+          </div>
+        );
+      },
+    },
     status: {
       key: "status",
       label: "Status",
@@ -456,6 +582,7 @@ export default function ApplicationTable({
           commonColumns.yoe,
           commonColumns.location,
           commonColumns.matchingScore,
+          commonColumns.interviewScoreDetails,
           commonColumns.status,
           commonColumns.actions,
           commonColumns.response,
@@ -471,6 +598,7 @@ export default function ApplicationTable({
           commonColumns.yoe,
           commonColumns.location,
           commonColumns.matchingScore,
+          commonColumns.interviewScoreDetails,
           commonColumns.status,
           commonColumns.actions,
           commonColumns.response,
@@ -913,6 +1041,21 @@ export default function ApplicationTable({
         }
         className=" sm:max-w-2xl min-w-[500px] min-h-[150px]">
         <RejectionFeedback jobApplication={RejectionFeedbackModal.application} />
+      </Modal>
+      
+      <Modal
+        isOpen={interviewDetailviewModal.isOpen}
+        onClose={() =>
+          setInterviewDetailviewModal({
+            isOpen: false,
+            interviewDetails: {} as InterviewDto,
+            userName: "",
+          })
+        }>
+        <InterviewDetailedViewModal
+          userName={interviewDetailviewModal.userName}
+          interviewDetails={interviewDetailviewModal.interviewDetails}
+        />
       </Modal>
     </>
   );

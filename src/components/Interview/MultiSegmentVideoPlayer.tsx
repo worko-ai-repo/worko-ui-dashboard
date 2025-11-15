@@ -141,6 +141,7 @@ export default function MultiSegmentVideoPlayer({
     return new Promise((resolve) => {
       const video = document.createElement("video");
       video.preload = "metadata";
+      video.crossOrigin = "anonymous"; // Add this line
       video.src = url;
       video.muted = true;
 
@@ -463,6 +464,7 @@ export default function MultiSegmentVideoPlayer({
       {/* Video Element */}
       <video
         ref={videoRef}
+        crossOrigin="anonymous" // Add this line
         className="w-full h-full object-contain"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleVideoEnded}

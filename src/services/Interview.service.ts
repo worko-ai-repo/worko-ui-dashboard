@@ -16,6 +16,17 @@ interface InterviewCompletionPayload {
   lastChunkUploaded?: string;
 }
 
+export interface InterviewRequestPayload {
+  candidateEmail: string;
+  candidateFullName: string;
+  companyName: string;
+  requesterUserName: string;
+  companyId: string;
+  jobId: string;
+  position: string;
+  requestedByActor: "ADMIN" | "CORPORATE_RECRUITER" | "CORPORATE_ADMIN" | "EVALUATOR";
+}
+
 class InterviewService {
   /**
    * Initiate a new interview for a candidate
@@ -179,6 +190,31 @@ class InterviewService {
       const errorMsg =
         err instanceof Error ? err.message : "An error occurred while fetching interview videos.";
       console.error("Error fetching interview videos:", err);
+      return { response: null, error: errorMsg };
+    }
+  }
+
+  /**
+   * Request an interview for a candidate
+   */
+  async requestInterview(payload: InterviewRequestPayload): Promise<ApiResponse<any>> {
+    try {
+      const { response, error, status } = await httpServiceObj.post<any>(
+        "/user/interview/request",
+        payload,
+        true
+      );
+
+      if (error) {
+        console.error("Failed to request interview:", error);
+        return { response: null, error: "Failed to request interview. Please try again." };
+      }
+
+      return { response: response || null, error: null };
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error ? err.message : "An error occurred while requesting the interview.";
+      console.error("Error requesting interview:", err);
       return { response: null, error: errorMsg };
     }
   }

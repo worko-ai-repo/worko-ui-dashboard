@@ -1,3 +1,4 @@
+import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import {
   JobApplicationStatusType,
   JobStatusType,
@@ -216,6 +217,7 @@ export interface JobApplicationDetailsDto {
     cloudFileName: string;
     remarks: string;
   }>;
+
   jobPortal: string;
   jobUrl: string;
   status: JobApplicationStatusType;
@@ -242,7 +244,9 @@ export interface JobApplicationDetailsDto {
     date: string;
   };
   statusTracker: StatusTracker[];
-  applicantDetails: ApplicantDetails;
+  applicantDetails: ApplicantDetails & {
+    interviewDetails?: Array<InterviewDto>;
+  };
   isEvaluatorResponded?: boolean;
   GSI1PK: string;
   GSI1SK: string;
