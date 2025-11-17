@@ -140,34 +140,55 @@ export default function MultiSegmentVideoPlayer({
   const getVideoDuration = (url: string): Promise<number> => {
     return new Promise((resolve) => {
       const video = document.createElement("video");
-      video.preload = "metadata";
-      video.crossOrigin = "anonymous"; // Add this line
-      video.src = url;
-      video.muted = true;
+      let timeoutId: ReturnType<typeof setTimeout> | null = null;
 
       const cleanup = () => {
+        if (timeoutId) {
+          clearTimeout(timeoutId);
+        }
         video.onloadedmetadata = null;
         video.onerror = null;
+        video.onseeked = null;
         video.src = "";
       };
 
-      video.onloadedmetadata = () => {
-        const duration = video.duration;
+      const finalize = (duration: number) => {
         cleanup();
         resolve(isFinite(duration) ? duration : 0);
       };
 
-      video.onerror = (e) => {
-        console.error("Failed to load metadata for:", url, e);
-        cleanup();
-        resolve(0);
+      video.preload = "metadata";
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.playsInline = true;
+
+      video.onloadedmetadata = () => {
+        if (isFinite(video.duration) && video.duration > 0) {
+          finalize(video.duration);
+        } else {
+          // Safari / recorded WebM blobs sometimes report Infinity until we force a seek
+          video.onseeked = () => finalize(video.duration);
+          try {
+            video.currentTime = Number.MAX_SAFE_INTEGER;
+          } catch (err) {
+            console.error("Failed to resolve duration via seek for:", url, err);
+            finalize(0);
+          }
+        }
       };
 
-      // Timeout after 10 seconds
-      setTimeout(() => {
-        cleanup();
-        resolve(0);
+      video.onerror = (e) => {
+        console.error("Failed to load metadata for:", url, e);
+        finalize(0);
+      };
+
+      timeoutId = setTimeout(() => {
+        console.warn("Timed out getting metadata for:", url);
+        finalize(0);
       }, 10000);
+
+      video.src = url;
+      video.load();
     });
   };
 
