@@ -135,8 +135,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
         return "bg-yellow-100 text-yellow-800";
       case "CANCELLED":
         return "bg-red-100 text-red-800";
-      case "EXPIRED":
-        return "bg-gray-100 text-gray-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -151,8 +149,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
       case "PENDING":
         return <Clock className="w-4 h-4" />;
       case "CANCELLED":
-      case "EXPIRED":
-        return <AlertCircle className="w-4 h-4" />;
       default:
         return <Clock className="w-4 h-4" />;
     }
@@ -199,19 +195,13 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
     onClose();
   };
 
-
   const pendingInterviews = interviews.filter(
     (interview) => interview.status === "PENDING" || interview.status === "IN_PROGRESS"
   );
 
-  const completedInterviews = interviews.filter((interview) => interview.status === "COMPLETED");
-
-  // Check if there's a pending interview that can be continued
-  const hasContinuableInterview = pendingInterviews.some((interview) => {
-    const questionsAttempted = interview.interviewHistory?.length || 0;
-    const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
-    return hasPartialProgress;
-  });
+  const completedInterviews = interviews.filter((interview) => 
+    interview.status === "COMPLETED" || interview.status === "CLOSED"
+  );
 
   // Check if user has completed an interview within last 3 months
   const canStartNewInterview = () => {
@@ -220,29 +210,39 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
       return true;
     }
 
-    // Check if any completed interview is within 3 months
+    // Check if any completed/closed interview is within 3 months
     const threeMonthsAgo = new Date();
     threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-    const recentCompletedInterview = completedInterviews.find((interview) => {
-      const completedDate = new Date(interview.updatedAt || interview.createdAt);
-      return completedDate > threeMonthsAgo;
+    // Check all non-pending interviews (COMPLETED, CLOSED, CANCELLED, EXPIRED)
+    const recentInterview = interviews.find((interview) => {
+      if (interview.status === "PENDING" || interview.status === "IN_PROGRESS") {
+        return false; // Skip pending/in-progress
+      }
+      
+      const interviewDate = new Date(interview.updatedAt || interview.createdAt);
+      return interviewDate > threeMonthsAgo;
     });
 
-    return !recentCompletedInterview;
+    return !recentInterview;
   };
 
   const getNextAvailableDate = () => {
-    if (completedInterviews.length === 0) return null;
+    // Check all non-pending interviews
+    const nonPendingInterviews = interviews.filter(
+      (interview) => interview.status !== "PENDING" && interview.status !== "IN_PROGRESS"
+    );
 
-    const latestCompleted = completedInterviews.sort((a, b) => {
+    if (nonPendingInterviews.length === 0) return null;
+
+    const latestInterview = nonPendingInterviews.sort((a, b) => {
       const dateA = new Date(a.updatedAt || a.createdAt).getTime();
       const dateB = new Date(b.updatedAt || b.createdAt).getTime();
       return dateB - dateA;
     })[0];
 
-    const completedDate = new Date(latestCompleted.updatedAt || latestCompleted.createdAt);
-    const nextAvailableDate = new Date(completedDate);
+    const interviewDate = new Date(latestInterview.updatedAt || latestInterview.createdAt);
+    const nextAvailableDate = new Date(interviewDate);
     nextAvailableDate.setMonth(nextAvailableDate.getMonth() + 3);
 
     return nextAvailableDate;
@@ -260,7 +260,9 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
   }) => {
     const isExpanded = expandedRequests[interview.id] || false;
     const hasRequests = interview.requestedBy && interview.requestedBy.length > 0;
-    const questionsAttempted = interview.interviewHistory?.length || 0;
+    const questionsAttempted = interview.interviewHistory?.filter(
+      (history) => history.chunkUploadStatus === "UPLOADED"
+    ).length || 0;
     const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
     const canContinue =
       (interview.status === "PENDING" || interview.status === "IN_PROGRESS") && hasPartialProgress;
@@ -506,7 +508,9 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
 
                   // Check if this interview can be continued (has partial progress)
                   if (oldestPendingInterview) {
-                    const questionsAttempted = oldestPendingInterview.interviewHistory?.length || 0;
+                    const questionsAttempted = oldestPendingInterview.interviewHistory?.filter(
+                      (history) => history.chunkUploadStatus === "UPLOADED"
+                    ).length || 0;
                     const hasPartialProgress =
                       questionsAttempted > 0 || oldestPendingInterview.status === "IN_PROGRESS";
 
@@ -528,9 +532,16 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
                 {isInitiating
                   ? "Starting Interview..."
                   : pendingInterviews.length > 0
-                  ? hasContinuableInterview
-                    ? "Continue Interview"
-                    : "Start Pending Interview"
+                  ? (() => {
+                      const oldestPending = [...pendingInterviews].sort(
+                        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+                      )[0];
+                      const questionsAttempted = oldestPending.interviewHistory?.filter(
+                        (history) => history.chunkUploadStatus === "UPLOADED"
+                      ).length || 0;
+                      const hasPartialProgress = questionsAttempted > 0 || oldestPending.status === "IN_PROGRESS";
+                      return hasPartialProgress ? "Continue Interview" : "Start Pending Interview";
+                    })()
                   : "Start New Interview"}
               </button>
             </div>

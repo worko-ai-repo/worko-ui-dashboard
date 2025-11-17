@@ -1,5 +1,5 @@
 // Interview Status Types
-export type InterviewStatusType = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "EXPIRED";
+export type InterviewStatusType = "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED" | "CLOSED";
 
 export type InterviewChunkUploadStatusType = "PENDING" | "UPLOADING" | "UPLOADED" | "FAILED";
 

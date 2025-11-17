@@ -49,11 +49,13 @@ class QnaHandler {
   private currentQuestionIndex: number = 0;
   private questions: Array<InterviewHistoryEntryDto> = [];
   private userEmail = (secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) as string) || "";
+  private introductoryFeedback: string = "Welcome to your interview. Let's begin with the first question. Please take your time and answer to the best of your ability.";
+
   /**
    * Initialize the QNA handler with interview data
    * Matches the current question from interviewDTO and sets up the question list
    */
-  initialize(interview: InterviewDto): { currentQuestion: string; acknowledgement: string } {
+  initialize(interview: InterviewDto): { currentQuestion: string; acknowledgement: string; feedback?: string } {
     if (!interview.interviewHistory || interview.interviewHistory.length === 0) {
       return {
         currentQuestion: "No questions available",
@@ -77,16 +79,20 @@ class QnaHandler {
 
     const currentQ = this.questions[this.currentQuestionIndex];
 
+    // Add introductory feedback for first question
+    const feedback = this.currentQuestionIndex === 0 ? this.introductoryFeedback : undefined;
+
     return {
       currentQuestion: currentQ?.questionText || "No more questions",
       acknowledgement: `Ready for question ${this.currentQuestionIndex + 1}`,
+      feedback,
     };
   }
 
   /**
    * Get the next question after user submits answer
    */
-  getNextQuestion(): { nextQuestion: string | null; isFinal: boolean; acknowledgement: string } {
+  getNextQuestion(): { nextQuestion: string | null; isFinal: boolean; acknowledgement: string; feedback?: string } {
     this.currentQuestionIndex++;
 
     if (this.currentQuestionIndex >= this.questions.length) {
@@ -98,10 +104,22 @@ class QnaHandler {
     }
 
     const nextQ = this.questions[this.currentQuestionIndex];
+    const previousQ = this.questions[this.currentQuestionIndex - 1];
+    
+    // Concatenate previous question's feedback with next question if feedback exists
+    let questionWithFeedback = nextQ?.questionText || null;
+    let feedback: string | undefined;
+    
+    if (previousQ?.feedback) {
+      feedback = previousQ.feedback;
+      questionWithFeedback = `${previousQ.feedback}\n\n${nextQ?.questionText || ""}`;
+    }
+
     return {
-      nextQuestion: nextQ?.questionText || null,
+      nextQuestion: questionWithFeedback,
       isFinal: false,
       acknowledgement: `Moving to question ${this.currentQuestionIndex + 1}`,
+      feedback,
     };
   }
 
@@ -162,7 +180,7 @@ class QnaHandler {
   /**
    * Patch feedback for the completed question
    */
-  async patchFeedback(interviewId: string, feedback: InterviewHistoryEntryDto): Promise<void> {
+  async patchFeedback(interviewId: string, feedback: InterviewHistoryEntryDto): Promise<{ needsFollowUp: boolean; feedback: string; isCorrect: boolean }> {
     try {
       const payload: FeedbackPatchPayload = {
         email: this.userEmail,
@@ -177,7 +195,30 @@ class QnaHandler {
         },
       };
 
-      await httpServiceObj.patch(`/user/interview/question/${interviewId}`, payload);
+      const { response: patchedInterview, error } = await httpServiceObj.patch<InterviewDto>(`/user/interview/question/${interviewId}`, payload);
+      
+      if (error && !patchedInterview) {
+        throw new Error(error.message || "Error patching feedback");
+      }
+      
+      console.log("Patched interview response:", patchedInterview);
+
+      // Extract feedback data from response
+      const needsFollowUp = (patchedInterview as any)?.needsFollowUp === "true" || (patchedInterview as any)?.needsFollowUp === true;
+      const currentQuestionFeedback = patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.feedback || "";
+      const isCorrect = patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.isCorrect || false;
+
+      // Update local questions array with feedback
+      if (this.questions[this.currentQuestionIndex]) {
+        this.questions[this.currentQuestionIndex].feedback = currentQuestionFeedback;
+        this.questions[this.currentQuestionIndex].isCorrect = isCorrect;
+      }
+
+      return {
+        needsFollowUp,
+        feedback: currentQuestionFeedback,
+        isCorrect,
+      };
     } catch (error) {
       console.error("Failed to patch feedback:", error);
       throw error;
@@ -197,7 +238,7 @@ class QnaHandler {
     timeTaken: number,
     chunkSequence: number,
     userId: string
-  ): Promise<{ success: boolean; nextQuestion: string | null; isFinal: boolean }> {
+  ): Promise<{ success: boolean; nextQuestion: string | null; isFinal: boolean; needsFollowUp: boolean; feedback?: string }> {
     try {
       // Step 1: Generate signed URL
       const signedUrlResponse = await this.generateSignedUrl(
@@ -228,21 +269,39 @@ class QnaHandler {
         chunkFileMimeType: signedUrlResponse.fileMimeType,
       };
 
-      await this.patchFeedback(interviewId, feedbackEntry);
+      const patchResponse = await this.patchFeedback(interviewId, feedbackEntry);
 
-      // Step 4: Get next question
+      // Step 4: Check if needs follow-up
+      if (patchResponse.needsFollowUp && !patchResponse.isCorrect) {
+        // Repeat the current question with feedback
+        const currentQ = this.questions[this.currentQuestionIndex];
+        const questionWithFeedback = `${patchResponse.feedback}\n\n${currentQ?.questionText || ""}`;
+        
+        return {
+          success: true,
+          nextQuestion: questionWithFeedback,
+          isFinal: false,
+          needsFollowUp: true,
+          feedback: patchResponse.feedback,
+        };
+      }
+
+      // Step 5: Get next question if answer is correct or doesn't need follow-up
       const nextQuestionData = this.getNextQuestion();
 
       return {
         success: true,
         nextQuestion: nextQuestionData.nextQuestion,
         isFinal: nextQuestionData.isFinal,
+        needsFollowUp: false,
+        feedback: nextQuestionData.feedback,
       };
     } catch (error) {
       console.error("Answer submission workflow failed:", error);
       throw error;
     }
   }
+  
   /**
    * Reset the handler state
    */

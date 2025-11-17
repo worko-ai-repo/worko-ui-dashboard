@@ -137,7 +137,7 @@ const InterviewActive = () => {
 
     setTimeout(() => {
       resetInterview();
-      navigate("/v1/candidate/profiles", { replace: true });
+      navigate("/candidate/profile");
     }, 1000);
   };
 
