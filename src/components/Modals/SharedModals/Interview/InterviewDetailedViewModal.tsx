@@ -1,10 +1,13 @@
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
-import { ChevronDown, ChevronUp, Info, Play } from "lucide-react";
-import { FC, useState } from "react";
+import { ChevronDown, ChevronUp, Info } from "lucide-react";
+import { FC, useRef, useState } from "react";
 
 import { formatObjectForDisplay } from "@Utils/FormatText.utils";
 import { formatInterviewDuration } from "./VideoInterviewModal";
-import MultiSegmentVideoPlayer from "@Components/Interview/MultiSegmentVideoPlayer";
+import MultiSegmentVideoPlayer, {
+  MultiSegmentVideoPlayerHandle,
+  SegmentTiming,
+} from "@Components/Interview/MultiSegmentVideoPlayer";
 
 interface InterviewDetailedViewModalProps {
   userName: string;
@@ -15,9 +18,52 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
   interviewDetails,
 }) => {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
+  const [questionTimings, setQuestionTimings] = useState<SegmentTiming[]>([]);
+  const videoPlayerRef = useRef<MultiSegmentVideoPlayerHandle | null>(null);
+
+  const formatTimestamp = (seconds?: number) => {
+    if (seconds === undefined || seconds === null) return "N/A";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
 
   const toggleQuestion = (index: number) => {
     setExpandedQuestion(expandedQuestion === index ? null : index);
+  };
+
+  const findQuestionTiming = (
+    questionId?: string,
+    questionNumber?: number,
+    questionText?: string,
+    fallbackIndex?: number
+  ) => {
+    return questionTimings.find((timing, index) => {
+      if (questionId && timing.questionId === questionId) {
+        return true;
+      }
+      if (questionNumber && timing.questionNumber === questionNumber) {
+        return true;
+      }
+      if (questionText && timing.questionText === questionText) {
+        return true;
+      }
+      if (fallbackIndex !== undefined && index === fallbackIndex) {
+        return true;
+      }
+      return false;
+    });
+  };
+
+  const handleTimestampClick = (
+    questionId?: string,
+    questionNumber?: number,
+    questionText?: string,
+    fallbackIndex?: number
+  ) => {
+    const timing = findQuestionTiming(questionId, questionNumber, questionText, fallbackIndex);
+    if (!timing || !videoPlayerRef.current) return;
+    videoPlayerRef.current.seekToTime(timing.startTime);
   };
 
   return (
@@ -29,7 +75,11 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
         <div className="grid grid-cols-10  gap-6 mb-6">
           {/* Left side - Video player (70%) */}
           <div className="col-span-7 bg-gray-900 rounded-lg overflow-hidden relative h-[350px]">
-            <MultiSegmentVideoPlayer interviewId={interviewDetails.id} />
+            <MultiSegmentVideoPlayer
+              ref={videoPlayerRef}
+              interviewId={interviewDetails.id}
+              onSegmentTimingsChange={setQuestionTimings}
+            />
           </div>
 
           {/* Right side - Overall Score (30%) */}
@@ -88,7 +138,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
             <thead className="sticky top-0 bg-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-gray-700 text-sm w-[13%]">
-                  Time Taken
+                  Question start
                 </th>
                 <th className="px-6 py-4 text-center font-semibold text-gray-700 text-sm w-[43%]">
                   Questions
@@ -104,9 +154,25 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
                 interviewDetails.interviewHistory.map((item, index) => (
                   <tr key={index} className="hover:bg-gray-50 transition-colors border-gray-200">
                     <td className="px-6 py-4 align-top border-r border-blue-300">
-                      <div className="bg-cyan-100 text-cyan-700 rounded-full px-3 py-1 text-xs font-medium inline-block">
-                        {formatInterviewDuration(item.timeTaken)}
-                      </div>
+                      {(() => {
+                        const timing = findQuestionTiming(item.questionId, undefined, item.questionText, index);
+                        const label = timing ? formatTimestamp(timing.startTime) : "N/A";
+                        return (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              handleTimestampClick(item.questionId, undefined, item.questionText, index)
+                            }
+                            disabled={!timing}
+                            className={`rounded-full px-3 py-1 text-xs font-semibold transition-colors ${
+                              timing
+                                ? "bg-cyan-100 text-cyan-700 hover:bg-cyan-200"
+                                : "bg-gray-200 text-gray-500 cursor-not-allowed"
+                            }`}>
+                            {label}
+                          </button>
+                        );
+                      })()}
                     </td>
 
                     <td className="px-6 py-4 align-top text-center border-r border-blue-300">

@@ -1,4 +1,12 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { Play, Pause, SkipForward, SkipBack, Volume2, VolumeX, Maximize } from "lucide-react";
 import InterviewService from "@Services/Interview.service";
 
@@ -13,6 +21,17 @@ interface VideoSegment {
 interface MultiSegmentVideoPlayerProps {
   className?: string;
   interviewId: string;
+  onSegmentTimingsChange?: (timings: SegmentTiming[]) => void;
+}
+
+export interface SegmentTiming extends VideoSegment {
+  startTime: number;
+  duration: number;
+}
+
+export interface MultiSegmentVideoPlayerHandle {
+  seekToTime: (seconds: number) => void;
+  seekToSegment: (questionId?: string, fallbackIndex?: number) => void;
 }
 interface InterviewData {
   interviewId: string;
@@ -32,10 +51,8 @@ interface VideoData {
   feedback?: string; // Optional since not all videos might have feedback
 }
 
-export default function MultiSegmentVideoPlayer({
-  className = "",
-  interviewId,
-}: MultiSegmentVideoPlayerProps) {
+const MultiSegmentVideoPlayer = forwardRef<MultiSegmentVideoPlayerHandle, MultiSegmentVideoPlayerProps>(
+  ({ className = "", interviewId, onSegmentTimingsChange }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -97,10 +114,12 @@ export default function MultiSegmentVideoPlayer({
   }, [interviewId]);
 
   // Calculate cumulative durations for timestamp mapping
-  const cumulativeDurations = detectedDurations.reduce((acc: number[], duration, index) => {
-    acc.push(index === 0 ? duration : acc[index - 1] + duration);
-    return acc;
-  }, []);
+  const cumulativeDurations = useMemo(() => {
+    return detectedDurations.reduce((acc: number[], segmentDuration, index) => {
+      acc.push(index === 0 ? segmentDuration : acc[index - 1] + segmentDuration);
+      return acc;
+    }, []);
+  }, [detectedDurations]);
 
   const totalDuration =
     cumulativeDurations.length > 0 ? cumulativeDurations[cumulativeDurations.length - 1] : 0;
@@ -303,40 +322,41 @@ export default function MultiSegmentVideoPlayer({
     setIsLoading(false);
   };
 
-  const seekToTime = (targetSeconds: number) => {
-    if (videoSegments.length === 0 || detectedDurations.length === 0) return;
+  const seekToTime = useCallback(
+    (targetSeconds: number) => {
+      if (videoSegments.length === 0 || detectedDurations.length === 0) return;
 
-    let videoIndex = 0;
-    let localTime = targetSeconds;
+      let videoIndex = 0;
+      let localTime = targetSeconds;
 
-    // Find which video segment contains the target time
-    for (let i = 0; i < cumulativeDurations.length; i++) {
-      if (targetSeconds <= cumulativeDurations[i]) {
-        videoIndex = i;
-        localTime = i === 0 ? targetSeconds : targetSeconds - cumulativeDurations[i - 1];
-        break;
+      for (let i = 0; i < cumulativeDurations.length; i++) {
+        if (targetSeconds <= cumulativeDurations[i]) {
+          videoIndex = i;
+          localTime = i === 0 ? targetSeconds : targetSeconds - cumulativeDurations[i - 1];
+          break;
+        }
       }
-    }
 
-    // Load different video if needed
-    if (videoIndex !== currentVideoIndex) {
-      const wasPlaying = isPlaying;
-      loadVideo(videoIndex);
-      if (videoRef.current) {
-        videoRef.current.onloadeddata = () => {
-          if (videoRef.current) {
-            videoRef.current.currentTime = localTime;
-            if (wasPlaying) {
-              videoRef.current.play().catch((err: Error) => console.error("Play failed:", err));
+      if (videoIndex !== currentVideoIndex) {
+        const wasPlaying = isPlaying;
+        loadVideo(videoIndex);
+        if (videoRef.current) {
+          videoRef.current.onloadeddata = () => {
+            if (videoRef.current) {
+              videoRef.current.currentTime = localTime;
+              if (wasPlaying) {
+                videoRef.current.play().catch((err: Error) => console.error("Play failed:", err));
+              }
+              videoRef.current.onloadeddata = null;
             }
-            videoRef.current.onloadeddata = null;
-          }
-        };
+          };
+        }
+      } else if (videoRef.current) {
+        videoRef.current.currentTime = localTime;
       }
-    } else if (videoRef.current) {
-      videoRef.current.currentTime = localTime;
-    }
-  };
+    },
+    [videoSegments, detectedDurations, cumulativeDurations, currentVideoIndex, isPlaying]
+  );
 
   const togglePlayPause = () => {
     if (videoRef.current) {
@@ -374,6 +394,50 @@ export default function MultiSegmentVideoPlayer({
   const skipBackward = () => {
     seekToTime(Math.max(currentTime - 10, 0));
   };
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      seekToTime,
+      seekToSegment: (questionId?: string, fallbackIndex?: number) => {
+        if (!detectedDurations.length) return;
+
+        const segmentIndex = videoSegments.findIndex((segment, index) => {
+          if (questionId && segment.questionId === questionId) return true;
+          if (fallbackIndex !== undefined && index === fallbackIndex) return true;
+          return false;
+        });
+
+        if (segmentIndex === -1) return;
+
+        const startTime = segmentIndex === 0 ? 0 : cumulativeDurations[segmentIndex - 1];
+        seekToTime(startTime);
+      },
+    }),
+    [seekToTime, videoSegments, detectedDurations, cumulativeDurations]
+  );
+
+  useEffect(() => {
+    if (
+      !onSegmentTimingsChange ||
+      detectedDurations.length === 0 ||
+      videoSegments.length === 0 ||
+      detectedDurations.length !== videoSegments.length
+    ) {
+      return;
+    }
+
+    const timings: SegmentTiming[] = videoSegments.map((segment, index) => {
+      const startTime = index === 0 ? 0 : cumulativeDurations[index - 1];
+      return {
+        ...segment,
+        startTime,
+        duration: detectedDurations[index],
+      };
+    });
+
+    onSegmentTimingsChange(timings);
+  }, [onSegmentTimingsChange, videoSegments, detectedDurations, cumulativeDurations]);
 
   const toggleMute = () => {
     if (videoRef.current) {
@@ -615,4 +679,8 @@ export default function MultiSegmentVideoPlayer({
       </div>
     </div>
   );
-}
+});
+
+MultiSegmentVideoPlayer.displayName = "MultiSegmentVideoPlayer";
+
+export default MultiSegmentVideoPlayer;
