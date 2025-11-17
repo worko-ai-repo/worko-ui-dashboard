@@ -25,7 +25,7 @@ const InterviewCompleted = () => {
         /> */}
         {!isProcessing && interviewId && (
           <InterviewCompletionFeedback interviewId={interviewId} onComplete={() =>
-            nav("/candidate/profiles")
+            nav("/candidate/profile")
           } />
           // <TranscriptHistory transcripts={transcriptHistory} answerVideos={answerVideos} />
         )}

@@ -351,7 +351,7 @@ const InterviewIdle = () => {
                     identity and monitor the session.
                   </p>
                   <Button
-                    onClick={() => navigate("/v1/candidate/profiles")}
+                    onClick={() => navigate("/candidate/profile")}
                     className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white">
                     Go Back to Dashboard
                   </Button>
