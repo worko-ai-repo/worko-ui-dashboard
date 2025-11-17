@@ -65,7 +65,7 @@ export const QuestionDisplay = ({
   }, [question]); // Only depend on question, not the callbacks
 
   return (
-    <div className="flex flex-col gap-1 h-[220px] max-h-[220px] overflow-y-auto pb-4">
+    <div className="flex flex-col gap-1 h-[300px] max-h-[300px] overflow-y-auto pb-4">
       {/* AI Message Bubble */}
       <div className="flex justify-start ">
         <div className="max-w-2xl">
@@ -78,7 +78,7 @@ export const QuestionDisplay = ({
             </div>
           </div>
           <div className="bg-blue-100 text-gray-900 rounded-2xl rounded-tl-none px-4 py-1 border border-blue-200 shadow-sm">
-            <p className="text-sm text-gray-500 font-semibold leading-relaxed">{question}</p>
+            <p className="text-sm text-gray-500 font-semibold text-left leading-relaxed">{question}</p>
             {!isTranscribing && <div className="flex items-center gap-2 mt-1 pt-1 border-t border-blue-200">
               <Volume2 className="w-3 h-3 text-blue-600" />
               <span className="text-xs text-blue-600 font-medium">AI is speaking</span>

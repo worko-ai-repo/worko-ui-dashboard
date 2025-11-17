@@ -140,7 +140,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
                         </span>
                       </div>
                       <p className="text-sm text-gray-600 leading-relaxed">
-                        {item.feedback || "Feedback pending"}
+                        {item.detailedFeedback || "Feedback pending"}
                       </p>
                     </td>
                   </tr>

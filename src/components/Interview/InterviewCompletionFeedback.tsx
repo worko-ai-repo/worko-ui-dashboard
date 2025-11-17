@@ -1,9 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Star, MessageSquare, Send, CheckCircle, AlertCircle } from "lucide-react";
 import { toast } from "react-toastify";
 import interviewServiceObj from "@Services/Interview.service";
 import { useAppContext } from "@Context/App.context";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { useInterview } from "@Context/Interview.context";
 
 interface InterviewCompletionFeedbackProps {
   interviewId: string;
@@ -15,12 +16,22 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
   onComplete,
 }) => {
   const { userDetails } = useAppContext();
+  const { cleanupMediaStreams } = useInterview();
   const [rating, setRating] = useState<number>(0);
   const [hoveredRating, setHoveredRating] = useState<number>(0);
   const [comments, setComments] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isSubmitted, setIsSubmitted] = useState<boolean>(false);
   const [errors, setErrors] = useState<{ rating?: string; comments?: string }>({});
+
+  // Cleanup effect when component unmounts
+  useEffect(() => {
+    return () => {
+      // Clean up all media streams when component unmounts
+      console.log("InterviewCompletionFeedback unmounting - cleaning up media streams");
+      cleanupMediaStreams();
+    };
+  }, [cleanupMediaStreams]);
 
   const validateForm = (): boolean => {
     const newErrors: { rating?: string; comments?: string } = {};
@@ -41,12 +52,15 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Please fix the errors before submitting",getToastOptions({autoClose: 4000}));
+      toast.error("Please fix the errors before submitting", getToastOptions({ autoClose: 4000 }));
       return;
     }
 
     if (!userDetails?.email) {
-      toast.error("User email not found. Please log in again.",getToastOptions({autoClose: 4000}));
+      toast.error(
+        "User email not found. Please log in again.",
+        getToastOptions({ autoClose: 4000 })
+      );
       return;
     }
 
@@ -63,21 +77,24 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
       });
 
       if (error) {
-        toast.error(error,getToastOptions({autoClose: 4000}));
+        toast.error(error, getToastOptions({ autoClose: 4000 }));
         setIsSubmitting(false);
         return;
       }
 
       if (response) {
         setIsSubmitted(true);
-        toast.success("Thank you for your feedback!",getToastOptions({autoClose: 4000}));
+        toast.success("Thank you for your feedback!", getToastOptions({ autoClose: 4000 }));
         setTimeout(() => {
           onComplete?.();
         }, 2000);
       }
     } catch (error) {
       console.error("Error submitting feedback:", error);
-      toast.error("An unexpected error occurred. Please try again.",getToastOptions({autoClose: 4000}));
+      toast.error(
+        "An unexpected error occurred. Please try again.",
+        getToastOptions({ autoClose: 4000 })
+      );
       setIsSubmitting(false);
     }
   };
@@ -101,7 +118,7 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
 
   if (isSubmitted) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
+      <div className="max-w-3xl mx-auto p-6">
         <div className="bg-white rounded-2xl shadow-xl p-8 border border-green-100">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
@@ -118,8 +135,8 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6">
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-8 border border-blue-100">
+    <div className="max-w-3xl mt-0 mx-auto p-1">
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-3 border border-blue-100">
         <div className="text-center mb-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Interview Complete! 🎉</h2>
           <p className="text-gray-600">

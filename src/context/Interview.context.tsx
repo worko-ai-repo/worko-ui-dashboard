@@ -58,6 +58,7 @@ interface InterviewContextType {
   handleInterviewEnd: (closingMessage: string) => Promise<void>;
   downloadRecording: () => void;
   resetInterview: () => void;
+  cleanupMediaStreams: () => void;
   handleQuestionStartSpeaking: () => void;
   handleQuestionEndSpeaking: () => void;
   stopListening: () => void;
@@ -82,7 +83,7 @@ interface InterviewProviderProps {
 
 export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   const navigate = useNavigate();
-  const {userDetails} = useAppContext();  
+  const { userDetails } = useAppContext();
   const [interviewState, setInterviewState] = useState<InterviewState>("idle");
   const [currentQuestion, setCurrentQuestion] = useState<string>("");
   const [isCrossQuestion, setIsCrossQuestion] = useState(false);
@@ -113,6 +114,32 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     stopListening,
     resetTranscript,
   } = useSpeechToText();
+
+  // Cleanup function to stop all media streams
+  const cleanupMediaStreams = useCallback(() => {
+    console.log("Cleaning up all media streams...");
+
+    // Stop the granted stream (camera + screen recording)
+    if (grantedStream) {
+      grantedStream.getTracks().forEach((track) => {
+        console.log(`Stopping track: ${track.kind} - ${track.label}`);
+        track.stop();
+      });
+      setGrantedStream(null);
+    }
+
+    // Stop recording if active
+    if (isRecording) {
+      console.log("Stopping active recording...");
+      stopRecording();
+    }
+
+    // Stop speech recognition if active
+    if (isListening) {
+      console.log("Stopping speech recognition...");
+      stopListening();
+    }
+  }, [grantedStream, isRecording, isListening, stopRecording, stopListening]);
 
   const handleQuestionStartSpeaking = useCallback(() => {
     if (isSpeechSupported && isListening) {
@@ -276,7 +303,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
             timestamp,
           },
         ]);
-        const userId = userDetails?.id
+        const userId = userDetails?.id;
         if (interviewId && currentInterview && userId) {
           const result = await qnaHandler.handleAnswerSubmission(
             interviewId,
@@ -332,6 +359,9 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
 
     const blob = await stopRecording();
 
+    // Clean up all media streams
+    cleanupMediaStreams();
+
     setTimeout(() => {
       setRecordedBlob(blob);
       setIsProcessing(false);
@@ -355,6 +385,9 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   };
 
   const resetInterview = () => {
+    // Clean up all media streams before resetting
+    cleanupMediaStreams();
+
     setInterviewState("idle");
     setCurrentQuestion("");
     setIsCrossQuestion(false);
@@ -408,6 +441,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     handleInterviewEnd,
     downloadRecording,
     resetInterview,
+    cleanupMediaStreams,
     handleQuestionStartSpeaking,
     handleQuestionEndSpeaking,
     stopListening,

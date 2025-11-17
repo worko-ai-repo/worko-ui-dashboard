@@ -105,6 +105,17 @@ const InterviewActive = () => {
     if (!interviewId || !userDetails?.email || hasTerminatedRef.current) return;
 
     hasTerminatedRef.current = true;
+
+    // Stop video stream before terminating
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => {
+        console.log(`Stopping camera track: ${track.kind} - ${track.label}`);
+        track.stop();
+      });
+      videoRef.current.srcObject = null;
+    }
+
     await terminateInterviewAPI();
 
     toast.warning(
@@ -129,6 +140,16 @@ const InterviewActive = () => {
 
   const handleTabSwitchAcknowledge = () => {
     setShowTabSwitchWarning(false);
+
+    // Stop video stream
+    if (videoRef.current?.srcObject) {
+      const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
+      tracks.forEach((track) => {
+        console.log(`Stopping camera track after tab switch: ${track.kind} - ${track.label}`);
+        track.stop();
+      });
+      videoRef.current.srcObject = null;
+    }
 
     toast.warning(
       "Interview session terminated. You will not be able to take this interview again for 3 months.",
@@ -176,9 +197,14 @@ const InterviewActive = () => {
     startCamera();
 
     return () => {
+      // Cleanup: Stop camera when component unmounts or navigates away
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
-        tracks.forEach((track) => track.stop());
+        tracks.forEach((track) => {
+          console.log(`Cleanup: Stopping camera track on unmount: ${track.kind} - ${track.label}`);
+          track.stop();
+        });
+        videoRef.current.srcObject = null;
       }
     };
   }, []);

@@ -1,6 +1,6 @@
 import { useInterview } from "@Context/Interview.context";
 import React, { useEffect, useRef } from "react";
-
+import { AI_agent } from "@AssetsFolder/assets";
 const InterviewAIAgent: React.FC = () => {
   const svgRef = useRef<SVGSVGElement>(null);
   const animationRef = useRef<number | null>(null);
@@ -162,19 +162,41 @@ const InterviewAIAgent: React.FC = () => {
         </>
       )}
 
-      {/* Spiral dot animation */}
+      {/* Spiral dot animation or AI agent image */}
       <div style={{ position: "relative", zIndex: 10 }}>
-        <svg
-          ref={svgRef}
-          width="160"
-          height="160"
-          viewBox="0 0 400 400"
-          style={{
-            display: "block",
-            filter: isSpeaking ? "drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))" : "none",
-            transition: "filter 0.3s ease",
-          }}
-        />
+        {isSpeaking ? (
+          <svg
+            ref={svgRef}
+            width="160"
+            height="160"
+            viewBox="0 0 400 400"
+            style={{
+              display: "block",
+              filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))",
+              transition: "filter 0.3s ease",
+            }}
+          />
+        ) : (
+          <div
+            style={{
+              width: "160px",
+              height: "160px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              transition: "all 0.3s ease",
+            }}>
+            <img
+              src={AI_agent}
+              alt="AI Agent"
+              style={{
+                width: "160px",
+                height: "200px",
+                objectFit: "cover",
+              }}
+            />
+          </div>
+        )}
       </div>
 
       {/* Status indicator with message */}
@@ -198,11 +220,12 @@ const InterviewAIAgent: React.FC = () => {
             border: isSpeaking ? "1px solid #93c5fd" : "1px solid #e5e7eb",
           }}>
           <div
+          className="animate-pulse "
             style={{
               width: "6px",
               height: "6px",
               borderRadius: "9999px",
-              backgroundColor: isSpeaking ? "#3b82f6" : "#9ca3af",
+              backgroundColor: isSpeaking ? "#3b82f6" : "red",
               animation: isSpeaking ? "pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
               transform: isSpeaking ? "scale(1.25)" : "scale(1)",
               transition: "all 0.3s ease",
@@ -215,7 +238,7 @@ const InterviewAIAgent: React.FC = () => {
               fontWeight: 500,
               fontFamily: "system-ui, -apple-system, sans-serif",
             }}>
-            {isSpeaking ? `${aiName} is speaking...` : `${aiName} is ready`}
+            {isSpeaking ? `${aiName} is speaking...` : `${aiName} is listening...`}
           </span>
         </div>
       </div>
