@@ -321,7 +321,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({ onClose, isOpen,han
                           <Building2 className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
                           <div className="flex-1 text-sm">
                             <div className="font-medium text-gray-900">
-                              {request.companyId || "Not Disclosed"}
+                              {request.companyName || "Not Disclosed"}
                             </div>
                             <div className="text-gray-600 mt-1">
                               Position: {request.position || "Not Disclosed"}
