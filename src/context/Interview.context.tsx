@@ -5,7 +5,7 @@ import { qnaHandler } from "@Utils/qnaHandler.util";
 import { TranscriptEntry } from "@Components/Interview/TranscriptHistory";
 import { useNavigate } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
-import httpServiceObj from "@Services/ApiHandler.service";
+import interviewServiceObj from "@Services/Interview.service";
 import { useMediaRecorder } from "@Hooks/useMediaRecorderForVideoInterview";
 import { useAppContext } from "./App.context";
 
@@ -47,13 +47,17 @@ interface InterviewContextType {
   isSubmittingRef: React.MutableRefObject<boolean>;
 
   // Actions
-  startInterview: () => Promise<void>;
+  startInterview: (options?: {
+    stage?: "new" | "continue";
+    routeInterviewId?: string | null;
+  }) => Promise<void>;
   loadExistingInterview: (
     interview: InterviewDto,
     stream?: MediaStream,
     id?: string,
     stage?: "new" | "continue"
   ) => void;
+  setInterviewStream: (stream: MediaStream | null) => void;
   handleSubmitAnswer: () => void;
   handleInterviewEnd: (closingMessage: string) => Promise<void>;
   downloadRecording: () => void;
@@ -97,7 +101,9 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   const [answerVideos, setAnswerVideos] = useState<Blob[]>([]);
   const [currentInterview, setCurrentInterview] = useState<InterviewDto | null>(null);
   const [grantedStream, setGrantedStream] = useState<MediaStream | null>(null);
+  const grantedStreamRef = useRef<MediaStream | null>(null);
   const [interviewId, setInterviewId] = useState<string | null>(null);
+  const interviewIdRef = useRef<string | null>(null);
   const [interviewStage, setInterviewStage] = useState<"new" | "continue" | null>(null);
   const [chunkSequence, setChunkSequence] = useState<number>(1);
 
@@ -116,15 +122,33 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   } = useSpeechToText();
 
   // Cleanup function to stop all media streams
+  const setInterviewStream = useCallback(
+    (stream: MediaStream | null) => {
+      if (!stream) {
+        grantedStreamRef.current = null;
+        setGrantedStream(null);
+        return;
+      }
+
+      const clonedTracks = stream.getTracks().map((t) => t.clone());
+      const clonedStream = new MediaStream(clonedTracks);
+      grantedStreamRef.current = clonedStream;
+      setGrantedStream(clonedStream);
+    },
+    []
+  );
+
   const cleanupMediaStreams = useCallback(() => {
     console.log("Cleaning up all media streams...");
 
     // Stop the granted stream (camera + screen recording)
-    if (grantedStream) {
-      grantedStream.getTracks().forEach((track) => {
+    const streamToCleanup = grantedStreamRef.current;
+    if (streamToCleanup) {
+      streamToCleanup.getTracks().forEach((track) => {
         console.log(`Stopping track: ${track.kind} - ${track.label}`);
         track.stop();
       });
+      grantedStreamRef.current = null;
       setGrantedStream(null);
     }
 
@@ -139,7 +163,10 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       console.log("Stopping speech recognition...");
       stopListening();
     }
-  }, [grantedStream, isRecording, isListening, stopRecording, stopListening]);
+    interviewIdRef.current = null;
+    setInterviewId(null);
+    setInterviewStage(null);
+  }, [isRecording, isListening, stopRecording, stopListening]);
 
   const handleQuestionStartSpeaking = useCallback(() => {
     if (isSpeechSupported && isListening) {
@@ -156,9 +183,45 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     }
   }, [isSpeechSupported, isListening, startListening]);
 
-  const startInterview = async () => {
+  const startInterview = async (options?: {
+    stage?: "new" | "continue";
+    routeInterviewId?: string | null;
+  }) => {
     try {
-      console.log("Starting interview with ID:", interviewId, "Stage:", interviewStage);
+      let stageForInterview = options?.stage || interviewStage;
+      let activeInterviewId =
+        interviewIdRef.current || interviewId || options?.routeInterviewId || null;
+      let interviewData = currentInterview;
+
+      if (
+        stageForInterview === "new" &&
+        (!activeInterviewId || activeInterviewId === "new" || !interviewData)
+      ) {
+        if (!userDetails?.email) {
+          throw new Error("User email not found. Please refresh and try again.");
+        }
+
+        const { response: initiatedInterview, error } = await interviewServiceObj.initiateInterview(
+          userDetails.email
+        );
+
+        if (error || !initiatedInterview) {
+          throw new Error(error || "Failed to initiate interview. Please try again.");
+        }
+
+        loadExistingInterview(
+          initiatedInterview,
+          grantedStreamRef.current || undefined,
+          initiatedInterview.id,
+          "new"
+        );
+
+        interviewData = initiatedInterview;
+        activeInterviewId = initiatedInterview.id;
+        stageForInterview = "new";
+      }
+
+      console.log("Starting interview with ID:", activeInterviewId, "Stage:", stageForInterview);
 
       qnaHandler.reset();
       setInterviewState("intro");
@@ -167,26 +230,31 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       setChunkSequence(1);
 
       // Start recording with already-granted stream
-      await startRecording(grantedStream || undefined);
+      const streamToUse = grantedStreamRef.current;
+      await startRecording(streamToUse || undefined);
       interviewStartTime.current = Date.now();
 
       // Get initial question from current interview if available
-      if (currentInterview) {
+      if (interviewData) {
         const { currentQuestion: question, acknowledgement: ack } =
-          qnaHandler.initialize(currentInterview);
+          qnaHandler.initialize(interviewData);
         setCurrentQuestion(question);
         setAcknowledgement(ack);
       }
 
       // Navigate using stored interviewId with absolute paths
-      const introPath = interviewId ? `/interview/${interviewId}/active` : "/interview/active";
+      if (!activeInterviewId) {
+        throw new Error("Interview ID missing. Please refresh and try again.");
+      }
+
+      const introPath = `/interview/${activeInterviewId}/active`;
       console.log("Navigating to:", introPath);
       navigate(introPath);
     } catch (err) {
       // If recording fails, reset to idle state
       console.error("Failed to start interview:", err);
       setInterviewState("idle");
-      // Error is already set by useMediaRecorder hook
+      throw err instanceof Error ? err : new Error("Failed to start interview.");
     }
   };
 
@@ -202,15 +270,12 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
       setCurrentInterview(interview);
 
       if (stream) {
-        // Clone provided stream so that unmount cleanup in InterviewIdle
-        // (which stops original tracks) does not kill the recorder stream.
-        const clonedTracks = stream.getTracks().map((t) => t.clone());
-        const clonedStream = new MediaStream(clonedTracks);
-        setGrantedStream(clonedStream);
+        setInterviewStream(stream);
       }
 
       if (id) {
         console.log("Setting interview ID:", id);
+        interviewIdRef.current = id;
         setInterviewId(id);
       } else {
         console.warn("No ID provided to loadExistingInterview");
@@ -311,7 +376,11 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
             finalTranscript,
             timestamp,
             chunkSequence,
-            userId
+            userId,
+            {
+              questionId: currentInterview.currentQuestion,
+              questionText: currentQuestion,
+            }
           );
 
           if (result.isFinal) {
@@ -437,6 +506,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     isSubmittingRef,
     startInterview,
     loadExistingInterview,
+    setInterviewStream,
     handleSubmitAnswer,
     handleInterviewEnd,
     downloadRecording,

@@ -237,7 +237,8 @@ class QnaHandler {
     userAnswer: string,
     timeTaken: number,
     chunkSequence: number,
-    userId: string
+    userId: string,
+    questionMeta?: { questionId?: string; questionText?: string }
   ): Promise<{ success: boolean; nextQuestion: string | null; isFinal: boolean; needsFollowUp: boolean; feedback?: string }> {
     try {
       // Step 1: Generate signed URL
@@ -257,9 +258,31 @@ class QnaHandler {
       );
 
       // Step 3: Prepare feedback payload and patch
+      if ((!this.questions.length || !this.questions[this.currentQuestionIndex]) && questionMeta?.questionId) {
+        this.questions[this.currentQuestionIndex] = {
+          questionId: questionMeta.questionId,
+          questionText: questionMeta.questionText || "",
+          userAnswer: "",
+          feedback: "",
+          isCorrect: false,
+          timeTaken: 0,
+          chunkId: "",
+          chunkUploadStatus: "PENDING",
+          chunkFileMimeType: "video/webm",
+        };
+      }
+
+      const activeQuestion = this.questions[this.currentQuestionIndex];
+      const questionId = activeQuestion?.questionId || questionMeta?.questionId || "";
+      const questionText = activeQuestion?.questionText || questionMeta?.questionText || "";
+
+      if (!questionId || !questionText) {
+        throw new Error("Question metadata is missing. Please restart the interview.");
+      }
+
       const feedbackEntry: InterviewHistoryEntryDto = {
-        questionId: this.questions[this.currentQuestionIndex]?.questionId || "",
-        questionText: this.questions[this.currentQuestionIndex]?.questionText || "",
+        questionId,
+        questionText,
         userAnswer,
         feedback: "", // To be filled by backend
         isCorrect: false, // To be determined by backend

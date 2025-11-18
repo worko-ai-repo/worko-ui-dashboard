@@ -24,6 +24,7 @@ const InterviewIdle = () => {
     isSpeechSupported,
     currentInterview,
     loadExistingInterview,
+    setInterviewStream,
   } = useInterview();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -44,6 +45,7 @@ const InterviewIdle = () => {
   const [micTestComplete, setMicTestComplete] = useState(false);
   const [testStream, setTestStream] = useState<MediaStream | null>(null);
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+  const [isStartingInterview, setIsStartingInterview] = useState(false);
 
   const stage = searchParams.get("stage");
   const interviewDataFromState = location.state?.interviewData as InterviewDto | undefined;
@@ -107,7 +109,7 @@ const InterviewIdle = () => {
   useEffect(() => {
     const initializeInterview = async () => {
       // If we don't have interview data and need to fetch it
-      if (!currentInterview && !isInitiating && interviewIdParam) {
+      if (!currentInterview && !isInitiating && interviewIdParam && interviewIdParam !== "new") {
         setIsInitiating(true);
         setInitError(null);
 
@@ -224,6 +226,7 @@ const InterviewIdle = () => {
       ]);
 
       setTestStream(combinedStream);
+      setInterviewStream(combinedStream);
 
       // Also pass to interview context if interview is already loaded
       if (currentInterview) {
@@ -243,6 +246,7 @@ const InterviewIdle = () => {
         microphone: false,
         screen: false,
       });
+      setInterviewStream(null);
     } finally {
       setIsRequestingPermissions(false);
     }
@@ -295,6 +299,23 @@ const InterviewIdle = () => {
 
   const userName = userDetails?.fullName || "Candidate";
   const firstName = userName.split(" ")[0];
+
+  const handleProceed = async () => {
+    setInitError(null);
+    setIsStartingInterview(true);
+    try {
+      await startInterview({
+        stage: interviewStage,
+        routeInterviewId: interviewIdParam,
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to initiate interview. Please try again.";
+      setInitError(message);
+    } finally {
+      setIsStartingInterview(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b bg-white">
@@ -532,12 +553,15 @@ const InterviewIdle = () => {
                       </div>
                     </div>
                     <Button
-                      onClick={startInterview}
+                      onClick={handleProceed}
                       size="default"
-                      disabled={!currentInterview || isInitiating}
+                      disabled={
+                        isStartingInterview ||
+                        (interviewStage === "continue" && (!currentInterview || isInitiating))
+                      }
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-base sm:text-lg py-6">
                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
-                      Proceed Now
+                      {isStartingInterview ? "Starting..." : "Proceed Now"}
                     </Button>
                   </div>
                 )}

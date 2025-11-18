@@ -123,10 +123,8 @@ const InterviewActive = () => {
       getToastOptions({ autoClose: 6000 })
     );
 
-    setTimeout(() => {
-      resetInterview();
-      navigate("/candidate/profile", { replace: true });
-    }, 2000);
+    resetInterview();
+    navigate("/candidate/profile", { replace: true });
   };
 
   const handleExitClick = () => {
@@ -170,14 +168,7 @@ const InterviewActive = () => {
     }
   }, [showTabSwitchWarning]);
 
-  // Auto-fire API when exit confirmation modal opens
-  useEffect(() => {
-    if (showExitConfirmation === true && !hasTerminatedRef.current) {
-      console.log("Exit button clicked - calling API to terminate interview");
-      hasTerminatedRef.current = true;
-      terminateInterviewAPI();
-    }
-  }, [showExitConfirmation]);
+  // Remove immediate API call when exit modal opens; handled on confirm only
 
   useEffect(() => {
     const startCamera = async () => {

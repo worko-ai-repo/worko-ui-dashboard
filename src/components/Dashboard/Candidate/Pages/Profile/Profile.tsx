@@ -1,7 +1,18 @@
 import React, { useEffect, useState } from "react";
 import profileService from "../../Service/ProfileService";
 import { Group, eyeIcon, verified, gender, salary, cancel } from "@Assets";
-import { AtSign, Briefcase, Link, Linkedin, MapPin, PhoneCall, Plus, Video, X } from "lucide-react";
+import {
+  AtSign,
+  Briefcase,
+  Building2,
+  Link,
+  Linkedin,
+  MapPin,
+  PhoneCall,
+  Plus,
+  Video,
+  X,
+} from "lucide-react";
 import QuickLinks from "./QuickLinks";
 import { renderCard, renderSkillsSection, renderListSection } from "./Helper/ProfileHelper";
 import EditForm from "./Helper/EditForm";
@@ -27,7 +38,10 @@ import VideoInterviewModal from "../../../../Modals/SharedModals/Interview/Video
 import EducationEditor from "./Helper/EducationEditor";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
+import CorporateRequestsModal from "@Components/Modals/SharedModals/Interview/CorporateRequestsModal";
 import Modal from "@Components/Shared/Modal";
+import interviewServiceObj from "@Services/Interview.service";
+import { useQuery } from "@tanstack/react-query";
 
 interface ProfileSectionProps {
   title: string;
@@ -98,6 +112,10 @@ const Profile = () => {
     isOpen: boolean;
     data: InterviewDto;
   }>({ isOpen: false, data: {} as InterviewDto });
+  const [viewCorporateRequestsModal, setViewCorporateRequestsModal] = useState<{
+    isOpen: boolean;
+    interview: InterviewDto | null;
+  }>({ isOpen: false, interview: null });
 
   const [isEditingEducation, setIsEditingEducation] = useState(false);
   const [editedEducation, setEditedEducation] = useState<{
@@ -106,7 +124,133 @@ const Profile = () => {
     passingYear: number | null;
   }>({ collage: "", degree: "", passingYear: null });
 
-  const { setUserDetails } = useAppContext();
+  const { setUserDetails, userDetails } = useAppContext();
+
+  // Fetch interviews
+  const fetchInterviews = async (): Promise<InterviewDto[]> => {
+    if (!userDetails?.email) throw new Error("User email not found");
+
+    const { response, error } = await interviewServiceObj.fetchInterviewList(userDetails.email);
+
+    if (error) throw error;
+    return response || [];
+  };
+
+  const { data: interviews = [], isLoading: isLoadingInterviews } = useQuery({
+    queryKey: ["interviews", userDetails?.email],
+    queryFn: fetchInterviews,
+    enabled: !!userDetails?.email,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
+  });
+
+  // Calculate interview button states
+  const getInterviewButtonState = () => {
+    const pendingInterviews = interviews.filter(
+      (interview) => interview.status === "PENDING" || interview.status === "IN_PROGRESS"
+    );
+
+    const completedInterviews = interviews.filter(
+      (interview) => interview.status === "COMPLETED" || interview.status === "CLOSED"
+    );
+
+    // Check if any completed/closed interview exists within last 3 months
+    const threeMonthsAgo = new Date();
+    threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
+
+    const hasRecentCompletedInterview = completedInterviews.some((interview) => {
+      const interviewDate = new Date(interview.updatedAt || interview.createdAt);
+      return interviewDate > threeMonthsAgo;
+    });
+
+    // If there's a completed interview within 3 months, only show View Details button
+    if (hasRecentCompletedInterview) {
+      return {
+        showInitiate: false,
+        showContinue: false,
+        showViewDetails: true,
+        showViewRequests: false,
+        buttonText: "",
+        pendingInterview: null,
+        hasRecentInterview: true,
+      };
+    }
+
+    // No pending interviews and no recent completed interviews
+    if (pendingInterviews.length === 0) {
+      return {
+        showInitiate: true,
+        showContinue: false,
+        showViewDetails: completedInterviews.length > 0,
+        showViewRequests: false,
+        buttonText: "Initiate Video Interview",
+        pendingInterview: null,
+      };
+    }
+
+    // Find oldest pending interview
+    const oldestPending = [...pendingInterviews].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    )[0];
+
+    const questionsAttempted =
+      oldestPending.interviewHistory?.filter((history) => history.chunkUploadStatus === "UPLOADED")
+        .length || 0;
+
+    // Check if should show "View Requests" button
+    const shouldShowViewRequests =
+      oldestPending.status === "PENDING" &&
+      (!oldestPending.interviewHistory || oldestPending.interviewHistory.length === 0) &&
+      oldestPending.requestedBy &&
+      oldestPending.requestedBy.length > 0;
+
+    // If no questions attempted, show as "Initiate" but internally continue
+    if (questionsAttempted === 0 && oldestPending.status === "PENDING") {
+      return {
+        showInitiate: true,
+        showContinue: false,
+        showViewDetails: completedInterviews.length > 0,
+        showViewRequests: shouldShowViewRequests,
+        buttonText: "Initiate Video Interview",
+        pendingInterview: oldestPending,
+        shouldContinue: true,
+      };
+    }
+
+    // If some questions attempted, show as "Continue"
+    return {
+      showInitiate: false,
+      showContinue: true,
+      showViewDetails: completedInterviews.length > 0,
+      showViewRequests: false,
+      buttonText: "Continue Interview",
+      pendingInterview: oldestPending,
+      shouldContinue: true,
+    };
+  };
+
+  const handleInterviewAction = () => {
+    const buttonState = getInterviewButtonState();
+    const basePath = import.meta.env.APP_PROXY_DASH ? `/${import.meta.env.APP_PROXY_DASH}` : "";
+
+    const openInterviewWindow = (relativePath: string) => {
+      const interviewUrl = `${basePath}${relativePath}`;
+      const newWindow = window.open(interviewUrl, "_blank");
+
+      if (!newWindow || newWindow.closed || typeof newWindow.closed === "undefined") {
+        toast.error("Popup blocked! Please allow popups for this site.");
+      }
+    };
+
+    if (buttonState.shouldContinue && buttonState.pendingInterview) {
+      openInterviewWindow(`/interview/${buttonState.pendingInterview.id}?stage=continue`);
+      return;
+    }
+
+    openInterviewWindow(`/interview/new?stage=new`);
+  };
 
   // State for loading and error
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -767,7 +911,6 @@ const Profile = () => {
   };
 
   const handleSaveResponsibilities = async (items: Responsibility[]) => {
-    // console.log(items)
     try {
       if (!user) return false;
 
@@ -1308,12 +1451,45 @@ const Profile = () => {
 
                   <UploadCVButton onUploadSuccess={() => fetchData()} />
 
-                  <button
-                    onClick={() => setInitiateVideoInterview(true)}
-                    className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 mt-9">
-                    <Video className="h-4 w-4 sm:h-5 sm:w-5" />
-                    <span className="text-xs font-semibold">Initiate video interview</span>
-                  </button>
+                  {!isLoadingInterviews &&
+                    (() => {
+                      const buttonState = getInterviewButtonState();
+                      return (
+                        <>
+                          {(buttonState.showInitiate || buttonState.showContinue) && (
+                            <button
+                              onClick={handleInterviewAction}
+                              className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-blue-200 text-blue-600 hover:bg-blue-50 transition-colors">
+                              <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                              <span className="text-xs font-semibold">
+                                {buttonState.buttonText}
+                              </span>
+                            </button>
+                          )}
+                          {buttonState.showViewRequests && buttonState.pendingInterview && (
+                            <button
+                              onClick={() =>
+                                setViewCorporateRequestsModal({
+                                  isOpen: true,
+                                  interview: buttonState.pendingInterview,
+                                })
+                              }
+                              className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-purple-200 text-purple-600 hover:bg-purple-50 transition-colors">
+                              <Building2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                              <span className="text-xs font-semibold">View Requests</span>
+                            </button>
+                          )}
+                          {buttonState.showViewDetails && (
+                            <button
+                              onClick={() => setInitiateVideoInterview(true)}
+                              className="w-full h-10 rounded-xl flex items-center justify-center gap-2 cursor-pointer bg-white shadow-md border border-gray-300 text-gray-700 hover:bg-gray-50 transition-colors">
+                              <Video className="h-4 w-4 sm:h-5 sm:w-5" />
+                              <span className="text-xs font-semibold">View Interview Details</span>
+                            </button>
+                          )}
+                        </>
+                      );
+                    })()}
                 </div>
               </div>
             </div>
@@ -1892,6 +2068,8 @@ const Profile = () => {
           <VideoInterviewModal
             onClose={() => setInitiateVideoInterview(false)}
             isOpen={initiateVideoInterview}
+            interviews={interviews}
+            isLoading={isLoadingInterviews}
             handleViewDetails={(interview: InterviewDto) => {
               setInitiateVideoInterview(false);
               setViewInterviewModalOpen({ isOpen: true, data: interview });
@@ -1910,6 +2088,17 @@ const Profile = () => {
               />
             </Modal>
           )}
+          <Modal
+            isOpen={viewCorporateRequestsModal.isOpen}
+            onClose={() => setViewCorporateRequestsModal({ isOpen: false, interview: null })}
+            
+            >
+            <CorporateRequestsModal
+              isOpen={viewCorporateRequestsModal.isOpen}
+              onClose={() => setViewCorporateRequestsModal({ isOpen: false, interview: null })}
+              interview={viewCorporateRequestsModal.interview}
+            />
+          </Modal>
         </div>
       </div>
     </div>
