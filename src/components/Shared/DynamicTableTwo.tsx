@@ -138,7 +138,7 @@ export function DynamicTableTwo<T extends { id: string }>({
       {/* Scroll wrapper */}
       <div className=" overflow-x-auto overflow-y-scroll  pb-4 rounded-md   h-full max-h-[calc(100vh-80px)]">
         <table className="min-w-full table-auto">
-          <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-10 shadow-sm border-b border-blue-200">
+          <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-30 shadow-sm border-b border-blue-200">
             <tr>
               {enableSelect && (
                 <th className="p-1 text-center rounded-l-xl sticky left-0 z-30 bg-blue-50">

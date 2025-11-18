@@ -3,8 +3,15 @@ import { ChevronDown } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 
 interface JobOption {
-  label: string;
-  value: string;
+  jobTitle: string;
+  id:string;
+  location:{
+    fullLocation:string[]
+  };
+  salaryRange:{
+    min:number;
+    max:number;
+  }
 }
 
 interface JobDropdownProps {
@@ -28,14 +35,14 @@ const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput }) 
     const value = e.target.value;
     setInput(value);
     const match = jobsList.filter((job) =>
-      job.label.toLowerCase().includes(value.toLowerCase())
+      job.jobTitle.toLowerCase().includes(value.toLowerCase())
     );
     setFiltered(match);
     setIsOpen(true);
   };
 
   const handleSelect = (job: JobOption) => {
-    setInput(job.label); 
+    setInput(job.jobTitle); 
     setIsOpen(false);
   };
 
@@ -81,11 +88,11 @@ useEffect(() => {
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto text-sm">
           {filtered.map((job) => (
             <li
-              key={job.value}
+              key={job.id}
               onClick={() => handleSelect(job)}
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start"
             >
-              {job.label}
+              {job?.jobTitle} | {job?.location?.fullLocation} | {job?.salaryRange?.min}-{job?.salaryRange?.max} LPA
             </li>
           ))}
         </ul>

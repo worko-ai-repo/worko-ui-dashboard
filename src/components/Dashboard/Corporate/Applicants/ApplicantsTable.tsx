@@ -69,6 +69,7 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
   REVISED_OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0]",
   REVISED_LETTER: "bg-[#D6F4FF] text-[#00ADC0]",
   OFFER_ACCEPTED: "bg-[#D1E7DD] text-[#0F5132]",
+  AWAITING: "bg-[#D6F4FF] text-[#00ADC0]",
 };
 
 export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
@@ -96,6 +97,7 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   REVISED_OFFER_SENT: "Revised Offer Sent",
   REVISED_LETTER: "Revised Letter Sent",
   OFFER_ACCEPTED: "Offer Accepted",
+  AWAITING: "Awaiting",
 };
 
 export interface ApplicationTableProps {

@@ -9,18 +9,24 @@ interface RejectCandidateModalProps {
   onClose: () => void;
   isOpen: boolean;
   data: any;
-  onRefresh: () => void;
+  // onRefresh: () => void;
   localUpdate?: (id: string, updatedData: Partial<any>) => void;
-  rejectCandidate?:() => void;
+  // rejectCandidate?:() => void;
+  setFetchData:(data:any)=>void;
+  type:string;
+  setSelectedRows: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
 const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   onClose,
   isOpen,
   data,
-  onRefresh,
+  // onRefresh,
   localUpdate,
-  rejectCandidate,
+  // rejectCandidate,
+  setFetchData,
+  type,
+  setSelectedRows,
 }) => {
   const options = [
     "Duplicate profile",
@@ -39,7 +45,7 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   const { user } = useDashboardContext();
 
   const handleSubmit = async () => {
-          if(localUpdate){
+    if(localUpdate){
       const updatedData = {
           ...data,
           currentStatus:"REJECTED"
@@ -47,9 +53,6 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
         localUpdate(data.id,updatedData)
         console.log(updatedData)
       }
-      
-      onClose()
-      return
     if (!reason) {
       toast.error("Please select a reason", getToastOptions({}));
       return;
@@ -79,7 +82,7 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
       if (response) {
         toast.success("Referral rejected", getToastOptions({}));
         setIsError("");
-        onRefresh();
+        // onRefresh();
         onClose();
       }
     } catch (error: any) {
@@ -89,6 +92,22 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
       toast.error(errorMsg, getToastOptions({}));
     } finally {
       setIsLoading(false);
+
+      //below is the local update for both single and multiple
+      if(type == "multiple"){
+        setFetchData((prevData:any) =>
+            prevData.filter((candidate:any) =>
+              !data.some((sel:any) => sel.id === candidate.id)
+            )
+        );
+        setSelectedRows(()=>[])
+      }else if(type == "single"){
+        setFetchData((prev:any) => prev?.filter((item:any) => item.id !== data.id))
+          setSelectedRows((prev: any[]) =>
+          prev.filter((row) => row.id !== data.id)
+        );
+      }
+      onClose()
     }
   };
 

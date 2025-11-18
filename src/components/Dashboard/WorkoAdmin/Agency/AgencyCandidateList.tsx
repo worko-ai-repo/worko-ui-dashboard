@@ -1,16 +1,14 @@
 import SearchBar from '@Components/Shared/SearchBar'
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
-import React, { useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import AgencyCandidateListTable from './AgencyCandidateListTable'
 import GenericDropdownAgency from '@Components/Shared/DropDown/GenericDropdownAgency'
 import SearchBarAgency from '@Components/Shared/SearchBarAgency'
 import { LogOut } from 'lucide-react'
+import { AgencyAllCandidatesListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
+import { useAppContext } from '@Context/App.context'
+import httpServiceObj from '@Services/ApiHandler.service'
 
-const AgencyCandidateList = () => {
-  const [searchBarText,setSearchBarText] = useState<string|null>("")
-  const [queryIsJobsLoading,setQueryIsJobsLoading] = useState<boolean>(false)
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("");
 const dummyData = [
   {
     id: "ref-10",
@@ -256,6 +254,125 @@ const dummyData = [
   }
 ];
 
+export interface AgencyAllCandidatesListFilters {
+  searchText?: string;
+  companyId?: string;
+  sortOrder?: "ascending" | "descending";
+  userType?: string;
+}
+
+export interface AgencyAllCandidatesListApiResponse {
+  data: AgencyAllCandidatesListDetailsDto[];
+  pagination: PaginationInfo;
+  totalReferrals?: number;
+  currentPage?: number;
+  totalPages?: number;
+  matchingScore?: number;
+}
+
+export interface PaginationInfo {
+  count: number;
+  pageSize: number;
+  sortOrder: string;
+  timesQueried: number;
+  queriedCount: number;
+  lastKey: string;
+}
+
+const initialPaginationState: PaginationInfo = {
+  count: 0,
+  pageSize: 10,
+  sortOrder: "descending",
+  timesQueried: 0,
+  queriedCount: 0,
+  lastKey: "",
+};
+
+
+const AgencyCandidateList = () => {
+const [searchBarText,setSearchBarText] = useState<string|null>("")
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [isRejecting,setIsRejecting] = useState<boolean>(false);
+  const [fetchData, setFetchData] = useState<any[]>([]);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [acceptingCandidate, setAcceptingCandidate] = useState(false);
+  const [rejectingCandidate, setRejectingCandidate] = useState(false);
+  const [dataFromParent, setDataFromParent] = useState<any[]>([]);
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
+  const [isEvaluatorForm,setIsEvaluatorForm] = useState<boolean>(false);
+  const [jobFilter,setJobFilter] = useState<any>([]);
+  const [agencyFilter,setAgencyFilter] = useState<any>([]);
+  const [pageSize,setPageSize] = useState<number>(10);
+  const [filters, setFilters] = useState<AgencyAllCandidatesListFilters>({});
+  const [isLoading,setIsLoading] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+  const paginationKeysRef = useRef<Record<number, string>>({1: "",});
+
+  const { userDetails } = useAppContext();
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+
+  const fetchAllCandidatesData = useCallback(
+      async (
+        page: number = 1,
+        size: number = pageSize,
+        lastKey: string = "",
+        searchFilters = filters,
+        isSearch = false,
+        sortOrder = "desc"
+      ) => {
+  
+        if (!userDetails?.email) return;
+    
+        setIsLoading(true);
+        try {
+          console.log(userDetails)
+        const url = `${agencyBaseUrl}/agency-user-submission/`;
+        const params = {
+          // companyId:userDetails?.companyId,
+          // agencyJobAssignedByCorporateUserId:userDetails?.id,
+          includeJobDetails: true,
+          includeCandidateParsedCvDetails: true,
+          //  agencyName:NELLSYS,
+          // jobId: string,
+          // candidateEmail: string,
+          pageSize:size,
+          lastKey,
+          sortOrder,
+        }
+          const { response } = await httpServiceObj.get<AgencyAllCandidatesListApiResponse>(url, true, params, true);
+    
+          if (response) {
+            setFetchData(response.data);
+            console.log(response)
+            if (response.pagination) {
+              setPaginationInfo(response.pagination);
+    
+              if (isSearch || page === 1) {
+                paginationKeysRef.current = { 1: "" };
+                if (response.pagination.lastKey) {
+                  paginationKeysRef.current[2] = response.pagination.lastKey;
+                }
+              } else if (response.pagination.lastKey) {
+                paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+              }
+            }
+          } else {
+            console.error("Cannot fetch user details");
+          }
+        } catch (err) {
+          console.error("Exception in fetchReferrals:", err);
+        } finally {
+          setIsLoading(false);
+          // setFetchData(agencyDetailsList.data)
+          // setPaginationInfo(agencyDetailsList.pagination)
+        }
+      },
+      [userDetails, pageSize, filters]
+    );
+
 const StatusFilterDropdown = [
   { label: "All", onClick: () => { setStatusFilter("")}},
   { label: "Applied", onClick: () => { setStatusFilter("APPLIED")}},
@@ -269,34 +386,85 @@ const StatusFilterDropdown = [
   { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
 ];
 
-      const toggleRow = (row: any) => {
-          setSelectedRows((prev) =>
-            prev.some((r) => r.id === row.id)
-              ? prev.filter((r) => r.id !== row.id)
-              : [...prev, row]
-          );
-        };
+useEffect(() => {
+    console.log(userDetails)
+      if (userDetails?.email) {
+        setCurrentPage(1);
+        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+        fetchAllCandidatesData(1, pageSize, "");
+        // fetchJobs()
+      }
+    }, [userDetails, fetchAllCandidatesData, pageSize]);
   
-      const toggleSelectAll = (rows: any[]) => {
-          if (selectedRows.length === rows.length) setSelectedRows([]);
-          else setSelectedRows(rows);
-      };
-  
-      const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
-      const reset = () => setSelectedRows([]);
+  const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchBarText(e.target.value);
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+      const lastKey = paginationKeysRef.current[page] || "";
       
-      const refetch = () => {};
-      const handleJobApplicationStatusUpdate = () => {};
-      const handleSendToRecruiter = () => {};
-      const onBulkUpdate = () => {};
+      setCurrentPage(page);
+      fetchAllCandidatesData(page, pageSize, lastKey);
+    },
+    [fetchAllCandidatesData, pageSize]
+  );
+
+  const handlePageSizeChange = useCallback(
+    (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+      setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+      fetchAllCandidatesData(1, size, "");
+    },
+    [fetchAllCandidatesData]
+  );
+      
+  const removeAgencyLocally = (id: string) => {
+    setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
+  };
+
+  const toggleRow = (row: any) => {
+      setSelectedRows((prev) =>
+        prev.some((r) => r.id === row.id)
+          ? prev.filter((r) => r.id !== row.id)
+          : [...prev, row]
+      );
+    };
+
+  const toggleSelectAll = (rows: any[]) => {
+      if (selectedRows.length === rows.length) setSelectedRows([]);
+      else setSelectedRows(rows);
+  };
+
+  const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
+  const reset = () => setSelectedRows([]);
   
-      const ListSelection = {
-      selectedRows,
-      toggleSelectAll,
-      toggleRow,
-      getAllSelected,
-      reset,
-      };
+  const refetch = () => {};
+  const handleJobApplicationStatusUpdate = () => {};
+  const handleSendToRecruiter = () => {};
+  const onBulkUpdate = () => {};
+
+  const ListSelection = {
+  selectedRows,
+  toggleSelectAll,
+  toggleRow,
+  getAllSelected,
+  reset,
+  };
+
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData) =>
+        prevData.map((candidate) =>
+          selectedRows.some((sel) => sel.id === candidate.id)
+            ? { ...candidate, score: 80 }
+            : candidate
+        )
+      );
+  }, []);
 
   return (
     <div>
@@ -347,7 +515,7 @@ const StatusFilterDropdown = [
         </div>
       </div>
       <br />
-      {queryIsJobsLoading ? (
+      {isLoading ? (
               <SkeletonLoader
                   showTableHeader={true}
                   showTableRows={true}
@@ -356,7 +524,7 @@ const StatusFilterDropdown = [
               />
               ) : (
               <AgencyCandidateListTable
-                data={dummyData}
+                data={fetchData}
                 userType="ADMIN"
                 refetch={refetch}
                 ListSelection={ListSelection}
@@ -364,6 +532,10 @@ const StatusFilterDropdown = [
                 sendApplicationToRecruiter={handleSendToRecruiter}
                 isBulkEvaluation={!!selectedRows.length}
                 onBulkUpdate={onBulkUpdate}
+                scoreLoading={scoreLoading}
+                localUpdate={handleLocalUpdate}
+                setFetchData={setFetchData}
+                setSelectedRows={setSelectedRows}
               />
       )}
     </div>

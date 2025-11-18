@@ -1,11 +1,42 @@
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AgencyListTable from './AgencyListTable'
 import { Plus } from 'lucide-react'
 import AddNewAgencyModal from './modals/AddNewAgencyModal'
 import httpServiceObj from '@Services/ApiHandler.service'
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import { useDashboardContext } from '@Context/Dashboard.context'
+import { PaginationInfo } from '@Components/Dashboard/Candidate/Pages/Job/JobTypes'
+import { debounce } from 'lodash'
+import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
+import { JobData } from '@Interfaces/CorporateDashboard.dto'
+
+
+
+const initialPaginationState: PaginationInfo = {
+  count: 0,
+  pageSize: 10,
+  sortOrder: "descending",
+  timesQueried: 0,
+  queriedCount: 0,
+  lastKey: "",
+};
+
+export interface AgencyListFilters {
+  searchText?: string;
+  companyId?: string;
+  sortOrder?: "ascending" | "descending";
+  userType?: string;
+}
+
+export interface AgencyListApiResponse {
+  data: AgencyListDetailsDto[];
+  pagination: PaginationInfo;
+  totalReferrals?: number;
+  currentPage?: number;
+  totalPages?: number;
+  matchingScore?: number;
+}
 
 const AgencyList = () => {
   const [searchBarText,setSearchBarText] = useState<string|null>("")
@@ -13,246 +44,201 @@ const AgencyList = () => {
   const [isAddAgencyModelOpen,setIsAddAgencyModelOpen] = useState<boolean>(false);
   const [fetchData,setFetchData] = useState<any>(null);
   const [isLoading,setIsLoading] = useState<boolean>(false)
-  const baseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const { userDetails } = useAppContext();
   const { user, isLoadingUser } = useDashboardContext();
-
+  const [pageSize,setPageSize] = useState<number>(10);
+  const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+  const [filters, setFilters] = useState<AgencyListFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const paginationKeysRef = useRef<Record<number, string>>({1: "",});
+  const [jobsList,setJobsList] = useState([]);
   //@TODO use callback maybe to call api
-  useEffect(() => {
-    const fetchUserData = async () =>{
-        if(!userDetails) {
-          return
+
+  // useEffect(() => {
+  //   // console.log(baseUrl)
+  //   const fetchUserData = async () =>{
+  //       if(!userDetails) {
+  //         return
+  //       }
+  //       setIsLoading(true)
+  //       const url = `${baseUrl}/agency-invite`;
+  //       const params = {
+  //         companyId:userDetails?.companyId,
+  //         invitedByCorporateUserId:userDetails?.id,
+  //         pageSize,
+  //       }
+  //       try {
+  //         const { response } = await httpServiceObj.get(url, true, params, true);
+  //         console.log(response)
+  //         if(response){
+  //           const data = response.data as any;
+  //           setFetchData(data)
+  //         }else{
+  //           setFetchData(dummyData.data)
+  //         }
+  //       } catch (error) {
+  //         console.error("Cannot fetch user details", error);
+  //         setFetchData(dummyData.data)
+  //       } finally{
+  //         setIsLoading(false)
+  //         // setFetchData(dummyData)
+  //       }
+  //   }
+  //   fetchUserData()
+  // }, [userDetails])
+
+  const fetchUserData = useCallback(
+  async (
+    page: number = 1,
+    size: number = pageSize,
+    lastKey: string = "",
+    searchFilters = filters,
+    isSearch = false,
+    sortOrder = "desc"
+  ) => {
+    if (!userDetails?.email) return;
+
+    setIsLoading(true);
+    try {
+      const url = `${agencyBaseUrl}/agency-invite`;
+      const params = {
+          companyId:userDetails?.companyId,
+          invitedByCorporateUserId:userDetails?.id,
+          pageSize:size,
+          lastKey,
+          sortOrder,
         }
-        setIsLoading(true)
-        const url = `${baseUrl}/agency-invite/${userDetails?.companyId}`;
-        try {
-          const { response } = await httpServiceObj.get(url, true, {}, true);
-          if(response){
-            // const data = response as UserDetails[];
-            setFetchData(response)
-          }else{
-            setFetchData(dummyData)
+      const { response } = await httpServiceObj.get<AgencyListApiResponse>(url, true, params, true);
+
+      if (response) {
+        setFetchData(response.data);
+        // console.log(response)
+        if (response.pagination) {
+          setPaginationInfo(response.pagination);
+
+          if (isSearch || page === 1) {
+            paginationKeysRef.current = { 1: "" };
+            if (response.pagination.lastKey) {
+              paginationKeysRef.current[2] = response.pagination.lastKey;
+            }
+          } else if (response.pagination.lastKey) {
+            paginationKeysRef.current[page + 1] = response.pagination.lastKey;
           }
-        } catch (error) {
-          console.error("Cannot fetch user details:", error);
-          setFetchData(dummyData)
-        } finally{
-          setIsLoading(false)
         }
+      } else {
+        console.error("Cannot fetch user details");
+      }
+    } catch (err) {
+      console.error("Exception in fetchReferrals:", err);
+    } finally {
+      setIsLoading(false);
     }
-    fetchUserData()
-  }, [userDetails])
+  },
+  [userDetails, pageSize, filters]
+);
 
-  const dummyData = [
-    {
-        id: "ref-10",
-        pk: "REFERRAL#ref-10",
-        sk: "CANDIDATE#ref-10",
-        name: "TechHire Solutions",
-        email: "abhay.raj@example.com",
-        contactName: "Abhay Raj",
-        contactNumber: "+91-9876543219",
-        dateActivated: "2025-10-05",
-        assignedJobs: 8,
-        totalCandidateSubmitted: 30,
-        totalCandidateRejected: 30,
-        totalCandidateHired: 30,
-        GSTIN: "29AAACC1206D2ZB",
-        contractCopyAwsS3FileName: "https://calibre-ebook.com/downloads/demos/demo.pdf",
-        isPaused:true,
-    },
-    {
-        id: "ref-11",
-        pk: "REFERRAL#ref-11",
-        sk: "CANDIDATE#ref-11",
-        name: "NextGen Recruiters",
-        email: "sneha.verma@example.com",
-        contactName: "Sneha Verma",
-        contactNumber: "+91-9876501234",
-        dateActivated: "2025-10-01",
-        assignedJobs: 5,
-        totalCandidateSubmitted: 20,
-        totalCandidateRejected: 5,
-        totalCandidateHired: 10,
-        GSTIN: "07AAACB2234M1ZK",
-        contractCopyAwsS3FileName: "https://example.com/contracts/nextgen.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-12",
-        pk: "REFERRAL#ref-12",
-        sk: "CANDIDATE#ref-12",
-        name: "FuturePlacers",
-        email: "rahul.kumar@example.com",
-        contactName: "Rahul Kumar",
-        contactNumber: "+91-9988776655",
-        dateActivated: "2025-09-25",
-        assignedJobs: 10,
-        totalCandidateSubmitted: 40,
-        totalCandidateRejected: 15,
-        totalCandidateHired: 20,
-        GSTIN: "27AABCU9603R1Z5",
-        contractCopyAwsS3FileName: "https://example.com/contracts/futureplacers.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-13",
-        pk: "REFERRAL#ref-13",
-        sk: "CANDIDATE#ref-13",
-        name: "SkillConnect",
-        email: "neha.mishra@example.com",
-        contactName: "Neha Mishra",
-        contactNumber: "+91-9123456789",
-        dateActivated: "2025-09-15",
-        assignedJobs: 6,
-        totalCandidateSubmitted: 22,
-        totalCandidateRejected: 8,
-        totalCandidateHired: 11,
-        GSTIN: "19AACCM9910C1Z2",
-        contractCopyAwsS3FileName: "https://example.com/contracts/skillconnect.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-14",
-        pk: "REFERRAL#ref-14",
-        sk: "CANDIDATE#ref-14",
-        name: "HireNow Agency",
-        email: "amit.shah@example.com",
-        contactName: "Amit Shah",
-        contactNumber: "+91-9090909090",
-        dateActivated: "2025-09-10",
-        assignedJobs: 7,
-        totalCandidateSubmitted: 35,
-        totalCandidateRejected: 20,
-        totalCandidateHired: 10,
-        GSTIN: "33AAACN1234F1Z3",
-        contractCopyAwsS3FileName: "https://example.com/contracts/hirenow.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-15",
-        pk: "REFERRAL#ref-15",
-        sk: "CANDIDATE#ref-15",
-        name: "WorkForce India",
-        email: "karan.jain@example.com",
-        contactName: "Karan Jain",
-        contactNumber: "+91-8888888888",
-        dateActivated: "2025-10-02",
-        assignedJobs: 4,
-        totalCandidateSubmitted: 18,
-        totalCandidateRejected: 6,
-        totalCandidateHired: 7,
-        GSTIN: "24AAACL4567Q1Z1",
-        contractCopyAwsS3FileName: "https://example.com/contracts/workforce.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-16",
-        pk: "REFERRAL#ref-16",
-        sk: "CANDIDATE#ref-16",
-        name: "SmartHire Solutions",
-        email: "deepa.mehta@example.com",
-        contactName: "Deepa Mehta",
-        contactNumber: "+91-9000000001",
-        dateActivated: "2025-09-28",
-        assignedJobs: 9,
-        totalCandidateSubmitted: 28,
-        totalCandidateRejected: 12,
-        totalCandidateHired: 14,
-        GSTIN: "21AABCS1234L1Z9",
-        contractCopyAwsS3FileName: "https://example.com/contracts/smarthire.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-17",
-        pk: "REFERRAL#ref-17",
-        sk: "CANDIDATE#ref-17",
-        name: "TalentSpring",
-        email: "arjun.rana@example.com",
-        contactName: "Arjun Rana",
-        contactNumber: "+91-9101010101",
-        dateActivated: "2025-09-20",
-        assignedJobs: 3,
-        totalCandidateSubmitted: 10,
-        totalCandidateRejected: 3,
-        totalCandidateHired: 5,
-        GSTIN: "08AACCR1234B1Z6",
-        contractCopyAwsS3FileName: "https://example.com/contracts/talentspring.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-18",
-        pk: "REFERRAL#ref-18",
-        sk: "CANDIDATE#ref-18",
-        name: "Recruitly",
-        email: "priya.singh@example.com",
-        contactName: "Priya Singh",
-        contactNumber: "+91-9012345678",
-        dateActivated: "2025-10-08",
-        assignedJobs: 2,
-        totalCandidateSubmitted: 12,
-        totalCandidateRejected: 2,
-        totalCandidateHired: 8,
-        GSTIN: "04AACCP1234E1Z5",
-        contractCopyAwsS3FileName: "https://example.com/contracts/recruitly.pdf",
-        isPaused:false,
-    },
-    {
-        id: "ref-19",
-        pk: "REFERRAL#ref-19",
-        sk: "CANDIDATE#ref-19",
-        name: "JobBridge",
-        email: "manoj.das@example.com",
-        contactName: "Manoj Das",
-        contactNumber: "+91-9321654987",
-        dateActivated: "2025-10-09",
-        assignedJobs: 12,
-        totalCandidateSubmitted: 50,
-        totalCandidateRejected: 25,
-        totalCandidateHired: 15,
-        GSTIN: "10AAACX1234K1Z7",
-        contractCopyAwsS3FileName: "https://example.com/contracts/jobbridge.pdf",
-        isPaused:false,
+  const fetchJobs = async() =>{
+    const params = {
+      pageSize: 200,
+      sortOrder: "desc",
+      dashboard: "CORPORATE",
+      userRole: "corporate-recruiter",
+      status: "PUBLISHED",
+      companyId: userDetails?.companyId,
+      corporateRecruiterUserId: userDetails?.id,
     }
-    ];
 
-      const toggleRow = (row: any) => {
-          setSelectedRows((prev) =>
-            prev.some((r) => r.id === row.id)
-              ? prev.filter((r) => r.id !== row.id)
-              : [...prev, row]
-          );
-        };
-  
-      const toggleSelectAll = (rows: any[]) => {
-          if (selectedRows.length === rows.length) setSelectedRows([]);
-          else setSelectedRows(rows);
-      };
-  
-      const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
-      const reset = () => setSelectedRows([]);
-      
-      const refetch = () => {};
-      const handleJobApplicationStatusUpdate = () => {};
-      const handleSendToRecruiter = () => {};
-      const onBulkUpdate = () => {};
-  
-      const ListSelection = {
-      selectedRows,
-      toggleSelectAll,
-      toggleRow,
-      getAllSelected,
-      reset,
-      };
+    try {
+      const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
+      if(response?.data){
+        setJobsList(response.data)
+      }
+    } catch (error) {
+      console.log(error)
+    }
+  }
 
-      const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
-        setFetchData((prevData:any) => {
-        if (!prevData || !Array.isArray(prevData)) return prevData;
+  useEffect(() => {
+    if (userDetails?.email) {
+      setCurrentPage(1);
+      setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+      fetchUserData(1, pageSize, "");
+      fetchJobs()
+    }
+  }, [userDetails, fetchUserData, pageSize]);
 
-        return prevData.map(job =>
-          job.id === jobId ? { ...job, ...updatedData } : job
-        );
-      });
+    const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+  
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchBarText(e.target.value);
+    };
+
+  
+    const handlePageChange = useCallback((page: number) => {
+        const lastKey = paginationKeysRef.current[page] || "";
+        
+        setCurrentPage(page);
+        fetchUserData(page, pageSize, lastKey);
+      },
+      [fetchUserData, pageSize]
+    );
+  
+  
+    const handlePageSizeChange = useCallback(
+      (size: number) => {
+        setPageSize(size);
+        setCurrentPage(1);
+        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+        fetchUserData(1, size, "");
+      },
+      [fetchUserData]
+    );
+
+  const removeAgencyLocally = (id: string) => {
+    setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
+  };
+
+  const toggleRow = (row: any) => {
+      setSelectedRows((prev) =>
+        prev.some((r) => r.id === row.id)
+          ? prev.filter((r) => r.id !== row.id)
+          : [...prev, row]
+      );
+    };
+
+  const toggleSelectAll = (rows: any[]) => {
+      if (selectedRows.length === rows.length) setSelectedRows([]);
+      else setSelectedRows(rows);
+  };
+
+  const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
+  const reset = () => setSelectedRows([]);
+  
+  const refetch = () => {};
+  const handleJobApplicationStatusUpdate = () => {};
+  const handleSendToRecruiter = () => {};
+  const onBulkUpdate = () => {};
+
+  const ListSelection = {
+  selectedRows,
+  toggleSelectAll,
+  toggleRow,
+  getAllSelected,
+  reset,
+  };
+
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+  });
 
   // setFetchData((prevData:any) => {
   //         if (!prevData) return prevData;
@@ -324,13 +310,28 @@ const AgencyList = () => {
                 isBulkEvaluation={!!selectedRows.length}
                 onBulkUpdate={onBulkUpdate}
                 localUpdate={handleLocalUpdate}
+                removeAgencyLocally={removeAgencyLocally}
+                pagination={paginationInfo}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
+                jobsList={jobsList}
+                // Pagination={{
+                //   hasNextPage,
+                //   hasPreviousPage,
+                //   goToNextPage,
+                //   goToPreviousPage,
+                //   pageSize,
+                //   setPageSize: handlePageSizeChange,
+                // }}
               />
       )}
         <AddNewAgencyModal
-          dashboardType={"corporate"}
+          dashboardType={"CORPORATE"}
           onClose= {() => setIsAddAgencyModelOpen(false)}
           isOpen= {isAddAgencyModelOpen}
           companyId={userDetails?.companyId}
+          setFetchData={setFetchData}
         />
     </div>
   )

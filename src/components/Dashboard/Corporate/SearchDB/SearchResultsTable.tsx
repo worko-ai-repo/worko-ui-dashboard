@@ -76,7 +76,7 @@ export default function SearchResultsTable(props: any) {
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
   };
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(data, keyFallbacks, {
     tableId: `database`,
     persistInUrl: true,
     persistInLocalStorage: false,

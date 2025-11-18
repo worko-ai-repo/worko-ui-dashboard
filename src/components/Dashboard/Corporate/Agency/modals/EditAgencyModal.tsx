@@ -1,6 +1,10 @@
+import { useAppContext } from '@Context/App.context';
+import httpServiceObj from '@Services/ApiHandler.service';
+import { getToastOptions } from '@Utils/Toast.utils';
 import { SendIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 interface EditAgencyModalProps{
     dashboardType:string;
@@ -11,9 +15,9 @@ interface EditAgencyModalProps{
 }
 
 export interface FormValues {
-  agency: string;
-  email: string;
-  contactName: string;
+  agencyName: string;
+  agencyEmail: string;
+  contactPersonName: string;
   contactNumber: string;
   GSTIN: string;
   contractCopy: FileList;
@@ -22,24 +26,27 @@ export interface FormValues {
 const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,isOpen,data,localUpdate}) => {
   const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm<FormValues>({ mode: "onChange",
         defaultValues: {
-          agency: data?.name,
-          email: data?.email,
-          contactName:data?.contactName,
-          contactNumber: data?.contactNumber,
+          agencyName: data?.agencyName,
+          agencyEmail: data?.email,
+          contactPersonName:data?.name,
+          contactNumber: data?.phoneNumberDetails?.number,
           GSTIN: data?.GSTIN,
         },
       });
       const [visible, setVisible] = useState(false);
       const [isAnimatingIn, setIsAnimatingIn] = useState(false);
       const [isSubmitting,setIsSubmitting]  = useState(false);
-      
+      const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+      const { userDetails } = useAppContext();
+
       useEffect(() => {
+        console.log(data)
       if (isOpen && data) {
             reset({
-            agency: data.name || "",
-            email: data.email || "",
-            contactName: data.contactName || "",
-            contactNumber: data.contactNumber || "",
+            agencyName: data.agencyName || "",
+            agencyEmail: data.email || "",
+            contactPersonName: data.name || "",
+            contactNumber: data?.phoneNumberDetails?.number || "",
             GSTIN: data.GSTIN || "",
             contractCopy: data.contractCopy,
             });
@@ -53,15 +60,72 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       }
       }, [isOpen,data,reset]);
   
-    const formSubmit = (formData: any) => {
-      const contractFile = formData.contractCopy?.[0];
+    const formSubmit = async (data: any) => {
+      // setIsSubmitting(true)
+
+      // if(!data.agencyEmail || !data.agencyName || !data.contactNumber || !data.contactPersonName){
+      //   console.log(data)
+      //   toast.error("Please fill all mandatory fields",getToastOptions({}))
+      //   setIsSubmitting(false);
+      //   return
+      // }
+
+      // const hasContract = data?.contractCopy?.length > 0;
+      // if(!hasContract){
+      //   let payload
+
+      //   if(data?.GSTIN?.trim()){
+      //       payload = {
+      //       agencyName: data?.agencyName,
+      //       email: data?.agencyEmail,
+      //       phoneNumberDetails: {
+      //           number: Number(data.contactNumber),
+      //           countryCode: 91
+      //       },
+      //       name:data?.contactPersonName,
+      //       GSTIN: data?.GSTIN,
+      //       companyId:userDetails?.companyId,
+      //     }
+      //   }else{
+      //     payload = {
+      //       agencyName: data?.agencyName,
+      //       email: data?.agencyEmail,
+      //       phoneNumberDetails: {
+      //           number: Number(data.contactNumber),
+      //           countryCode: 91
+      //       },
+      //       name:data?.contactPersonName,
+      //       companyId:userDetails?.companyId,
+      //     }
+      //   }
+      //   console.log(payload,"payload")
+      //   try {
+      //     const uploadResponse:any = await invitingAgency(payload);
+      //     if (!uploadResponse.success) {
+      //       toast.error("Failed to invite agency. Please try again.", getToastOptions({}));
+      //       return; 
+      //     }
+      //     toast.success("Agency invited successfully!", getToastOptions({}));
+      //     // setFetchData((prev:any) => ([...(prev ?? []), uploadResponse.data]));
+      //     reset();
+      //     onClose();
+      //     return
+      //   } catch (error) {
+      //       console.error("Unexpected error:", error);
+      //       toast.error("Failed to invite agency, Please try again later.", getToastOptions({}));
+      //   } finally{
+      //       setIsSubmitting(false)
+      //   }
+      // }
+      
+      const contractFile = data.contractCopy?.[0];
 
       const updatedData = {
-        name: formData.agency,
-        email: formData.email,
-        contactName: formData.contactName,
-        contactNumber: formData.contactNumber,
-        GSTIN: formData.GSTIN,
+        name: data.agency,
+        email: data.email,
+        contactName: data.contactName,
+        contactNumber: data.contactNumber,
+        GSTIN: data.GSTIN,
         contractCopyAwsS3FileName:contractFile.name,
       };
       
@@ -70,6 +134,20 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       reset();
       onClose();
       }
+
+      const invitingAgency = async (payload: any) => {
+        try {
+          const { response } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
+          if (response) {
+            return { success: true, data: response };
+          }
+          return { success: false };
+        } catch (error) {
+          console.error("Upload failed:", error);
+          return { success: false, error };
+        }
+      };
+
 //   @TODO handle the already uploaded contract copy and mobile number 
     return (
       <div
@@ -97,9 +175,9 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                 placeholder='Apex Marketing Pvt Ltd'
                 type="text"
                 className="input_primary auth_input capitalize"
-                {...register("agency", { required: "Agency name is required." })}
+                {...register("agencyName", { required: "Agency name is required." })}
                 />
-                {errors.agency && <p className="text-red-500 text-sm mt-1">{errors.agency.message}</p>}
+                {errors.agencyName && <p className="text-red-500 text-sm mt-1">{errors.agencyName.message}</p>}
             </div>
   
               <div className='text-left'>
@@ -108,7 +186,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                   placeholder='contact@apexmarketing.com'
                   type="text" 
                   className="input_primary auth_input"
-                  {...register("email", {
+                  {...register("agencyEmail", {
                     required: "Agency email is required",
                     pattern: {
                         value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
@@ -116,7 +194,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                     },
                     })}
                   />
-                {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email.message}</p>}
+                {errors.agencyEmail && <p className="text-red-500 text-sm mt-1">{errors.agencyEmail.message}</p>}
               </div>
   
               <div className='text-left'>
@@ -125,9 +203,9 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                   placeholder='Rahul Sharma'
                   type="text" 
                   className="input_primary auth_input"
-                  {...register("contactName",{required:"Contact person name is required"})}
+                  {...register("contactPersonName",{required:"Contact person name is required"})}
                   />
-                  {errors.contactName && <p className="text-red-500 text-sm mt-1">{errors.contactName.message}</p>}
+                  {errors.contactPersonName && <p className="text-red-500 text-sm mt-1">{errors.contactPersonName.message}</p>}
               </div>
 
               <div className='text-left'>
@@ -154,36 +232,39 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
               
 
               <div className='text-left'>
-                  <label htmlFor="">GSTIN<span className='text-red-500'>*</span></label>
+                  <label htmlFor="">GSTIN</label>
                   <input 
                     placeholder='Enter registered GSTIN no'
                     type="text" 
                     maxLength={15}
                     className="input_primary auth_input capitalize"
                     {...register("GSTIN", {
-                        required: "GSTIN no is required",
-                        pattern: {
-                            value: /^[A-Z0-9]{15}$/i,
-                            message: "GSTIN must be exactly 15 characters",
-                        },
-                        })}
+                      validate: value => {
+                        if (!value) return true;
+                        return /^[A-Z0-9]{15}$/i.test(value) || "GSTIN must be exactly 15 alphanumeric characters";
+                      },
+                    })}
                   />
                 {errors.GSTIN && <p className="text-red-500 text-sm mt-1">{errors.GSTIN.message}</p>}
               </div>
 
             <div className='text-left mt-4'>
-            <label htmlFor="contractCopy">Upload Contract Copy (PDF only)<span className='text-red-500'>*</span></label>
+            <label htmlFor="contractCopy">Upload Contract Copy (PDF only) max 5MB</label>
             <input
                 type="file"
                 accept="application/pdf"
                 {...register("contractCopy", {
-                required: "Please upload a contract copy.",
-                validate: {
-                    isPdf: (value: FileList) =>
-                    value?.[0]?.type === "application/pdf" || "Only PDF files are allowed.",
-                    isUnder5MB: (value: FileList) =>
-                    value?.[0]?.size <= 5 * 1024 * 1024 || "File size must be under 5MB",
-                },
+               validate: (value: FileList) => {
+                    if (!value || value.length === 0) return true;
+                    const file = value[0];
+                    if (file.type !== "application/pdf") {
+                      return "Only PDF files are allowed.";
+                    }
+                    if (file.size > 5 * 1024 * 1024) {
+                      return "File size must be under 5MB.";
+                    }
+                    return true;
+                  },
                 })}
                 className="input_primary auth_input"
             />

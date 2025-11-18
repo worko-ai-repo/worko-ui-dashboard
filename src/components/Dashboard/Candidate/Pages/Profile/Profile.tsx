@@ -1103,11 +1103,18 @@ const handleSaveSalary = async (data:any) => {
                     </div>
 
                     <div className="text-xs font-medium text-black text-center sm:text-left">
-                      Profile last updated - {new Date().toLocaleDateString('en-US', {
-                        day: '2-digit',
-                        month: 'short',
-                        year: 'numeric'
-                      })}
+                      Profile last updated –{" "}
+                      {detailsData[0].updatedAt
+                        ? new Date(detailsData[0]?.updatedAt).toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })
+                        : new Date().toLocaleDateString('en-US', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric',
+                          })}
                     </div>
 
                   {/* <div className="flex items-center justify-center sm:justify-start text-xs text-black gap-1.5 mt-2">

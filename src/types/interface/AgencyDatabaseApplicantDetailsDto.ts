@@ -1,153 +1,135 @@
-export interface AgencyDatabaseApplicantDetailsDto {
-  pk: string;
-  sk: string;
-  referredBy: string;
-  refereeType: string;
-  date: string;
-  profileName: string;
-  candidateName: string;
+export interface AgencyAllCandidatesListDetailsDto {
+  agencyComments: string;
+  agencyJobAssignedByCorporateUserId: string;
+  agencyJobAssignmentId: string;
+  agencyName: string;
+  agencyRegisteredEmail: string;
+  agencyUserId: string;
+  agencyUserInviteId: string;
+  candidateEmail:  string;
+  candidateParsedCvDetails: CandidateParsedCvDetails;
+  candidateParsedCvId: string;
+  companyId: string;
+  createdAt: string;
+  id: string;
+  jobDetails: JobDetails;
+  jobId: string;
+  updatedAt: string;
+}
+
+export interface JobDetails {
+  companyId: string;
+  companyLogoUrl: string;
+  companyName: string;
+  companyUrl: string;
+  coreSkills: string[];
+  createdAt: string;
+  createdByCorporateUserId: string;
+  department: string;
+  displaySalaryRange: boolean;
+  experienceRange: {
+    min: number;
+    max: number;
+  };
+  flexibleNotice: boolean;
+  htmlJobDescription: string;
+  id: string;
+  isDeleted: boolean;
+  jobDescription: string;
+  jobTitle: string;
+  jobUrl: string;
+  location: {
+    city: string[];
+    fullLocation: string[];
+    state: string[];
+    country: string[];
+  };
+  miscellaneousSkills: string[];
+  noticePeriod: number;
+  numOfOpenings: number;
+  otherRequirements: string;
+  salaryRange: {
+    min: number;
+    max: number;
+    fixedComponentPercentage: number;
+    variableComponentPercentage: number;
+  };
+  softSkills: string[];
+  sourcedFrom: string;
+  status: string;
+  technicalSkills: string[];
+  typeofEmployment: string;
+  updatedAt: string;
+  workMode: string;
+}
+
+export interface CandidateParsedCvDetails {
+  agencyUserSubmissionId: string;
+  createdAt: string;
+  currentCTC: number;
   currentCompany: string;
   currentDesignation: string;
-  currentCTC: string;
-  expectedCTC: string;
-  noticePeriod: string;
-  locationComfortableWith: string;
-  remark: string;
-  cv: string;
-  coreSkills:string;
-  YOE:string;
-  source:string;
-  about:string;
-  CTC:string;
-  ECTC:string;
-  cvLink:string;
-  candidateEmail:string;
-  contactNumber:string;
-  appliedCompany:string;
-  addedBy:string;
-  addedFor:string;
-  coolingPeriod:string;
-  lastActive:string;
-  jobProfile: string;
-  agencyName: string;
-  dateSubmitted: string;
-  applicantName: string;
-  emailId: string;
-  totalYOE: number;
-  relevantYOE: number;
+  cvAwsS3FileName: string;
+  email: string;
+  expectedCTC: number;
+  id: string;
+  isNoticePeriodNegotiable: boolean;
+  location: string;
+  name: string;
+  noticePeriod: number;
+  phoneNumberDetails: PhoneNumberDetails;
+  countryCode: number;
+  number: number;
   readyToRelocate: boolean;
-  comments: string;
-  score: number;
-  currentStatus: string;
-  location:string;
-  contactName:string;
-  dateActivated:string;
-  assignedJobs:number;
-  totalCandidateSubmitted:number;
-  totalCandidateRejected:number;
-  totalCandidateHired:number;
-  GSTIN:string;
-  contractLink:string;
-  companyName:string;
-  achievements?:string;
-  locationComfortable:string;
+  relevantYOE: number;
+  totalYOE: number;
+  updatedAt: string;
 }
-//   "data": [
-//       {
-//          invitedByCorporateUserId: string;
-//          updatedByCorporateUserId?: string;
-//          companyId: string;
-//          name: string;
-//          inviteStatus: string;
-//          email: string;
-//          phoneNumberDetails: object;
-//          GSTIN?: string;
-//          contractCopyAwsS3FileName: string;
-//          contractCopyUserFileName: string;
-//          createdAt: string;
-//          updatedAt: string;
-//       }
-//   ],
-//   "pagination": {
-//     "count": 1,
-//     "pageSize": 25,
-//     "sortOrder": "descending"
-//   }
-// }
+
+export interface AgencyDatabaseApplicantDetailsDto {
+  agencyUserSubmissionId: string;
+  candidateEmail: string;
+  candidateParsedCvDetails: CandidateParsedCvDetails;
+  candidateParsedCvId: string;
+  companyId: string;
+  createdAt: string;
+  id: string;
+  jobId: string;
+  phoneNumberDetails: PhoneNumberDetails;
+  refereeType: string;
+  updatedAt: string;
+}
+
+interface PhoneNumberDetails {
+  number: number;
+  countryCode: number;
+}
+
 
 export interface AgencyListDetailsDto {
-  PK: string;
-  SK: string;
-  GSI1PK: string;
-  GSI1SK:string;
-  id: string;
-  invitedByCorporateUserId: string;
-  updatedByCorporateUserId?: string;
-  companyId: string;
-  name: string;
-  inviteStatus: string;
-  email: string;
-  phoneNumberDetails: object;
-  GSTIN?: string;
-  contractCopyAwsS3FileName: string;
-  contractCopyUserFileName: string;
-  createdAt: string;
-  updatedAt: string;
-    pagination: {
-    count: number,
-    pageSize: number,
-    sortOrder: string
-  }
-  //fake data
-  pk: string;
-  sk: string;
-  referredBy: string;
-  refereeType: string;
-  date: string;
-  profileName: string;
-  candidateName: string;
-  currentCompany: string;
-  currentDesignation: string;
-  currentCTC: string;
-  expectedCTC: string;
-  noticePeriod: string;
-  locationComfortableWith: string;
-  remark: string;
-  cv: string;
-  coreSkills:string;
-  YOE:string;
-  source:string;
-  about:string;
-  CTC:string;
-  ECTC:string;
-  cvLink:string;
-  candidateEmail:string;
-  contactNumber:string;
-  appliedCompany:string;
-  addedBy:string;
-  addedFor:string;
-  coolingPeriod:string;
-  lastActive:string;
-  jobProfile: string;
+  GSTIN: string;
   agencyName: string;
-  dateSubmitted: string;
-  applicantName: string;
-  emailId: string;
-  totalYOE: number;
-  relevantYOE: number;
-  readyToRelocate: boolean;
-  comments: string;
-  score: number;
-  currentStatus: string;
-  location:string;
-  contactName:string;
-  dateActivated:string;
+  companyId: string;
+  companyName: string;
+  contractCopyAwsS3FileName:string;
+  contractCopyUserFileName: string;
+  createdAt: string; 
+  email: string;
+  id: string;
+  inviteStatus: string;
+  invitedByCorporateUserId: string;
+  inviterName: string;
+  miscellaneousEmailDomainName: string;
+  name: string;
+  phoneNumberDetails:PhoneNumberDetails;
+  updatedAt: string;
+  updatedByAgencyUserId: string;
+
+  //future data
   assignedJobs:number;
   totalCandidateSubmitted:number;
   totalCandidateRejected:number;
   totalCandidateHired:number;
-  contractLink:string;
-  companyName:string;
-  achievements?:string;
   isPaused:boolean;
+  isDelete:boolean;
 }

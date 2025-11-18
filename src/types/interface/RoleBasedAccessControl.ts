@@ -11,6 +11,7 @@ export enum UserRole {
   ADMIN = "admin",
   LINKEDIN = "linkedin",
   EVALUATOR = "evaluator",
+  AGENCY = "agency",
 }
 
 /**
@@ -63,6 +64,8 @@ export const RolePermissions: Record<UserRole, UserRolesActions[]> = {
   [UserRole.CORPORATE_RECRUITER]: ["play_corporate_recruiter", "view_jobs", "create_jobs","manage_users"],
   [UserRole.LINKEDIN]: ["play_linkedin", "view_jobs", "apply_jobs"],
   [UserRole.GENERAL_USER]: ["play_general_user", "view_jobs", "apply_jobs"],
+  [UserRole.AGENCY]: ["view_jobs", "apply_jobs", "play_general_user"],
 };
 
 //@TODO: For corp_rec and admin permusion not working as expected need to check it once again
+//@TODO: For agency role permissions maybe changed

@@ -13,7 +13,7 @@ const CorporateDashboard = lazy(() => import("@Pages/Corporate/CorporateDashboar
 const PageNotFound = lazy(() => import("@Pages/errors/404/PageNotFound"));
 const JobCardGrid = lazy(() => import("@Pages/test"));
 const CandidateDashboard = lazy(() => import("@Pages/Candidate/CandidateDashboard"));
-const AgencyDashboard = lazy(() => import("./Pages/Agency/AgencyDashboard"));
+// const AgencyDashboard = lazy(() => import("./Pages/Agency/AgencyDashboard"));
 
 // Create router with a basename of '/v1' to match the proxy configuration
 const AppRoutes = createBrowserRouter(
@@ -70,14 +70,14 @@ const AppRoutes = createBrowserRouter(
             </Suspense>
           ),
         },
-        {
-          path: "agency-dashboard/*",
-          element: (
-            <Suspense fallback={<MainLoader />}>
-              <AgencyDashboard />
-            </Suspense>
-          ),
-        },
+        // {
+        //   path: "agency-dashboard/*",
+        //   element: (
+        //     <Suspense fallback={<MainLoader />}>
+        //       <AgencyDashboard />
+        //     </Suspense>
+        //   ),
+        // },
       ],
     },
     { path: "*", element: <PageNotFound /> },

@@ -1,34 +1,23 @@
 import SearchBar from '@Components/Shared/SearchBar'
 import SkeletonLoader from '@Components/Shared/SkeletonLoader'
-import React, { useCallback, useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import AgencyCandidateListTable from './AgencyCandidateListTable'
 import GenericDropdownAgency from '@Components/Shared/DropDown/GenericDropdownAgency'
 import SearchBarAgency from '@Components/Shared/SearchBarAgency'
 import httpServiceObj from '@Services/ApiHandler.service'
-import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
+import { AgencyAllCandidatesListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
 import { Check, RefreshCcw, Send, X } from 'lucide-react'
 import RejectCandidateModal from './modals/RejectCandidateModal'
 import { toast } from 'react-toastify'
 import { getToastOptions } from 'lib-worko-ui'
-
+import { useQuery } from '@tanstack/react-query';
+import EvaluatorForm from '@Components/Shared/ApplicantsPage/EvaluatorForm'
+import Modal from '@Components/Shared/Modal'
+import { useAppContext } from '@Context/App.context'
 interface UserDetails {
   id: string;
   // add any other fields you expect
 }
-
-const AgencyCandidateList = () => {
-  const [searchBarText,setSearchBarText] = useState<string|null>("")
-  const [queryIsJobsLoading,setQueryIsJobsLoading] = useState<boolean>(false)
-  const [selectedRows, setSelectedRows] = useState<any[]>([]);
-  const [statusFilter, setStatusFilter] = useState<string>("");
-  const [isRejecting,setIsRejecting] = useState<boolean>(false);
-  const [fetchData, setFetchData] = useState<any[]>([]);
-  const [scoreLoading, setScoreLoading] = useState(false);
-  const [acceptingCandidate, setAcceptingCandidate] = useState(false);
-  const [rejectingCandidate, setRejectingCandidate] = useState(false);
-
-  const [jobFilter,setJobFilter] = useState<any>([]);
-  const [agencyFilter,setAgencyFilter] = useState<any>([]);
 
   const dummyData = [
     {
@@ -349,40 +338,158 @@ const AgencyCandidateList = () => {
     }
   ]
 
-  useEffect(() => {
-    const fetchingAllCandidate = async () => {
-      try {
-        const { response } = await httpServiceObj.get("callingapi", true, {}, true);
+export interface AgencyAllCandidatesListFilters {
+  searchText?: string;
+  companyId?: string;
+  sortOrder?: "ascending" | "descending";
+  userType?: string;
+}
 
-        if (response) {
-          setFetchData(response as any);
-        } else {
-          setFetchData(dummyData);
+export interface AgencyAllCandidatesListApiResponse {
+  data: AgencyAllCandidatesListDetailsDto[];
+  pagination: PaginationInfo;
+  totalReferrals?: number;
+  currentPage?: number;
+  totalPages?: number;
+  matchingScore?: number;
+}
+
+export interface PaginationInfo {
+  count: number;
+  pageSize: number;
+  sortOrder: string;
+  timesQueried: number;
+  queriedCount: number;
+  lastKey: string;
+}
+
+const initialPaginationState: PaginationInfo = {
+  count: 0,
+  pageSize: 10,
+  sortOrder: "descending",
+  timesQueried: 0,
+  queriedCount: 0,
+  lastKey: "",
+};
+
+const AgencyCandidateList = () => {
+  const [searchBarText,setSearchBarText] = useState<string|null>("")
+  const [selectedRows, setSelectedRows] = useState<any[]>([]);
+  const [statusFilter, setStatusFilter] = useState<string>("");
+  const [isRejecting,setIsRejecting] = useState<boolean>(false);
+  const [fetchData, setFetchData] = useState<any[]>([]);
+  const [scoreLoading, setScoreLoading] = useState(false);
+  const [acceptingCandidate, setAcceptingCandidate] = useState(false);
+  const [rejectingCandidate, setRejectingCandidate] = useState(false);
+  const [dataFromParent, setDataFromParent] = useState<any[]>([]);
+  const [isPolling, setIsPolling] = useState(false);
+  const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
+  const [isEvaluatorForm,setIsEvaluatorForm] = useState<boolean>(false);
+  const [jobFilter,setJobFilter] = useState<any>([]);
+  const [agencyFilter,setAgencyFilter] = useState<any>([]);
+  const [pageSize,setPageSize] = useState<number>(10);
+  const [filters, setFilters] = useState<AgencyAllCandidatesListFilters>({});
+  const [isLoading,setIsLoading] = useState<boolean>(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+  const paginationKeysRef = useRef<Record<number, string>>({1: "",});
+
+  const { userDetails } = useAppContext();
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+
+
+  // useEffect(() => {
+  //   const fetchingAllCandidate = async () => {
+  //     try {
+  //       const { response } = await httpServiceObj.get(`${baseUrl}/callingapi`, true, {}, true);
+
+  //       if (response) {
+  //         setFetchData(response as any);
+  //       } else {
+  //         setFetchData(dummyData);
+  //       }
+  //       const data = response as any || dummyData;
+
+  //       const agencyFilters = data.map((item: any) => ({
+  //         label: item.agencyName,
+  //         onClick: () => setAgencyFilter(item.agencyName),
+  //       }));
+  //       setAgencyFilter(agencyFilters);
+
+  //       const jobFilters = data.map((item: any) => ({
+  //         label: item.jobProfile,
+  //         onClick: () => setJobFilter(item.jobProfile),
+  //       }));
+  //       setJobFilter(jobFilters);
+
+  //       setAgencyFilter(agencyFilters);
+  //     } catch (error) {
+  //       console.log("Error fetching data:", error);
+  //       setFetchData(dummyData);
+  //     }
+  //   };
+
+  //   fetchingAllCandidate();
+  // }, []);
+
+    const fetchAllCandidatesData = useCallback(
+      async (
+        page: number = 1,
+        size: number = pageSize,
+        lastKey: string = "",
+        searchFilters = filters,
+        isSearch = false,
+        sortOrder = "desc"
+      ) => {
+  
+        if (!userDetails?.email) return;
+    
+        setIsLoading(true);
+        try {
+          console.log(userDetails)
+        const url = `${agencyBaseUrl}/agency-user-submission/`;
+        const params = {
+          companyId:userDetails?.companyId,
+          agencyJobAssignedByCorporateUserId:userDetails?.id,
+          includeJobDetails: true,
+          includeCandidateParsedCvDetails: true,
+          //  agencyName:NELLSYS,
+          // jobId: string,
+          // candidateEmail: string,
+          pageSize:size,
+          lastKey,
+          sortOrder,
         }
-        const data = response as any || dummyData;
-
-        const agencyFilters = data.map((item: any) => ({
-          label: item.agencyName,
-          onClick: () => setAgencyFilter(item.agencyName),
-        }));
-        setAgencyFilter(agencyFilters);
-
-        const jobFilters = data.map((item: any) => ({
-          label: item.jobProfile,
-          onClick: () => setJobFilter(item.jobProfile),
-        }));
-        setJobFilter(jobFilters);
-
-        setAgencyFilter(agencyFilters);
-      } catch (error) {
-        console.log("Error fetching data:", error);
-        setFetchData(dummyData);
-      }
-    };
-
-    fetchingAllCandidate();
-  }, []);
-
+          const { response } = await httpServiceObj.get<AgencyAllCandidatesListApiResponse>(url, true, params, true);
+    
+          if (response) {
+            setFetchData(response.data);
+            console.log(response)
+            if (response.pagination) {
+              setPaginationInfo(response.pagination);
+    
+              if (isSearch || page === 1) {
+                paginationKeysRef.current = { 1: "" };
+                if (response.pagination.lastKey) {
+                  paginationKeysRef.current[2] = response.pagination.lastKey;
+                }
+              } else if (response.pagination.lastKey) {
+                paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+              }
+            }
+          } else {
+            console.error("Cannot fetch user details");
+          }
+        } catch (err) {
+          console.error("Exception in fetchReferrals:", err);
+        } finally {
+          setIsLoading(false);
+          // setFetchData(agencyDetailsList.data)
+          // setPaginationInfo(agencyDetailsList.pagination)
+        }
+      },
+      [userDetails, pageSize, filters]
+    );
 
   const StatusFilterDropdown = [
     { label: "All", onClick: () => { setStatusFilter("")}},
@@ -396,6 +503,47 @@ const AgencyCandidateList = () => {
     { label: "Joined", onClick: () => { setStatusFilter("JOINED")}},
     { label: "Rejected", onClick: () => { setStatusFilter("REJECTED")}},
   ];
+
+    useEffect(() => {
+    console.log(userDetails)
+      if (userDetails?.email) {
+        setCurrentPage(1);
+        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+        fetchAllCandidatesData(1, pageSize, "");
+        // fetchJobs()
+      }
+    }, [userDetails, fetchAllCandidatesData, pageSize]);
+  
+  const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchBarText(e.target.value);
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+      const lastKey = paginationKeysRef.current[page] || "";
+      
+      setCurrentPage(page);
+      fetchAllCandidatesData(page, pageSize, lastKey);
+    },
+    [fetchAllCandidatesData, pageSize]
+  );
+
+    const handlePageSizeChange = useCallback(
+    (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+      setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+      fetchAllCandidatesData(1, size, "");
+    },
+    [fetchAllCandidatesData]
+  );
+      
+  const removeAgencyLocally = (id: string) => {
+    setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
+  };
 
       const toggleRow = (row: any) => {
           setSelectedRows((prev) =>
@@ -449,57 +597,156 @@ const AgencyCandidateList = () => {
         }
       }
       
-      const rejectCandidate = async() =>{
-        setRejectingCandidate(true);
-        const payload = {
-          candidates: selectedRows,
-        };
-        try {
-          const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          setFetchData((prevData) =>
-            prevData.filter((candidate) =>
-              !selectedRows.some((sel) => sel.id === candidate.id)
-            )
-          );
-          toast.success("Candidate rejected successfully",getToastOptions({}))
-          // console.log("Matching scores updated successfully!");
-        } catch (error) {
-          console.error("Error finding matching score:", error);
-        } finally {
-            setRejectingCandidate(false);
-            setSelectedRows([])
-        }
-      }
+      // const rejectCandidate = async() =>{
+      //   setRejectingCandidate(true);
+      //   const payload = {
+      //     candidates: selectedRows,
+      //   };
+      //   try {
+      //     const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
+      //     await new Promise((resolve) => setTimeout(resolve, 2000));
+      //     setFetchData((prevData) =>
+      //       prevData.filter((candidate) =>
+      //         !selectedRows.some((sel) => sel.id === candidate.id)
+      //       )
+      //     );
+      //     toast.success("Candidate rejected successfully",getToastOptions({}))
+      //     // console.log("Matching scores updated successfully!");
+      //   } catch (error) {
+      //     console.error("Error finding matching score:", error);
+      //   } finally {
+      //       setRejectingCandidate(false);
+      //       setSelectedRows([])
+      //   }
+      // }
       
-      const findMatchingScore = async () =>{
+      //old findmatchingscore
+      // const findMatchingScore = async () =>{
+      //   setScoreLoading(true);
+
+      //   const candidatesToSend = selectedRows.filter(candidate => !candidate.score);
+      //   console.log("Candidates to send:", candidatesToSend);
+      //   const payload = {
+      //     candidates: candidatesToSend,
+      //   };
+
+      //   try {
+      //     const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
+      //     await new Promise((resolve) => setTimeout(resolve, 2000));
+      //     setFetchData((prevData) =>
+      //       prevData.map((candidate) =>
+      //         selectedRows.some((sel) => sel.id === candidate.id)
+      //           ? { ...candidate, score: 80 }
+      //           : candidate
+      //       )
+      //     );
+
+      //     console.log("Matching scores updated successfully!");
+      //   } catch (error) {
+      //     console.error("Error finding matching score:", error);
+      //   } finally {
+      //       setScoreLoading(false);
+      //   }
+      // }
+      
+
+
+      const findMatchingScore = async () => {
         setScoreLoading(true);
 
-        const candidatesToSend = selectedRows.filter(candidate => !candidate.score);
+        // Step 1: Copy selectedRows → dataFromParent (snapshot)
+        const candidatesToSend = selectedRows.filter(c => !c.score);
+        
+        if (candidatesToSend.length === 0) {
+          console.log("No candidates need scoring.");
+          setScoreLoading(false);
+          return;
+        }
+
         console.log("Candidates to send:", candidatesToSend);
-        const payload = {
-          candidates: candidatesToSend,
-        };
-
+        const payload = { candidates: candidatesToSend };
+        
         try {
-          const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
-          await new Promise((resolve) => setTimeout(resolve, 2000));
-          setFetchData((prevData) =>
-            prevData.map((candidate) =>
-              selectedRows.some((sel) => sel.id === candidate.id)
-                ? { ...candidate, score: 80 }
-                : candidate
-            )
-          );
+          // Step 2: Start the scoring process once
+          await httpServiceObj.post("/someapi/start-scoring", payload, true, {}, true);
+          console.log("✅ Scoring started, now polling for updates...");
 
-          console.log("Matching scores updated successfully!");
+          const startTime = Date.now();
+          const pollingInterval = 5000;
+          let remainingCandidates = [...candidatesToSend]; // Track locally
+
+          const poll = async () => {
+            try {
+              const { response } = await httpServiceObj.get("/someapi/fetch", true, {}, true);
+
+              if (response && Array.isArray(response)) {
+                // Update fetchedData and track what's left
+                const updatedIds = new Set<string>();
+
+                setFetchData(prev =>
+                  prev.map(candidate => {
+                    const updated = response.find(
+                      (r: any) => r.id === candidate.id && r.score != null
+                    );
+                    if (updated) {
+                      updatedIds.add(candidate.id);
+                      return { ...candidate, score: updated.score };
+                    }
+                    return candidate;
+                  })
+                );
+
+                // Remove scored candidates from tracking
+                remainingCandidates = remainingCandidates.filter(
+                  item => !updatedIds.has(item.id)
+                );
+
+                // Stop if all scored
+                if (remainingCandidates.length === 0) {
+                  console.log("✅ All scores received, stopping polling.");
+                  clearInterval(intervalId);
+                  setDataFromParent([]);
+                  setScoreLoading(false);
+                  return;
+                }
+              }
+            } catch (pollError) {
+              console.error("Polling error:", pollError);
+            }
+
+            // Check timeout
+            const elapsed = Date.now() - startTime;
+            if (elapsed > 30000) {
+              console.warn("⏰ Polling timed out after 30 seconds. Assigning default score 80.");
+              clearInterval(intervalId);
+
+              // Assign default score 80 to remaining candidates
+              setFetchData(prev =>
+                prev.map(candidate => {
+                  const isRemaining = remainingCandidates.some(r => r.id === candidate.id);
+                  if (isRemaining && (candidate.score == null || candidate.score === undefined)) {
+                    return { ...candidate, score: 80 };
+                  }
+                  return candidate;
+                })
+              );
+
+              setDataFromParent([]);
+              setScoreLoading(false);
+            }
+          };
+
+          // Start polling
+          const intervalId = setInterval(poll, pollingInterval);
+          poll(); // Run immediately
+
         } catch (error) {
           console.error("Error finding matching score:", error);
-        } finally {
-            setScoreLoading(false);
+          setScoreLoading(false);
         }
-      }
-      
+      };
+
+
       const sendForEvaluation = () =>{
 
       }
@@ -513,11 +760,20 @@ const AgencyCandidateList = () => {
           );
       }, []);
 
+      const isMatchingScore = (selectedRows: any[]): boolean => {
+        for (const row of selectedRows) {
+          if (row.score !== undefined && row.score !== null) {
+            return false;
+          }
+        }
+        return true;
+      };
+
   return (
     <div>
-      <div className="flex flex-col sm:flex-row gap-2 justify-center items-center m-2">
+      <div className="flex flex-col sm:flex-row gap-2 my-2 items-stretch sm:items-center justify-center">
         {/* Dropdown 1 */}
-        <div className="flex justify-center w-full sm:w-auto">
+        <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
           <GenericDropdownAgency
             selectTitle="Select job"
             tooltipMessage="Select Status to filter applications"
@@ -527,7 +783,7 @@ const AgencyCandidateList = () => {
         </div>
 
         {/* Dropdown 2 */}
-        <div className="flex justify-center w-full sm:w-auto">
+        <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
           <GenericDropdownAgency
             selectTitle="Select agency"
             tooltipMessage="Select Status to filter applications"
@@ -537,11 +793,28 @@ const AgencyCandidateList = () => {
         </div>
       </div>
 
+
       <div className="flex flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-col gap-4">
-          <div className="flex flex-wrap gap-4">
-          </div>
-          <div className="flex flex-col sm:flex-row justify-end items-stretch sm:items-end gap-3">
+          {/* <div className="flex flex-wrap gap-4">
+          </div> */}
+            <div
+              className="
+                flex flex-row
+                flex-wrap lg:flex-nowrap
+                justify-start items-stretch lg:items-center
+                gap-2 lg:gap-3
+                [&>*]:min-w-0
+
+                /* SearchBar rules */
+                [&>*:first-child]:basis-full [&>*:first-child]:w-full
+                lg:[&>*:first-child]:basis-auto lg:[&>*:first-child]:w-auto lg:[&>*:first-child]:flex-1
+
+                /* Buttons rules */
+                [&>button]:flex-1 [&>button]:min-w-[140px] [&>button]:whitespace-normal
+                lg:[&>button]:flex-none lg:[&>button]:min-w-0 lg:[&>button]:whitespace-nowrap
+              "
+            >
             {/* Search Bar */}
             <SearchBarAgency
               searchBarText={searchBarText}
@@ -586,12 +859,12 @@ const AgencyCandidateList = () => {
 
             <button 
               type="button"
-              disabled={selectedRows.length < 1 || scoreLoading}
+              disabled={selectedRows.length < 1 || scoreLoading || !isMatchingScore(selectedRows)}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Find matching score"}
               className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs transition whitespace-nowrap
                 ${
-                  selectedRows.length < 1 || scoreLoading
+                  selectedRows.length < 1 || scoreLoading || !isMatchingScore(selectedRows)
                     ? "bg-gray-300 text-gray-500 cursor-not-allowed"
                     : "bg-gradient-to-br from-cyan-300 to-cyan-500 text-white hover:to-cyan-700"
                 }
@@ -614,6 +887,7 @@ const AgencyCandidateList = () => {
                   : "bg-blue-500 text-white hover:bg-blue-700"
               }
             `}
+            onClick={()=>setIsEvaluatorForm(true)}
           >
             <Send className="w-4 h-4" />
             <span>Send for Evaluation</span>
@@ -623,7 +897,7 @@ const AgencyCandidateList = () => {
         </div>
       </div>
       <br />
-      {queryIsJobsLoading ? (
+      {isLoading? (
               <SkeletonLoader
                   showTableHeader={true}
                   showTableRows={true}
@@ -642,14 +916,32 @@ const AgencyCandidateList = () => {
                 onBulkUpdate={onBulkUpdate}
                 scoreLoading={scoreLoading}
                 localUpdate={handleLocalUpdate}
+                setFetchData={setFetchData}
+                setSelectedRows={setSelectedRows}
               />
       )}
         <RejectCandidateModal
         onClose={()=>setIsRejecting(false)}
         isOpen={isRejecting}
         data={selectedRows}
-        onRefresh={()=>alert("closed")}
-        rejectCandidate={rejectCandidate}/>
+        // onRefresh={()=>alert("closed")}
+        // rejectCandidate={rejectCandidate}
+        type={"multiple"}
+        setFetchData={setFetchData}
+        setSelectedRows={setSelectedRows}/>
+
+      <Modal
+        isOpen={isEvaluatorForm}
+        onClose={() => setIsEvaluatorForm(false)}
+        className="w-[90vw] sm:w-[455px] h-auto">
+        {isEvaluatorForm &&
+          <EvaluatorForm
+          Defaultvalues={selectedRows as any}
+          isBulk={true}
+          onClose = {()=>setIsEvaluatorForm(false)}
+          formLimit={10}/>
+        }
+      </Modal>
     </div>
   )
 }

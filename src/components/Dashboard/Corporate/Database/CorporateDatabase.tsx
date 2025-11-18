@@ -3,11 +3,16 @@ import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
 import { DatabaseStatusType, JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye } from 'lucide-react';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CorporateDatabaseTable from './CorporateDatabaseTable';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
 import SearchBarAgency from '@Components/Shared/SearchBarAgency';
+import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
+import { useDashboardContext } from '@Context/Dashboard.context'
+import httpServiceObj from '@Services/ApiHandler.service';
+import { PaginationInfo } from '@Components/Dashboard/Candidate/Pages/Job/JobTypes';
+import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto';
 
 interface CorporateDatabaseProps{
 
@@ -21,270 +26,53 @@ sorting fallbacks needs to be changed as per database data
 remove useless codes
 icons needs to be changed
 */}
-const dummyData = [
-  {
-    id: "ref-1",
-    pk: "REFERRAL#ref-1",
-    sk: "CANDIDATE#ref-1",
-    referredBy: "Anita Sharma",
-    refereeType: "internal",
-    date: "2025-09-15",
-    profileName: "Product Manager",
-    candidateName: "Karan Mehta",
-    candidateEmail: "karan.mehta@example.com",
-    contactNumber: "+91-9876543210",
-    YOE: 7,
-    currentCompany: "ZetaTech",
-    currentDesignation: "Product Owner",
-    currentCTC: "22 LPA",
-    expectedCTC: "26 LPA",
-    noticePeriod: "45 days",
-    locationComfortableWith: "Mumbai, Remote",
-    remark: "Strong product background with fintech domain.",
-    cv: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    lastRejectionDate: "2025-09-15",
-    rejectedBy: "Somesh Dey",
-    coolingPeriod: "30 days",
-    rejectedReason: "Not aligned with project needs Not aligned with project needs Not aligned with project needsNot aligned with project needs",
-  },
-  {
-    id: "ref-2",
-    pk: "REFERRAL#ref-2",
-    sk: "CANDIDATE#ref-2",
-    referredBy: "Ravi Sinha",
-    refereeType: "referral",
-    date: "2025-10-02",
-    profileName: "Backend Developer",
-    candidateName: "Sneha Reddy",
-    candidateEmail: "sneha.reddy@example.com",
-    contactNumber: "+91-9876543211",
-    YOE: 5,
-    currentCompany: "CodeCrush",
-    currentDesignation: "Java Developer",
-    currentCTC: "14 LPA",
-    expectedCTC: "17 LPA",
-    noticePeriod: "60 days",
-    locationComfortableWith: "Hyderabad, Remote",
-    remark: "Excellent in Spring Boot and microservices.",
-    cv: "https://www.orimi.com/pdf-test.pdf",
-    lastRejectionDate: "2025-09-16",
-    rejectedBy: "Meera Thomas",
-    coolingPeriod: "60 days",
-    rejectedReason: "Skills mismatch",
-  },
-  {
-    id: "ref-3",
-    pk: "REFERRAL#ref-3",
-    sk: "CANDIDATE#ref-3",
-    referredBy: "Deepak Nair",
-    refereeType: "internal",
-    date: "2025-10-01",
-    profileName: "QA Engineer",
-    candidateName: "Nikita Joshi",
-    candidateEmail: "nikita.joshi@example.com",
-    contactNumber: "+91-9876543212",
-    YOE: 4,
-    currentCompany: "TestNova",
-    currentDesignation: "QA Analyst",
-    currentCTC: "9 LPA",
-    expectedCTC: "11 LPA",
-    noticePeriod: "30 days",
-    locationComfortableWith: "Pune",
-    remark: "Automation and manual QA expert.",
-    cv: "https://www.africau.edu/images/default/sample.pdf",
-    lastRejectionDate: "2025-09-17",
-    rejectedBy: "Rakesh Menon",
-    coolingPeriod: "45 days",
-    rejectedReason: "Failed technical round",
-  },
-  {
-    id: "ref-4",
-    pk: "REFERRAL#ref-4",
-    sk: "CANDIDATE#ref-4",
-    referredBy: "Pooja Rao",
-    refereeType: "agency",
-    date: "2025-09-30",
-    profileName: "UI/UX Designer",
-    candidateName: "Arjun Khanna",
-    candidateEmail: "arjun.khanna@example.com",
-    contactNumber: "+91-9876543213",
-    YOE: 6,
-    currentCompany: "DesignGurus",
-    currentDesignation: "UX Designer",
-    currentCTC: "11 LPA",
-    expectedCTC: "13 LPA",
-    noticePeriod: "15 days",
-    locationComfortableWith: "Delhi NCR",
-    remark: "Strong portfolio and user-centric approach.",
-    cv: "https://www.hq.nasa.gov/alsj/a17/A17_FlightPlan.pdf",
-    lastRejectionDate: "2025-09-18",
-    rejectedBy: "Priya Narang",
-    coolingPeriod: "90 days",
-    rejectedReason: "Overqualified for the role",
-  },
-  {
-    id: "ref-5",
-    pk: "REFERRAL#ref-5",
-    sk: "CANDIDATE#ref-5",
-    referredBy: "Maya Kapoor",
-    refereeType: "internal",
-    date: "2025-10-05",
-    profileName: "DevOps Engineer",
-    candidateName: "Ramesh Bhat",
-    candidateEmail: "ramesh.bhat@example.com",
-    contactNumber: "+91-9876543214",
-    YOE: 8,
-    currentCompany: "Cloudify",
-    currentDesignation: "Site Reliability Engineer",
-    currentCTC: "18 LPA",
-    expectedCTC: "21 LPA",
-    noticePeriod: "90 days",
-    locationComfortableWith: "Remote",
-    remark: "Kubernetes, Docker, CI/CD expert.",
-    cv: "https://www.adobe.com/support/products/enterprise/knowledgecenter/media/c4611_sample_explain.pdf",
-    lastRejectionDate: "2025-09-19",
-    rejectedBy: "Amit Shah",
-    coolingPeriod: "30 days",
-    rejectedReason: "Communication skills concern",
-  },
-  {
-    id: "ref-6",
-    pk: "REFERRAL#ref-6",
-    sk: "CANDIDATE#ref-6",
-    referredBy: "Nikhil Ghosh",
-    refereeType: "worko",
-    date: "2025-09-25",
-    profileName: "Data Scientist",
-    candidateName: "Priya Iyer",
-    candidateEmail: "priya.iyer@example.com",
-    contactNumber: "+91-9876543215",
-    YOE: 5,
-    currentCompany: "AIWorks",
-    currentDesignation: "Data Analyst",
-    currentCTC: "13 LPA",
-    expectedCTC: "16 LPA",
-    noticePeriod: "30 days",
-    locationComfortableWith: "Chennai, Remote",
-    remark: "Proficient in ML, Python, SQL.",
-    cv: "https://unec.edu.az/application/uploads/2014/12/pdf-sample.pdf",
-    lastRejectionDate: "2025-09-20",
-    rejectedBy: "Kiran Deshmukh",
-    coolingPeriod: "60 days",
-    rejectedReason: "Budget constraints",
-  },
-  {
-    id: "ref-7",
-    pk: "REFERRAL#ref-7",
-    sk: "CANDIDATE#ref-7",
-    referredBy: "Aman Saxena",
-    refereeType: "agency",
-    date: "2025-09-18",
-    profileName: "Frontend Developer",
-    candidateName: "Tina Fernandes",
-    candidateEmail: "tina.fernandes@example.com",
-    contactNumber: "+91-9876543216",
-    YOE: 4,
-    currentCompany: "Frontify",
-    currentDesignation: "React Developer",
-    currentCTC: "12 LPA",
-    expectedCTC: "14 LPA",
-    noticePeriod: "15 days",
-    locationComfortableWith: "Remote",
-    remark: "React + TailwindCSS specialist.",
-    cv: "https://www.bu.edu/pcgs/files/2021/10/sample.pdf",
-    lastRejectionDate: "2025-09-21",
-    rejectedBy: "Divya Patel",
-    coolingPeriod: "30 days",
-    rejectedReason: "Better internal candidate available",
-  },
-  {
-    id: "ref-8",
-    pk: "REFERRAL#ref-8",
-    sk: "CANDIDATE#ref-8",
-    referredBy: "Siddharth Jain",
-    refereeType: "referral",
-    date: "2025-10-03",
-    profileName: "Project Manager",
-    candidateName: "Neha Chatterjee",
-    candidateEmail: "neha.chatterjee@example.com",
-    contactNumber: "+91-9876543217",
-    YOE: 7,
-    currentCompany: "AgileBase",
-    currentDesignation: "Scrum Master",
-    currentCTC: "20 LPA",
-    expectedCTC: "23 LPA",
-    noticePeriod: "60 days",
-    locationComfortableWith: "Bangalore",
-    remark: "Certified PMP with 7+ years experience.",
-    cv: "https://file-examples.com/wp-content/uploads/2017/10/file-sample_150kB.pdf",
-    lastRejectionDate: "2025-09-22",
-    rejectedBy: "Anil Kumar",
-    coolingPeriod: "45 days",
-    rejectedReason: "Role already filled",
-  },
-  {
-    id: "ref-9",
-    pk: "REFERRAL#ref-9",
-    sk: "CANDIDATE#ref-9",
-    referredBy: "Kunal Patil",
-    refereeType: "referral",
-    date: "2025-09-20",
-    profileName: "Mobile Developer",
-    candidateName: "Imran Khan",
-    candidateEmail: "imran.khan@example.com",
-    contactNumber: "+91-9876543218",
-    YOE: 3,
-    currentCompany: "AppSprint",
-    currentDesignation: "Flutter Developer",
-    currentCTC: "10 LPA",
-    expectedCTC: "12 LPA",
-    noticePeriod: "45 days",
-    locationComfortableWith: "Mumbai, Remote",
-    remark: "Strong cross-platform experience.",
-    cv: "https://www.learningcontainer.com/wp-content/uploads/2019/09/sample-pdf-file.pdf",
-    lastRejectionDate: "2025-09-23",
-    rejectedBy: "Rekha Singh",
-    coolingPeriod: "60 days",
-    rejectedReason: "Insufficient experience",
-  },
-  {
-    id: "ref-10",
-    pk: "REFERRAL#ref-10",
-    sk: "CANDIDATE#ref-10",
-    referredBy: "Shruti Verma",
-    refereeType: "worko",
-    date: "2025-10-06",
-    profileName: "Cloud Engineer",
-    candidateName: "Abhay Raj",
-    candidateEmail: "abhay.raj@example.com",
-    contactNumber: "+91-9876543219",
-    YOE: 6,
-    currentCompany: "NetCloud",
-    currentDesignation: "AWS Engineer",
-    currentCTC: "16 LPA",
-    expectedCTC: "19 LPA",
-    noticePeriod: "30 days",
-    locationComfortableWith: "Remote, Hyderabad",
-    remark: "Certified AWS Solutions Architect.",
-    cv: "https://calibre-ebook.com/downloads/demos/demo.pdf",
-    lastRejectionDate: "2025-09-24",
-    rejectedBy: "Suresh Rathi",
-    coolingPeriod: "90 days",
-    rejectedReason: "Did not accept offer",
-  },
-];
 
+const initialPaginationState: PaginationInfo = {
+  count: 0,
+  pageSize: 10,
+  sortOrder: "descending",
+  timesQueried: 0,
+  queriedCount: 0,
+  lastKey: "",
+};
+
+export interface DatabaseListFilters {
+  searchText?: string;
+  companyId?: string;
+  sortOrder?: "ascending" | "descending";
+  userType?: string;
+}
+
+export interface DatabaseListApiResponse {
+  data: AgencyListDetailsDto[];
+  pagination: PaginationInfo;
+  totalReferrals?: number;
+  currentPage?: number;
+  totalPages?: number;
+  matchingScore?: number;
+}
 
 const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
-    const [queryIsJobsLoading,setQueryIsJobsLoading] = useState<boolean>(false)
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isActionSelected,setIsActionSelected] = useState<boolean>(false);
     const [actionName,setactionName] = useState<string>("");
     const dropdownRef = useRef<HTMLDivElement | null>(null);
-  
+    const [isLoading,setIsLoading] = useState<boolean>(false)
+    const { userDetails } = useAppContext();
+    const { user, isLoadingUser } = useDashboardContext();
+    const baseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+    const [fetchData, setFetchData] = useState<any[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+    const [pageSize,setPageSize] = useState<number>(10);
+    const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+    const [filters, setFilters] = useState<DatabaseListFilters>({});
+    const paginationKeysRef = useRef<Record<number, string>>({1: "",});
+    const [currentPage, setCurrentPage] = useState(1);
+
     useEffect(() => {
       function handleClickOutside(event:any) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -296,8 +84,29 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     }, []);
 
     // useEffect(()=>{
-    //     console.log(selectedRows,"selectedrows")
-    // },[selectedRows])
+    //     const fetchUserData = async () =>{
+    //     if(!userDetails) {
+    //       return
+    //     }
+    //     setIsLoading(true)
+    //     const url = `${baseUrl}/agency-invite/${userDetails?.companyId}/`;
+    //     try {
+    //       const { response } = await httpServiceObj.get(url, true, {}, true);
+    //       if(response){
+    //         // const data = response as UserDetails[];
+    //         setFetchData(response as any)
+    //       }else{
+    //         setFetchData(dummyData)
+    //       }
+    //     } catch (error) {
+    //       console.error("Cannot fetch user details:", error);
+    //       setFetchData(dummyData)
+    //     } finally{
+    //       setIsLoading(false)
+    //     }
+    // }
+    // fetchUserData()
+    // },[userDetails])
 
     const SourceFilterDropdown = [
         { label: "All", onClick: () => setApiStatus(undefined) },
@@ -314,7 +123,107 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         { label: "Worko", onClick: () => setApiStatus("WORKO") },
     ];
 
-     const toggleRow = (row: any) => {
+const fetchDatabaseData = useCallback(
+  async (
+    page: number = 1,
+    size: number = pageSize,
+    lastKey: string = "",
+    searchFilters = filters,
+    isSearch = false,
+    sortOrder = "desc",
+    statusOverride?: DatabaseStatusType
+  ) => {
+    if (!userDetails?.email) return;
+
+    setIsLoading(true);
+    try {
+      const url = `${agencyBaseUrl}/corporate-candidate-profile/`;
+      const params: Record<string, any> = {
+        companyId: userDetails?.companyId,
+        includeCandidateParsedCvDetails: true,
+        pageSize: size,
+        lastKey,
+        sortOrder,
+      };
+
+      // include filters if present
+      if (searchFilters?.searchText) params.searchText = searchFilters.searchText;
+      if (searchFilters?.userType) params.userType = searchFilters.userType;
+
+      // include status (apiStatus state or override if provided)
+      if (typeof statusOverride !== "undefined") params.refereeType = statusOverride;
+      else if (apiStatus) params.refereeType = apiStatus;
+
+      const { response } = await httpServiceObj.get<DatabaseListApiResponse>(url, true, params, true);
+
+      if (response) {
+        setFetchData(response.data);
+        if (response.pagination) {
+          setPaginationInfo(response.pagination);
+
+          if (isSearch || page === 1) {
+            paginationKeysRef.current = { 1: "" };
+            if (response.pagination.lastKey) {
+              paginationKeysRef.current[2] = response.pagination.lastKey;
+            }
+          } else if (response.pagination.lastKey) {
+            paginationKeysRef.current[page + 1] = response.pagination.lastKey;
+          }
+        }
+      } else {
+        console.error("Cannot fetch user details");
+      }
+    } catch (err) {
+      console.error("Exception in fetchDatabaseData:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  },
+  [userDetails, pageSize, filters, apiStatus]
+);
+
+    useEffect(() => {
+        if (userDetails?.email) {
+          setCurrentPage(1);
+          setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+          paginationKeysRef.current = { 1: "" };
+          fetchDatabaseData(1, pageSize, "");
+        }
+      }, [userDetails, fetchDatabaseData, pageSize]);
+    
+        const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+      
+        const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+          setSearchBarText(e.target.value);
+        };
+    
+      
+        const handlePageChange = useCallback((page: number) => {
+            const lastKey = paginationKeysRef.current[page] || "";
+            
+            setCurrentPage(page);
+            fetchDatabaseData(page, pageSize, lastKey);
+          },
+          [fetchDatabaseData, pageSize]
+        );
+      
+      
+        const handlePageSizeChange = useCallback(
+          (size: number) => {
+            setPageSize(size);
+            setCurrentPage(1);
+            setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+            paginationKeysRef.current = { 1: "" };
+            fetchDatabaseData(1, size, "");
+          },
+          [fetchDatabaseData]
+        );
+    
+      const removeAgencyLocally = (id: string) => {
+        setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
+      };
+
+    const toggleRow = (row: any) => {
     setSelectedRows((prev) =>
       prev.some((r) => r.id === row.id)
         ? prev.filter((r) => r.id !== row.id)
@@ -344,37 +253,144 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     };
 
     const handleBulkBan = () =>{
-        console.log(selectedRows)
+      console.log(fetchData)
+      setFetchData((prevData:any) =>
+        prevData.filter((candidate:any) =>
+          !selectedRows.some((sel) => sel.id === candidate.id)
+        )
+      );
+      setSelectedRows([])
     }
 
     const handleBulkDelete = () =>{
-        console.log(selectedRows)
+      console.log(fetchData)
+      setFetchData((prevData:any) =>
+        prevData.filter((candidate:any) =>
+          !selectedRows.some((sel) => sel.id === candidate.id)
+        )
+      );
+      setSelectedRows([])
     }
 
-    const handleBulkCVDownload = async() =>{
-        if (selectedRows.length === 0) {
-            toast.error("Please select at least one candidate to download CVs",getToastOptions({}));
-            return;
-        }
-        for (const row of selectedRows) {
-            if (row.cv) {
-            try {
-                const response = await fetch(row.cv, { mode: "cors" });
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.setAttribute("download", `${row.candidateName || "CV"}.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error("Failed to download CV:", error);
-            }
-            }
-        }
+//     const handleBulkCVDownload = async() =>{
+//         if (selectedRows.length === 0) {
+//             toast.error("Please select at least one candidate to download CVs",getToastOptions({}));
+//             return;
+//         }
+//         for (const row of selectedRows) {
+//             if (row.cv) {
+//             try {
+//                 const response = await fetch(row.cv, { mode: "cors" });
+//                 const blob = await response.blob();
+//                 const url = window.URL.createObjectURL(blob);
+//                 const link = document.createElement("a");
+//                 link.href = url;
+//                 link.setAttribute("download", `${row.candidateName || "CV"}.pdf`);
+//                 document.body.appendChild(link);
+//                 link.click();
+//                 link.remove();
+//                 window.URL.revokeObjectURL(url);
+//             } catch (error) {
+//                 console.error("Failed to download CV:", error);
+//             }
+//             }
+//         }
+// };
+
+const handleBulkCVDownload = () => {
+  selectedRows.forEach((file:any) => {
+    console.log(file)
+    const a = document.createElement('a');
+    a.href = file.contractCopyAwsS3FileName;
+    a.download = file.name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  });
 };
+
+// multi upload files
+  const handleButtonClick = () => {
+      fileInputRef.current?.click();
+  };
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    const pdfFiles = Array.from(files).filter(
+      (file) => file.type === "application/pdf"
+    );
+
+    if (pdfFiles.length !== files.length) {
+      toast.error("Only PDF files are allowed.",getToastOptions({}));
+      return;
+    }
+    const oversizedFiles = pdfFiles.filter((file) => file.size > 2 * 1024 * 1024);
+    if (oversizedFiles.length > 0) {
+      toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
+      return;
+    }
+    console.log(pdfFiles);
+    const payload = pdfFiles
+    const uploadResponse:any = await invitingAgency(payload);
+    console.log(uploadResponse,"uploadResponse")
+    if (!uploadResponse.success) {
+      toast.error("File upload failed. Please try again.", getToastOptions({}));
+      return; 
+    }
+    const payloadForAws = {
+      companyId:userDetails?.companyId,
+      agencyInviteId: uploadResponse.data.id,
+      // fileName: contractFile.name,
+      fileMimeType: "application/pdf",
+    }
+    const responseFromAws = await uploadContractToAws(payloadForAws);
+    console.log(responseFromAws,"response from aws")
+    if (!responseFromAws.success) {
+      toast.error("Failed to upload contract copy", getToastOptions({}));
+      return;
+    }
+  };
+
+  const invitingAgency = async (payload: any) => {
+    try {
+      const { response } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
+      if (response) {
+        return { success: true, data: response };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Upload failed:", error);
+      return { success: false, error };
+    }
+  };
+
+  const uploadContractToAws = async (payload: any) => {
+    try {
+      const { response } = await httpServiceObj.post(`${agencyBaseUrl}/file/gsu2u/AGENCY_INVITE_CONTRACT_COPY`, payload, true, {}, true);
+      if (response) {
+        return { success: true, data: response };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Upload failed:", error);
+      return { success: false, error };
+    }
+  };
+
+  const createAgencyProfile = async (payload: any) => {
+    try {
+      const { response } = await httpServiceObj.patch(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
+      if (response) {
+        return { success: true, data: response };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Agency creation failed:", error);
+      return { success: false, error };
+    }
+  };
 
   return (
     <div>
@@ -391,12 +407,22 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
               handleClick={() => console.log("as")}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">   
-               <button 
-                    type="button"
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
-                    >
-                    <Upload className="w-4 h-4" />
-                    <span>Bulk CV upload</span>
+               <input
+                  type="file"
+                  accept="application/pdf"
+                  multiple
+                  ref={fileInputRef}
+                  style={{ display: "none" }}
+                  onChange={handleFileChange}
+                />
+
+                <button
+                  type="button"
+                  onClick={handleButtonClick}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
+                >
+                  <Upload className="w-4 h-4" />
+                  <span>Bulk CV upload</span>
                 </button>
 
                     <DatabaseDropdown
@@ -500,7 +526,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         </div>
       </div>
       <br />
-        {queryIsJobsLoading ? (
+        {isLoading ? (
         <SkeletonLoader
             showTableHeader={true}
             showTableRows={true}
@@ -509,7 +535,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         />
         ) : (
         <CorporateDatabaseTable
-          data={dummyData}
+          data={fetchData}
           userType="CORPORATE"
           refetch={refetch}
           ListSelection={ListSelection}

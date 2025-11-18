@@ -32,7 +32,8 @@ export enum JobApplicationStatusEnum {
   JOINED = "JOINED", // send email to both cand and job poster
 
   REVISED_LETTER = "REVISED_LETTER",
-  OFFER_ACCEPTED = "OFFER_ACCEPTED"
+  OFFER_ACCEPTED = "OFFER_ACCEPTED",
+  AWAITING = "AWAITING"
 }
 
 /**

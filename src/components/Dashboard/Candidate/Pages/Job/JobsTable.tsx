@@ -357,6 +357,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
     REJECTED: { bg: "bg-red-400", text: "text-white", label: "Rejected" },
     ON_HOLD: { bg: "bg-red-400", text: "text-white", label: "On hold" },
     DOCUMENT_VERIFIED: { bg: "bg-blue-100", text: "text-blue-500", label: "Document verified" },
+    AWAITING:{ bg: "bg-blue-100", text: "text-blue-500", label: "Accepted" },
   };
   
   const config = statusConfigs[status as JobApplicationStatusType] || statusConfigs.UNDER_EVALUATION;

@@ -19,8 +19,8 @@ const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSea
   }, [setSearchBarText, handleClick]);
 
   return (
-    <div className="flex flex-row w-1/3 bg-white shadow-md rounded-xl overflow-hidden max-w-7xl">
-      <div className="w-full relative display flex">
+    <div className="flex flex-row w-full sm:flex-1 bg-white shadow-md rounded-xl overflow-hidden">
+      <div className="relative flex flex-1">
         {/* <i className=" fa-solid fa-magnifying-glass absolute z-10 top-4 left-3 text-gray-300" /> */}
         <input
           type="text"

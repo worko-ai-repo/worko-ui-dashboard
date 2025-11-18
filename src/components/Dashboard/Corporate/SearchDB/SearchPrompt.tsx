@@ -1,26 +1,57 @@
 import { ArrowRight, Mic, MicOff, RotateCcw, Search, Sparkles } from 'lucide-react';
 import Dropdown from './Dropdown';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logo_text } from '@AssetsFolder/assets';
 import { useSpeechRecognition } from '@Hooks/useSpeechSynthesis.hook';
 import JobDropdown from './JobDropdown';
+import { useAppContext } from '@Context/App.context';
+import httpServiceObj from '@Services/ApiHandler.service';
 
 const SearchPrompt: React.FC = () => {
-  const [input, setInput] = React.useState("");
-  const [mode, setMode] = React.useState<"jd" | "prompt">("jd");
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState<"jobs" | "prompt">("jobs");
+  const [jobsList,setJobsList] = useState([]);
+  const [isFetchingJobs,setIsFetchingJobs] = useState(false);
+  const { userDetails } = useAppContext();
 
-  const jobsList = [
-    { label: "Full-Stack", value: "full-stack" },
-    { label: "Half-Stack", value: "half-stack" },
-    { label: "Frontend", value: "frontend" },
-    { label: "Backend", value: "backend" },
-    { label: "DevOps", value: "devops" },
-    { label: "UI/UX", value: "ui-ux" },
-    { label: "Data Engineer", value: "data-engineer" },
-    { label: "AI/ML", value: "ai-ml" },
-    { label: "QA Tester", value: "qa-tester" },
-    ];
+  useEffect(()=>{
+    const fetchJobs = async() =>{
+    setIsFetchingJobs(true)
+    const params = {
+      pageSize: 200,
+      sortOrder: "desc",
+      dashboard: "CORPORATE",
+      userRole: "corporate-recruiter",
+      status: "PUBLISHED",
+      companyId: userDetails?.companyId,
+      corporateRecruiterUserId: userDetails?.id,
+    }
+
+    try {
+      const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
+      console.log(response)
+      if(response?.data){
+        setJobsList(response.data)
+      }
+      setIsFetchingJobs(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  fetchJobs()
+  },[])
+  // const jobsList = [
+  //   { label: "Full-Stack", value: "full-stack" },
+  //   { label: "Half-Stack", value: "half-stack" },
+  //   { label: "Frontend", value: "frontend" },
+  //   { label: "Backend", value: "backend" },
+  //   { label: "DevOps", value: "devops" },
+  //   { label: "UI/UX", value: "ui-ux" },
+  //   { label: "Data Engineer", value: "data-engineer" },
+  //   { label: "AI/ML", value: "ai-ml" },
+  //   { label: "QA Tester", value: "qa-tester" },
+  //   ];
 
   const navigate = useNavigate();
     const {
@@ -65,8 +96,8 @@ const SearchPrompt: React.FC = () => {
 
   const handleSubmit = () => {
     if (!input.trim()) return;
-    console.log(mode,input)
-    navigate(`/corporate/aSearchDB/results?query=${encodeURIComponent(input.trim())}`);
+    // console.log(mode,input)
+    navigate(`/corporate/aSearchDB/results?${mode}=${encodeURIComponent(input.trim())}`);
   };
 
   return (
@@ -87,7 +118,7 @@ const SearchPrompt: React.FC = () => {
         </div>
 
         <div className="border border-border rounded-2xl shadow-sm bg-white z-9999">
-        <div className={`relative border border-border ${mode === "jd" ? "rounded-2xl" : "rounded-t-2xl"} shadow-sm bg-white`}>
+        <div className={`relative border border-border ${mode === "jobs" ? "rounded-2xl" : "rounded-t-2xl"} shadow-sm bg-white`}>
   {mode === "prompt" ? (
     <textarea
       value={input}
@@ -127,7 +158,7 @@ const SearchPrompt: React.FC = () => {
   )}
 
   {/* Mic + Arrow buttons (only in prompt mode) */}
-  {mode !== "jd" && (
+  {mode !== "jobs" && (
     <div className="absolute top-3 right-3 flex gap-2 items-center">
       {isSupported && (
         <button

@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
 
 interface AddNewAgencyModalProps{
-    dashboardType:string;
-    onClose: () => void;
-    isOpen: boolean;
-    userID:string;
+  dashboardType:string;
+  onClose: () => void;
+  isOpen: boolean;
+  companyId:string | undefined;
+  setFetchData:any;
 }
 
 interface FormValues {
@@ -18,7 +19,21 @@ interface FormValues {
   contractCopy: FileList;
 }
 
-const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClose,isOpen,userID}) => {
+export interface AwsS3FileUploadResponse {
+	// awsS3SignedUrl: string;
+	// cloudFileName: string;
+	// fileExtension: string;
+	// fileMimeType: string;
+	// userFileName: string;
+	// awsS3Tag:any;
+  // objectUrl: string;
+  companyId:string;
+  agencyInviteEmail:string;
+  inviteId:string;
+  contractCopyAwsS3FileName:string;
+}
+
+const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClose,isOpen}) => {
   const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm<FormValues>({ mode: "onChange",
         defaultValues: {
           agencyName: "",
@@ -31,6 +46,7 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
       const [visible, setVisible] = useState(false);
       const [isAnimatingIn, setIsAnimatingIn] = useState(false);
       const [isSubmitting,setIsSubmitting]  = useState(false);
+      const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
       
       useEffect(() => {
       if (isOpen) {

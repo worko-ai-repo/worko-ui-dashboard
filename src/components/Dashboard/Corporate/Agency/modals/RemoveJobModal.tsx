@@ -4,19 +4,14 @@ import { getToastOptions } from 'lib-worko-ui';
 import { ChevronDown, SendIcon, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
+import { JobData } from "@Interfaces/CorporateDashboard.dto";
 
-interface Joblist {
-  id: string;
-  jobName: string;
-  location: string;
-  CTC: number;
-}
 
 interface RemoveJobModalProps {
   dashboardType: string;
   onClose: () => void;
   isOpen: boolean;
-  jobsList: Joblist[];
+  jobsList: JobData[];
   agencyData:AgencyListDetailsDto;
   userDetails:any;
 }
@@ -30,7 +25,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
 
   const [input, setInput] = useState('');
   const [reasonInput, setReasonInput] = useState('');
-  const [selectedJobs, setSelectedJobs] = useState<Joblist[]>([]);
+  const [selectedJobs, setSelectedJobs] = useState<JobData[]>([]);
   const [selectedReason, setSelectedReason] = useState('');
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -93,7 +88,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
   };
 
   // Toggle job selection
-  const toggleJobSelection = (job: Joblist) => {
+  const toggleJobSelection = (job: JobData) => {
     setSelectedJobs(prev => {
       const isAlreadySelected = prev.find(j => j.id === job.id);
       if (isAlreadySelected) {
@@ -124,24 +119,30 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
       return
     }
 
-    const payload = selectedJobs.map(jobs=>({
-          agencyRegisteredEmail:userDetails.email,
-          agencyUserId: agencyData?.id,
-          companyId: userDetails.id,
-          jobId: jobs.id
-    }));
+    const jobIds = selectedJobs.map((job)=>{
+      return job.id
+    })
 
-    try {
-    const { response } = await httpServiceObj.post( `${agencyBaseUrl}/agency-job-assignment/`, payload, true, {}, true);
-
-    if (!response) {
-      toast.error("Error assigning data, please try again later.", getToastOptions({}));
-      return;
+    const payload = {
+      companyId: userDetails?.companyId,
+      jobsToAssign: jobIds,
+      agencyEmail: agencyData.email,
+      agencyInviteId: agencyData.id
     }
 
-    toast.success("Job assigned successfully!", getToastOptions({}));
-    setSelectedJobs([]);
-    onClose();
+    try {
+      const { response } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
+
+      if (!response) {
+        toast.error("Error assigning data, please try again later.", getToastOptions({}));
+        return;
+      }
+
+      if(response.isSuccess){
+        toast.success("Job removed successfully!", getToastOptions({}));
+        setSelectedJobs([]);
+        onClose();
+      }
     // setTimeout(() => {
     //   console.log('Selected Jobs:', selectedJobs,userDetails);
     //   setIsSubmitting(false);
@@ -150,7 +151,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
     // }, 1000);
     } catch (err) {
       console.error("Assignment error:", err);
-      toast.error("Unexpected error occurred. Please try again.", getToastOptions({}));
+      toast.error("removing job failed. Please try again.", getToastOptions({}));
     } finally {
       setIsSubmitting(false);
     }
@@ -251,7 +252,7 @@ const removeSelectedJob = (id: string) => {
             <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-90 overflow-y-auto text-sm">
               {jobsList
                 .filter(job =>
-                  job.jobName.toLowerCase().includes(input.toLowerCase())
+                  job?.jobTitle?.toLowerCase().includes(input.toLowerCase())
                 )
                 .map(job => (
                   <li
@@ -265,7 +266,7 @@ const removeSelectedJob = (id: string) => {
                       readOnly
                       className="form-checkbox"
                     />
-                    <span>{`${job.jobName} | ${job.location} | ${job.CTC} LPA`}</span>
+                    <span>{`${job?.jobTitle} | ${job?.location?.fullLocation} | ${job?.salaryRange?.min}-${job?.salaryRange?.max} LPA`}</span>
                   </li>
                 ))}
             </ul>
@@ -316,7 +317,7 @@ const removeSelectedJob = (id: string) => {
             key={job.id}
             className="flex items-center bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full"
             >
-            <span>{job.jobName}</span>
+            <span>{job?.jobTitle}</span>
             <button
                 onClick={() => removeSelectedJob(job.id)}
                 className="ml-1 hover:text-red-500"

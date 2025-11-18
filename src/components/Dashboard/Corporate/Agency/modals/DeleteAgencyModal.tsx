@@ -9,14 +9,20 @@ interface DeleteAgencyModalProps {
   dashboardType:string;
   onClose: () => void;
   isOpen: boolean;
+  data:any;
   // referralData: any;
   // onRefresh: () => void;
   isCandidate?: boolean;
+  localUpdate: (id: string, updatedData: Partial<any>) => void;
+  removeAgencyLocally: (id: string) => void;
 }
 
 const DeleteAgencyModal: FC<DeleteAgencyModalProps> = ({
   onClose,
   isOpen,
+  data,
+  localUpdate,
+  removeAgencyLocally,
   // referralData,
   // onRefresh,
   isCandidate,
@@ -39,6 +45,15 @@ const DeleteAgencyModal: FC<DeleteAgencyModalProps> = ({
     }
   }, [isOpen]);
 
+  const handleSubmit = async()=>{
+    const updatedData ={
+      ...data,
+      isDelete:true,
+    }
+    // localUpdate(data.id,updatedData)
+    removeAgencyLocally(data.id)
+    onClose()
+  }
   // const handleSubmit = async () => {
   //   setIsLoading(true);
   //   if (!referralData) {
@@ -115,7 +130,7 @@ const DeleteAgencyModal: FC<DeleteAgencyModalProps> = ({
         {/* Submit and cancel Button */}
         <div className="flex justify-center gap-3">
           <button
-            // onClick={handleSubmit}
+            onClick={handleSubmit}
             disabled={isLoading}
             className={`w-30 flex items-center gap-2 text-white text-sm font-medium px-4 py-3 rounded-xl transition-colors duration-200 ${
               isLoading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-300"

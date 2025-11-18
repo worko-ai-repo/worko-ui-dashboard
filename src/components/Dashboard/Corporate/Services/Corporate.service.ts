@@ -21,7 +21,9 @@ import {
   BulkJobApplicationUpdatePayload,
 } from "@Interfaces/CorporateServices.dto";
 import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
+import { AgencyListDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 
+const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
 /**
  * Corporate Service File
  *
@@ -578,6 +580,25 @@ class CorporateService {
           pageSize: 0,
         },
       };
+    }
+  }
+
+  async agencyList(params: object): Promise<AgencyListDetailsDto | []> {
+    try {
+      const { response } = await httpServiceObj.get<AgencyListDetailsDto>(
+        `${agencyBaseUrl}/agency-invite`,
+        true,
+        params,
+        true,
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response;
+    } catch (error: any) {
+      console.error("[CORPORATE SERVICE]: Failed to get agency list", error);
+      return [];
     }
   }
 }
