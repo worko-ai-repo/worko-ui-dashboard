@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { MessageSquare, Mic, Volume2 } from "lucide-react";
+import { MessageSquare, Mic, Volume2, VolumeX } from "lucide-react";
 import { useInterview } from "@Context/Interview.context";
 
 interface QuestionDisplayProps {
@@ -7,6 +7,7 @@ interface QuestionDisplayProps {
   isCrossQuestion?: boolean;
   onQuestionStartSpeaking?: () => void;
   onQuestionEndSpeaking?: () => void;
+  onStartListening?: () => void;
 }
 
 // Helper function to get the best available voice
@@ -52,9 +53,7 @@ const getBestVoice = (): SpeechSynthesisVoice | null => {
   if (indianVoice) return indianVoice;
 
   // Priority 5: English voices (any variant)
-  const englishVoice = voices.find((voice) =>
-    voice.lang.toLowerCase().startsWith("en")
-  );
+  const englishVoice = voices.find((voice) => voice.lang.toLowerCase().startsWith("en"));
 
   if (englishVoice) return englishVoice;
 
@@ -67,12 +66,15 @@ export const QuestionDisplay = ({
   isCrossQuestion,
   onQuestionStartSpeaking,
   onQuestionEndSpeaking,
+  onStartListening,
 }: QuestionDisplayProps) => {
   const lastSpokenQuestionRef = useRef<string>("");
   const onStartRef = useRef(onQuestionStartSpeaking);
   const onEndRef = useRef(onQuestionEndSpeaking);
   const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
   const [voicesLoaded, setVoicesLoaded] = useState(!("speechSynthesis" in window));
+  const [isNarrationEnabled, setIsNarrationEnabled] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { isTranscribing, transcript, aiName } = useInterview();
 
   // Load voices when component mounts
@@ -121,6 +123,7 @@ export const QuestionDisplay = ({
     if (
       question &&
       voicesLoaded &&
+      isNarrationEnabled &&
       question !== lastSpokenQuestionRef.current &&
       "speechSynthesis" in window
     ) {
@@ -140,14 +143,17 @@ export const QuestionDisplay = ({
       }
 
       utterance.onstart = () => {
+        setIsSpeaking(true);
         onStartRef.current?.();
       };
 
       utterance.onend = () => {
+        setIsSpeaking(false);
         onEndRef.current?.();
       };
 
       utterance.onerror = () => {
+        setIsSpeaking(false);
         onEndRef.current?.();
       };
 
@@ -162,9 +168,32 @@ export const QuestionDisplay = ({
     return () => {
       if ("speechSynthesis" in window) {
         window.speechSynthesis.cancel();
+        setIsSpeaking(false);
       }
     };
-  }, [question, selectedVoice]); // Include selectedVoice in dependencies
+  }, [question, selectedVoice, isNarrationEnabled]);
+
+  const toggleNarration = () => {
+    if ("speechSynthesis" in window) {
+      if (isSpeaking) {
+        // Stop current speech
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+        onEndRef.current?.();
+      }
+
+      const newNarrationState = !isNarrationEnabled;
+      setIsNarrationEnabled(newNarrationState);
+
+      // If narration is being disabled, start listening mode
+      if (!newNarrationState && onStartListening) {
+        // Small delay to ensure speech has fully stopped
+        setTimeout(() => {
+          onStartListening();
+        }, 100);
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col gap-1 h-[300px] max-h-[300px] overflow-y-auto pb-4">
@@ -178,13 +207,28 @@ export const QuestionDisplay = ({
               </div>
               <span className="text-xs font-semibold text-gray-700">{aiName}</span>
             </div>
+            {/* Narration Toggle Button */}
+            <button
+              onClick={toggleNarration}
+              className="ml-2 p-1.5 rounded-full hover:bg-gray-200 transition-colors"
+              title={isNarrationEnabled ? "Disable narration" : "Enable narration"}>
+              {isNarrationEnabled ? (
+                <Volume2 className="w-4 h-4 text-blue-600" />
+              ) : (
+                <VolumeX className="w-4 h-4 text-gray-500" />
+              )}
+            </button>
           </div>
           <div className="bg-blue-100 text-gray-900 rounded-2xl rounded-tl-none px-4 py-1 border border-blue-200 shadow-sm">
-            <p className="text-sm text-gray-500 font-semibold text-left leading-relaxed">{question}</p>
-            {!isTranscribing && <div className="flex items-center gap-2 mt-1 pt-1 border-t border-blue-200">
-              <Volume2 className="w-3 h-3 text-blue-600" />
-              <span className="text-xs text-blue-600 font-medium">AI is speaking</span>
-            </div>}
+            <p className="text-sm text-gray-500 font-semibold text-left leading-relaxed">
+              {question}
+            </p>
+            {!isTranscribing && isSpeaking && isNarrationEnabled && (
+              <div className="flex items-center gap-2 mt-1 pt-1 border-t border-blue-200">
+                <Volume2 className="w-3 h-3 text-blue-600" />
+                <span className="text-xs text-blue-600 font-medium">AI is speaking</span>
+              </div>
+            )}
           </div>
           <span className="text-xs text-left text-gray-500 mt-1 block">
             {isCrossQuestion ? "Follow-up Question" : "Interview Question"}

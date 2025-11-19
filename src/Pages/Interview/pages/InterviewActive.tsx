@@ -42,6 +42,7 @@ const InterviewActive = () => {
     isSubmittingRef,
     interviewId,
     resetInterview,
+    startListening,
   } = useInterview();
   const {
     isFacePresent,
@@ -297,10 +298,11 @@ const InterviewActive = () => {
           isCrossQuestion={isCrossQuestion}
           onQuestionStartSpeaking={handleQuestionStartSpeaking}
           onQuestionEndSpeaking={handleQuestionEndSpeaking}
+          onStartListening={startListening}
         />
       </div>
 
-      {/* Tab Switch Warning Modal */}
+      {/* Tab  Switch Warning Modal */}
       <Modal isOpen={showTabSwitchWarning} onClose={() => {}} className="w-[90vw] sm:max-w-md">
         <div className="p-6 text-center">
           <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
