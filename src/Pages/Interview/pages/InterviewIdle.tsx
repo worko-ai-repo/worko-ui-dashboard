@@ -2,13 +2,14 @@ import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
 import { Button } from "@Components/ui/button";
 import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone } from "lucide-react";
 import { useInterview } from "../../../context/Interview.context";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import interviewServiceObj from "@Services/Interview.service";
 import { useAppContext } from "@Context/App.context";
 import { logo_text } from "@AssetsFolder/assets";
 import InterviewIdelFragment from "@Components/Interview/InterviewIdelFragment";
+import { useFaceDetection } from "@Hooks/useFaceDetection.hook";
 
 interface PermissionState {
   camera: boolean;
@@ -46,6 +47,21 @@ const InterviewIdle = () => {
   const [testStream, setTestStream] = useState<MediaStream | null>(null);
   const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
   const [isStartingInterview, setIsStartingInterview] = useState(false);
+  const faceVideoRef = useRef<HTMLVideoElement>(null);
+  const [isFaceStreamActive, setIsFaceStreamActive] = useState(false);
+
+  const {
+    isFacePresent,
+    isFaceCentered,
+    faceWarning,
+    detectionError: faceDetectionError,
+  } = useFaceDetection({
+    videoRef: faceVideoRef,
+    enabled: isFaceStreamActive,
+    detectionInterval: 400,
+  });
+
+  const isFaceReady = isFacePresent && isFaceCentered && !faceWarning && !faceDetectionError;
 
   const stage = searchParams.get("stage");
   const interviewDataFromState = location.state?.interviewData as InterviewDto | undefined;
@@ -69,6 +85,7 @@ const InterviewIdle = () => {
       interviewDataFromState?.status === "PENDING");
 
   const allPermissionsGranted = permissions.camera && permissions.microphone && permissions.screen;
+  const canProceed = allPermissionsGranted && micTestComplete && isFaceReady;
 
   // Handle interview initiation or loading from state
   useEffect(() => {
@@ -227,6 +244,7 @@ const InterviewIdle = () => {
 
       setTestStream(combinedStream);
       setInterviewStream(combinedStream);
+      setIsFaceStreamActive(true);
 
       // Also pass to interview context if interview is already loaded
       if (currentInterview) {
@@ -247,6 +265,7 @@ const InterviewIdle = () => {
         screen: false,
       });
       setInterviewStream(null);
+      setIsFaceStreamActive(false);
     } finally {
       setIsRequestingPermissions(false);
     }
@@ -297,6 +316,15 @@ const InterviewIdle = () => {
     }, 8000);
   };
 
+  useEffect(() => {
+    if (faceVideoRef.current && testStream) {
+      faceVideoRef.current.srcObject = testStream;
+      setIsFaceStreamActive(true);
+    } else if (!testStream) {
+      setIsFaceStreamActive(false);
+    }
+  }, [testStream]);
+
   const userName = userDetails?.fullName || "Candidate";
   const firstName = userName.split(" ")[0];
 
@@ -316,6 +344,7 @@ const InterviewIdle = () => {
       setIsStartingInterview(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-b bg-white">
@@ -520,8 +549,55 @@ const InterviewIdle = () => {
                   </Card>
                 )}
 
+                {/* Face Verification Card */}
+                {allPermissionsGranted && (
+                  <Card className="border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-white">
+                    <CardContent className="p-4 sm:p-6 text-left space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                            Face Verification
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Keep your face centered and visible to proceed.
+                          </p>
+                        </div>
+                        <div
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            isFaceReady
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                          {isFaceReady ? "Verified" : "Adjust Needed"}
+                        </div>
+                      </div>
+                      <div className="relative w-full rounded-xl overflow-hidden border border-purple-200 bg-black">
+                        <video
+                          ref={faceVideoRef}
+                          autoPlay
+                          muted
+                          playsInline
+                          className="w-full h-48 object-cover opacity-90"
+                        />
+                      </div>
+                      <p
+                        className={`text-sm font-medium ${
+                          isFaceReady ? "text-green-700" : "text-yellow-800"
+                        }`}>
+                        {faceDetectionError
+                          ? faceDetectionError
+                          : faceWarning
+                          ? faceWarning
+                          : isFaceReady
+                          ? "Face verified. You are good to go."
+                          : "Align your face in the frame and look straight into the camera."}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
                 {/* Success Message */}
-                {allPermissionsGranted && micTestComplete && (
+                {allPermissionsGranted && micTestComplete && isFaceReady && (
                   <div className="space-y-4">
                     <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 flex items-center gap-3">
                       <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
@@ -557,7 +633,8 @@ const InterviewIdle = () => {
                       size="default"
                       disabled={
                         isStartingInterview ||
-                        (interviewStage === "continue" && (!currentInterview || isInitiating))
+                        (interviewStage === "continue" && (!currentInterview || isInitiating)) ||
+                        !canProceed
                       }
                       className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-base sm:text-lg py-6">
                       <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />

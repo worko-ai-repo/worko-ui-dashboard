@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { useAppContext } from "@Context/App.context";
 import { useNavigate } from "react-router-dom";
+import { useFaceDetection } from "@Hooks/useFaceDetection.hook";
 
 const InterviewActive = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -23,6 +24,7 @@ const InterviewActive = () => {
   const [showTabSwitchWarning, setShowTabSwitchWarning] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isTerminating, setIsTerminating] = useState(false);
+  const [isCameraReady, setIsCameraReady] = useState(false);
   const hasTerminatedRef = useRef(false);
   const tabSwitchDetectedRef = useRef(false);
 
@@ -40,6 +42,18 @@ const InterviewActive = () => {
     interviewId,
     resetInterview,
   } = useInterview();
+  const {
+    isFacePresent,
+    isFaceCentered,
+    faceWarning,
+    detectionError: activeFaceError,
+  } = useFaceDetection({
+    videoRef,
+    enabled: isCameraReady,
+    detectionInterval: 350,
+  });
+
+  const isFaceCompliant = isFacePresent && isFaceCentered && !faceWarning && !activeFaceError;
 
   // Detect tab visibility change
   useEffect(() => {
@@ -173,15 +187,17 @@ const InterviewActive = () => {
   useEffect(() => {
     const startCamera = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
+        const localStream = await navigator.mediaDevices.getUserMedia({
           video: { facingMode: "user" },
           audio: false,
         });
         if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+          videoRef.current.srcObject = localStream;
+          setIsCameraReady(true);
         }
       } catch (error) {
         console.error("Error accessing camera:", error);
+        setIsCameraReady(false);
       }
     };
 
@@ -197,6 +213,7 @@ const InterviewActive = () => {
         });
         videoRef.current.srcObject = null;
       }
+      setIsCameraReady(false);
     };
   }, []);
 
@@ -222,8 +239,29 @@ const InterviewActive = () => {
       <div className="max-w-6xl max-sm:max-w-[90vw] space-y-4 mx-auto px-4 py-4">
         <div className="flex justify-between">
           <RecorderStatus isRecording={isRecording} isTranscribing={isTranscribing} />
-          <SubmitAnswerButton onClick={handleSubmitAnswer} disabled={isSubmittingRef.current} />
+          <SubmitAnswerButton
+            onClick={handleSubmitAnswer}
+            disabled={isSubmittingRef.current || !isFaceCompliant}
+          />
         </div>
+        {(!isFaceCompliant || faceWarning || activeFaceError) && (
+          <div className="flex items-start gap-3 p-4 border rounded-2xl bg-red-50 border-red-200 text-left">
+            <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="text-sm font-semibold text-red-700">
+                {activeFaceError
+                  ? activeFaceError
+                  : !isFacePresent
+                  ? "Face not detected. Interview controls are paused."
+                  : faceWarning || "Please keep your face centered in the frame."}
+              </p>
+              <p className="text-xs text-red-600 mt-1">
+                Look straight at the camera and avoid looking away or moving outside the frame.
+                Your face must remain visible to continue.
+              </p>
+            </div>
+          </div>
+        )}
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-6 mb-4">
           <div className="w-full border border-blue-200 max-h-[300px] rounded-3xl shadow-2xl overflow-hidden">
             <InterviewAIAgent />
