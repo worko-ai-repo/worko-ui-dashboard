@@ -84,11 +84,12 @@ class QnaHandler {
 
     const currentQ = this.questions[this.currentQuestionIndex];
 
-    // Add introductory feedback for first question
     const feedback = this.currentQuestionIndex === 0 ? this.introductoryFeedback : undefined;
+    const questionText = currentQ?.questionText || "No more questions";
+    const questionWithFeedback = feedback ? `${feedback}\n\n${questionText}` : questionText;
 
     return {
-      currentQuestion: currentQ?.questionText || "No more questions",
+      currentQuestion: questionWithFeedback,
       acknowledgement: `Ready for question ${this.currentQuestionIndex + 1}`,
       feedback,
     };
@@ -121,6 +122,10 @@ class QnaHandler {
     let feedback: string | undefined;
 
     if (previousQ?.feedback) {
+      if (previousQ?.questionId === this.questions[0]?.questionId) {
+        feedback = this.introductoryFeedback;
+        questionWithFeedback = `${this.introductoryFeedback}\n\n${nextQ?.questionText || ""}`;
+      }
       feedback = previousQ.feedback;
       questionWithFeedback = `${previousQ.feedback}\n\n${nextQ?.questionText || ""}`;
     }

@@ -73,7 +73,7 @@ export const useFaceDetection = ({
   const [detectionError, setDetectionError] = useState<string | null>(null);
 
   const modelRef = useRef<blazeface.BlazeFaceModel | null>(null);
-  const intervalRef = useRef<number | null>(null);
+  const timeoutRef = useRef<number | null>(null);
   const stableFrameCountRef = useRef(0);
 
   useEffect(() => {
@@ -88,17 +88,20 @@ export const useFaceDetection = ({
         modelRef.current = model;
         setIsModelReady(true);
 
-        intervalRef.current = window.setInterval(async () => {
+        const runDetectionLoop = async () => {
           const video = videoRef.current;
           if (!video || video.readyState < 2 || !modelRef.current) {
+            scheduleNextDetection();
             return;
           }
 
           if (video.videoWidth === 0 || video.videoHeight === 0) {
+            scheduleNextDetection();
             return;
           }
 
           try {
+            await tf.nextFrame();
             const predictions = await modelRef.current.estimateFaces(video, false);
 
             if (!predictions.length) {
@@ -110,7 +113,7 @@ export const useFaceDetection = ({
             }
 
             const face = predictions[0];
-            const [score]:any = face.probability ?? [1];
+            const [score]: any = face.probability ?? [1];
 
             if (score < minScore) {
               stableFrameCountRef.current = 0;
@@ -172,8 +175,26 @@ export const useFaceDetection = ({
             setIsFacePresent(false);
             setIsFaceCentered(false);
             setFaceWarning("Face detection temporarily unavailable.");
+          } finally {
+            scheduleNextDetection();
           }
-        }, detectionInterval);
+        };
+
+        function scheduleNextDetection() {
+          if (!isMounted || !enabled) {
+            return;
+          }
+          timeoutRef.current = window.setTimeout(runDetectionLoop, detectionInterval);
+        }
+
+        const runLoopCleanupSafe = () => {
+          if (!isMounted || !enabled) {
+            return;
+          }
+          runDetectionLoop();
+        };
+
+        runLoopCleanupSafe();
       } catch (error) {
         console.error("Unable to start face detection:", error);
         if (isMounted) {
@@ -188,9 +209,9 @@ export const useFaceDetection = ({
 
     return () => {
       isMounted = false;
-      if (intervalRef.current) {
-        window.clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
       stableFrameCountRef.current = 0;
       setIsFacePresent(false);
