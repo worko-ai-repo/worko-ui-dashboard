@@ -19,10 +19,18 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
 }) => {
   const [expandedQuestion, setExpandedQuestion] = useState<number | null>(null);
   const [questionTimings, setQuestionTimings] = useState<SegmentTiming[]>([]);
+  const [totalVideoDuration, setTotalVideoDuration] = useState<number>(0);
   const videoPlayerRef = useRef<MultiSegmentVideoPlayerHandle | null>(null);
 
   const formatTimestamp = (seconds?: number) => {
     if (seconds === undefined || seconds === null) return "N/A";
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, "0")}`;
+  };
+
+  const formatVideoDuration = (seconds: number) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
     const mins = Math.floor(seconds / 60);
     const secs = Math.floor(seconds % 60);
     return `${mins}:${secs.toString().padStart(2, "0")}`;
@@ -66,6 +74,13 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
     videoPlayerRef.current.seekToTime(timing.startTime);
   };
 
+  const handleSegmentTimingsChange = (timings: SegmentTiming[]) => {
+    setQuestionTimings(timings);
+    // Calculate total duration from all segments
+    const total = timings.reduce((sum, timing) => sum + timing.duration, 0);
+    setTotalVideoDuration(total);
+  };
+
   return (
       <div className="max-w-5xl mx-auto">
         {/* Header */}
@@ -78,7 +93,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
             <MultiSegmentVideoPlayer
               ref={videoPlayerRef}
               interviewId={interviewDetails.id}
-              onSegmentTimingsChange={setQuestionTimings}
+              onSegmentTimingsChange={handleSegmentTimingsChange}
             />
           </div>
 
@@ -110,7 +125,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
               <div className="flex justify-between text-sm">
                 <span className="font-semibold text-gray-400">Interview duration:</span>
                 <span className="font-semibold text-gray-800">
-                  {formatInterviewDuration(interviewDetails.duration)}
+                  {totalVideoDuration > 0 ? formatVideoDuration(totalVideoDuration) : "--:--"}
                 </span>
               </div>
             </div>
@@ -138,7 +153,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
             <thead className="sticky top-0 bg-gray-100 border-b border-gray-200">
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-gray-700 text-sm w-[13%]">
-                  Question start
+                  Timestamp
                 </th>
                 <th className="px-6 py-4 text-center font-semibold text-gray-700 text-sm w-[43%]">
                   Questions

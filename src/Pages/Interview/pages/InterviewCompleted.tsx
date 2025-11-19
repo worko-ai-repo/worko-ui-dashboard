@@ -11,7 +11,6 @@ const InterviewCompleted = () => {
   } = useInterview();
   
   const { id: pathInterviewId } = useParams<{ id: string }>();
-  debugger;
   const interviewId = contextInterviewId || pathInterviewId;
   
   const nav = useNavigate();

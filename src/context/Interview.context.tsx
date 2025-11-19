@@ -11,7 +11,7 @@ import { useAppContext } from "./App.context";
 
 type InterviewState = "idle" | "intro" | "active" | "completed";
 
-const AI_NAME = "Alex";
+const AI_NAME = "VERA";
 
 interface InterviewContextType {
   // State

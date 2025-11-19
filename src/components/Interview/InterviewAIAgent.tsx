@@ -130,7 +130,7 @@ const InterviewAIAgent: React.FC = () => {
             }`}
           />
           <span className="text-sm font-semibold text-white">{aiName}</span>
-          <span className="text-xs text-gray-200">(AI Interview Assistant)</span>
+          <span className="text-xs text-gray-200">(Virtual Evaluation & Recruitment Assistant)</span>
         </div>
       </div>
 

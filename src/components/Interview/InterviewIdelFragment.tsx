@@ -109,21 +109,21 @@ const InterviewIdelFragment = () => {
           <img
             src={dotSpiral}
             alt="Background Pattern"
-            className=" inset-0 w-64 h-64 object-cover rounded-3xl opacity-60 rotate-"
+            className=" inset-0 w-80 h-w-80 object-cover rounded-3xl opacity-60 rotate-"
           />
           <div className="">
-            <p className="text-xl  text-left font-semibold text-[#001f3f]">
+            <p className="text-3xl  text-left font-semibold text-[#001f3f]">
               {currentText}
               <span className="animate-pulse">|</span>
             </p>
             <div className="text-xs text-left text-[#001f3f] font-semibold mt-3">
-              Meet our AI agent that will take your test and help you succeed
+              Meet our AI agent VERA (Virtual Evaluation & Recruitment Assistant) that will take your test and help you succeed.
             </div>
           </div>
         </div>
       </div>
       {/* Floating Reviews */}
-      <div className=" px-10 absolute bottom-0 text-left text-nowrap left-0 w-full right-0 h-32 pointer-events-none z-20">
+      {/* <div className=" px-10 absolute bottom-0 text-left text-nowrap left-0 w-full right-0 h-32 pointer-events-none z-20">
         <AnimatePresence>
           {visibleReviews.map((review) => (
             <motion.div
@@ -147,7 +147,7 @@ const InterviewIdelFragment = () => {
             </motion.div>
           ))}
         </AnimatePresence>
-      </div>
+      </div> */}
     </div>
   );
 };
