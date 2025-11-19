@@ -25,6 +25,7 @@ const InterviewActive = () => {
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isTerminating, setIsTerminating] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
   const hasTerminatedRef = useRef(false);
   const tabSwitchDetectedRef = useRef(false);
 
@@ -64,9 +65,23 @@ const InterviewActive = () => {
       }
       // User came back to the tab after switching
       else if (!document.hidden && tabSwitchDetectedRef.current && !hasTerminatedRef.current) {
-        hasTerminatedRef.current = true;
-        // Show the violation modal - API will be called by the useEffect watching showTabSwitchWarning
-        setShowTabSwitchWarning(true);
+        tabSwitchDetectedRef.current = false;
+        const newCount = tabSwitchCount + 1;
+        setTabSwitchCount(newCount);
+
+        if (newCount >= 3) {
+          // Terminate on 3rd violation
+          hasTerminatedRef.current = true;
+          setShowTabSwitchWarning(true);
+        } else {
+          // Show warning toast for 1st and 2nd violation
+          toast.warning(
+            `Warning ${newCount}/3: You switched tabs during the interview. You have ${
+              3 - newCount
+            } warning${3 - newCount > 1 ? "s" : ""} remaining before your interview is terminated.`,
+            getToastOptions({ autoClose: 5000 })
+          );
+        }
       }
     };
 
@@ -75,7 +90,7 @@ const InterviewActive = () => {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [interviewId, userDetails]);
+  }, [interviewId, userDetails, tabSwitchCount]);
 
   // Warn user before closing/refreshing page
   useEffect(() => {
@@ -177,7 +192,7 @@ const InterviewActive = () => {
   // Auto-fire API when tab switch warning modal opens
   useEffect(() => {
     if (showTabSwitchWarning === true && !isTerminating) {
-      console.log("Tab switch detected - calling API to terminate interview");
+      console.log("Tab switch limit exceeded (3 violations) - calling API to terminate interview");
       terminateInterviewAPI();
     }
   }, [showTabSwitchWarning]);
@@ -256,8 +271,8 @@ const InterviewActive = () => {
                   : faceWarning || "Please keep your face centered in the frame."}
               </p>
               <p className="text-xs text-red-600 mt-1">
-                Look straight at the camera and avoid looking away or moving outside the frame.
-                Your face must remain visible to continue.
+                Look straight at the camera and avoid looking away or moving outside the frame. Your
+                face must remain visible to continue.
               </p>
             </div>
           </div>
@@ -293,8 +308,8 @@ const InterviewActive = () => {
           </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Session Terminated</h2>
           <p className="text-gray-600 mb-6">
-            You switched to another tab or window during the interview. As per our guidelines, this
-            is not allowed. Your interview session has been terminated.
+            You switched to another tab or window 3 times during the interview. As per our
+            guidelines, after 2 warnings, your interview session has been terminated.
           </p>
           <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
             <p className="text-sm text-yellow-800 font-semibold">

@@ -49,13 +49,18 @@ class QnaHandler {
   private currentQuestionIndex: number = 0;
   private questions: Array<InterviewHistoryEntryDto> = [];
   private userEmail = (secureStorage.getItem(SecureStorageKeyEnum.USEREMAIL) as string) || "";
-  private introductoryFeedback: string = "Welcome to your interview. Let's begin with the first question. Please take your time and answer to the best of your ability.";
+  private introductoryFeedback: string =
+    "Welcome to your interview. Let's begin with the first question. Please take your time and answer to the best of your ability.";
 
   /**
    * Initialize the QNA handler with interview data
    * Matches the current question from interviewDTO and sets up the question list
    */
-  initialize(interview: InterviewDto): { currentQuestion: string; acknowledgement: string; feedback?: string } {
+  initialize(interview: InterviewDto): {
+    currentQuestion: string;
+    acknowledgement: string;
+    feedback?: string;
+  } {
     if (!interview.interviewHistory || interview.interviewHistory.length === 0) {
       return {
         currentQuestion: "No questions available",
@@ -92,7 +97,12 @@ class QnaHandler {
   /**
    * Get the next question after user submits answer
    */
-  getNextQuestion(): { nextQuestion: string | null; isFinal: boolean; acknowledgement: string; feedback?: string } {
+  getNextQuestion(): {
+    nextQuestion: string | null;
+    isFinal: boolean;
+    acknowledgement: string;
+    feedback?: string;
+  } {
     this.currentQuestionIndex++;
 
     if (this.currentQuestionIndex >= this.questions.length) {
@@ -105,11 +115,11 @@ class QnaHandler {
 
     const nextQ = this.questions[this.currentQuestionIndex];
     const previousQ = this.questions[this.currentQuestionIndex - 1];
-    
+
     // Concatenate previous question's feedback with next question if feedback exists
     let questionWithFeedback = nextQ?.questionText || null;
     let feedback: string | undefined;
-    
+
     if (previousQ?.feedback) {
       feedback = previousQ.feedback;
       questionWithFeedback = `${previousQ.feedback}\n\n${nextQ?.questionText || ""}`;
@@ -131,7 +141,7 @@ class QnaHandler {
     chunkFileName: string,
     chunkFileMimeType: string,
     chunkSequence: number,
-    userId: string 
+    userId: string
   ): Promise<SignedUrlResponse> {
     try {
       const payload: UploadChunkPayload = {
@@ -180,7 +190,15 @@ class QnaHandler {
   /**
    * Patch feedback for the completed question
    */
-  async patchFeedback(interviewId: string, feedback: InterviewHistoryEntryDto): Promise<{ needsFollowUp: boolean; feedback: string; isCorrect: boolean }> {
+  async patchFeedback(
+    interviewId: string,
+    feedback: InterviewHistoryEntryDto
+  ): Promise<{
+    needsFollowUp: boolean;
+    feedback: string;
+    isCorrect: boolean;
+    updatedInterview: InterviewDto;
+  }> {
     try {
       const payload: FeedbackPatchPayload = {
         email: this.userEmail,
@@ -195,29 +213,36 @@ class QnaHandler {
         },
       };
 
-      const { response: patchedInterview, error } = await httpServiceObj.patch<InterviewDto>(`/user/interview/question/${interviewId}`, payload);
-      
+      const { response: patchedInterview, error } = await httpServiceObj.patch<InterviewDto>(
+        `/user/interview/question/${interviewId}`,
+        payload
+      );
+
       if (error && !patchedInterview) {
         throw new Error(error.message || "Error patching feedback");
       }
-      
+
       console.log("Patched interview response:", patchedInterview);
 
       // Extract feedback data from response
-      const needsFollowUp = (patchedInterview as any)?.needsFollowUp === "true" || (patchedInterview as any)?.needsFollowUp === true;
-      const currentQuestionFeedback = patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.feedback || "";
-      const isCorrect = patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.isCorrect || false;
+      const needsFollowUp =
+        (patchedInterview as any)?.needsFollowUp === "true" ||
+        (patchedInterview as any)?.needsFollowUp === true;
+      const currentQuestionFeedback =
+        patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.feedback || "";
+      const isCorrect =
+        patchedInterview?.interviewHistory?.[this.currentQuestionIndex]?.isCorrect || false;
 
-      // Update local questions array with feedback
-      if (this.questions[this.currentQuestionIndex]) {
-        this.questions[this.currentQuestionIndex].feedback = currentQuestionFeedback;
-        this.questions[this.currentQuestionIndex].isCorrect = isCorrect;
+      // Update local questions array with the entire updated history from backend
+      if (patchedInterview?.interviewHistory) {
+        this.questions = patchedInterview.interviewHistory;
       }
 
       return {
         needsFollowUp,
         feedback: currentQuestionFeedback,
         isCorrect,
+        updatedInterview: patchedInterview!,
       };
     } catch (error) {
       console.error("Failed to patch feedback:", error);
@@ -239,7 +264,14 @@ class QnaHandler {
     chunkSequence: number,
     userId: string,
     questionMeta?: { questionId?: string; questionText?: string }
-  ): Promise<{ success: boolean; nextQuestion: string | null; isFinal: boolean; needsFollowUp: boolean; feedback?: string }> {
+  ): Promise<{
+    success: boolean;
+    nextQuestion: string | null;
+    isFinal: boolean;
+    needsFollowUp: boolean;
+    feedback?: string;
+    updatedInterview?: InterviewDto;
+  }> {
     try {
       // Step 1: Generate signed URL
       const signedUrlResponse = await this.generateSignedUrl(
@@ -258,7 +290,10 @@ class QnaHandler {
       );
 
       // Step 3: Prepare feedback payload and patch
-      if ((!this.questions.length || !this.questions[this.currentQuestionIndex]) && questionMeta?.questionId) {
+      if (
+        (!this.questions.length || !this.questions[this.currentQuestionIndex]) &&
+        questionMeta?.questionId
+      ) {
         this.questions[this.currentQuestionIndex] = {
           questionId: questionMeta.questionId,
           questionText: questionMeta.questionText || "",
@@ -299,13 +334,14 @@ class QnaHandler {
         // Repeat the current question with feedback
         const currentQ = this.questions[this.currentQuestionIndex];
         const questionWithFeedback = `${patchResponse.feedback}\n\n${currentQ?.questionText || ""}`;
-        
+
         return {
           success: true,
           nextQuestion: questionWithFeedback,
           isFinal: false,
           needsFollowUp: true,
           feedback: patchResponse.feedback,
+          updatedInterview: patchResponse.updatedInterview,
         };
       }
 
@@ -318,13 +354,14 @@ class QnaHandler {
         isFinal: nextQuestionData.isFinal,
         needsFollowUp: false,
         feedback: nextQuestionData.feedback,
+        updatedInterview: patchResponse.updatedInterview,
       };
     } catch (error) {
       console.error("Answer submission workflow failed:", error);
       throw error;
     }
   }
-  
+
   /**
    * Reset the handler state
    */

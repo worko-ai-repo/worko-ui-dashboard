@@ -122,21 +122,18 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
   } = useSpeechToText();
 
   // Cleanup function to stop all media streams
-  const setInterviewStream = useCallback(
-    (stream: MediaStream | null) => {
-      if (!stream) {
-        grantedStreamRef.current = null;
-        setGrantedStream(null);
-        return;
-      }
+  const setInterviewStream = useCallback((stream: MediaStream | null) => {
+    if (!stream) {
+      grantedStreamRef.current = null;
+      setGrantedStream(null);
+      return;
+    }
 
-      const clonedTracks = stream.getTracks().map((t) => t.clone());
-      const clonedStream = new MediaStream(clonedTracks);
-      grantedStreamRef.current = clonedStream;
-      setGrantedStream(clonedStream);
-    },
-    []
-  );
+    const clonedTracks = stream.getTracks().map((t) => t.clone());
+    const clonedStream = new MediaStream(clonedTracks);
+    grantedStreamRef.current = clonedStream;
+    setGrantedStream(clonedStream);
+  }, []);
 
   const cleanupMediaStreams = useCallback(() => {
     console.log("Cleaning up all media streams...");
@@ -382,6 +379,11 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
               questionText: currentQuestion,
             }
           );
+
+          // Update the interview state with the latest data from backend
+          if (result.updatedInterview) {
+            setCurrentInterview(result.updatedInterview);
+          }
 
           if (result.isFinal) {
             handleInterviewEnd("Interview completed successfully");

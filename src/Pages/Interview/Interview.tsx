@@ -36,7 +36,7 @@ function Interview() {
     },
     {
       path: "*",
-      element: <Navigate to="/interview" replace />,
+      element: <Navigate to="/404" replace />,
     },
   ]);
 

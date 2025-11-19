@@ -1,14 +1,19 @@
 import { useInterview } from "../../../context/Interview.context";
 import { logo_text } from "@AssetsFolder/assets";
 import InterviewCompletionFeedback from "@Components/Interview/InterviewCompletionFeedback";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 
 const InterviewCompleted = () => {
   const {
     isProcessing,
-    interviewId,
+    interviewId: contextInterviewId,
   } = useInterview();
+  
+  const { id: pathInterviewId } = useParams<{ id: string }>();
+  debugger;
+  const interviewId = contextInterviewId || pathInterviewId;
+  
   const nav = useNavigate();
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white">
