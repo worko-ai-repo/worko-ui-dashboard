@@ -51,8 +51,10 @@ interface VideoData {
   feedback?: string; // Optional since not all videos might have feedback
 }
 
-const MultiSegmentVideoPlayer = forwardRef<MultiSegmentVideoPlayerHandle, MultiSegmentVideoPlayerProps>(
-  ({ className = "", interviewId, onSegmentTimingsChange }, ref) => {
+const MultiSegmentVideoPlayer = forwardRef<
+  MultiSegmentVideoPlayerHandle,
+  MultiSegmentVideoPlayerProps
+>(({ className = "", interviewId, onSegmentTimingsChange }, ref) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
@@ -542,7 +544,7 @@ const MultiSegmentVideoPlayer = forwardRef<MultiSegmentVideoPlayerHandle, MultiS
   return (
     <div
       ref={containerRef}
-      className={`relative bg-black rounded-lg overflow-hidden group max-h-[350px] ${className}`}
+      className={`relative bg-black rounded-lg overflow-hidden group ${className}`}
       onMouseMove={handleMouseMove}
       onMouseLeave={() => {}} // Don't hide controls on mouse leave
     >
@@ -550,7 +552,7 @@ const MultiSegmentVideoPlayer = forwardRef<MultiSegmentVideoPlayerHandle, MultiS
       <video
         ref={videoRef}
         crossOrigin="anonymous" // Add this line
-        className="w-full h-full object-contain"
+        className="w-full max-h-[350px] object-contain mx-auto"
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleVideoEnded}
         onLoadedMetadata={handleTimeUpdate}

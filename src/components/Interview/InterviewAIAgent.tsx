@@ -6,6 +6,7 @@ const InterviewAIAgent: React.FC = () => {
   const animationRef = useRef<number | null>(null);
   const { isTranscribing, aiName } = useInterview();
   const isSpeaking = !isTranscribing;
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!svgRef.current) return;
@@ -89,6 +90,7 @@ const InterviewAIAgent: React.FC = () => {
     } else {
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
 
       circles.forEach((circle) => {
@@ -105,12 +107,14 @@ const InterviewAIAgent: React.FC = () => {
     return () => {
       if (animationRef.current !== null) {
         cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
       }
     };
   }, [isSpeaking]);
 
   return (
     <div
+      ref={containerRef}
       className="ai-agent-container flex flex-col  items-center gap-4 p-6 rounded-lg bg-black border border-blue-200 shadow-lg"
       style={{
         position: "relative",
@@ -163,40 +167,37 @@ const InterviewAIAgent: React.FC = () => {
       )}
 
       {/* Spiral dot animation or AI agent image */}
-      <div style={{ position: "relative", zIndex: 10 }}>
-        {isSpeaking ? (
-          <svg
-            ref={svgRef}
-            width="160"
-            height="160"
-            viewBox="0 0 400 400"
-            style={{
-              display: "block",
-              filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))",
-              transition: "filter 0.3s ease",
-            }}
-          />
-        ) : (
-          <div
+      <div style={{ position: "relative", zIndex: 10, width: "160px", height: "160px" }}>
+        <svg
+          ref={svgRef}
+          width="160"
+          height="160"
+          viewBox="0 0 400 400"
+          style={{
+            display: isSpeaking ? "block" : "none",
+            filter: "drop-shadow(0 0 20px rgba(59, 130, 246, 0.5))",
+            transition: "filter 0.3s ease",
+          }}
+        />
+        <div
+          style={{
+            width: "160px",
+            height: "160px",
+            display: isSpeaking ? "none" : "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            transition: "all 0.3s ease",
+          }}>
+          <img
+            src={AI_agent}
+            alt="AI Agent"
             style={{
               width: "160px",
-              height: "160px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "all 0.3s ease",
-            }}>
-            <img
-              src={AI_agent}
-              alt="AI Agent"
-              style={{
-                width: "160px",
-                height: "200px",
-                objectFit: "cover",
-              }}
-            />
-          </div>
-        )}
+              height: "200px",
+              objectFit: "cover",
+            }}
+          />
+        </div>
       </div>
 
       {/* Status indicator with message */}

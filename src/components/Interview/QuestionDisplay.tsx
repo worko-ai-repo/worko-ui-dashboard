@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MessageSquare, Mic, Volume2 } from "lucide-react";
 import { useInterview } from "@Context/Interview.context";
 
@@ -9,6 +9,59 @@ interface QuestionDisplayProps {
   onQuestionEndSpeaking?: () => void;
 }
 
+// Helper function to get the best available voice
+const getBestVoice = (): SpeechSynthesisVoice | null => {
+  if (!("speechSynthesis" in window)) return null;
+
+  const voices = window.speechSynthesis.getVoices();
+  if (voices.length === 0) return null;
+
+  // Priority 1: Use voice at index 10 (most convincing sound)
+  if (voices.length > 10 && voices[10]) {
+    return voices[10];
+  }
+
+  // Priority 2: Fallback to female voices (often sound more natural for TTS)
+  const femaleVoice = voices.find(
+    (voice) =>
+      voice.name.toLowerCase().includes("female") ||
+      voice.name.toLowerCase().includes("zira") ||
+      voice.name.toLowerCase().includes("hazel") ||
+      voice.name.toLowerCase().includes("arya") ||
+      voice.name.toLowerCase().includes("neha")
+  );
+
+  if (femaleVoice) return femaleVoice;
+
+  // Priority 3: Natural/Neural voices (usually better quality)
+  const neuralVoice =
+    voices.find((voice) => voice.name.toLowerCase().includes("neural")) ||
+    voices.find((voice) => voice.name.toLowerCase().includes("premium")) ||
+    voices.find((voice) => voice.name.toLowerCase().includes("natural"));
+
+  if (neuralVoice) return neuralVoice;
+
+  // Priority 4: Indian English voices
+  const indianVoice = voices.find(
+    (voice) =>
+      voice.lang.toLowerCase().includes("in") ||
+      voice.name.toLowerCase().includes("india") ||
+      voice.name.toLowerCase().includes("indian")
+  );
+
+  if (indianVoice) return indianVoice;
+
+  // Priority 5: English voices (any variant)
+  const englishVoice = voices.find((voice) =>
+    voice.lang.toLowerCase().startsWith("en")
+  );
+
+  if (englishVoice) return englishVoice;
+
+  // Fallback: Default voice
+  return voices[0];
+};
+
 export const QuestionDisplay = ({
   question,
   isCrossQuestion,
@@ -18,7 +71,44 @@ export const QuestionDisplay = ({
   const lastSpokenQuestionRef = useRef<string>("");
   const onStartRef = useRef(onQuestionStartSpeaking);
   const onEndRef = useRef(onQuestionEndSpeaking);
+  const [selectedVoice, setSelectedVoice] = useState<SpeechSynthesisVoice | null>(null);
+  const [voicesLoaded, setVoicesLoaded] = useState(!("speechSynthesis" in window));
   const { isTranscribing, transcript, aiName } = useInterview();
+
+  // Load voices when component mounts
+  useEffect(() => {
+    const loadVoices = () => {
+      if ("speechSynthesis" in window) {
+        const voices = window.speechSynthesis.getVoices();
+        if (voices.length > 0) {
+          setSelectedVoice(getBestVoice());
+          setVoicesLoaded(true);
+        }
+      }
+    };
+
+    const timeoutId = window.setTimeout(() => {
+      if (!voicesLoaded) {
+        setSelectedVoice(getBestVoice());
+        setVoicesLoaded(true);
+      }
+    }, 1000);
+
+    // Load voices immediately
+    loadVoices();
+
+    // Some browsers load voices asynchronously
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.onvoiceschanged = loadVoices;
+    }
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if ("speechSynthesis" in window) {
+        window.speechSynthesis.onvoiceschanged = null;
+      }
+    };
+  }, [voicesLoaded]);
 
   // Update refs when callbacks change
   useEffect(() => {
@@ -28,7 +118,12 @@ export const QuestionDisplay = ({
 
   useEffect(() => {
     // Only speak if the question has changed and hasn't been spoken yet
-    if (question && question !== lastSpokenQuestionRef.current && "speechSynthesis" in window) {
+    if (
+      question &&
+      voicesLoaded &&
+      question !== lastSpokenQuestionRef.current &&
+      "speechSynthesis" in window
+    ) {
       // Cancel any ongoing speech
       window.speechSynthesis.cancel();
 
@@ -36,6 +131,13 @@ export const QuestionDisplay = ({
       utterance.rate = 0.9;
       utterance.pitch = 1;
       utterance.volume = 1;
+
+      // Set the selected voice if available
+      if (selectedVoice) {
+        utterance.voice = selectedVoice;
+        // Set language to match voice locale for better pronunciation
+        utterance.lang = selectedVoice.lang;
+      }
 
       utterance.onstart = () => {
         onStartRef.current?.();
@@ -62,7 +164,7 @@ export const QuestionDisplay = ({
         window.speechSynthesis.cancel();
       }
     };
-  }, [question]); // Only depend on question, not the callbacks
+  }, [question, selectedVoice]); // Include selectedVoice in dependencies
 
   return (
     <div className="flex flex-col gap-1 h-[300px] max-h-[300px] overflow-y-auto pb-4">
