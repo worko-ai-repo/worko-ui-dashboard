@@ -354,7 +354,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     <div className="min-h-screen w-[800px] bg-gray-50 p-4 sm:p-6 lg:p-8">
       <div className="mx-auto max-w-4xl">
         {/* Header */}
-        <div className="mb-8">
+        {false && <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
             <div className="flex items-start gap-4">
               <FileText size={24} className="text-blue-500 mt-1" />
@@ -374,7 +374,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
               </div>
             </div>
           </div>
-        </div>
+        </div>}
 
         {/* Add Note Button */}
         <div className="mb-6 text-left">

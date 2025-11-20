@@ -126,7 +126,8 @@ const InviteForm = ({
         } = await httpServiceObj.post(`/corporate-invite/`, apiPayload, true, {}, false, "BASE");
 
         if (status === 409) {
-          toast.error("Invite already exists for this user.", getToastOptions({ autoClose: 3000 }));
+          const errorMessage = (inviteResponseError?.message || "Failed to send Invite");
+          toast.error(errorMessage, getToastOptions({ autoClose: 3000 }));
           return;
         }
 
