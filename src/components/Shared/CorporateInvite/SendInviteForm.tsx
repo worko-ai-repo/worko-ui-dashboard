@@ -87,7 +87,10 @@ const InviteForm = ({
 
       // Validate phone number
       if (isNaN(phoneNumber) || phoneNumber.toString().length !== 10) {
-        toast.error("Please enter a valid 10-digit phone number", getToastOptions());
+        toast.error(
+          "Please enter a valid 10-digit phone number",
+          getToastOptions({ autoClose: 3000 })
+        );
         setIsSubmitting(false);
         return;
       }
@@ -115,35 +118,36 @@ const InviteForm = ({
           };
 
       // Make API call with toast promise
-      const apiCall = httpServiceObj.post(
-        `/corporate-invite/`,
-        apiPayload,
-        true,
-        {},
-        false,
-        "BASE"
-      );
+      try {
+        const {
+          response: inviteResponse,
+          error: inviteResponseError,
+          status,
+        } = await httpServiceObj.post(`/corporate-invite/`, apiPayload, true, {}, false, "BASE");
 
-      await toast.promise(
-        apiCall,
-        {
-          pending: "Sending invite...",
-          success: "Invite sent successfully!",
-          error: "Failed to send invite. Please try again.",
-        },
-        getToastOptions()
-      );
+        if (status === 409) {
+          toast.error("Invite already exists for this user.", getToastOptions({ autoClose: 3000 }));
+          return;
+        }
 
-      const { response, error } = await apiCall;
+        if (inviteResponseError) {
+          throw new Error(inviteResponseError.message || "Failed to send invite");
+        }
 
-      if (error) {
-        throw new Error(error.message || "Failed to send invite");
+        toast.success("Invite sent successfully!", getToastOptions({ autoClose: 3000 }));
+        setName(`${data.firstName} ${data.lastName}`);
+        setInviteSent(true);
+        onRefetch();
+        onClose();
+      } catch (error) {
+        console.error("Error sending invite:", error);
+        toast.error(
+          (error instanceof Error ? error.message : "Failed to send invite. Please try again."),
+          getToastOptions({ autoClose: 3000 })
+        );
+      } finally {
+        setIsSubmitting(false);
       }
-
-      setName(`${data.firstName} ${data.lastName}`);
-      setInviteSent(true);
-      onRefetch();
-      onClose();
     } catch (error) {
       console.error("Error sending invite:", error);
     } finally {
