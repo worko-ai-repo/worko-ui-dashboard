@@ -29,7 +29,7 @@ const InterviewCompleted = () => {
         /> */}
         {!isProcessing && interviewId && (
           <InterviewCompletionFeedback interviewId={interviewId} onComplete={() =>
-            nav("/candidate/profile")
+            window.location.href = `/${import.meta.env.APP_PROXY_DASH}/candidate/profile`
           } />
           // <TranscriptHistory transcripts={transcriptHistory} answerVideos={answerVideos} />
         )}

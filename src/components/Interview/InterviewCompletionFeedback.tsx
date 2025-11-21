@@ -66,36 +66,49 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
 
     setIsSubmitting(true);
 
-    try {
-      const { response, error } = await interviewServiceObj.completeInterview(interviewId, {
-        candidateEmail: userDetails.email,
-        status: "COMPLETED",
-        userFeedback: {
-          rating,
-          comments: comments.trim() || undefined,
-        },
-      });
+    let attempts = 0;
+    const maxAttempts = 3;
 
-      if (error) {
-        toast.error(error, getToastOptions({ autoClose: 4000 }));
-        setIsSubmitting(false);
-        return;
-      }
+    while (attempts < maxAttempts) {
+      try {
+        const { response, error } = await interviewServiceObj.completeInterview(interviewId, {
+          candidateEmail: userDetails.email,
+          status: "COMPLETED",
+          userFeedback: {
+            rating,
+            comments: comments.trim() || undefined,
+          },
+        });
 
-      if (response) {
-        setIsSubmitted(true);
-        toast.success("Thank you for your feedback!", getToastOptions({ autoClose: 4000 }));
-        setTimeout(() => {
-          onComplete?.();
-        }, 2000);
+        if (error) {
+          attempts++;
+          if (attempts >= maxAttempts) {
+            toast.error(error, getToastOptions({ autoClose: 4000 }));
+            setIsSubmitting(false);
+            return;
+          }
+          // Do not show error toast on every attempt
+        } else if (response) {
+          setIsSubmitted(true);
+          toast.success("Thank you for your feedback!", getToastOptions({ autoClose: 4000 }));
+          setTimeout(() => {
+            onComplete?.();
+          }, 2000);
+          return;
+        }
+      } catch (error) {
+        attempts++;
+        if (attempts >= maxAttempts) {
+          console.error("Error submitting feedback:", error);
+          toast.error(
+            "An unexpected error occurred. Please try again.",
+            getToastOptions({ autoClose: 4000 })
+          );
+          setIsSubmitting(false);
+          return;
+        }
+        // Do not show error toast on every attempt
       }
-    } catch (error) {
-      console.error("Error submitting feedback:", error);
-      toast.error(
-        "An unexpected error occurred. Please try again.",
-        getToastOptions({ autoClose: 4000 })
-      );
-      setIsSubmitting(false);
     }
   };
 

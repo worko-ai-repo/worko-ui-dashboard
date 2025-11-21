@@ -20,14 +20,18 @@ const InterviewActive = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const navigate = useNavigate();
   const { userDetails } = useAppContext();
+  const skipBeforeUnloadRef = useRef(false);
 
   const [showTabSwitchWarning, setShowTabSwitchWarning] = useState(false);
   const [showExitConfirmation, setShowExitConfirmation] = useState(false);
   const [isTerminating, setIsTerminating] = useState(false);
   const [isCameraReady, setIsCameraReady] = useState(false);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [faceNonCompliantTimer, setFaceNonCompliantTimer] = useState(30);
+  const [showFacePause, setShowFacePause] = useState(false);
   const hasTerminatedRef = useRef(false);
   const tabSwitchDetectedRef = useRef(false);
+  const faceTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const {
     isRecording,
@@ -96,7 +100,7 @@ const InterviewActive = () => {
   // Warn user before closing/refreshing page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      if (!hasTerminatedRef.current) {
+      if (!hasTerminatedRef.current && !skipBeforeUnloadRef.current) {
         e.preventDefault();
         e.returnValue = "Interview in progress. Are you sure you want to leave?";
       }
@@ -108,6 +112,51 @@ const InterviewActive = () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
     };
   }, []);
+
+  // Face compliance timer effect
+  useEffect(() => {
+    if (!isFaceCompliant) {
+      if (!showFacePause) {
+        if (!faceTimerRef.current) {
+          setFaceNonCompliantTimer(30);
+          faceTimerRef.current = setInterval(() => {
+            setFaceNonCompliantTimer((prev) => {
+              if (prev <= 1) {
+                clearInterval(faceTimerRef.current!);
+                faceTimerRef.current = null;
+                setShowFacePause(true);
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
+        }
+      }
+    } else {
+      if (faceTimerRef.current) {
+        clearInterval(faceTimerRef.current);
+        faceTimerRef.current = null;
+      }
+      setFaceNonCompliantTimer(30);
+      setShowFacePause(false);
+    }
+    return () => {
+      if (faceTimerRef.current) {
+        clearInterval(faceTimerRef.current);
+        faceTimerRef.current = null;
+      }
+    };
+  }, [isFaceCompliant]);
+
+  // Redirect when timer hits 0 and showFacePause is true
+  useEffect(() => {
+    if (showFacePause && faceNonCompliantTimer === 0) {
+      skipBeforeUnloadRef.current = true;
+      setTimeout(() => {
+        window.location.href = `/${import.meta.env.APP_PROXY_DASH}/candidate/profile`;
+      }, 1500);
+    }
+  }, [showFacePause, faceNonCompliantTimer]);
 
   // API call function to terminate interview
   const terminateInterviewAPI = async () => {
@@ -260,7 +309,7 @@ const InterviewActive = () => {
             disabled={isSubmittingRef.current || !isFaceCompliant}
           />
         </div>
-        {(!isFaceCompliant || faceWarning || activeFaceError) && (
+        {(!isFaceCompliant || faceWarning || activeFaceError) && !showFacePause && (
           <div className="flex items-start gap-3 p-4 border rounded-2xl bg-red-50 border-red-200 text-left">
             <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" />
             <div>
@@ -275,7 +324,18 @@ const InterviewActive = () => {
                 Look straight at the camera and avoid looking away or moving outside the frame. Your
                 face must remain visible to continue.
               </p>
+              {!isFaceCompliant && (
+                <span className="block text-xs text-red-700 mt-2">Interview will be paused in {faceNonCompliantTimer}s if your face is not centered.</span>
+              )}
             </div>
+          </div>
+        )}
+        {showFacePause && (
+          <div className="flex items-center justify-center p-6 border rounded-2xl bg-red-100 border-red-300 text-center flex-col">
+            <AlertTriangle className="w-8 h-8 text-red-600 mb-2" />
+            <p className="text-lg font-bold text-red-700 mb-2">Interview Paused</p>
+            <p className="text-sm text-red-700 mb-2">Your face was not centered for 30 seconds. You have to try again.</p>
+            <p className="text-xs text-red-600">Redirecting to your profile...</p>
           </div>
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 w-full gap-6 mb-4">

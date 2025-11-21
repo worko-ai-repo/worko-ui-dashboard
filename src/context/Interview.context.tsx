@@ -316,9 +316,7 @@ export const InterviewProvider = ({ children }: InterviewProviderProps) => {
     stopListening();
     setIsTranscribing(false);
 
-    const finalTranscript =
-      transcript.trim() ||
-      `Candidate's answer to: "${currentQuestion}" - This is a simulated transcription of the candidate's verbal response.`;
+    const finalTranscript = transcript.trim() || `Candidate skipped the question`;
 
     setTranscription(finalTranscript);
 

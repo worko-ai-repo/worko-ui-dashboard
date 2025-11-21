@@ -84,7 +84,7 @@ const InterviewIdle = () => {
       currentInterview?.status === "IN_PROGRESS" ||
       interviewDataFromState?.status === "PENDING");
 
-  const allPermissionsGranted = permissions.camera && permissions.microphone && permissions.screen;
+  const allPermissionsGranted = permissions.camera && permissions.microphone;
   const canProceed = allPermissionsGranted && micTestComplete && isFaceReady;
 
   // Handle interview initiation or loading from state
@@ -197,7 +197,7 @@ const InterviewIdle = () => {
     setPermissionError(null);
 
     try {
-      // Request camera and microphone first
+      // Request camera and microphone only
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: true,
         audio: true,
@@ -209,60 +209,27 @@ const InterviewIdle = () => {
         microphone: true,
       }));
 
-      // Request screen sharing immediately with entire screen enforcement
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({
-        video: {
-          displaySurface: "monitor", // Enforce full screen sharing
-        },
-        audio: false,
-      });
-
-      // Check if user selected entire screen (not window or tab)
-      const videoTrack = screenStream.getVideoTracks()[0];
-      const settings = videoTrack.getSettings();
-
-      if (settings.displaySurface !== "monitor") {
-        // Stop the stream if not entire screen
-        screenStream.getTracks().forEach((track) => track.stop());
-        mediaStream.getTracks().forEach((track) => track.stop());
-        throw new Error(
-          "Please select 'Entire Screen' for security purposes. Window or tab sharing is not allowed."
-        );
-      }
-
-      setPermissions((prev) => ({
-        ...prev,
-        screen: true,
-      }));
-
-      // Combine all streams (camera, mic, and screen)
-      const combinedStream = new MediaStream([
-        ...mediaStream.getVideoTracks(),
-        ...mediaStream.getAudioTracks(),
-        ...screenStream.getVideoTracks(),
-      ]);
-
-      setTestStream(combinedStream);
-      setInterviewStream(combinedStream);
+      setTestStream(mediaStream);
+      setInterviewStream(mediaStream);
       setIsFaceStreamActive(true);
 
       // Also pass to interview context if interview is already loaded
       if (currentInterview) {
         console.log("Updating existing interview in context with stream");
-        loadExistingInterview(currentInterview, combinedStream, interviewIdParam, interviewStage);
+        loadExistingInterview(currentInterview, mediaStream, interviewIdParam, interviewStage);
       }
     } catch (err) {
       const errorMsg =
         err instanceof Error
           ? err.message
-          : "Camera, microphone, and screen sharing access are required. Please allow access.";
+          : "Camera and microphone access are required. Please allow access.";
       setPermissionError(errorMsg);
 
       // Reset permissions on error
       setPermissions({
         camera: false,
         microphone: false,
-        screen: false,
+        screen: false, // Removed screen sharing
       });
       setInterviewStream(null);
       setIsFaceStreamActive(false);
@@ -344,7 +311,6 @@ const InterviewIdle = () => {
       setIsStartingInterview(false);
     }
   };
-
 
   return (
     <div className="min-h-screen bg-gradient-to-b bg-white">
@@ -463,38 +429,6 @@ const InterviewIdle = () => {
                             <p className="text-xs text-gray-500">To record your audio responses</p>
                           </div>
                         </div>
-
-                        {/* Screen Sharing Permission */}
-                        <div className="flex items-center px-3 gap-3 py-1 bg-white rounded-lg border border-gray-200">
-                          <div
-                            className={`flex-shrink-0 p-1 w-6 h-6 rounded-full flex items-center justify-center ${
-                              permissions.screen ? "bg-green-100" : "bg-gray-100"
-                            }`}>
-                            {permissions.screen ? (
-                              <Check className="w-3 h-3 text-green-600" />
-                            ) : (
-                              <Monitor className="w-3 h-3 text-gray-400" />
-                            )}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-semibold text-gray-800 text-sm">Screen Sharing</p>
-                            <p className="text-xs text-gray-500">
-                              You must share your entire screen (security requirement)
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Info about screen sharing requirement */}
-                      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
-                        <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                        <div className="text-left">
-                          <p className="text-sm text-blue-800">
-                            <span className="font-semibold">Important:</span> When prompted for
-                            screen sharing, please select "Entire Screen" (not a window or tab) for
-                            security purposes.
-                          </p>
-                        </div>
                       </div>
 
                       {permissionError && (
@@ -510,7 +444,7 @@ const InterviewIdle = () => {
                         className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-sm sm:text-base">
                         {isRequestingPermissions
                           ? "Requesting Permissions..."
-                          : "Grant All Permissions"}
+                          : "Grant Permissions"}
                       </Button>
                     </CardContent>
                   </Card>
