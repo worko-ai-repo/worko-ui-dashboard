@@ -69,6 +69,7 @@ const MultiSegmentVideoPlayer = forwardRef<
   const [videoSegments, setVideoSegments] = useState<VideoSegment[]>([]);
   const [isFetchingVideos, setIsFetchingVideos] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -469,6 +470,15 @@ const MultiSegmentVideoPlayer = forwardRef<
     }
   };
 
+  // Fullscreen change effect
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
+
   const handleMouseMove = () => {
     setShowControls(true);
     if (controlsTimeoutRef.current) {
@@ -551,8 +561,12 @@ const MultiSegmentVideoPlayer = forwardRef<
       {/* Video Element */}
       <video
         ref={videoRef}
-        crossOrigin="anonymous" // Add this line
-        className="w-full max-h-[350px] object-contain mx-auto"
+        crossOrigin="anonymous"
+        className={
+          isFullscreen
+            ? "w-screen h-screen object-contain bg-black"
+            : "w-full max-h-[350px] object-contain mx-auto"
+        }
         onTimeUpdate={handleTimeUpdate}
         onEnded={handleVideoEnded}
         onLoadedMetadata={handleTimeUpdate}

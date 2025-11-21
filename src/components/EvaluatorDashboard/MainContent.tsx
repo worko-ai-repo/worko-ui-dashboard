@@ -438,7 +438,7 @@ const MainContent: React.FC<MainContentProps> = ({
                   Video interview data not available.
                 </p>
 
-                <button
+               {/*  <button
                   onClick={async () => {
                     if (!userDetails?.email || !applicationDetails) {
                       toast.error(
@@ -513,7 +513,7 @@ const MainContent: React.FC<MainContentProps> = ({
                   }}
                   className="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105">
                   Request Video Interview
-                </button>
+                </button> */}
               </>
             )}
           </div>

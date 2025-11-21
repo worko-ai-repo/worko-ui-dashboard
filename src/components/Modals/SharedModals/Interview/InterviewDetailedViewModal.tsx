@@ -82,12 +82,12 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
   };
 
   return (
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
-        <h1 className="text-3xl font-bold text-gray-800 mb-6 capitalize">{userName}</h1>
+        <h1 className="text-3xl font-bold text-gray-800 mb-6 mt-5 capitalize">{userName}</h1>
 
         {/* First Row - 70/30 split */}
-        <div className="grid grid-cols-10  gap-6 mb-6">
+        <div className="grid grid-cols-10  gap-6 ">
           {/* Left side - Video player (70%) */}
           <div className="col-span-7 bg-gray-900 rounded-lg overflow-hidden relative h-[350px]">
             <MultiSegmentVideoPlayer

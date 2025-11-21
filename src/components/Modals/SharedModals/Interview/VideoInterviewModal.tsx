@@ -165,13 +165,13 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
 
   const InterviewCard = ({
     interview,
-    isPending = false,
     onInitiateRequest,
   }: {
     interview: InterviewDto;
-    isPending?: boolean;
     onInitiateRequest?: (interview: InterviewDto) => void;
   }) => {
+    // Determine if interview is pending or in progress
+    const isPending = interview.status === "PENDING" || interview.status === "IN_PROGRESS";
     const isExpanded = expandedRequests[interview.id] || false;
     const hasRequests = interview.requestedBy && interview.requestedBy.length > 0;
     const questionsAttempted =
@@ -282,23 +282,26 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
 
             {/* Metrics */}
             {!isPending && (
-              <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-gray-600">
-                {false/* interview.duration  */&& (
+                <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-gray-600">
+                {interview.duration && (
                   <div>
-                    <span className="text-gray-500">Duration:</span>{" "}
-                    <span className="font-medium">
-                      {formatInterviewDuration(interview.duration)}
-                    </span>
+                  <span className="text-gray-500">Duration:</span>{" "}
+                  <span className="font-medium">
+                    {formatInterviewDuration(interview.duration)}
+                  </span>
                   </div>
                 )}
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>
-                    {isPending ? "Created" : "Completed"}:{" "}
-                    {formatInterviewDate(isPending ? interview.createdAt : interview.updatedAt)}
+                  {interview.status
+                    .toLowerCase()
+                    .replace(/_/g, " ")
+                    .replace(/\b\w/g, (char) => char.toUpperCase())}
+                  : {formatInterviewDate(isPending ? interview.createdAt : interview.updatedAt)}
                   </span>
                 </div>
-              </div>
+                </div>
             )}
 
             {/* Footer Info */}
@@ -324,7 +327,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
                   Start Interview
                 </button>
               ) : null
-            ) : !isPending ? (
+            ) : interview.status === "COMPLETED" ? (
               <button
                 onClick={() => handleViewDetails(interview)}
                 className="inline-flex items-center px-4 py-2 border shadow-2xl bg-blue-100 text-blue-700 text-sm font-medium rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors duration-200">
@@ -378,7 +381,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
                     <InterviewCard
                       key={interview.id}
                       interview={interview}
-                      isPending
                       onInitiateRequest={(_interview) => handleRequestedInterviewStart()}
                     />
                   ))}
