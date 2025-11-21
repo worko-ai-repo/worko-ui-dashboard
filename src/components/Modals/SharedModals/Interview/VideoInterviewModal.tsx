@@ -283,14 +283,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
             {/* Metrics */}
             {!isPending && (
                 <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-gray-600">
-                {interview.duration && (
-                  <div>
-                  <span className="text-gray-500">Duration:</span>{" "}
-                  <span className="font-medium">
-                    {formatInterviewDuration(interview.duration)}
-                  </span>
-                  </div>
-                )}
                 <div className="flex items-center gap-1">
                   <Calendar className="w-3 h-3" />
                   <span>
