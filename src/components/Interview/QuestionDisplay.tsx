@@ -10,6 +10,9 @@ interface QuestionDisplayProps {
   onStartListening?: () => void;
 }
 
+// Preferred voice configuration - Primary voice that works best
+const PREFERRED_VOICE_NAME: string = "Google हिन्दी"; // Primary preferred voice
+
 // Helper function to get the best available voice
 const getBestVoice = (): SpeechSynthesisVoice | null => {
   if (!("speechSynthesis" in window)) return null;
@@ -17,9 +20,14 @@ const getBestVoice = (): SpeechSynthesisVoice | null => {
   const voices = window.speechSynthesis.getVoices();
   if (voices.length === 0) return null;
 
-  // Priority 1: Use voice at index 10 (most convincing sound)
-  if (voices.length > 10 && voices[10]) {
-    return voices[10];
+  // Priority 1: Use preferred voice by exact name match (primary voice)
+  if (PREFERRED_VOICE_NAME && PREFERRED_VOICE_NAME.trim() !== "") {
+    const preferredVoice = voices.find(
+      (voice) => voice.name === PREFERRED_VOICE_NAME || voice.voiceURI === PREFERRED_VOICE_NAME
+    );
+    if (preferredVoice) {
+      return preferredVoice;
+    }
   }
 
   // Priority 2: Fallback to female voices (often sound more natural for TTS)

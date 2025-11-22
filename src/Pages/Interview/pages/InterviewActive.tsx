@@ -317,7 +317,7 @@ const InterviewActive = () => {
                 {activeFaceError
                   ? activeFaceError
                   : !isFacePresent
-                  ? "Face not detected. Interview controls are paused."
+                  ? "Eyes are not looking in camera. Interview controls are paused."
                   : faceWarning || "Please keep your face centered in the frame."}
               </p>
               <p className="text-xs text-red-600 mt-1">

@@ -32,7 +32,7 @@ export const SubmitAnswerButton = ({
         ) : (
           <>
             <ChevronDoubleRightIcon className="w-4 h-4 mr-2" />
-            End Response
+            Next Question
           </>
         )}
       </Button>

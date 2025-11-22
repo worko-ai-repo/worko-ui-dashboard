@@ -157,7 +157,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
                   <Info
                   data-tooltip-id="my-tooltip"
                   data-tooltip-content="Click on a timestamp to jump to that question in the video."
-                  className="w-3 h-3 text-blue-400" />
+                  className="inline-block ml-1 w-3 h-3 text-blue-400" />
                 </th>
                 <th className="px-6 py-4 text-center font-semibold text-gray-700 text-sm w-[43%]">
                   Questions
