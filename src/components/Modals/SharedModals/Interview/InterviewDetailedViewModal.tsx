@@ -103,7 +103,7 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
               <div className="flex items-center gap-2 ">
                 {" "}
                 <h2 className="text-xl font-semibold text-gray-700">Overall Score</h2>
-                <Info className="w-4 h-4 text-blue-400" />
+                
               </div>
               <div className="text-6xl font-bold text-gray-800 mb-8">
                 {interviewDetails?.score}%
@@ -154,6 +154,10 @@ const InterviewDetailedViewModal: FC<InterviewDetailedViewModalProps> = ({
               <tr>
                 <th className="px-6 py-4 text-left font-semibold text-gray-700 text-sm w-[13%]">
                   Timestamp
+                  <Info
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content="Click on a timestamp to jump to that question in the video."
+                  className="w-3 h-3 text-blue-400" />
                 </th>
                 <th className="px-6 py-4 text-center font-semibold text-gray-700 text-sm w-[43%]">
                   Questions

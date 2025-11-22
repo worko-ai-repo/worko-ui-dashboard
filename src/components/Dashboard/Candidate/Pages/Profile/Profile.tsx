@@ -244,7 +244,24 @@ const Profile = () => {
       }
     };
 
-    if (buttonState.shouldContinue && buttonState.pendingInterview) {
+    // If pending interview is a corporate request and has no interview history, always use new stage
+    if (
+      buttonState.pendingInterview &&
+      buttonState.pendingInterview.status === "PENDING" &&
+      buttonState.pendingInterview.requestedBy &&
+      buttonState.pendingInterview.requestedBy.length > 0 &&
+      (!buttonState.pendingInterview.interviewHistory || buttonState.pendingInterview.interviewHistory.length === 0)
+    ) {
+      openInterviewWindow(`/interview/new?stage=new`);
+      return;
+    }
+
+    if (
+      buttonState.shouldContinue &&
+      buttonState.pendingInterview &&
+      buttonState.pendingInterview.interviewHistory &&
+      buttonState.pendingInterview.interviewHistory.length > 0
+    ) {
       openInterviewWindow(`/interview/${buttonState.pendingInterview.id}?stage=continue`);
       return;
     }
