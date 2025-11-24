@@ -68,10 +68,14 @@ export default function ApplicantScreeningTable() {
   const { userDetails } = useAppContext();
 
   //{ state: { jobTitle: row?.jobTitle } } get this and set the job title
-  let jobTitle = "";
-  if (location.state && (location.state as any).jobTitle) {
-    jobTitle = (location.state as any).jobTitle;
-  }
+  const locationState = (location.state as { jobTitle?: string; returnUrl?: string } | null) ?? {};
+  const queryJobTitle = new URLSearchParams(location.search).get("jobTitle") ?? "";
+  const jobTitle = locationState.jobTitle ?? queryJobTitle ?? "";
+  const returnUrl = locationState.returnUrl;
+  const isAdminRoute = location.pathname.includes("/admin/");
+  const fallbackReturnUrl = `${
+    isAdminRoute ? "/admin/aBulkCVCheck" : "/corporate/bulk-cv-check"
+  }?tab=screening-list`;
 
   const [FeedbackModalOpen, setFeedbackModalOpen] = useState(false);
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
@@ -132,11 +136,11 @@ export default function ApplicantScreeningTable() {
     }
     return [];
   }, [data]);
-  const { sortedData, onSortChange } = useSortableData(applicantsData, fallbackKeys,    {
-    tableId:"screening-list-view",
-    defaultSort:null,
-    persistInLocalStorage:false,
-    persistInUrl:true
+  const { sortedData, onSortChange } = useSortableData(applicantsData, fallbackKeys, {
+    tableId: "screening-list-view",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
   });
 
   // Keep the reset useEffect as it's safe
@@ -169,22 +173,24 @@ export default function ApplicantScreeningTable() {
       key: "name",
       label: "Applicants name",
       sortable: true,
-      contentWidth:"max-w-none",
+      contentWidth: "max-w-none",
       render: (row: (typeof applicantsData)[0]) => (
         <div className="flex w-full  mx-auto justify-center   items-center gap-3">
           <div className="w-10 h-10 mx-auto bg-gray-200  rounded-lg flex items-center justify-center">
             <span className="text-sm font-medium text-gray-600">
               {row?.name
-          .split(" ")
-          .map((n: string) => n[0])
-          .slice(0, 3) // limit to max 3 initials
-          .join("")}
+                .split(" ")
+                .map((n: string) => n[0])
+                .slice(0, 3) // limit to max 3 initials
+                .join("")}
             </span>
           </div>
-          <span 
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={row?.name}
-          className="font-semibold text-gray-800  flex-1 text-left truncate">{row?.name}</span>
+          <span
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={row?.name}
+            className="font-semibold text-gray-800  flex-1 text-left truncate">
+            {row?.name}
+          </span>
         </div>
       ),
     },
@@ -193,9 +199,11 @@ export default function ApplicantScreeningTable() {
       label: "Company",
       render: (row: (typeof applicantsData)[0]) => (
         <span
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={row?.company}
-        className="text-gray-700">{row?.company}</span>
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.company}
+          className="text-gray-700">
+          {row?.company}
+        </span>
       ),
     },
     {
@@ -203,9 +211,11 @@ export default function ApplicantScreeningTable() {
       label: "Designation",
       render: (row: (typeof applicantsData)[0]) => (
         <span
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={row?.designation}
-        className="text-gray-700">{row?.designation}</span>
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.designation}
+          className="text-gray-700">
+          {row?.designation}
+        </span>
       ),
     },
     {
@@ -219,7 +229,12 @@ export default function ApplicantScreeningTable() {
       key: "location",
       label: "Location",
       render: (row: (typeof applicantsData)[0]) => (
-        <span className="text-gray-700">{row?.location}</span>
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row?.location}
+          className="text-gray-700">
+          {row?.location}
+        </span>
       ),
     },
     {
@@ -326,7 +341,9 @@ export default function ApplicantScreeningTable() {
       <div className="my-6">
         <div className="flex  flex-wrap items-center gap-4 mb-6">
           <button
-            onClick={() => nav(-1)}
+            onClick={() => {
+              nav(returnUrl || fallbackReturnUrl);
+            }}
             className="w-16 h-16 bg-white rounded-full shadow-md flex items-center justify-center hover:shadow-lg transition-shadow">
             <ArrowLeft className="w-6 h-6 text-gray-600" />
           </button>
