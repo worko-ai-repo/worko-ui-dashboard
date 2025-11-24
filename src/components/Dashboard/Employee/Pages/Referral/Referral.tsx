@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReferralsTable from "./modals/ReferralsTable";
-import { ReferralApiResponse, PaginationInfo, ReferralFilters } from "./modals/ReferralTypes";
+import { ReferralApiResponse, PaginationInfo, ReferralFilters, ReferralDetailsDto } from "./modals/ReferralTypes";
 import { debounce } from "lodash";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -10,6 +10,30 @@ import { toast } from "react-toastify";
 import VerifyCompanymodal from "./modals/VerifyCompanymodal";
 import { ChevronDown } from "lucide-react";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
+import { useAppContext } from "@Context/App.context";
+
+interface CountsProps{
+  PK: string,
+  SK: string,
+  candidateReferralCounts: {
+    total: number,
+    accepted: number,
+    awaiting: number,
+    rejected:number,
+    done:number,
+  },
+  employeeReferralCounts: {
+    total: number,
+    accepted: number,
+    awaiting: number,
+    rejected: number,
+    done:number,
+  }
+}
+interface Stat {
+  label:string;
+  value:number|null;
+}
 
 const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -47,7 +71,16 @@ const Referrals = () => {
     1: "",
   });
   const [statusFilter, setStatusFilter] = useState<string>("");
+  const [stats,setStats] = useState<Stat[]>([
+    // { label: "Total Applicants", value: null },
+    { label: "Accepted", value: null },
+    // { label: "Pending", value: null },
+    { label: "Done", value: null },
+    { label: "Rejected", value: null },
+  ])
+
   const { user, isLoadingUser } = useDashboardContext();
+  const {userDetails} = useAppContext();
 
   const StatusFilterDropdown = [
   { label: "All", onClick: () => { setStatusFilter("")}},
@@ -186,12 +219,41 @@ const fetchReferrals = useCallback(
   //   window.location.href = `${window.location.origin}${import.meta.env.APP_PROXY_BASE}/referrals`;
   // };
 
+  //Fetch Counts
+  const fetchCounts = async()=>{
+  if(!userDetails?.email) return
+    const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");
+    // console.log(response)
+    setStats([
+      // { label: 'Total Applicants', value: response?.employeeReferralCounts?.total ?? null },
+      { label: 'Accepted', value: response?.employeeReferralCounts?.accepted ?? null },
+      // { label: 'Awaiting', value: response?.employeeReferralCounts?.awaiting ?? null },
+      { label: 'Done', value: response?.employeeReferralCounts?.done ?? null },
+      { label: 'Rejected', value: response?.employeeReferralCounts?.rejected ?? null },
+    ]);
+  }
+
+    const handleLocalUpdate = useCallback((referralId: string, updatedData: Partial<ReferralDetailsDto>) => {
+      setData((prevData:any) => {
+        if (!prevData) return prevData;
+        
+        return {
+          ...prevData,
+          data: prevData.data.map((referral:any) => 
+            referral.id === referralId 
+              ? { ...referral, ...updatedData }
+              : referral
+          )
+        };
+      });
+    }, []);
   useEffect(() => {
     if (user?.email) {
       // console.log("user",user)
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
+      fetchCounts()
       fetchReferrals(1, pageSize, "");
     }
   }, [user, fetchReferrals, pageSize]);
@@ -221,17 +283,25 @@ const fetchReferrals = useCallback(
       {/* stats cards */}
       <div className="flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between">
         <div className="flex-1 flex flex-col gap-4">
-          {/* <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
-            {statsItems.map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
-              >
-                <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{stat.value}</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
+            {stats.map((stat) => (
+              // <div
+              //   key={stat.label}
+              //   className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
+              // >
+              //   <p className="text-sm text-[#64748B]">{stat.label}</p>
+              //   <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+              // </div>
+              <div className="flex flex-wrap gap-4 mt-4 mb-6">
+                  <div
+                    key={stat.label}
+                    className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
+                    <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
+                    <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+                  </div>
               </div>
             ))}
-          </div> */}
+          </div>
             
           {/* search bar */}
             <div className="flex flex-col sm:flex-row justify-center gap-2">
@@ -319,6 +389,7 @@ const fetchReferrals = useCallback(
             const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || "" : "";
             fetchReferrals(currentPage, pageSize, lastKey);
           }}
+          onLocalUpdate={handleLocalUpdate}
         />
       )}
     </div>

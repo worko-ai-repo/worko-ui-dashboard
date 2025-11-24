@@ -1161,29 +1161,35 @@ const Profile = () => {
                         />
                       )}
 
-                      {/* Avatar Image */}
-                      <img
-                        className="w-full h-full object-cover rounded-full border-2"
-                        alt="Profile"
-                        src={
-                          detailsData[0]?.profileImageAwsS3SignedUrl ||
-                          "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png"
-                        }
-                      />
-                    </div>
-                    {editMode.profilePic && (
-                      <div className="mt-4 w-full">
-                        <UploadImageButton
-                          detailsData={detailsData[0]}
-                          onUploadSuccess={(url) => {
-                            // console.log("New image uploaded:", url);
-                            fetchData();
-                            setEditMode("profilePic", false);
-                          }}
-                        />
-                      </div>
-                    )}
-                  </div>
+                {/* Avatar Image */}
+                <img
+                  className="w-full h-full object-cover rounded-full border-2"
+                  alt="Profile"
+                  src={
+                    detailsData[0]?.profileImageAwsS3SignedUrl ||
+                    "https://cdn.pixabay.com/photo/2017/02/23/13/05/avatar-2092113_1280.png"
+                  }
+                />
+              </div>
+              {editMode.profilePic &&
+              <div className="mt-4 w-full">
+                <UploadImageButton 
+                detailsData={detailsData[0]}
+                onUploadSuccess={(signedUrl) => {
+                  setDetailsData((prev:any) => {
+                    const updated = [...prev];
+                    updated[0] = {
+                      ...updated[0],
+                      profileImageAwsS3SignedUrl: signedUrl,
+                    };
+                    return updated;
+                  });
+                  setEditMode('profilePic', false);
+              }}
+                />
+              </div>
+              }
+              </div>
                   {/* Profile Info */}
                   <div className="sm:ml-6 lg:ml-8 space-y-2 flex-1">
                     <div className="flex items-center justify-center sm:justify-start">

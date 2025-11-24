@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ReferralsTable from "./modals/ReferralsTable";
-import { ReferralApiResponse, PaginationInfo, ReferralFilters } from "./modals/ReferralTypes";
+// import { ReferralApiResponse, PaginationInfo, ReferralFilters } from "./modals/ReferralTypes";
+import { ReferralApiResponse, PaginationInfo, ReferralFilters, ReferralDetailsDto } from "./modals/ReferralTypes";
 import { debounce } from "lodash";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -8,7 +9,29 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { ChevronDown } from "lucide-react";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
+import { useAppContext } from "@Context/App.context";
 
+interface CountsProps{
+  PK: string,
+  SK: string,
+  candidateReferralCounts: {
+    total: number,
+    accepted: number,
+    awaiting: number,
+    rejected:number,
+    done:number,
+  },
+  employeeReferralCounts: {
+    total: number,
+    accepted: number,
+    awaiting: number,
+    rejected: number,
+  }
+}
+interface Stat {
+  label:string;
+  value:number|null;
+}
 const initialPaginationState: PaginationInfo = {
   count: 0,
   pageSize: 25,
@@ -17,13 +40,6 @@ const initialPaginationState: PaginationInfo = {
   queriedCount: 0,
   lastKey: "",
 };
-
-const statsItems = [
-  { label: "Total Referrals", value: 52 },
-  { label: "Accepted", value: 30 },
-  { label: "Pending", value: 15 },
-  { label: "Rejected", value: 7 },
-];
 
 const Referrals = () => {
   const [searchBarText, setSearchBarText] = useState("");
@@ -34,7 +50,13 @@ const Referrals = () => {
   const [filters, setFilters] = useState<ReferralFilters>({});
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
   const [statusFilter, setStatusFilter] = useState<string>("");
-
+  const [stats,setStats] = useState<Stat[]>([
+  { label: "Total Referrals", value: null },
+  { label: "Accepted", value: null },
+  { label: "Pending", value: null },
+  { label: "Done", value: null },
+  { label: "Rejected", value: null },
+])
   const StatusFilterDropdown = [
   { label: "All", onClick: () => { setStatusFilter("")}},
   { label: "Accepted", onClick: () => { setStatusFilter("ACCEPTED")}},
@@ -50,6 +72,7 @@ const Referrals = () => {
   });
 
   const { user, isLoadingUser } = useDashboardContext();
+  const {userDetails} = useAppContext();
 
   const APP_API_URI = import.meta.env.APP_API_URI
 
@@ -140,11 +163,39 @@ const fetchReferrals = useCallback(
     window.location.href = `${window.location.origin}${"/"}referrals`;
   };
 
+  const handleLocalUpdate = useCallback((referralId: string, updatedData: Partial<ReferralDetailsDto>) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+      
+      return {
+        ...prevData,
+        data: prevData.data.map(referral => 
+          referral.id === referralId 
+            ? { ...referral, ...updatedData }
+            : referral
+        )
+      };
+    });
+  }, []);
+
+  const fetchCounts = async()=>{
+    if(!userDetails?.email) return
+      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");
+      // console.log(response)
+      setStats([
+        { label: 'Total Referrals', value: response?.candidateReferralCounts?.total ?? null },
+        { label: 'Accepted', value: response?.candidateReferralCounts?.accepted ?? null },
+        { label: 'Awaiting', value: response?.candidateReferralCounts?.awaiting ?? null },
+        { label: "Done", value: response?.candidateReferralCounts?.done ?? null },
+        { label: 'Rejected', value: response?.candidateReferralCounts?.rejected ?? null },
+      ]);
+  }
   useEffect(() => {
     if (user?.email) {
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
+      fetchCounts()
       fetchReferrals(1, pageSize, "");
     }
   }, [user, fetchReferrals, pageSize]);
@@ -181,17 +232,25 @@ const fetchReferrals = useCallback(
   }
 
   return (
-    <div className="w-full space-y-[35px] px-0 mt-5">
+    <div className="w-full space-y-[16px] px-0 mt-5">
       <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
           <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
-            {statsItems.map((stat) => (
-              <div
-                key={stat.label}
-                className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
-              >
-                <p className="text-sm text-[#64748B]">{stat.label}</p>
-                <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
+            {stats.map((stat) => (
+              // <div
+              //   key={stat.label}
+              //   className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
+              // >
+              //   <p className="text-sm text-[#64748B]">{stat.label}</p>
+              //   <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+              // </div>
+              <div className="flex flex-wrap gap-4 mt-4 mb-6">
+                  <div
+                    key={stat.label}
+                    className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
+                    <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
+                    <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+                  </div>
               </div>
             ))}
           </div>
@@ -292,6 +351,7 @@ const fetchReferrals = useCallback(
             const lastKey = currentPage > 1 ? paginationKeysRef.current[currentPage] || "" : "";
             fetchReferrals(currentPage, pageSize, lastKey);
           }}
+          onLocalUpdate={handleLocalUpdate}
         />
       )}
     </div>

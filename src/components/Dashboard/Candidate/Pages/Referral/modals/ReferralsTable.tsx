@@ -1,5 +1,5 @@
 import React, { memo, useMemo, useState } from "react";
-import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo } from "./ReferralTypes";
+import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo, ReferralStatus } from "./ReferralTypes";
 import { DynamicTable } from "@Components/Shared/DynamicTable";
 import { chat } from "@AssetsFolder/assets";
 import WithdrawRefferralModal from "./WithdrawRefferralModal";
@@ -22,6 +22,7 @@ interface ReferralsTableProps {
   onPageChange: (page: number) => void;
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
+  onLocalUpdate: (referralId: string, updatedData: Partial<ReferralDetailsDto>) => void;
 }
 interface StepperProps {
   status: string;
@@ -35,6 +36,7 @@ const ReferralsTable = memo(
     onPageChange,
     onPageSizeChange,
     onRefresh,
+    onLocalUpdate,
   }: ReferralsTableProps) => {
     const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
     const [sortField, setSortField] = useState<string>("");
@@ -79,7 +81,10 @@ const ReferralsTable = memo(
           setSelectedRow(null);
           setWithdrawComments("");
           setWithdrawReason("");
-          onRefresh();
+          onLocalUpdate(id || "" , { 
+            status: "WITHDRAWN" as ReferralStatus
+          });
+          // onRefresh();
         } else if (error) {
           toast.error("Something went wrong please try again", getToastOptions({}));
         }
@@ -408,7 +413,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowRaiseIssueModal(false)}
               isOpen={showRaiseIssueModal}
               referralData={referralData}
-              onRefresh={onRefresh}
+              // onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
@@ -417,7 +423,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowCompletedModal(false)}
               isOpen={showCompletedModal}
               referralData={referralData}
-              onRefresh={onRefresh}
+              onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
@@ -426,7 +433,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onClose={() => setShowProvideFeedback(false)}
               isOpen={showProvideFeedback}
               referralData={referralData}
-              onRefresh={onRefresh}
+              // onLocalUpdate={onLocalUpdate}
+              // onRefresh={onRefresh}
               isCandidate={true}
             />
           )}
@@ -444,6 +452,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               onSubmit={handleWithdrawReferral}
               onClose={() => setShowWithdrawModal(false)}
               isOpen={showWithdrawModal}
+              onLocalUpdate={onLocalUpdate}
             />
           )}
           {/* {showChatWindow && ( */}

@@ -5,17 +5,26 @@ import EarningsDropdown from "./EarningsDropdown";
 import ReferralsTable from "./ReferAndEarnTable";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useDashboardContext } from "@Context/Dashboard.context";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, X } from "lucide-react";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
-
-const stats = [
-    { label: 'Total Applicants', value: 106 },
-    { label: 'Rejected', value: 90 },
-    { label: 'Reviewed', value: 20 },
-    { label: 'New Applicants', value: 10 },
-    { label: 'Hired', value: 90 },
-  ];
+import { useAppContext } from "@Context/App.context";
   
+interface CountsProps{
+  PK:string;
+  SK:string;
+  referAndEarnJobApplicationCounts:{
+    total:number | null;
+    pending:number;
+    applied:number;
+    hired:number;
+    rejected:number;
+  }
+}
+interface Stat {
+  label: string;
+  value: number | null;
+}
+
   const handleRedirect = () => {
     const baseUrl = window.location.origin;
     window.location.href = `${baseUrl}/jobs?dashboard=USER`;
@@ -43,6 +52,13 @@ const stats = [
     });
     const [currentPage, setCurrentPage] = useState(1);
     const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
+    const [stats, setStats] = useState<Stat[]>([
+      { label: 'Total Applicants', value: null },
+      { label: 'Rejected', value: null },
+      { label: 'Pending', value: null },
+      { label: 'New Applicants', value: null },
+      { label: 'Hired', value: null },
+    ]);
 
     const StatusFilterDropdown = [
     { label: "All", onClick: () => { setStatusFilter("")}},
@@ -59,9 +75,8 @@ const stats = [
       return referrals.filter((item) => item.status === statusFilter);
     }, [referrals, statusFilter]);
 
-
-
     const { user } = useDashboardContext();
+    const {userDetails} = useAppContext();
 
   const fetchReferrals = async (page = 1, pageSize = 25) => {
     if (!user?.email) {
@@ -132,8 +147,22 @@ const stats = [
     }
   };
 
+  const fetchCounts = async()=>{
+    if(!userDetails?.email) return
+      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFER_AND_EARN/user`,true,{},false,"JOB")
+      // console.log(response)
+        setStats([
+        { label: 'Total Applicants', value: response?.referAndEarnJobApplicationCounts?.total ?? null },
+        { label: 'Rejected', value: response?.referAndEarnJobApplicationCounts?.rejected ?? null },
+        { label: 'Pending', value: response?.referAndEarnJobApplicationCounts?.pending ?? null },
+        { label: 'New Applicants', value: response?.referAndEarnJobApplicationCounts?.applied ?? null },
+        { label: 'Hired', value: response?.referAndEarnJobApplicationCounts?.hired ?? null },
+      ]);
+  }
+
   useEffect(() => {
     fetchReferrals(currentPage, pagination.pageSize);
+    fetchCounts()
   }, [user?.email, currentPage, pagination.pageSize, searchBarText]);
 
   const handlePageChange = (page: number) => setCurrentPage(page);
@@ -154,18 +183,26 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
 };
 
     return (
-      <div className="w-full space-y-[35px] px-0 mt-5">
-        <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
+      <div className="w-full space-y-[16px] px-0 mt-5">
+        <div className='flex flex-col sm:flex-row gap-4 sm:gap-14 justify-between'>
           <div className=" flex-1 flex flex-col gap-4">
             <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
               {stats.map((stat) => (
-                <div
-                  key={stat.label}
-                  className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]"
-                >
-                  <p className="text-sm text-[#64748B]">{stat.label}</p>
-                  <p className="text-2xl font-extrabold text-gray-900">{"-"}</p>
-                </div>
+                // <div
+                //   key={stat.label}
+                //   className="bg-white rounded-xl px-7 py-4 text-center min-w-[130px]"
+                // >
+                //   <p className="text-sm text-[#64748B]">{stat.label}</p>
+                //   <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+                // </div>
+                <div className="flex flex-wrap gap-4 mt-4 mb-6">
+                  <div
+                    key={stat.label}
+                    className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
+                    <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
+                    <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
+                  </div>
+              </div>
               ))}
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-2">
@@ -175,8 +212,18 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
                 placeholder="Search by name or job"
                 value={searchBarTextTemp}
                 onChange={(e) => setsearchBarTextTemp(e.target.value)}
-                className="px-4 py-3 w-full outline-none bg-[#FAFAFA] text-sm"
+                className="px-4 py-3 w-full outline-none focus:outline-none focus:ring-0 bg-[#FAFAFA] text-sm"
               />
+              {searchBarTextTemp && (
+                <button
+                    onClick={() => {
+                      setsearchBarTextTemp("")
+                      setsearchBarText("")
+                    }}
+                  className="scale-50 active:scale-[45%] right-[5%] h-full w-fit rounded-full">
+                  <X className="p-1 text-white bg-blue-600 rounded-full w-10 h-auto relative" />
+                </button>
+              )}
               <button
                 onClick={()=>setsearchBarText(searchBarTextTemp)}
                 className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none">

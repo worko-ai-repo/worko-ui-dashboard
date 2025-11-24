@@ -30,6 +30,9 @@ interface JobsTableProps {
   onPageSizeChange: (pageSize: number) => void;
   onRefresh: () => void;
   hasNextPage?: boolean; // Add this prop
+  onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
+  handleFollowUpRequestUpdate: (jobId: string, newFollowUps: { actionDate: string }[]) => void;
+  fetchCounts:() => void;
 }
 
 interface StepperProps {
@@ -43,7 +46,10 @@ const JobsTable = memo(({
   onPageChange,
   onPageSizeChange,
   onRefresh,
-  hasNextPage // Add this to destructured props
+  hasNextPage, // Add this to destructured props
+  onLocalUpdate,
+  handleFollowUpRequestUpdate,
+  fetchCounts,
 }: JobsTableProps) => {
   const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const [feedbackContent, setFeedbackContent] = useState<string>("");
@@ -147,6 +153,9 @@ const processedJobs = data?.data?.map((job) => ({
         const { response, error } = await httpServiceObj.patch(url, payload, true, {}, false,"JOB");
 
       if (!error) {
+        handleFollowUpRequestUpdate(id, [
+          { actionDate: new Date().toISOString() },
+        ]);
         setModalMessage({
           message: "Your request has been successfully sent to the HR team. Please check your email for feedback or a reply.",
           isError: false,
@@ -169,9 +178,9 @@ const processedJobs = data?.data?.map((job) => ({
   };
   const closeModal = () => {
     setModalMessage(prev => ({ ...prev, open: false }));
-    if (!modalMessage.isError && onRefresh) {
-      onRefresh(); // Call parent's refresh function
-    }
+    // if (!modalMessage.isError && onRefresh) {
+    //   onRefresh(); // Call parent's refresh function
+    // }
   };
 
 
@@ -372,7 +381,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
 });
 
 
-  const ActionButton = memo(({ type, job }: { type: string, job: JobApplicationDetailsDto }) => {
+  const ActionButton = memo(({ type, job, fetchCounts }: { type: string, job: JobApplicationDetailsDto, fetchCounts: () => void}) => {
     // console.log(job)
     const isProcessing = processingJobId === job.id;
     
@@ -420,7 +429,12 @@ const StatusBadge = memo(({ status }: { status: string }) => {
     return (
       <button 
         className={`w-36 rounded-xl ${config.color} h-11 flex items-center justify-center py-2 px-4 gap-0.5 text-white ${isProcessing ? 'opacity-75 cursor-not-allowed' : ''}`}
-        onClick={() => !isProcessing && handleActionClick(type, job)}
+        onClick={() => {
+          if (!isProcessing) {
+            handleActionClick(type, job);
+            // fetchCounts();
+          }
+        }}
         disabled={isProcessing}
       >
         {isProcessing ? (
@@ -495,7 +509,7 @@ const StatusBadge = memo(({ status }: { status: string }) => {
       sortable: true,
       render: (row: JobApplicationDetailsDto) => row.action ? 
         <div className="flex justify-center m-auto w-[150px]">
-        <ActionButton type={row.action} job={row} />
+        <ActionButton type={row.action} job={row} fetchCounts={fetchCounts}/>
         </div> :null
     },
     {
@@ -599,7 +613,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
     const statusTracker = row.statusTracker;
     
-      if (statusTracker?.length > 1 && statusTracker[1].newStatus === "REJECTED") {
+      if (statusTracker?.length > 1 && statusTracker[statusTracker.length-1].newStatus === "REJECTED") {
         return null;
       }
       if (row.statusTracker && row.statusTracker.length > 0) {
@@ -681,10 +695,12 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
           onSubmit={handleSubmitDocs}
           onSuccess={() => {
             setShowDocumentUploadModal(false);
-            onRefresh();
+            fetchCounts()
+            // onRefresh();
           }}
           userID={user?.sub ?? ""}
           jobId={parsingJobId ?? ""}
+          onLocalUpdate={onLocalUpdate}
         />
 
         {showCheckAcceptModal && currentJobForCheckAccept && (
@@ -693,17 +709,19 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
             job={currentJobForCheckAccept}
             onClose={() => setShowCheckAcceptModal(false)}
             onSuccess={() => {
-              onRefresh();
+              // onRefresh();
               setShowCheckAcceptModal(false);
+              fetchCounts()
             }}
-            onConfirm={async () => {
-              if (!user?.email || !currentJobForCheckAccept) return;
-              const result = await JobService.acceptOffer(currentJobForCheckAccept.id, user.email);
-              if (result.response) {
-                onRefresh();
-              }
-              setShowCheckAcceptModal(false);
-            }}
+            onLocalUpdate={onLocalUpdate}
+            // onConfirm={async () => {
+            //   if (!user?.email || !currentJobForCheckAccept) return;
+            //   const result = await JobService.acceptOffer(currentJobForCheckAccept.id, user.email);
+            //   if (result.response) {
+            //     onRefresh();
+            //   }
+            //   setShowCheckAcceptModal(false);
+            // }}
           />
         )}
 
@@ -713,9 +731,11 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
           isOpen={showJoinedModal}
           onClose={() => setShowJoinedModal(false)}
           onSuccess={() => {
-            onRefresh();
+            // onRefresh();
             setShowJoinedModal(false);
+            fetchCounts()
           }}
+          onLocalUpdate={onLocalUpdate}
           // onSubmit={(data) => {
           //   console.log("Form data:", data);
           //   // call JobService.markAsJoined(job.id, user.email, data)

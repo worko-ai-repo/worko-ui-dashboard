@@ -1,4 +1,4 @@
-import { FunctionComponent, useState } from 'react';
+import { FunctionComponent, useEffect, useState } from 'react';
 import { GuidanceRequest } from "../Guidance";
 import httpServiceObj from '@Services/ApiHandler.service';
 import { toast } from 'react-toastify';
@@ -7,22 +7,24 @@ import { createPortal } from 'react-dom';
 
 interface AcceptAndPayProps {
   request: GuidanceRequest | null;
-  onAcceptAndPay?: () => void;
+  // onAcceptAndPay?: () => void;
   className?: string;
   acceptAndPayDetails: any | null;
   closeModal:()=>void;
-  onRefresh:()=>void;
+  // onRefresh:()=>void;
   userID:string;
+  onLocalUpdate:((guidanceId: string, updatedData: Partial<GuidanceRequest>)=>void);
 }
 
 const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
   request,
-  onAcceptAndPay,
+  // onAcceptAndPay,
   className,
   acceptAndPayDetails,
   closeModal,
-  onRefresh,
-  userID
+  // onRefresh,
+  userID,
+  onLocalUpdate,
 }) => {
   const [showCancelReason, setShowCancelReason] = useState(false);
   const [cancelReason, setCancelReason] = useState('');
@@ -48,7 +50,6 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
       console.error('Missing request ID or actionByUserId');
       return;
     }
-
     try {
       const payload = {
         newStatus: "PAYMENT_CONFIRMATION_PENDING",
@@ -66,8 +67,9 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
 
       toast.success("Payment submitted. An admin will review and confirm shortly.", getToastOptions({}));
       setShowPopup(false)
-      closeModal()
-      onRefresh()
+      // onRefresh()
+      onLocalUpdate(request.id, { status: "PAYMENT_CONFIRMATION_PENDING"});
+      closeModal();
       return response;
     } catch (err) {
       console.error('Exception in acceptAndPay:', err);
@@ -114,8 +116,9 @@ const AcceptAndPay: FunctionComponent<AcceptAndPayProps> = ({
     setSubmitError('');
     // console.log("Submitted cancel reason:", cancelReason);
     toast.success("Guidance Cancelled", getToastOptions({}));
-    closeModal()
-    onRefresh()
+    // onRefresh()
+    onLocalUpdate(request.id, { status: "CANCELLED"});
+    closeModal();
     return response;
   } catch (err) {
     console.error('Exception in patchCandidateAction:', err);

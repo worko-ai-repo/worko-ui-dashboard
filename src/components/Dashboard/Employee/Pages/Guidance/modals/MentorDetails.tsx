@@ -11,8 +11,9 @@ interface MentorDetailsProps {
   request: GuidanceRequest | null;
   mentorDetails: any | null;
   closeModal:()=>void;
-  onRefresh:()=>void;
+  // onRefresh:()=>void;
   mentorID:string;
+  onLocalUpdate:((guidanceId: string, updatedData: Partial<GuidanceRequest>)=>void);
 }
 
 const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
@@ -21,28 +22,43 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   request,
   mentorDetails,
   closeModal,
-  onRefresh,
-  mentorID
+  // onRefresh,
+  mentorID,
+  onLocalUpdate,
 }) => {
   const [showRescheduleForm, setShowRescheduleForm] = useState(false);
   const [rescheduleDate, setRescheduleDate] = useState('');
   const [rescheduleTime, setRescheduleTime] = useState('');
   const [rescheduleError, setRescheduleError] = useState('');
-  const [linkedin,setLinkedin] = useState("")
+  const [linkedin,setLinkedin] = useState("");
+  const [github,setGithub] = useState("");
+  const [twitter,setTwitter] = useState("");
   const social = mentorDetails?.socialProfile || {};
   const about = mentorDetails?.about || '';
 
-useEffect(() => {
-  Object.entries(social).forEach(([platform, links]) => {
-    if (platform.toLowerCase() === "linkedin" && Array.isArray(links) && links.length > 0) {
-      const rawLink = links[0];
-      const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
-      setLinkedin(validLink);
+// useEffect(() => {
+//   Object.entries(social).forEach(([platform, links]) => {
+//     if (platform.toLowerCase() === "linkedin" && Array.isArray(links) && links.length > 0) {
+//       const rawLink = links[0];
+//       const validLink = /^https?:\/\//i.test(rawLink) ? rawLink : `https://${rawLink}`;
+//       setLinkedin(validLink);
+//     }
+//   });
+// }, [social]);
+
+  useEffect(() => {
+    if (social.linkedin && Array.isArray(social.linkedin) && social.linkedin[0]) {
+      setLinkedin(social.linkedin[0]);
     }
-  });
-}, [social]);
 
+    if (social.github && Array.isArray(social.github) && social.github[0]) {
+      setGithub(social.github[0]);
+    }
 
+    if (social.twitter && Array.isArray(social.twitter) && social.twitter[0]) {
+      setTwitter(social.twitter[0]);
+    }
+  }, [social]);
 
   const handleJoinClick = () => {
     window.open(figmaUrl, '_blank');
@@ -99,7 +115,7 @@ useEffect(() => {
       console.error('Missing request ID or actionByUserId');
       return;
     }
-
+    
     try {
       // console.log(request)
       const payload = {
@@ -121,8 +137,9 @@ useEffect(() => {
       toast.success("Reschedule request sent successfully", getToastOptions({}));
       setShowRescheduleForm(false);
       setRescheduleError('');
+      // onRefresh()
+      onLocalUpdate(request.id,{status:"MEETING_RESCHEDULE_REQUESTED_BY_MENTOR"})
       closeModal()
-      onRefresh()
       return response;
     } catch (err) {
       console.error('Exception in reschedule request:', err);
@@ -195,7 +212,47 @@ useEffect(() => {
               <span className="text-[#94a3b8] font-medium capitalize whitespace-nowrap">
                 Candidate Socials
               </span>
-              <div className="flex flex-wrap gap-2 text-[#0f172a]">
+              <div>
+                {!linkedin?.trim() && !twitter?.trim() && !github?.trim() ? (
+                  <span>NA</span>
+                ) : (
+                  <>
+                    {linkedin?.trim() && (
+                      <a
+                        href={linkedin}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        LinkedIn
+                      </a>
+                    )}
+                    &nbsp; &nbsp;
+                    {github?.trim() && (
+                      <a
+                        href={github}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        GitHub
+                      </a>
+                    )}
+                    &nbsp; &nbsp;
+                    {twitter?.trim() && (
+                      <a
+                        href={twitter}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600"
+                      >
+                        Twitter
+                      </a>
+                    )}
+                  </>
+                )}
+              </div>
+              {/* <div className="flex flex-wrap gap-2 text-[#0f172a]">
                 {Object.entries(social).flatMap(([platform, links]) => {
                   if (!Array.isArray(links) || links.length === 0) return [];
 
@@ -211,7 +268,7 @@ useEffect(() => {
                     </a>
                   ));
                 })}
-              </div>
+              </div> */}
             </div>
           )}
         </div>

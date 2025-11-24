@@ -16,7 +16,6 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
 
   useEffect(() => {
-    console.log("openend")
     if (isOpen) {
       setVisible(true);
       const timer = setTimeout(() => setIsAnimatingIn(true), 10);

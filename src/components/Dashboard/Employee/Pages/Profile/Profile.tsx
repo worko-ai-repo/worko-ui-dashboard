@@ -491,11 +491,18 @@ const Profile = () => {
                 <div className="mt-4 w-full">
                   <UploadImageButton2
                   detailsData={detailsData[0]}
-                  onUploadSuccess={(url) => {
-                    // console.log("New image uploaded:", url);
-                    fetchData()
-                    setEditMode('profilePic', false)
-                  }} />
+                  onUploadSuccess={(signedUrl) => {
+                    setDetailsData((prev:any) => {
+                      const updated = [...prev];
+                      updated[0] = {
+                        ...updated[0],
+                        profileImageAwsS3SignedUrl: signedUrl,
+                      };
+                      return updated;
+                    });
+                    setEditMode('profilePic', false);
+                    }} 
+                />
                 </div>
               }
               </div>
