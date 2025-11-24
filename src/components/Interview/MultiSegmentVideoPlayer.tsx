@@ -205,7 +205,7 @@ const MultiSegmentVideoPlayer = forwardRef<
       };
 
       timeoutId = setTimeout(() => {
-        console.warn("Timed out getting metadata for:", url);
+        // console.warn("Timed out getting metadata for:", url);
         finalize(0);
       }, 10000);
 

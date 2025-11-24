@@ -189,7 +189,7 @@ const InterviewActive = () => {
     if (videoRef.current?.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
       tracks.forEach((track) => {
-        console.log(`Stopping camera track: ${track.kind} - ${track.label}`);
+        // console.log(`Stopping camera track: ${track.kind} - ${track.label}`);
         track.stop();
       });
       videoRef.current.srcObject = null;
@@ -222,7 +222,7 @@ const InterviewActive = () => {
     if (videoRef.current?.srcObject) {
       const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
       tracks.forEach((track) => {
-        console.log(`Stopping camera track after tab switch: ${track.kind} - ${track.label}`);
+        // console.log(`Stopping camera track after tab switch: ${track.kind} - ${track.label}`);
         track.stop();
       });
       videoRef.current.srcObject = null;
@@ -242,7 +242,7 @@ const InterviewActive = () => {
   // Auto-fire API when tab switch warning modal opens
   useEffect(() => {
     if (showTabSwitchWarning === true && !isTerminating) {
-      console.log("Tab switch limit exceeded (3 violations) - calling API to terminate interview");
+      // console.log("Tab switch limit exceeded (3 violations) - calling API to terminate interview");
       terminateInterviewAPI();
     }
   }, [showTabSwitchWarning]);
@@ -273,7 +273,7 @@ const InterviewActive = () => {
       if (videoRef.current?.srcObject) {
         const tracks = (videoRef.current.srcObject as MediaStream).getTracks();
         tracks.forEach((track) => {
-          console.log(`Cleanup: Stopping camera track on unmount: ${track.kind} - ${track.label}`);
+          // console.log(`Cleanup: Stopping camera track on unmount: ${track.kind} - ${track.label}`);
           track.stop();
         });
         videoRef.current.srcObject = null;

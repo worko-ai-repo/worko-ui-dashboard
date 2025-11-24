@@ -28,7 +28,7 @@ const InterviewCompletionFeedback: React.FC<InterviewCompletionFeedbackProps> = 
   useEffect(() => {
     return () => {
       // Clean up all media streams when component unmounts
-      console.log("InterviewCompletionFeedback unmounting - cleaning up media streams");
+      // console.log("InterviewCompletionFeedback unmounting - cleaning up media streams");
       cleanupMediaStreams();
     };
   }, [cleanupMediaStreams]);

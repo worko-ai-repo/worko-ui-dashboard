@@ -68,14 +68,14 @@ const InterviewIdle = () => {
   const interviewStage = (stage === "continue" ? "continue" : "new") as "new" | "continue";
 
   // Log for debugging
-  useEffect(() => {
+/*   useEffect(() => {
     console.log("InterviewIdle - URL Params:", {
       interviewIdParam,
       stage,
       interviewStage,
       hasInterviewData: !!interviewDataFromState,
     });
-  }, [interviewIdParam, stage, interviewStage, interviewDataFromState]);
+  }, [interviewIdParam, stage, interviewStage, interviewDataFromState]); */
 
   const isContinuing =
     stage === "continue" &&
@@ -92,7 +92,7 @@ const InterviewIdle = () => {
     const initializeInterview = async () => {
       // If we have interview data in state (from modal), load it
       if (interviewDataFromState) {
-        console.log("Loading interview from state with ID:", interviewIdParam);
+        // console.log("Loading interview from state with ID:", interviewIdParam);
         loadExistingInterview(
           interviewDataFromState,
           testStream || undefined,
@@ -131,7 +131,7 @@ const InterviewIdle = () => {
         setInitError(null);
 
         try {
-          console.log("Fetching interview details for ID:", interviewIdParam);
+          // console.log("Fetching interview details for ID:", interviewIdParam);
 
           // Try to fetch existing interview details first
           const { response: fetchedInterview, error: fetchError } =
@@ -145,7 +145,7 @@ const InterviewIdle = () => {
           }
 
           if (fetchedInterview) {
-            console.log("Successfully fetched interview, loading it...");
+            // console.log("Successfully fetched interview, loading it...");
             loadExistingInterview(
               fetchedInterview,
               testStream || undefined,
@@ -215,7 +215,7 @@ const InterviewIdle = () => {
 
       // Also pass to interview context if interview is already loaded
       if (currentInterview) {
-        console.log("Updating existing interview in context with stream");
+        // console.log("Updating existing interview in context with stream");
         loadExistingInterview(currentInterview, mediaStream, interviewIdParam, interviewStage);
       }
     } catch (err) {
