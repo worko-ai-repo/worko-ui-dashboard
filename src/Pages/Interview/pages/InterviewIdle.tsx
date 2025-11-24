@@ -566,6 +566,7 @@ const InterviewIdle = () => {
                       onClick={handleProceed}
                       size="default"
                       disabled={
+                        !isSpeechSupported ||
                         isStartingInterview ||
                         (interviewStage === "continue" && (!currentInterview || isInitiating)) ||
                         !canProceed
