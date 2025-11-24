@@ -1,6 +1,6 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
 import { Button } from "@Components/ui/button";
-import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone } from "lucide-react";
+import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone, Info } from "lucide-react";
 import { useInterview } from "../../../context/Interview.context";
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
@@ -446,6 +446,10 @@ const InterviewIdle = () => {
                           ? "Requesting Permissions..."
                           : "Grant Permissions"}
                       </Button>
+                      <>
+                      <Info className="w-3 h-3 text-blue-600 inline-block mr-1 mt-1" />
+                      <small className="text-[9px]  text-gray-500 font-semibold">Your data is secure and used only for evaluation.</small>
+                      </>
                     </CardContent>
                   </Card>
                 )}
