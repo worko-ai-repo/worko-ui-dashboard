@@ -338,7 +338,7 @@ const InterviewIdle = () => {
             <p className="text-left text-gray-600 text-sm sm:text-base">
               {isContinuing
                 ? "Let's continue where you left off"
-                : "Let's get you set up for your interview"}
+                : "Let’s get you set up before we begin."}
             </p>
           </CardHeader>
           <CardContent className="p-4">
@@ -388,7 +388,7 @@ const InterviewIdle = () => {
                         Required Permissions
                       </h3>
                       <p className="text-xs font-semibold text-gray-600 mb-4">
-                        We need access to the following to conduct your interview:
+                      To begin your interview, please enable following:
                       </p>
 
                       <div className="space-y-3 mb-6 ">
@@ -407,7 +407,7 @@ const InterviewIdle = () => {
                           <div className="flex-1  min-w-0">
                             <p className="font-semibold text-gray-800 text-sm ">Camera Access</p>
                             <p className="text-xs text-gray-500">
-                              To record your video during the interview
+                            So VERA can understand your expressions & presence
                             </p>
                           </div>
                         </div>
@@ -426,7 +426,7 @@ const InterviewIdle = () => {
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="font-semibold text-gray-800 text-sm">Microphone Access</p>
-                            <p className="text-xs text-gray-500">To record your audio responses</p>
+                            <p className="text-xs text-gray-500">So it can evaluate your responses clearly</p>
                           </div>
                         </div>
                       </div>

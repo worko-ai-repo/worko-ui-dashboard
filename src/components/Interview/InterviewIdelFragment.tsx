@@ -4,10 +4,8 @@ import React, { useState, useEffect } from "react";
 
 const InterviewIdelFragment = () => {
   const advantages = [
-    "Be ahead in getting hired",
-    "Show your professional skills",
-    "Practice with real-time feedback",
-    "Improve your confidence",
+    "Interview Once. Apply Anywhere.",
+    "Get Better Matches and Faster Decisions.",
   ];
 
   const [currentText, setCurrentText] = useState("");
@@ -117,7 +115,8 @@ const InterviewIdelFragment = () => {
               <span className="animate-pulse">|</span>
             </p>
             <div className="text-xs text-left text-[#001f3f] font-semibold mt-3">
-              Meet our AI agent VERA (Virtual Evaluation & Recruitment Assistant) that will take your test and help you succeed.
+            VERA (Virtual Evaluation & Recruitment Assistant) will guide you through a smooth, stress-free interview experience. 
+            Just enable permissions and you're good to go.
             </div>
           </div>
         </div>
