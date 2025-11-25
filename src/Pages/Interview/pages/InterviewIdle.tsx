@@ -2,7 +2,8 @@ import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
 import { Button } from "@Components/ui/button";
 import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone, Info } from "lucide-react";
 import { useInterview } from "../../../context/Interview.context";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import interviewServiceObj from "@Services/Interview.service";
@@ -49,6 +50,14 @@ const InterviewIdle = () => {
   const [isStartingInterview, setIsStartingInterview] = useState(false);
   const faceVideoRef = useRef<HTMLVideoElement>(null);
   const [isFaceStreamActive, setIsFaceStreamActive] = useState(false);
+  const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedMicDeviceId, setSelectedMicDeviceId] = useState("");
+  const [micLevel, setMicLevel] = useState(0);
+  const [micTestError, setMicTestError] = useState<string | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const micTestTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const {
     isFacePresent,
@@ -86,6 +95,78 @@ const InterviewIdle = () => {
 
   const allPermissionsGranted = permissions.camera && permissions.microphone;
   const canProceed = allPermissionsGranted && micTestComplete && isFaceReady;
+  const micLevelPercentage = Math.min(Math.round(micLevel * 100), 100);
+  const micLevelColorClass =
+    micLevel > 0.6 ? "bg-green-500" : micLevel > 0.3 ? "bg-yellow-500" : "bg-red-500";
+
+  const stopExistingStream = (stream?: MediaStream | null) => {
+    stream?.getTracks().forEach((track) => track.stop());
+  };
+
+  const stopMicMonitoring = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    if (micTestTimeoutRef.current) {
+      clearTimeout(micTestTimeoutRef.current);
+      micTestTimeoutRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => null);
+      audioContextRef.current = null;
+    }
+
+    analyserRef.current = null;
+  };
+
+  const buildAudioConstraints = (audioDeviceId?: string): MediaTrackConstraints => {
+    const constraints: MediaTrackConstraints = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    };
+
+    if (audioDeviceId && audioDeviceId !== "default") {
+      constraints.deviceId = { exact: audioDeviceId };
+    }
+
+    return constraints;
+  };
+
+  const createInterviewStream = (audioDeviceId?: string) => {
+    return navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: buildAudioConstraints(audioDeviceId),
+    });
+  };
+
+  const fetchMicDevices = useCallback(
+    async (stream?: MediaStream | null) => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter((device) => device.kind === "audioinput");
+
+        setMicDevices(audioInputs);
+
+        const activeAudioTrack = (stream ?? testStream)?.getAudioTracks()[0];
+        const activeDeviceId =
+          activeAudioTrack?.getSettings().deviceId ||
+          selectedMicDeviceId ||
+          audioInputs[0]?.deviceId ||
+          "";
+
+        if (activeDeviceId && activeDeviceId !== selectedMicDeviceId) {
+          setSelectedMicDeviceId(activeDeviceId);
+        }
+      } catch (deviceError) {
+        console.error("Failed to enumerate microphones:", deviceError);
+      }
+    },
+    [selectedMicDeviceId, testStream]
+  );
 
   // Handle interview initiation or loading from state
   useEffect(() => {
@@ -114,14 +195,32 @@ const InterviewIdle = () => {
     interviewStage,
   ]);
 
-  // Cleanup test stream on unmount
+  // Cleanup test stream and audio monitoring on unmount or stream change
   useEffect(() => {
     return () => {
-      if (testStream) {
-        testStream.getTracks().forEach((track) => track.stop());
-      }
+      stopMicMonitoring();
+      stopExistingStream(testStream);
     };
   }, [testStream]);
+
+  useEffect(() => {
+    if (!permissions.microphone) return;
+
+    fetchMicDevices(testStream);
+
+    const mediaDevices = navigator.mediaDevices;
+
+    if (!mediaDevices || typeof mediaDevices.addEventListener !== "function") {
+      return;
+    }
+
+    const handleDeviceChange = () => fetchMicDevices(testStream);
+    mediaDevices.addEventListener("devicechange", handleDeviceChange);
+
+    return () => {
+      mediaDevices.removeEventListener("devicechange", handleDeviceChange);
+    };
+  }, [permissions.microphone, fetchMicDevices, testStream]);
 
   useEffect(() => {
     const initializeInterview = async () => {
@@ -195,13 +294,18 @@ const InterviewIdle = () => {
   const requestAllPermissions = async () => {
     setIsRequestingPermissions(true);
     setPermissionError(null);
+    stopMicMonitoring();
+    setMicTestComplete(false);
+    setMicLevel(0);
+    setMicTestError(null);
 
     try {
       // Request camera and microphone only
-      const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: true,
-        audio: true,
-      });
+      const mediaStream = await createInterviewStream(selectedMicDeviceId || undefined);
+
+      if (testStream) {
+        stopExistingStream(testStream);
+      }
 
       setPermissions((prev) => ({
         ...prev,
@@ -212,6 +316,7 @@ const InterviewIdle = () => {
       setTestStream(mediaStream);
       setInterviewStream(mediaStream);
       setIsFaceStreamActive(true);
+      await fetchMicDevices(mediaStream);
 
       // Also pass to interview context if interview is already loaded
       if (currentInterview) {
@@ -233,54 +338,102 @@ const InterviewIdle = () => {
       });
       setInterviewStream(null);
       setIsFaceStreamActive(false);
+      setMicDevices([]);
+      setSelectedMicDeviceId("");
     } finally {
       setIsRequestingPermissions(false);
     }
   };
 
+
+  const handleMicDeviceChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const deviceId = event.target.value;
+    setSelectedMicDeviceId(deviceId);
+    setMicTestComplete(false);
+    setMicLevel(0);
+    setMicTestError(null);
+    setIsTesting(false); // Reset testing state
+    stopMicMonitoring();
+
+    try {
+      const updatedStream = await createInterviewStream(deviceId || undefined);
+      stopExistingStream(testStream);
+      setTestStream(updatedStream);
+      setInterviewStream(updatedStream);
+      setIsFaceStreamActive(true);
+      
+      // Update the video element with the new stream
+      if (faceVideoRef.current) {
+        faceVideoRef.current.srcObject = updatedStream;
+      }
+      
+      await fetchMicDevices(updatedStream);
+    } catch (err) {
+      console.error("Failed to switch microphone:", err);
+      setMicTestError(
+        "Unable to access the selected microphone. Please choose a different device or review your permissions."
+      );
+    }
+  };
+
   const startMicTest = () => {
     if (!testStream) return;
-    setIsTesting(true);
 
-    // Simulate listening for audio input
+    stopMicMonitoring();
+    setIsTesting(true);
+    setMicTestComplete(false);
+    setMicTestError(null);
+    setMicLevel(0);
+
     const audioContext = new AudioContext();
     const source = audioContext.createMediaStreamSource(testStream);
     const analyser = audioContext.createAnalyser();
+
+    analyser.fftSize = 2048;
     source.connect(analyser);
-    analyser.fftSize = 256;
 
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-    let hasDetectedSound = false;
+    audioContextRef.current = audioContext;
+    analyserRef.current = analyser;
 
-    const checkAudio = () => {
-      if (!isTesting) return;
+    const bufferLength = analyser.fftSize;
+    const dataArray = new Uint8Array(bufferLength);
 
-      analyser.getByteFrequencyData(dataArray);
-      const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
+    const detectAudio = () => {
+      if (!analyserRef.current) return;
 
-      // If we detect sound above threshold
-      if (average > 10 && !hasDetectedSound) {
-        hasDetectedSound = true;
-        setTimeout(() => {
-          setMicTestComplete(true);
-          setIsTesting(false);
-          audioContext.close();
-        }, 1000);
-      } else if (isTesting && !hasDetectedSound) {
-        requestAnimationFrame(checkAudio);
+      analyserRef.current.getByteTimeDomainData(dataArray);
+
+      let sumSquares = 0;
+      for (let i = 0; i < bufferLength; i += 1) {
+        const value = (dataArray[i] - 128) / 128;
+        sumSquares += value * value;
       }
-    };
 
-    checkAudio();
+      const rms = Math.sqrt(sumSquares / bufferLength);
+      const normalizedLevel = Math.min(rms * 4, 1);
 
-    // Auto-complete after 10 seconds
-    setTimeout(() => {
-      if (!micTestComplete) {
+      setMicLevel(normalizedLevel);
+
+      if (normalizedLevel > 0.2) {
+        stopMicMonitoring();
         setMicTestComplete(true);
         setIsTesting(false);
-        audioContext.close();
+        return;
       }
-    }, 8000);
+
+      animationFrameRef.current = requestAnimationFrame(detectAudio);
+    };
+
+    detectAudio();
+
+    micTestTimeoutRef.current = setTimeout(() => {
+      stopMicMonitoring();
+      setIsTesting(false);
+      setMicLevel(0);
+      setMicTestError(
+        "We could not detect any audio. Please ensure your microphone is working and try again."
+      );
+    }, 15000);
   };
 
   useEffect(() => {
@@ -466,6 +619,40 @@ const InterviewIdle = () => {
                         test of my microphone for the interview."
                       </p>
 
+                      {micDevices.length > 0 && (
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-gray-800 mb-1">
+                            Choose Microphone
+                          </label>
+                          <select
+                            value={selectedMicDeviceId || micDevices[0]?.deviceId || ""}
+                            onChange={handleMicDeviceChange}
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none">
+                            {micDevices.map((device) => (
+                              <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `Microphone ${device.deviceId}`}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">
+                            Pick the device you actively use. Switching resets the test.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <span>Input level</span>
+                          <span>{micLevelPercentage}%</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-150 ${micLevelColorClass}`}
+                            style={{ width: `${micLevelPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+
                       {isTesting && (
                         <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
                           <div className="animate-pulse">
@@ -477,11 +664,18 @@ const InterviewIdle = () => {
                         </div>
                       )}
 
+                      {micTestError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-red-700">{micTestError}</p>
+                        </div>
+                      )}
+
                       <Button
                         onClick={startMicTest}
                         disabled={isTesting}
                         className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm sm:text-base">
-                        {isTesting ? "Testing Microphone..." : "Start Microphone Test"}
+                        {isTesting ? "Listening..." : "Start Microphone Test"}
                       </Button>
                     </CardContent>
                   </Card>
