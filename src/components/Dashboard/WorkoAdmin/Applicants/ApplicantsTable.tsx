@@ -128,11 +128,15 @@ export const getLatestInterviewData = (interviewDetails: InterviewDto[], userId:
   const sortedInterviews = interviewDetails.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
-  const latestIntereview = sortedInterviews[0];
-  // Check if the latest interview is doesnt have score and is requested by the current user
+  const latestInterview = sortedInterviews[0];
+  
+  // Check if the latest interview doesn't have a score and if the current user has already requested it
   const isAlreadyRequested =
-    latestIntereview && !latestIntereview?.score && latestIntereview.createdByUserId === userId;
-  return { interviewDetails: latestIntereview, isAlreadyRequested };
+    latestInterview && 
+    !latestInterview?.score && 
+    latestInterview.requestedBy?.some(request => request.corporateUserId === userId);
+    
+  return { interviewDetails: latestInterview, isAlreadyRequested };
 };
 
 export default function ApplicationTable({

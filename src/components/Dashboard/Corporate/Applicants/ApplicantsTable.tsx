@@ -331,12 +331,12 @@ export default function ApplicationTable({
         </div>
       ),
     },
+
     interviewScoreDetails: {
       key: "interviewScoreDetails",
       label: "Interview Score",
       render: (row: JobApplicationDetailsDto) => {
         const hasInterviewDetails = row.applicantDetails?.interviewDetails?.length;
-
         if (!hasInterviewDetails) {
           // No interview details at all - show request button
           return (
@@ -354,12 +354,9 @@ export default function ApplicationTable({
                       position: row.jobTitle,
                       requesterUserName: userDetails.fullName,
                     });
-                    await InterviewService.requestInterview(
-                      payload
-                    );
+                    await InterviewService.requestInterview(payload);
                     toast.success("Interview requested successfully", getToastOptions({}));
-                    // Update the row silently
-                    refetch();
+                    refetch(); // Only refetch the row if possible
                   } catch (error) {
                     toast.error("Failed to request interview", getToastOptions({}));
                   }
@@ -371,13 +368,22 @@ export default function ApplicationTable({
             </div>
           );
         }
-
+        const id:string = secureStorage.getItem(SecureStorageKeyEnum.COGNITOUSERID) || "";
         const { interviewDetails, isAlreadyRequested } = getLatestInterviewData(
           row.applicantDetails?.interviewDetails || [],
-          userDetails?.id
+          id
         );
+        // If interview is already requested (no score but requested by current user)
+        if (isAlreadyRequested) {
+          return (
+            <div className="flex justify-center">
+              <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">
+                Already Requested
+              </span>
+            </div>
+          );
+        }
 
-        // If interview has score, show the score
         if (interviewDetails?.score) {
           return (
             <div className="flex justify-center">
@@ -397,18 +403,6 @@ export default function ApplicationTable({
           );
         }
 
-        // If interview is already requested (no score but requested by current user)
-        if (isAlreadyRequested) {
-          return (
-            <div className="flex justify-center">
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-600">
-                Already Requested
-              </span>
-            </div>
-          );
-        }
-
-        // Interview exists but no score and not requested by current user - show request button
         return (
           <div className="flex justify-center">
             <button
@@ -424,12 +418,9 @@ export default function ApplicationTable({
                     position: row.jobTitle,
                     requesterUserName: userDetails.fullName,
                   });
-                  await InterviewService.requestInterview(
-                    payload
-                  );
+                  await InterviewService.requestInterview(payload);
                   toast.success("Interview requested successfully", getToastOptions({}));
-                  // Update the row silently
-                  refetch();
+                  refetch(); // Only refetch the row if possible
                 } catch (error) {
                   toast.error("Failed to request interview", getToastOptions({}));
                 }
@@ -635,7 +626,7 @@ export default function ApplicationTable({
                 .reverse()
                 .find((tracker) => tracker.newStatus === "JOINED");
 
-              const joiningDate = joinedStatus?.actionDate
+              const joiningDate: Date | null = joinedStatus?.actionDate
                 ? new Date(joinedStatus.actionDate)
                 : null;
 
@@ -694,7 +685,7 @@ export default function ApplicationTable({
               <span className="font-semibold text-gray-500">Email ID</span>
               <p>{row.applicantDetails?.email}</p>
             </div>
-            
+
             <div className="">
               <span className="font-semibold text-gray-500">Application Date</span>
               <div className="flex items-center justify-center">
@@ -892,9 +883,12 @@ export default function ApplicationTable({
           setIsHireNowModalOpen({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
         }
         className="w-[90vw] sm:w-[532px] h-[95vh] ">
-        <HireNowForm jobData={isHireNowModalOpen.jobData} onClose={() =>
-          setIsHireNowModalOpen({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
-        }/>
+        <HireNowForm
+          jobData={isHireNowModalOpen.jobData}
+          onClose={() =>
+            setIsHireNowModalOpen({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
+          }
+        />
       </Modal>
 
       <Modal
@@ -903,9 +897,12 @@ export default function ApplicationTable({
           setIsViewOfferIssue({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
         }
         className="w-[90vw] sm:w-[532px] h-[95vh] ">
-        <ResendOfferLetter jobData={isViewOfferIssue.jobData}  onClose={() =>
-          setIsViewOfferIssue({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
-        }/>
+        <ResendOfferLetter
+          jobData={isViewOfferIssue.jobData}
+          onClose={() =>
+            setIsViewOfferIssue({ isOpen: false, jobData: {} as JobApplicationDetailsDto })
+          }
+        />
       </Modal>
 
       <Modal
@@ -1042,7 +1039,7 @@ export default function ApplicationTable({
         className=" sm:max-w-2xl min-w-[500px] min-h-[150px]">
         <RejectionFeedback jobApplication={RejectionFeedbackModal.application} />
       </Modal>
-      
+
       <Modal
         isOpen={interviewDetailviewModal.isOpen}
         onClose={() =>

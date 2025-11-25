@@ -177,6 +177,12 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
     const questionsAttempted =
       interview.interviewHistory?.filter((history) => history.chunkUploadStatus === "UPLOADED")
         .length || 0;
+    const questionsManullaySkipped = interview.interviewHistory?.filter(
+      (history) => history.userAnswer.trim() === "Candidate skipped the question" || history.userAnswer.trim() === ""
+    ).length || 0;
+    debugger
+    const totalAttempted = questionsAttempted - questionsManullaySkipped;
+
     const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";
     const canContinue =
       (interview.status === "PENDING" || interview.status === "IN_PROGRESS") && hasPartialProgress;
@@ -208,7 +214,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
                 <span className="text-sm text-gray-500">{interview.totalQuestions} questions</span>
               ) : (
                 <span className="text-sm text-gray-500">
-                  Questions Attempted: {questionsAttempted}/{interview.totalQuestions}
+                  Questions Attempted: {totalAttempted}/{interview.totalQuestions}
                 </span>
               )}
             </div>

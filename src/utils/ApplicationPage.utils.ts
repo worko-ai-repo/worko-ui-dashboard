@@ -277,7 +277,7 @@ class JobApplicationService {
       companyName,
       position,
       requesterUserName,
-      requestedByActor: actor,
+      requestedByActor: actor.toLocaleUpperCase().replace(/-/g, '_') as "ADMIN" | "CORPORATE_RECRUITER" | "CORPORATE_ADMIN" | "EVALUATOR",
     };
     return {
       candidateEmail: data.candidateEmail,
