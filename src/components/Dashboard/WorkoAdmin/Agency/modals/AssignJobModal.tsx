@@ -15,7 +15,7 @@ interface AssignJobModalProps {
   userDetails:any;
 }
 
-interface CompanyFormData {
+export interface CompanyFormData {
   companyName: string;
   designation: string;
   department: string;
@@ -23,7 +23,7 @@ interface CompanyFormData {
   emailId: string;
 }
 
-interface Company {
+export interface Company {
   aboutCompany:string,
   id: string;
   name: string;
@@ -34,7 +34,7 @@ interface Company {
   teamSize:number;
 }
 
-interface CompanyAPIResponse {
+export interface CompanyAPIResponse {
   data: Company[];
   pagination: {
     count: number;
@@ -64,6 +64,9 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
   const [selectionMade, setSelectionMade] = useState(false);
   const [selectedCompany, setSelectedCompany] = useState<Company | null>(null);
   const [companyJobs, setCompanyJobs] = useState<JobData[]>([]);
+  const [isLoadingCompany, setIsLoadingCompany] = useState(false);
+  const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+
   const [formData, setFormData] = useState<CompanyFormData>({
   companyName: '',
   designation: '',
@@ -140,7 +143,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
     })
 
     const payload = {
-      companyId: userDetails?.companyId,
+      companyId: selectedCompany?.id,
       jobsToAssign: jobIds,
       agencyEmail: agencyData.email,
       agencyInviteId: agencyData.id
@@ -194,18 +197,23 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
 
   // search companies to assign jobs
   useEffect(() => {
-  const delayDebounce = setTimeout(() => {
-    if (formData.companyName.trim() && !selectionMade) {
-      fetchCompanies(formData.companyName);
-    } else {
+    if (!formData.companyName.trim() || selectionMade) {
       setSuggestions([]);
+      return;
     }
-  }, 250);
-  
-    return () => clearTimeout(delayDebounce);
+    // instantly show loading
+    setIsLoadingCompany(true);
+
+    const delay = setTimeout(() => {
+      fetchCompanies(formData.companyName);
+    }, 250);
+
+    return () => clearTimeout(delay);
   }, [formData.companyName, selectionMade]);
+
   
   const fetchCompanies = async (query:string) => {
+    setIsLoadingCompany(true)
     try {
       // const {response} = await httpServiceObj.get(`/company?companyName=${query}&isVerified=0`,true,{});
       const {response} = await httpServiceObj.get(`/company?companyName=${query}`,true,{});
@@ -214,6 +222,8 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
       setSuggestions(typedResponse.data);
     } catch (error) {
       console.error('Error fetching companies:', error);
+    } finally {
+      setIsLoadingCompany(false)
     }
   };
 
@@ -244,6 +254,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
 
   // call this with selectedCompany.id
   const fetchJobs = async (companyId: string) => {
+    setIsLoadingJobs(true)
     const params = {
       pageSize: 200,
       sortOrder: "desc",
@@ -262,6 +273,8 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
     } catch (error) {
       console.log(error);
       setCompanyJobs([]);
+    } finally{
+      setIsLoadingJobs(false)
     }
   };
 
@@ -345,16 +358,37 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
           />
 
           {formData.companyName?.trim() && !selectionMade && showSuggestions && (
-            <ul className="border bg-white rounded shadow-md absolute w-full z-10 max-h-60 overflow-y-auto">
-              {suggestions.map((company, idx) => (
-                <li
-                  key={company.id ?? idx}
-                  className="block w-full px-4 py-2 hover:bg-gray-100 cursor-pointer text-left"
-                  onMouseDown={() => handleSuggestionClick(company)}
-                >
-                  {company.name}
+            <ul
+              className="border bg-white rounded shadow-md absolute w-full z-10 max-h-60 overflow-y-auto"
+              aria-live="polite"
+            >
+              {/* show only while loading */}
+              {isLoadingCompany && (
+                <li className="block w-full px-4 py-2 text-gray-500 text-left">
+                  Loading companies...
                 </li>
-              ))}
+              )}
+
+              {/* when not loading, show results or empty message */}
+              {!isLoadingCompany && (
+                <>
+                  {suggestions.length > 0 ? (
+                    suggestions.map((company, idx) => (
+                      <li
+                        key={company.id ?? idx}
+                        className="block w-full px-4 py-2 hover:bg-gray-100 cursor-pointer text-left"
+                        onMouseDown={() => handleSuggestionClick(company)}
+                      >
+                        {company.name}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="block w-full px-4 py-2 text-gray-500 cursor-default text-left">
+                      Sorry no company found
+                    </li>
+                  )}
+                </>
+              )}
             </ul>
           )}
         </div>
@@ -388,27 +422,68 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
             <ChevronDown className="h-5 w-auto" />
           </button>
 
-          {isDropDownOpen && companyJobs.length > 0 && (
-            <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-90 overflow-y-auto text-sm">
-              {companyJobs
-                .filter(job => job?.jobTitle?.toLowerCase().includes(input.toLowerCase()))
-                .map(job => (
-                  <li
-                    key={job.id}
-                    onClick={() => toggleJobSelection(job)}
-                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start flex items-center gap-2"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={isJobSelected(job.id)}
-                      readOnly
-                      className="form-checkbox text-blue-600"
-                    />
-                    <span>{`${job?.jobTitle} | ${job?.location?.fullLocation} | ${job?.salaryRange?.min}-${job?.salaryRange?.max} LPA`}</span>
+        {isDropDownOpen && (
+          <ul
+            className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-90 overflow-y-auto text-sm"
+            aria-live="polite"
+          >
+            {/* loading jobs */}
+            {isLoadingJobs && (
+              <li className="block w-full px-4 py-2 text-gray-500 text-left">
+                Loading jobs...
+              </li>
+            )}
+
+            {/* when jobs is not loading */}
+            {!isLoadingJobs && (() => {
+
+              // Compute filtered list one time
+              const filtered = companyJobs.filter(job =>
+                job?.jobTitle?.toLowerCase().includes(input.toLowerCase())
+              );
+
+              // company has no jobs
+              if (companyJobs.length === 0) {
+                return (
+                  <li className="block w-full px-4 py-2 text-gray-500 text-left">
+                    No jobs posted for this company
                   </li>
-                ))}
-            </ul>
-          )}
+                );
+              }
+
+              // company has jobs but filtered list is empty
+              if (filtered.length === 0) {
+                return (
+                  <li className="block w-full px-4 py-2 text-gray-500 text-left">
+                    No matching jobs
+                  </li>
+                );
+              }
+
+              // render filtered jobs successfully
+              return filtered.map(job => (
+                <li
+                  key={job.id}
+                  onMouseDown={() => toggleJobSelection(job)}
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start flex items-center gap-2"
+                >
+                  <input
+                    type="checkbox"
+                    checked={isJobSelected(job.id)}
+                    readOnly
+                    className="form-checkbox text-blue-600"
+                  />
+                  <span>
+                    {`${job?.jobTitle} | ${job?.location?.fullLocation || "N/A"} | ${
+                      job?.salaryRange?.min ?? "—"
+                    }-${job?.salaryRange?.max ?? "—"} LPA`}
+                  </span>
+                </li>
+              ));
+            })()}
+          </ul>
+        )}
+
         </div>
 
         {/* display selected in UI */}

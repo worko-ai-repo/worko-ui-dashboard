@@ -43,16 +43,17 @@ const DatabaseDropdown: React.FC<DatabaseDropdownProps> = ({
   }, [isOpen]);
 
   return (
-    <div
-      ref={wrapperRef}
-      className={`relative min-w-[7rem]  ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
-      data-tooltip-id="dropdown-tooltip"
-      data-tooltip-content={tooltipMessage}
-    >
+<div
+  ref={wrapperRef}
+  className={`relative min-w-[7rem] overflow-visible ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+  data-tooltip-id="dropdown-tooltip"
+  data-tooltip-content={tooltipMessage}
+>
+
       {/* Trigger Button */}
       <div
         onClick={toggleDropdown}
-        className={`flex justify-center text-left  min-w-[7rem] h-10 bg-white px-2 py-2 items-center font-semibold  transition-all ${
+        className={`shadow-md flex justify-center text-left  min-w-[7rem] h-9 bg-white px-2 py-2 items-center font-semibold  transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
@@ -62,7 +63,7 @@ const DatabaseDropdown: React.FC<DatabaseDropdownProps> = ({
 
       {/* Dropdown Panel */}
       {isOpen && !disabled && (
-        <div className="absolute min-w-[7rem]  bg-white rounded-2xl rounded-t-none  shadow-lg z-50">
+        <div className="absolute left-0 w-full min-w-[7rem] bg-white rounded-2xl rounded-t-none shadow-lg z-50">
           <div className="flex flex-col  gap-1">
             {options.map((option, index) => {
               const isSelected = option.label === selectedLabel;

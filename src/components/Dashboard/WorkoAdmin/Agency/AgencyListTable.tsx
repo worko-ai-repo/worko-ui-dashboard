@@ -199,7 +199,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.assignedJobs ?? "-"}</span>
+                <span>{row?.totalAssignedJobs ?? "-"}</span>
             </div>
         ),
     },
@@ -210,7 +210,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.totalCandidateSubmitted ?? "-"}</span>
+                <span>{row?.totalCandidatesSubmitted ?? "-"}</span>
             </div>
         ),
     },

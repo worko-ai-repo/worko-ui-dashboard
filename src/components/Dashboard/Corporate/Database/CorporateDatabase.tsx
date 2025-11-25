@@ -27,7 +27,7 @@ remove useless codes
 icons needs to be changed
 */}
 
-const initialPaginationState: PaginationInfo = {
+export const initialPaginationState: PaginationInfo = {
   count: 0,
   pageSize: 10,
   sortOrder: "descending",
@@ -147,7 +147,7 @@ const fetchDatabaseData = useCallback(
       };
 
       // include filters if present
-      if (searchFilters?.searchText) params.searchText = searchFilters.searchText;
+      if (searchBarText?.trim()) params.candidateEmail = searchBarText;
       if (searchFilters?.userType) params.userType = searchFilters.userType;
 
       // include status (apiStatus state or override if provided)
@@ -179,7 +179,7 @@ const fetchDatabaseData = useCallback(
       setIsLoading(false);
     }
   },
-  [userDetails, pageSize, filters, apiStatus]
+  [userDetails, pageSize, filters, apiStatus, searchBarText]
 );
 
     useEffect(() => {
@@ -394,137 +394,139 @@ const handleBulkCVDownload = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
-        <div className="flex flex-col ">
-          <div className="flex flex-wrap gap-4">
-          </div>
+<div className="flex flex-col lg:flex-row lg:items-center gap-1 sm:gap-1 w-full">
+  {/* Search (Row 1 on mobile/tablet; left part on lg+) */}
+  <div className="w-full lg:flex-1">
+    <SearchBarAgency
+      searchBarText={searchBarText}
+      setSearchBarText={setSearchBarText}
+      handleClick={() => console.log("as")}
+    />
+  </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
-            {/* Search Bar */}
-            <SearchBarAgency
-              searchBarText={searchBarText}
-              setSearchBarText={setSearchBarText}
-              handleClick={() => console.log("as")}
-            />
-            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">   
-               <input
-                  type="file"
-                  accept="application/pdf"
-                  multiple
-                  ref={fileInputRef}
-                  style={{ display: "none" }}
-                  onChange={handleFileChange}
-                />
+  {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
+  <div className="w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
+    {/* Bulk upload - full width on mobile/tablet, auto on lg */}
+    <div className="w-full lg:w-auto">
+      <input
+        type="file"
+        accept="application/pdf"
+        multiple
+        ref={fileInputRef}
+        style={{ display: "none" }}
+        onChange={handleFileChange}
+      />
 
-                <button
-                  type="button"
-                  onClick={handleButtonClick}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
-                >
-                  <Upload className="w-4 h-4" />
-                  <span>Bulk CV upload</span>
-                </button>
-
-                    <DatabaseDropdown
-                    selectTitle="Source"
-                    tooltipMessage="Filter by source"
-                    options={StatusFilterDropdown}
-                    />
-                
-                    <DatabaseDropdown
-                    selectTitle="Status"
-                    tooltipMessage="Filter by status"
-                    options={SourceFilterDropdown}
-                    />
-
-                <button 
-                    onClick={handleBulkBan}
-                    disabled={selectedRows.length<1}
-                    type="button"
-                    data-tooltip-id="my-tooltip"
-                    data-tooltip-content={"Ban"}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition whitespace-nowrap
-                    ${selectedRows.length < 1 
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                    : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
-                    >
-                    <Ban className="w-4 h-4"/>
-                </button>
-                
-                <button 
-                    onClick={handleBulkDelete}
-                    disabled={selectedRows.length<1}
-                    type="button"
-                    data-tooltip-id="my-tooltip"
-                    data-tooltip-content={"Delete"}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition whitespace-nowrap
-                        ${selectedRows.length < 1 
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                    : "bg-white text-red-500 hover:bg-red-500 hover:text-white"}`}
-                    >
-                    <Trash2 className="w-4 h-4" />
-                </button>
-
-                <div className="relative inline-block" ref={dropdownRef}>
-                  <button 
-                    onClick={() => {
-                      if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
-                    }}                  
-                    disabled={selectedRows.length < 1}
-                    type="button"
-                    data-tooltip-id="my-tooltip"
-                    data-tooltip-content={"Action"}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition whitespace-nowrap
-                      ${selectedRows.length < 1 
-                        ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                        : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
-                  >
-                    <Forward className="w-5 h-6" />
-                  </button>
-
-                  {showDropdown && (
-                    <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
-                      <button 
-                        onClick={() => {
-                          setIsActionSelected(true)
-                          setactionName("Move to applicants")
-                          setShowDropdown(false);
-                        }} 
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                      >
-                        Move to applicants
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setIsActionSelected(true)
-                          setactionName("Move to bulk")
-                          setShowDropdown(false);
-                        }} 
-                        className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                      >
-                        Move for bulk matching
-                      </button>
-                    </div>
-                  )}
-                </div>
-
-                <button 
-                    onClick={handleBulkCVDownload}
-                    disabled={selectedRows.length<1}
-                    type="button"
-                    data-tooltip-id="my-tooltip"
-                    data-tooltip-content={"Download cv"}
-                    className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm transition whitespace-nowrap
-                    ${selectedRows.length < 1 
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                    : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
-                    >
-                    <Download className="w-4 h-4" />
-                </button>
-            </div>
-          </div>
-        </div>
+      <button
+        type="button"
+        onClick={handleButtonClick}
+        className="w-full lg:w-auto flex-none inline-flex items-center justify-center gap-2 h-9 rounded-xl px-3 text-xs transition shadow-md bg-blue-600 text-white hover:bg-blue-700"
+      >
+        <Upload className="w-4 h-4 stroke-[3]" />
+        <span>Bulk CV upload</span>
+      </button>
+    </div>
       </div>
+  {/* Row 3 (mobile/tablet stacked): Source, Status */}
+  <div className="w-full lg:w-auto flex flex-row gap-2 lg:flex-row lg:items-center lg:gap-1 ">
+    {/* Source dropdown */}
+    <div className="w-full lg:w-auto">
+      <DatabaseDropdown
+        selectTitle="Source"
+        tooltipMessage="Filter by source"
+        options={StatusFilterDropdown}
+      />
+    </div>
+
+    {/* Status dropdown */}
+    <div className="w-full lg:w-auto">
+      <DatabaseDropdown
+        selectTitle="Status"
+        tooltipMessage="Filter by status"
+        options={SourceFilterDropdown}
+      />
+    </div>
+  </div>
+
+  {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
+  <div className="w-full lg:w-auto">
+    <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible py-1">
+      <button
+        onClick={handleBulkBan}
+        disabled={selectedRows.length < 1}
+        type="button"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={"Ban"}
+        className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+      >
+        <Ban className="w-4 h-4" />
+      </button>
+
+      <button
+        onClick={handleBulkDelete}
+        disabled={selectedRows.length < 1}
+        type="button"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={"Delete"}
+        className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-red-500 hover:bg-red-500 hover:text-white"
+      >
+        <Trash2 className="w-4 h-4" />
+      </button>
+
+      <div className="relative inline-block" ref={dropdownRef}>
+        <button
+          onClick={() => {
+            if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
+          }}
+          disabled={selectedRows.length < 1}
+          type="button"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={"Action"}
+          className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+        >
+          <Forward className="w-5 h-6" />
+        </button>
+
+        {showDropdown && (
+          <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
+            <button
+              onClick={() => {
+                setIsActionSelected(true);
+                setactionName("Move to applicants");
+                setShowDropdown(false);
+              }}
+              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+            >
+              Move to applicants
+            </button>
+            <button
+              onClick={() => {
+                setIsActionSelected(true);
+                setactionName("Move to bulk");
+                setShowDropdown(false);
+              }}
+              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+            >
+              Move for bulk matching
+            </button>
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={handleBulkCVDownload}
+        disabled={selectedRows.length < 1}
+        type="button"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={"Download cv"}
+        className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+      >
+        <Download className="w-4 h-4" />
+      </button>
+    </div>
+  </div>
+</div>
+
       <br />
         {isLoading ? (
         <SkeletonLoader

@@ -84,9 +84,15 @@ export interface CandidateParsedCvDetails {
   relevantYOE: number;
   totalYOE: number;
   updatedAt: string;
+  userDetailId:String;
+  //for admin db listing
+  companyId:string;
+  jobId:string;
+  agencyUserId:string;
 }
 
 export interface AgencyDatabaseApplicantDetailsDto {
+  agencyUserId:string;
   agencyUserSubmissionId: string;
   candidateEmail: string;
   candidateParsedCvDetails: CandidateParsedCvDetails;
@@ -98,8 +104,17 @@ export interface AgencyDatabaseApplicantDetailsDto {
   phoneNumberDetails: PhoneNumberDetails;
   refereeType: string;
   updatedAt: string;
+  candidateProfileInCompanies:CandidateProfileInCompanies[];
+
+  //fake data
+  emailId:string;
 }
 
+export interface CandidateProfileInCompanies{
+    companyId: string;
+    companyName: string;
+    jobIds: string[];
+}
 interface PhoneNumberDetails {
   number: number;
   countryCode: number;
@@ -126,10 +141,13 @@ export interface AgencyListDetailsDto {
   updatedByAgencyUserId: string;
 
   //future data
-  assignedJobs:number;
-  totalCandidateSubmitted:number;
+  totalAssignedJobs:number;
+  totalCandidatesSubmitted:number;
   totalCandidateRejected:number;
   totalCandidateHired:number;
   isPaused:boolean;
   isDelete:boolean;
+
+  //fake data
+  emailId:string;
 }

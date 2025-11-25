@@ -115,14 +115,14 @@ const navigationItems: NavItem[] = [
     dashboardTypes: ["ADMIN"],
   },
   {
-    id: "aAgency/agencyList",
+    id: "agencyList",
     label: "Agency List",
     icon: Warehouse,
     dashboardTypes: ["ADMIN", "CORPORATE"],
     expandable: true,
     child: [
       { 
-        id: "aAgency/allCandidates",
+        id: "allCandidates",
         label: "All candidates", 
         icon: Warehouse,
         dashboardTypes: ["ADMIN", "CORPORATE"],
@@ -218,36 +218,6 @@ const navigationItems: NavItem[] = [
   //   label: "Support",
   //   icon: SupportIcon,
   //   dashboardTypes: ["ADMIN", "EMPLOYEE", "CANDIDATE"],
-  // },
-  // {
-  //   id: "agInvites",
-  //   label: "Invites",
-  //   icon: HomeIcon,
-  //   // dashboardTypes: ["AGENCY"],
-  // },
-  // {
-  //   id: "agJobs",
-  //   label: "Jobs",
-  //   icon: HomeIcon,
-  //   // dashboardTypes: ["AGENCY"],
-  // },
-  // {
-  //   id: "agApplicants",
-  //   label: "Applicants",
-  //   icon: HomeIcon,
-  //   // dashboardTypes: ["AGENCY"],
-  // },
-  // {
-  //   id: "agBulkCVCheck",
-  //   label: "Bulk cv check",
-  //   icon: HomeIcon,
-  //   // dashboardTypes: ["AGENCY"],
-  // },
-  // {
-  //   id: "agRecharge",
-  //   label: "Recharge",
-  //   icon: HomeIcon,
-  //   // dashboardTypes: ["AGENCY"],
   // },
 ];
 

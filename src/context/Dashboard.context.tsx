@@ -94,8 +94,12 @@ export const DashboardProvider = ({
   useEffect(() => {
     const { Dashboard, ActiveTab } = getDashboardTypeFromUrl();
     setDashboardType(Dashboard);
-    setActiveTab(ActiveTab);
+    // Only update activeTab when getDashboardTypeFromUrl returns a meaningful label
+    if (ActiveTab && ActiveTab.length > 0) {
+      setActiveTab(ActiveTab);
+    }
   }, [location.pathname]);
+
 
   // Dynamic breadcrumb based on active tab
   const breadcrumb = useMemo(

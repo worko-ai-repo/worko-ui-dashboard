@@ -201,7 +201,7 @@ export default function AgencyListTable(props: any) {
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.assignedJobs ?? "-"}</span>
+                <span>{row?.totalAssignedJobs ?? "-"}</span>
             </div>
         ),
     },
@@ -212,7 +212,7 @@ export default function AgencyListTable(props: any) {
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.totalCandidateSubmitted ?? "-"}</span>
+                <span>{row?.totalCandidatesSubmitted ?? "-"}</span>
             </div>
         ),
     },

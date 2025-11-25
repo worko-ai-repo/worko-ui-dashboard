@@ -101,10 +101,14 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
     }
 
     try {
-      const { response } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
+      const { response, error } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
 
       if (!response) {
-        toast.error("Error assigning data, please try again later.", getToastOptions({}));
+        if(error?.message == "Few jobs are already assigned to this agency, so check and try again."){
+          toast.error(error?.message, getToastOptions({}));
+        }else{
+          toast.error("Error assigning data, please try again later.", getToastOptions({}));
+        }
         return;
       }
       if(response.isSuccess){

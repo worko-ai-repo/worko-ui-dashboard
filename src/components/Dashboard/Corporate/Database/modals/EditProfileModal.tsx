@@ -8,12 +8,12 @@ import { useForm } from 'react-hook-form';
 interface EditProfileModalProps{
     onClose: () => void;
     isOpen: boolean;
-    fullDetails:any;
+    candidateFullDetails:any;
 }
 const EditProfileModal:React.FC<EditProfileModalProps> = ({  
     onClose,
     isOpen,
-    fullDetails,
+    candidateFullDetails,
 }) => {
       const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm({ mode: "onChange",
       defaultValues: {
@@ -26,7 +26,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         //   phoneNumber: "",
         // },
         currentDesignation: "",
-        YOE: "",
+        YOE: null,
         currentCTC: "",
         expectedCTC: "",
         locationComfortableWith: "",
@@ -40,24 +40,20 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
     const [isSubmitting,setIsSubmitting]  = useState(false);
     
     useEffect(() => {
-    if (isOpen && fullDetails) {
+    if (isOpen && candidateFullDetails) {
         reset({
-            candidateName: fullDetails.candidateName || "",
-            candidateEmail: fullDetails.candidateEmail || "",
-            contactNumber:fullDetails.contactNumber || "",
-            // phoneNumberDetails: {
-            // countryCode: fullDetails.phoneNumberDetails?.countryCode || "",
-            // phoneNumber: fullDetails.phoneNumberDetails?.phoneNumber || "",
-            // },
-            currentCompany: fullDetails.currentCompany || "",
-            currentDesignation:fullDetails.currentDesignation || "",
-            YOE: fullDetails.YOE || "",
-            currentCTC: fullDetails.currentCTC || "",
-            expectedCTC: fullDetails.expectedCTC || "",
-            locationComfortableWith: fullDetails.locationComfortableWith || "",
-            noticePeriod: fullDetails.noticePeriod || "",
-            coolingPeriod: fullDetails.coolingPeriod || "",
-            referredBy:fullDetails.referredBy || "",
+            candidateName: candidateFullDetails?.candidateParsedCvDetails?.name || "",
+            candidateEmail: candidateFullDetails?.candidateParsedCvDetails?.email || "",
+            contactNumber:candidateFullDetails?.candidateParsedCvDetails?.phoneNumberDetails?.number || "",
+            currentCompany: candidateFullDetails?.candidateParsedCvDetails?.currentCompany || "",
+            currentDesignation:candidateFullDetails?.candidateParsedCvDetails?.currentDesignation || "",
+            YOE: candidateFullDetails?.candidateParsedCvDetails?.totalYOE || 0,
+            currentCTC: candidateFullDetails?.candidateParsedCvDetails?.currentCTC || 0,
+            expectedCTC: candidateFullDetails?.candidateParsedCvDetails?.expectedCTC || 0,
+            locationComfortableWith: candidateFullDetails?.candidateParsedCvDetails?.location || "",
+            noticePeriod: candidateFullDetails?.candidateParsedCvDetails?.noticePeriod || 0,
+            coolingPeriod: candidateFullDetails.coolingPeriod || "",
+            referredBy:candidateFullDetails.referredBy || "",
         })
         setVisible(true);
         const timer = setTimeout(() => setIsAnimatingIn(true), 10);
@@ -67,7 +63,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         const timer = setTimeout(() => setVisible(false), 300);
         return () => clearTimeout(timer);
     }
-    }, [isOpen,fullDetails,reset]);
+    }, [isOpen,candidateFullDetails,reset]);
 
     const formSubmit = (data:any) =>{
         console.log(data)
@@ -126,19 +122,26 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             </div>
             <div className='text-left'>
                 <label htmlFor="">Total YOE <span className='text-red-500'>*</span></label>
-                <input type="text" 
-                className="input_primary auth_input capitalize"
-                {...register("YOE")}/>
+                <input 
+                    type="number"
+                    step="0.1" //allows in decimal
+                    className="input_primary auth_input"
+                    {...register("YOE", {
+                        valueAsNumber: true,
+                    })}
+                />
+                {errors.YOE && <p className="text-red-500 text-sm">Please enter a valid number</p>}
             </div>
+
             <div className='flex gap-2'>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Current CTC <span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Current CTC(LPA)<span className='text-red-500'>*</span></label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
                     {...register("currentCTC")}/>
                 </div>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Expected CTC <span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Expected CTC(LPA)<span className='text-red-500'>*</span></label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
                     {...register("expectedCTC")}/>
@@ -151,19 +154,30 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     className="input_primary auth_input capitalize"
                     {...register("locationComfortableWith")}/>
                 </div>
-            <div className='text-left flex-1'>
+            {/* <div className='text-left flex-1'>
                 <label htmlFor="">Notice Period <span className='text-red-500'>*</span></label>
                 <select 
                     className="input_primary auth_input capitalize"
                     {...register("noticePeriod")}
                 >
                     <option value="">Select notice period</option>
-                    <option value="15">15 days</option>
-                    <option value="30">30 days</option>
-                    <option value="45">45 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
+                    <option value="15">15</option>
+                    <option value="30">30</option>
+                    <option value="45">45</option>
+                    <option value="60">60</option>
+                    <option value="90">90</option>
                 </select>
+            </div> */}
+            <div className='text-left flex-1'>
+                <label htmlFor="">Notice Period(in days)<span className='text-red-500'>*</span></label>
+                <input 
+                    type="number"
+                    className="input_primary auth_input"
+                    {...register("noticePeriod", {
+                        valueAsNumber: true,
+                    })}
+                />
+                {errors.noticePeriod && <p className="text-red-500 text-sm">Please enter a valid number</p>}
             </div>
             </div>
             <div className='text-left'>

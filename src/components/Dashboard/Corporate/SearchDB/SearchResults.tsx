@@ -91,18 +91,6 @@ const dummyData = [
   }
 ];
 
-  // const jobsList = [
-  //   { label: "Full-Stack", value: "full-stack" },
-  //   { label: "Half-Stack", value: "half-stack" },
-  //   { label: "Frontend", value: "frontend" },
-  //   { label: "Backend", value: "backend" },
-  //   { label: "DevOps", value: "devops" },
-  //   { label: "UI/UX", value: "ui-ux" },
-  //   { label: "Data Engineer", value: "data-engineer" },
-  //   { label: "AI/ML", value: "ai-ml" },
-  //   { label: "QA Tester", value: "qa-tester" },
-  //   ];
-
   const suggestions = [
     "Show candidates with 3+ years of experience available to join in less than 30 days",
     "Find frontend developers skilled in React and TypeScript with immediate availability",

@@ -112,7 +112,7 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
           try {
             const uploadResponse:any = await invitingAgency(payload);
             if (!uploadResponse.success) {
-              toast.error("Failed to invite agency. Please try again.", getToastOptions({}));
+              toast.error(uploadResponse.data.message, getToastOptions({}));
               return; 
             }
             toast.success("Agency invited successfully!", getToastOptions({}));
@@ -162,7 +162,7 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
           const uploadResponse:any = await invitingAgency(payload);
           // console.log(uploadResponse,"uploadResponse")
           if (!uploadResponse.success) {
-            toast.error("Failed to invite agency. Please try again.", getToastOptions({}));
+            toast.error(uploadResponse.data.message, getToastOptions({}));
             return; 
           }
 
@@ -218,11 +218,11 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
 
       const invitingAgency = async (payload: any) => {
         try {
-          const { response } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
+          const { response,error } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
           if (response) {
             return { success: true, data: response };
           }
-          return { success: false };
+          return { success: false,data:error };
         } catch (error) {
           console.error("Upload failed:", error);
           return { success: false, error };

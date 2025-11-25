@@ -57,6 +57,10 @@ export default function AgencyCandidateListTable(props: any) {
     data,
     handleUpdate,
     userType,
+    pagination,
+    currentPage,
+    onPageChange,
+    onPageSizeChange,
   } = props as any;
 
   // State required for table interactions
@@ -72,6 +76,7 @@ export default function AgencyCandidateListTable(props: any) {
   const [isAllExpanded, setIsAllExpanded] = React.useState(false);
   const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
+  const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
@@ -154,6 +159,19 @@ export default function AgencyCandidateListTable(props: any) {
     };
     handleUpdate && handleUpdate(payload, row.id, hasRefetch);
   };
+
+      const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+      if (typeof value === "number") {
+        setPageSize(value);
+        onPageSizeChange(value);
+      } else {
+        setPageSize((prev:any) => {
+          const newValue = value(prev);
+          onPageSizeChange(newValue);
+          return newValue;
+        });
+      }
+    };
 
   // Column definitions (kept same as previous "All" view)
 const columns = [
@@ -582,12 +600,12 @@ const viewCV = async (row:AgencyAllCandidatesListDetailsDto) =>{
         // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
-        pageSize={10}
-        setPageSize={() => {}}
-        hasPrevPage={false}
-        hasNextPage={false}
-        handlePreviousPage={() => {}}
-        handleNextPage={() => {}}
+        pageSize={pageSize}
+        setPageSize={handlePageSizeChange}
+        handlePreviousPage={() => onPageChange(currentPage - 1)}
+        handleNextPage={() => onPageChange(currentPage + 1)}
+        hasPrevPage={currentPage > 1}
+        hasNextPage={!!pagination?.lastKey}
         // mainColumns={["jobProfile","agencyName",'applicantName','email',"viewCV","workoScore","action","currentStatus"]}
         // expandedColumns={['currentCompany',"currentDesignation",'currentCTC','expectedCTC', 'totalYOE','relevantYOE', 'readyToRelocate','anyComment','achievements']}
         />

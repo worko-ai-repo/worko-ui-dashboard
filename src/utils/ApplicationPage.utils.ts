@@ -26,6 +26,7 @@ class JobApplicationService {
     [JobApplicationStatusEnum.HIRED]: "Hired",
     [JobApplicationStatusEnum.JOINED]: "Joined",
     [JobApplicationStatusEnum.REJECTED]: "Rejected",
+    [JobApplicationStatusEnum.AWAITING]: "Awaiting",
 
     // Not part of timeline → keep as empty label
     [JobApplicationStatusEnum.ON_HOLD]: "",

@@ -40,7 +40,6 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       const { userDetails } = useAppContext();
 
       useEffect(() => {
-        console.log(data)
       if (isOpen && data) {
             reset({
             agencyName: data.agencyName || "",

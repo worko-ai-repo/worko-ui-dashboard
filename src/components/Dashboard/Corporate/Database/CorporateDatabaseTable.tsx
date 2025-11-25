@@ -182,7 +182,7 @@ const columns = [
               {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number
               ? <span>+{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}</span>
               : <span>{"NA"}</span>}     
-            </div>
+        </div>
         ),
     },
     {
@@ -358,22 +358,31 @@ const columns = [
     },
 ];
 
-    const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
-      console.log(row)
-        const payload = {
-            companyId: row?.companyId,
-            jobId:row?.jobId,
-            agencyUserId: row?.agencyUserSubmissionId,
-            candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
-        }
-        try {
+  const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
+    if(row?.refereeType === "WORKO"){
+      try {
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
+        setPdfViewDetails(response?.objectUrl)
+        setIsViewCVModalOpen(true)
+      } catch (error) {
+        console.log(error)
+      }
+    }else{
+      const payload = {
+        companyId: row?.companyId,
+        jobId:row?.jobId,
+        agencyUserId: row?.agencyUserId,
+        candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
+      }
+      try {
         const {response} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
         setPdfViewDetails(response.objectUrl)
         setIsViewCVModalOpen(true)
-        } catch (error) {
+      } catch (error) {
         console.log(error)
-        }
+      }
     }
+  }
 
   // Toggle row expansion
   const toggleExpand = (id: string) => {
@@ -457,7 +466,7 @@ return (
             setEditProfileData(undefined)
         }}
         isOpen={editProfileView}
-        fullDetails={editProfileData}
+        candidateFullDetails={editProfileData}
         />
         <Modal
           isOpen={isViewCVModalOpen}

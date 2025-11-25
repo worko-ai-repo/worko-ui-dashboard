@@ -345,8 +345,10 @@ const columns = [
         label: "Location",
         sortable: true,
         render: (row: AgencyAllCandidatesListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[100px]'>
-                <span>{row?.candidateParsedCvDetails?.location ?? "NA"}</span>
+            <div className='flex justify-center m-auto w-[100px] text-center'>
+                <span 
+                title={row?.candidateParsedCvDetails?.location}
+                className="truncate block w-full">{row?.candidateParsedCvDetails?.location ?? "NA"}</span>
             </div>
         ),
     },
@@ -385,6 +387,7 @@ const columns = [
         render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className='flex justify-center m-auto w-[40px]'>
             <button
+            title={"view cv"}
             className="flex flex-row justify-center items-center"
             onClick={()=>{
             viewCV(row)
@@ -471,6 +474,7 @@ const columns = [
 
             <button
               type="button"
+              title="reject"
               className="inline-flex items-center gap-2 rounded-lg bg-red-500 text-white text-xs hover:bg-white hover:text-red-500 transition border border-red-500 p-1 text-center"
               onClick={()=>{
                 setIsRejecting(true)

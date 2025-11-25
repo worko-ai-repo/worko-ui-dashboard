@@ -138,7 +138,7 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aAgency/allCandidates",
+          path: "allCandidates",
           element: (
             <Suspense fallback={<MainLoader />}>
               <AgencyCandidateList />
@@ -146,7 +146,7 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aAgency/agencyList",
+          path: "agencyList",
           element: (
             <Suspense fallback={<MainLoader />}>
               <AgencyList />

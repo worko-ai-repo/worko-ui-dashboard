@@ -9,6 +9,8 @@ import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApp
 import { RefreshCcw, LogOut } from 'lucide-react';
 import { Edit, View } from "@AssetsFolder/assets";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
+import MoveToApplicants from "./modals/MoveToApplicants";
+
 
 
 export const getCvViewDate = (statusTracker: any[]) => {
@@ -59,6 +61,7 @@ export default function SearchResultsTable(props: any) {
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
+  const [isAssignJobModelOpen,setIsAssignJobModelOpen] = useState<boolean>(false);
 
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
@@ -288,6 +291,10 @@ const columns = [
                 <button
                 type="button"
                 className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 text-xs hover:bg-blue-700 transition"
+                onClick={() => {
+                    setIsAssignJobModelOpen(true)
+                    setEditProfileData(row);
+                }}
                 >
                 <LogOut className="w-4 h-4 mt-1" />
                 <span className="text-left leading-tight text-xs">
@@ -390,6 +397,15 @@ const columns = [
         handlePreviousPage={() => {}}
         handleNextPage={() => {}}
         />
+        {editProfileData && (
+        <MoveToApplicants
+        dashboardType= {"CORPORATE"}
+        onClose= {() => setIsAssignJobModelOpen(false)}
+        isOpen= {isAssignJobModelOpen}
+        agencyData={editProfileData}
+        userDetails={userDetails}
+        />
+        )}
     </>
   );
 }
