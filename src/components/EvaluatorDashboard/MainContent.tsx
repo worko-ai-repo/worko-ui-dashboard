@@ -50,7 +50,8 @@ interface MainContentProps {
       isOpen: boolean;
       interviewDetails: InterviewDto;
       userName: string;
-    }>>;
+    }>
+  >;
 }
 
 const handleLogout = async () => {
@@ -82,7 +83,7 @@ const MainContent: React.FC<MainContentProps> = ({
   const [evaluatorEmail, setEvaluatorEmail] = useState<string>("");
   const [interviewDetails, setInterviewDetails] = useState<InterviewDto | undefined>(undefined);
   const [isAlreadyRequested, setIsAlreadyRequested] = useState<boolean>(false);
- 
+
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const jobApplicationId = searchParams.get("jobApplicationId") || "";
@@ -398,7 +399,7 @@ const MainContent: React.FC<MainContentProps> = ({
           <div className="bg-white border rounded-lg p-6 shadow-sm ">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-500">Video Interview</h3>
-              <button
+             {checkValidInterview() && !isAlreadyRequested && <button
                 onClick={() => {
                   setInterviewDetailviewModal({
                     isOpen: true,
@@ -410,15 +411,16 @@ const MainContent: React.FC<MainContentProps> = ({
                   interviewDetails && !isAlreadyRequested
                     ? "bg-green-600 text-white hover:bg-green-700 transform hover:scale-105 cursor-pointer"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}>
+                }`}
+              >
                 <Play className="w-4 h-4" />
                 <span className="text-sm font-semibold">
                   {interviewDetails && !isAlreadyRequested ? "View Interview" : "View"}
                 </span>
-              </button>
+              </button>}
             </div>
 
-            {interviewDetails && !isAlreadyRequested ? (
+            {checkValidInterview() && !isAlreadyRequested ? (
               <div className="flex items-center  rounded-lg  p-6 mb-6">
                 <h3 className="text-lg font-semibold text-gray-700 ">Scores: &nbsp;</h3>
                 <div className="flex justify-evenly p-3 rounded-lg gap-6 bg-cyan-100 flex-1  ">
@@ -438,7 +440,7 @@ const MainContent: React.FC<MainContentProps> = ({
                   Video interview data not available.
                 </p>
 
-               {/*  <button
+                {/*  <button
                   onClick={async () => {
                     if (!userDetails?.email || !applicationDetails) {
                       toast.error(
@@ -539,6 +541,14 @@ const MainContent: React.FC<MainContentProps> = ({
         </div>
       </div>
     );
+  }
+
+  function checkValidInterview() {
+    if (!interviewDetails) return false;
+    if (interviewDetails && !interviewDetails?.interviewHistory) return false;
+    if (interviewDetails.interviewHistory && interviewDetails.interviewHistory.length === 0)
+      return false;
+    return true;
   }
 
   if (!isLoadingData && hasAttemptedLoad && requests.length === 0) {
