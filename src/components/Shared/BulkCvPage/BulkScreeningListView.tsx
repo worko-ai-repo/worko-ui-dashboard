@@ -11,7 +11,7 @@ import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corpor
 import secureStorage from "@Utils/SecureStorage.utils";
 
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 
 // Define the data type for our screening records
@@ -28,6 +28,7 @@ interface ScreeningRecord {
 
 const ScreeningListView: FunctionComponent = () => {
   const nav = useNavigate();
+  const location = useLocation();
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [BulkResumeId, setBulkResumeId] = useState<string>("");
   const [isBulkResumesOpen, setBulkResumesOpen] = useState<boolean>(false);
@@ -103,13 +104,30 @@ const ScreeningListView: FunctionComponent = () => {
       persistInUrl:true
     }
   );
+  const returnUrl = useMemo(() => {
+    const search = location.search || "?tab=screening-list";
+    return `${location.pathname}${search}`;
+  }, [location.pathname, location.search]);
+
   const renderActions = useCallback(
     (row: ScreeningRecord) => (
       <div className="flex  items-center">
         <button
           onClick={(e) => {
             e.stopPropagation();
-            nav(`listing/${row.id}`, { state: { jobTitle: row.jobTitle } });
+            const searchParams = new URLSearchParams();
+            if (row.jobTitle) {
+              searchParams.set("jobTitle", row.jobTitle);
+            }
+            nav(
+              {
+                pathname: `listing/${row.id}`,
+                search: searchParams.size ? `?${searchParams.toString()}` : "",
+              },
+              {
+                state: { jobTitle: row.jobTitle, returnUrl },
+              }
+            );
           }}
           data-tooltip-id="my-tooltip"
           data-tooltip-content="View details"
@@ -122,7 +140,7 @@ const ScreeningListView: FunctionComponent = () => {
         </button>
       </div>
     ),
-    []
+    [nav, returnUrl]
   );
 
   // Define columns for the table

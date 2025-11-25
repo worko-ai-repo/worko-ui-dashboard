@@ -55,6 +55,7 @@ export interface CursorPaginationApplicationDataAdminParams {
   jobId?: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
+  includeInterviewDetails?: boolean;
 }
 
 /**

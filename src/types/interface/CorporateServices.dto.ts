@@ -353,6 +353,7 @@ export interface CursorPaginationApplicationDataParams {
   jobId: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
+  includeInterviewDetails?: boolean;
 }
 
 /**

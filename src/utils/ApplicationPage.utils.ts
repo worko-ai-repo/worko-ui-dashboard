@@ -2,6 +2,10 @@ import { JobApplicationDetailsDto, StatusTracker } from "@Interfaces/CorporateDa
 import { parseScorePoints, ScorePoint } from "./DetailedAnalysis.utils";
 import { TimelineStep } from "@Components/Shared/Timeline";
 import { JobApplicationStatusEnum } from "@Enums/JobAndApplication.enum";
+import { InterviewRequestPayload } from "@Services/Interview.service";
+import secureStorage from "./SecureStorage.utils";
+import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 
 class JobApplicationService {
   private readonly THRESHOLD_SCORE = 40;
@@ -237,6 +241,56 @@ class JobApplicationService {
     return typeof row?.displayToCorporate === "boolean" && row.displayToCorporate === true
    }
   } 
+
+  public generateInterviewRequestPayload({
+    candidateEmail,
+    jobId,
+    candidateFullName,
+    companyId,
+    companyName,
+    position,
+    requesterUserName,
+  }: {
+    candidateEmail: string;
+    jobId: string;
+    candidateFullName: string;
+    companyId: string;
+    companyName: string;
+    position: string;
+    requesterUserName: string;
+  }):InterviewRequestPayload{
+    const corporateUserType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE);
+    const userType = secureStorage
+      .getItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE)
+      ?.includes(UserRole.ADMIN)
+      ? "ADMIN"
+      : corporateUserType || UserRole.CORPORATE_ADMIN;
+    // check if we are on evaluatorpage if yes then use EVALUATOR as actor
+    const isEvaluatorPage = window.location.pathname.includes('/evaluator');
+    const actor: "ADMIN" | "CORPORATE_RECRUITER" | "CORPORATE_ADMIN" | "EVALUATOR" = isEvaluatorPage ? 'EVALUATOR' : userType as "ADMIN" | "CORPORATE_RECRUITER" | "CORPORATE_ADMIN" | "EVALUATOR";
+    
+
+    const data = {
+      candidateEmail,
+      jobId,
+      candidateFullName,
+      companyId,
+      companyName,
+      position,
+      requesterUserName,
+      requestedByActor: actor.toLocaleUpperCase().replace(/-/g, '_') as "ADMIN" | "CORPORATE_RECRUITER" | "CORPORATE_ADMIN" | "EVALUATOR",
+    };
+    return {
+      candidateEmail: data.candidateEmail,
+      jobId: data.jobId,
+      candidateFullName: data.candidateFullName,
+      companyId: data.companyId,
+      companyName: data.companyName,
+      position: data.position,
+      requesterUserName: data.requesterUserName,
+      requestedByActor: data.requestedByActor,
+    };
+  }
 }
 
 const jobApplicationServiceObj = new JobApplicationService();

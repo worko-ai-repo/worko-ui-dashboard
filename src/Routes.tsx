@@ -6,7 +6,7 @@ import ProtectedRoute from "@Services/SessionValidator.service";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import AdminDashboard from "@Pages/WorkoAdmin/AdminDashboard";
 import EmployeeDashboard from "@Pages/Employee/EmployeeDashboard";
-
+import Interview from "@Pages/Interview/Interview";
 
 const EvaluatorDashboard = lazy(() => import("@Components/EvaluatorDashboard/EvaluatorDashboard"));
 const CorporateDashboard = lazy(() => import("@Pages/Corporate/CorporateDashboard"));
@@ -34,7 +34,10 @@ const AppRoutes = createBrowserRouter(
           path: "corporate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.CORPORATE]} element={<CorporateDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.CORPORATE]}
+                element={<CorporateDashboard />}
+              />
             </Suspense>
           ),
         },
@@ -50,7 +53,21 @@ const AppRoutes = createBrowserRouter(
           path: "candidate/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<CandidateDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<CandidateDashboard />}
+              />
+            </Suspense>
+          ),
+        },
+        {
+          path: "interview/:id/*",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<Interview />}
+              />
             </Suspense>
           ),
         },
@@ -58,7 +75,10 @@ const AppRoutes = createBrowserRouter(
           path: "employee/*",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ProtectedRoute requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]} element={<EmployeeDashboard />} />
+              <ProtectedRoute
+                requiredRoles={[UserRole.ADMIN, UserRole.GENERAL_USER]}
+                element={<EmployeeDashboard />}
+              />
             </Suspense>
           ),
         },

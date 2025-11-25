@@ -136,14 +136,22 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
       setValue("teamSize", companyData.teamSize || 0);
       setValue("aboutCompany", companyData.aboutCompany || "");
       setValue("isCompanyRequestPageFlag", companyData.isCompanyRequestPageFlag || false);
-
       // Set logo preview if exists
       if (companyData.logoUrl) {
         setLogoPreview(companyData.logoUrl);
       }
-
       // Store initial form data for change detection
-      setInitialFormData(JSON.stringify(companyData));
+      setInitialFormData(JSON.stringify({
+        name: companyData.name || "",
+        website: companyData.website || "",
+        linkedIn: companyData.linkedIn || "",
+        carrierPage: companyData.carrierPage || "",
+        logoUrl: companyData.logoUrl || "",
+        industry: companyData.industry || "",
+        teamSize: companyData.teamSize || 0,
+        aboutCompany: companyData.aboutCompany || "",
+        isCompanyRequestPageFlag: companyData.isCompanyRequestPageFlag || false,
+      }));
     }
   }, [companyData, setValue, mode]);
 
@@ -601,7 +609,7 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
               About Company<span className="text-red-500 ml-1">*</span>
             </label>
             <Editor
-              value={mode === "UPDATE" ? companyData?.aboutCompany || "" : ""}
+              value={watch("aboutCompany")}
               style={{ height: "200px" }}
               onChange={(htmlVal: string, plainVal: string) => {
                 setValue("aboutCompany", plainVal);

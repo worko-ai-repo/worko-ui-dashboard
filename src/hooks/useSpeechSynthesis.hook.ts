@@ -27,13 +27,13 @@ export const useSpeechRecognition = (): SpeechRecognitionResult => {
   const initializeRecognition = useCallback(() => {
     if (!isSupported) return null;
 
-    const SpeechRecognitionClass = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = new SpeechRecognitionClass();
+    const SpeechRecognitionClass = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognitionClass() as SpeechRecognition;
 
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-    recognition.maxAlternatives = 1;
+    // Removed unsupported property 'maxAlternatives'
 
     recognition.onstart = () => {
       setIsListening(true);
@@ -146,64 +146,3 @@ export const useSpeechRecognition = (): SpeechRecognitionResult => {
     resetTranscript,
   };
 };
-
-// Extend Window interface for TypeScript
-declare global {
-  interface SpeechRecognitionEvent {
-    resultIndex: number;
-    results: {
-      isFinal: boolean;
-      [key: number]: {
-        transcript: string;
-      };
-    }[];
-  }
-
-  interface SpeechRecognitionErrorEvent {
-    error: string;
-  }
-
-  interface SpeechRecognition {
-    start: () => void;
-    stop: () => void;
-    onstart: (() => void) | null;
-    onresult: ((event: SpeechRecognitionEvent) => void) | null;
-    onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-    onend: (() => void) | null;
-    continuous: boolean;
-    interimResults: boolean;
-    lang: string;
-    maxAlternatives: number;
-  }
-
-  interface Window {
-    SpeechRecognition: {
-      new (): {
-        start: () => void;
-        stop: () => void;
-        onstart: (() => void) | null;
-        onresult: ((event: SpeechRecognitionEvent) => void) | null;
-        onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-        onend: (() => void) | null;
-        continuous: boolean;
-        interimResults: boolean;
-        lang: string;
-        maxAlternatives: number;
-      };
-    };
-    webkitSpeechRecognition: {
-      new (): {
-        start: () => void;
-        stop: () => void;
-        onstart: (() => void) | null;
-        onresult: ((event: SpeechRecognitionEvent) => void) | null;
-        onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
-        onend: (() => void) | null;
-        continuous: boolean;
-        interimResults: boolean;
-        lang: string;
-        maxAlternatives: number;
-      };
-    };
-  }
-}

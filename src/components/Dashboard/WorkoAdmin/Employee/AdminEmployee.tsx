@@ -298,8 +298,6 @@ const Employee = () => {
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
               <InputFromDataToDateFilter 
                 onDateChange={handleDateRangeChange}
-                defaultFromDate={fromDate}
-                defaultToDate={toDate}
               />
             </div>
           </div>

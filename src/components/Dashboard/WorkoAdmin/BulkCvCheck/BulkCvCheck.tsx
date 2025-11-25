@@ -49,8 +49,19 @@ const BulkCVCheck: React.FC = () => {
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const tab = queryParams.get("tab");
+    if (!tab) {
+      navigate(
+        {
+          pathname: location.pathname,
+          search: "?tab=new-screening",
+        },
+        { replace: true }
+      );
+      setisScreeningNew(true);
+      return;
+    }
     setisScreeningNew(tab !== "screening-list");
-  }, [location.search]);
+  }, [location.pathname, location.search, navigate]);
 
   //UseEffect to get the state from location for description and open the form directly if data is present in state and page is screening new
   useEffect(() => {
@@ -61,14 +72,23 @@ const BulkCVCheck: React.FC = () => {
         setDropDownData(null);
       }
       // Clear the state to prevent re-triggering on subsequent renders
-      navigate(location.pathname, { replace: true });
+      navigate(
+        {
+          pathname: location.pathname,
+          search: location.search,
+        },
+        { replace: true }
+      );
     }
   }, [location.state, isScreeningNew, navigate]);
 
   const handleTabChange = (isFormOpen: boolean) => {
     setisScreeningNew(isFormOpen);
     const tab = isFormOpen ? "new-screening" : "screening-list";
-    navigate(`?tab=${tab}`);
+    navigate({
+      pathname: location.pathname,
+      search: `?tab=${tab}`,
+    });
   };
 
   async function handleParseJd(jobDescription: string) {

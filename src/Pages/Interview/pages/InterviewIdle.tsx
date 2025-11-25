@@ -1,0 +1,805 @@
+import { Card, CardHeader, CardTitle, CardContent } from "@Components/ui/card";
+import { Button } from "@Components/ui/button";
+import { Play, Camera, Mic, Monitor, Check, AlertCircle, Smartphone, Info } from "lucide-react";
+import { useInterview } from "../../../context/Interview.context";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
+import { useSearchParams, useLocation, useNavigate, useParams } from "react-router-dom";
+import { InterviewDto } from "@TypesAndConstants/Interview.dto";
+import interviewServiceObj from "@Services/Interview.service";
+import { useAppContext } from "@Context/App.context";
+import { logo_text } from "@AssetsFolder/assets";
+import InterviewIdelFragment from "@Components/Interview/InterviewIdelFragment";
+import { useFaceDetection } from "@Hooks/useFaceDetection.hook";
+
+interface PermissionState {
+  camera: boolean;
+  microphone: boolean;
+  screen: boolean;
+}
+
+const InterviewIdle = () => {
+  const {
+    startInterview,
+    error,
+    speechError,
+    isSpeechSupported,
+    currentInterview,
+    loadExistingInterview,
+    setInterviewStream,
+  } = useInterview();
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { id: interviewIdParam } = useParams<{ id: string }>();
+  const { userDetails } = useAppContext();
+
+  const [isInitiating, setIsInitiating] = useState(false);
+  const [initError, setInitError] = useState<string | null>(null);
+  const [permissions, setPermissions] = useState<PermissionState>({
+    camera: false,
+    microphone: false,
+    screen: false,
+  });
+  const [isRequestingPermissions, setIsRequestingPermissions] = useState(false);
+  const [permissionError, setPermissionError] = useState<string | null>(null);
+  const [isTesting, setIsTesting] = useState(false);
+  const [micTestComplete, setMicTestComplete] = useState(false);
+  const [testStream, setTestStream] = useState<MediaStream | null>(null);
+  const [isMobileOrTablet, setIsMobileOrTablet] = useState(false);
+  const [isStartingInterview, setIsStartingInterview] = useState(false);
+  const faceVideoRef = useRef<HTMLVideoElement>(null);
+  const [isFaceStreamActive, setIsFaceStreamActive] = useState(false);
+  const [micDevices, setMicDevices] = useState<MediaDeviceInfo[]>([]);
+  const [selectedMicDeviceId, setSelectedMicDeviceId] = useState("");
+  const [micLevel, setMicLevel] = useState(0);
+  const [micTestError, setMicTestError] = useState<string | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const micTestTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const {
+    isFacePresent,
+    isFaceCentered,
+    faceWarning,
+    detectionError: faceDetectionError,
+  } = useFaceDetection({
+    videoRef: faceVideoRef,
+    enabled: isFaceStreamActive,
+    detectionInterval: 400,
+  });
+
+  const isFaceReady = isFacePresent && isFaceCentered && !faceWarning && !faceDetectionError;
+
+  const stage = searchParams.get("stage");
+  const interviewDataFromState = location.state?.interviewData as InterviewDto | undefined;
+  const interviewStage = (stage === "continue" ? "continue" : "new") as "new" | "continue";
+
+  // Log for debugging
+/*   useEffect(() => {
+    console.log("InterviewIdle - URL Params:", {
+      interviewIdParam,
+      stage,
+      interviewStage,
+      hasInterviewData: !!interviewDataFromState,
+    });
+  }, [interviewIdParam, stage, interviewStage, interviewDataFromState]); */
+
+  const isContinuing =
+    stage === "continue" &&
+    (currentInterview || interviewDataFromState) &&
+    (currentInterview?.status === "PENDING" ||
+      currentInterview?.status === "IN_PROGRESS" ||
+      interviewDataFromState?.status === "PENDING");
+
+  const allPermissionsGranted = permissions.camera && permissions.microphone;
+  const canProceed = allPermissionsGranted && micTestComplete && isFaceReady;
+  const micLevelPercentage = Math.min(Math.round(micLevel * 100), 100);
+  const micLevelColorClass =
+    micLevel > 0.6 ? "bg-green-500" : micLevel > 0.3 ? "bg-yellow-500" : "bg-red-500";
+
+  const stopExistingStream = (stream?: MediaStream | null) => {
+    stream?.getTracks().forEach((track) => track.stop());
+  };
+
+  const stopMicMonitoring = () => {
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+
+    if (micTestTimeoutRef.current) {
+      clearTimeout(micTestTimeoutRef.current);
+      micTestTimeoutRef.current = null;
+    }
+
+    if (audioContextRef.current) {
+      audioContextRef.current.close().catch(() => null);
+      audioContextRef.current = null;
+    }
+
+    analyserRef.current = null;
+  };
+
+  const buildAudioConstraints = (audioDeviceId?: string): MediaTrackConstraints => {
+    const constraints: MediaTrackConstraints = {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true,
+    };
+
+    if (audioDeviceId && audioDeviceId !== "default") {
+      constraints.deviceId = { exact: audioDeviceId };
+    }
+
+    return constraints;
+  };
+
+  const createInterviewStream = (audioDeviceId?: string) => {
+    return navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: buildAudioConstraints(audioDeviceId),
+    });
+  };
+
+  const fetchMicDevices = useCallback(
+    async (stream?: MediaStream | null) => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        const audioInputs = devices.filter((device) => device.kind === "audioinput");
+
+        setMicDevices(audioInputs);
+
+        const activeAudioTrack = (stream ?? testStream)?.getAudioTracks()[0];
+        const activeDeviceId =
+          activeAudioTrack?.getSettings().deviceId ||
+          selectedMicDeviceId ||
+          audioInputs[0]?.deviceId ||
+          "";
+
+        if (activeDeviceId && activeDeviceId !== selectedMicDeviceId) {
+          setSelectedMicDeviceId(activeDeviceId);
+        }
+      } catch (deviceError) {
+        console.error("Failed to enumerate microphones:", deviceError);
+      }
+    },
+    [selectedMicDeviceId, testStream]
+  );
+
+  // Handle interview initiation or loading from state
+  useEffect(() => {
+    const initializeInterview = async () => {
+      // If we have interview data in state (from modal), load it
+      if (interviewDataFromState) {
+        // console.log("Loading interview from state with ID:", interviewIdParam);
+        loadExistingInterview(
+          interviewDataFromState,
+          testStream || undefined,
+          interviewIdParam,
+          interviewStage
+        );
+        return;
+      }
+    };
+
+    initializeInterview();
+  }, [
+    interviewDataFromState,
+    currentInterview,
+    loadExistingInterview,
+    testStream,
+    isInitiating,
+    interviewIdParam,
+    interviewStage,
+  ]);
+
+  // Cleanup test stream and audio monitoring on unmount or stream change
+  useEffect(() => {
+    return () => {
+      stopMicMonitoring();
+      stopExistingStream(testStream);
+    };
+  }, [testStream]);
+
+  useEffect(() => {
+    if (!permissions.microphone) return;
+
+    fetchMicDevices(testStream);
+
+    const mediaDevices = navigator.mediaDevices;
+
+    if (!mediaDevices || typeof mediaDevices.addEventListener !== "function") {
+      return;
+    }
+
+    const handleDeviceChange = () => fetchMicDevices(testStream);
+    mediaDevices.addEventListener("devicechange", handleDeviceChange);
+
+    return () => {
+      mediaDevices.removeEventListener("devicechange", handleDeviceChange);
+    };
+  }, [permissions.microphone, fetchMicDevices, testStream]);
+
+  useEffect(() => {
+    const initializeInterview = async () => {
+      // If we don't have interview data and need to fetch it
+      if (!currentInterview && !isInitiating && interviewIdParam && interviewIdParam !== "new") {
+        setIsInitiating(true);
+        setInitError(null);
+
+        try {
+          // console.log("Fetching interview details for ID:", interviewIdParam);
+
+          // Try to fetch existing interview details first
+          const { response: fetchedInterview, error: fetchError } =
+            await interviewServiceObj.fetchInterviewDetails(interviewIdParam);
+
+          if (fetchError) {
+            console.error("Failed to fetch interview:", fetchError);
+            setInitError(fetchError);
+            setIsInitiating(false);
+            return;
+          }
+
+          if (fetchedInterview) {
+            // console.log("Successfully fetched interview, loading it...");
+            loadExistingInterview(
+              fetchedInterview,
+              testStream || undefined,
+              interviewIdParam,
+              interviewStage
+            );
+          }
+        } catch (error) {
+          console.error("Error during interview initialization:", error);
+          setInitError("An error occurred while loading the interview.");
+        } finally {
+          setIsInitiating(false);
+        }
+      }
+    };
+
+    initializeInterview();
+  }, []);
+
+  // Detect mobile or tablet device
+  useEffect(() => {
+    const checkDevice = () => {
+      const userAgent = navigator.userAgent.toLowerCase();
+      const isMobile = /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+        userAgent
+      );
+      const isTablet =
+        /(ipad|tablet|(android(?!.*mobile))|(windows(?!.*phone)(.*touch))|kindle|playbook|silk|(puffin(?!.*(IP|AP|WP))))/.test(
+          userAgent
+        );
+
+      // Also check screen size as a fallback
+      const screenWidth = window.innerWidth;
+      const isMobileScreen = screenWidth < 768; // Less than tablet breakpoint
+      const isTabletScreen = screenWidth >= 768 && screenWidth < 1024;
+
+      setIsMobileOrTablet(isMobile || isTablet || isMobileScreen || isTabletScreen);
+    };
+
+    checkDevice();
+
+    // Re-check on window resize
+    window.addEventListener("resize", checkDevice);
+    return () => window.removeEventListener("resize", checkDevice);
+  }, []);
+
+  const requestAllPermissions = async () => {
+    setIsRequestingPermissions(true);
+    setPermissionError(null);
+    stopMicMonitoring();
+    setMicTestComplete(false);
+    setMicLevel(0);
+    setMicTestError(null);
+
+    try {
+      // Request camera and microphone only
+      const mediaStream = await createInterviewStream(selectedMicDeviceId || undefined);
+
+      if (testStream) {
+        stopExistingStream(testStream);
+      }
+
+      setPermissions((prev) => ({
+        ...prev,
+        camera: true,
+        microphone: true,
+      }));
+
+      setTestStream(mediaStream);
+      setInterviewStream(mediaStream);
+      setIsFaceStreamActive(true);
+      await fetchMicDevices(mediaStream);
+
+      // Also pass to interview context if interview is already loaded
+      if (currentInterview) {
+        // console.log("Updating existing interview in context with stream");
+        loadExistingInterview(currentInterview, mediaStream, interviewIdParam, interviewStage);
+      }
+    } catch (err) {
+      const errorMsg =
+        err instanceof Error
+          ? err.message
+          : "Camera and microphone access are required. Please allow access.";
+      setPermissionError(errorMsg);
+
+      // Reset permissions on error
+      setPermissions({
+        camera: false,
+        microphone: false,
+        screen: false, // Removed screen sharing
+      });
+      setInterviewStream(null);
+      setIsFaceStreamActive(false);
+      setMicDevices([]);
+      setSelectedMicDeviceId("");
+    } finally {
+      setIsRequestingPermissions(false);
+    }
+  };
+
+
+  const handleMicDeviceChange = async (event: ChangeEvent<HTMLSelectElement>) => {
+    const deviceId = event.target.value;
+    setSelectedMicDeviceId(deviceId);
+    setMicTestComplete(false);
+    setMicLevel(0);
+    setMicTestError(null);
+    setIsTesting(false); // Reset testing state
+    stopMicMonitoring();
+
+    try {
+      const updatedStream = await createInterviewStream(deviceId || undefined);
+      stopExistingStream(testStream);
+      setTestStream(updatedStream);
+      setInterviewStream(updatedStream);
+      setIsFaceStreamActive(true);
+      
+      // Update the video element with the new stream
+      if (faceVideoRef.current) {
+        faceVideoRef.current.srcObject = updatedStream;
+      }
+      
+      await fetchMicDevices(updatedStream);
+    } catch (err) {
+      console.error("Failed to switch microphone:", err);
+      setMicTestError(
+        "Unable to access the selected microphone. Please choose a different device or review your permissions."
+      );
+    }
+  };
+
+  const startMicTest = () => {
+    if (!testStream) return;
+
+    stopMicMonitoring();
+    setIsTesting(true);
+    setMicTestComplete(false);
+    setMicTestError(null);
+    setMicLevel(0);
+
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(testStream);
+    const analyser = audioContext.createAnalyser();
+
+    analyser.fftSize = 2048;
+    source.connect(analyser);
+
+    audioContextRef.current = audioContext;
+    analyserRef.current = analyser;
+
+    const bufferLength = analyser.fftSize;
+    const dataArray = new Uint8Array(bufferLength);
+
+    const detectAudio = () => {
+      if (!analyserRef.current) return;
+
+      analyserRef.current.getByteTimeDomainData(dataArray);
+
+      let sumSquares = 0;
+      for (let i = 0; i < bufferLength; i += 1) {
+        const value = (dataArray[i] - 128) / 128;
+        sumSquares += value * value;
+      }
+
+      const rms = Math.sqrt(sumSquares / bufferLength);
+      const normalizedLevel = Math.min(rms * 4, 1);
+
+      setMicLevel(normalizedLevel);
+
+      if (normalizedLevel > 0.2) {
+        stopMicMonitoring();
+        setMicTestComplete(true);
+        setIsTesting(false);
+        return;
+      }
+
+      animationFrameRef.current = requestAnimationFrame(detectAudio);
+    };
+
+    detectAudio();
+
+    micTestTimeoutRef.current = setTimeout(() => {
+      stopMicMonitoring();
+      setIsTesting(false);
+      setMicLevel(0);
+      setMicTestError(
+        "We could not detect any audio. Please ensure your microphone is working and try again."
+      );
+    }, 15000);
+  };
+
+  useEffect(() => {
+    if (faceVideoRef.current && testStream) {
+      faceVideoRef.current.srcObject = testStream;
+      setIsFaceStreamActive(true);
+    } else if (!testStream) {
+      setIsFaceStreamActive(false);
+    }
+  }, [testStream]);
+
+  const userName = userDetails?.fullName || "Candidate";
+  const firstName = userName.split(" ")[0];
+
+  const handleProceed = async () => {
+    setInitError(null);
+    setIsStartingInterview(true);
+    try {
+      await startInterview({
+        stage: interviewStage,
+        routeInterviewId: interviewIdParam,
+      });
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Failed to initiate interview. Please try again.";
+      setInitError(message);
+    } finally {
+      setIsStartingInterview(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b bg-white">
+      {/* Header */}
+      <div className="w-full">
+        <img src={logo_text} alt="Worko" className=" mx-auto h-8 sm:h-10 md:h-12 object-contain" />
+      </div>
+
+      {/* Main Content */}
+      <div
+        className="
+      flex flex-row items-center justify-between  mx-auto 
+      ">
+        <Card className="bg-white border-none  rounded-none  p-0 flex-1 h-screen max-sm:hidden ">
+          <InterviewIdelFragment />
+        </Card>
+
+        <Card className="bg-white border-blue-200 rounded-br-none rounded-tr-none shadow-lg   flex-1">
+          <CardHeader className="">
+            <CardTitle className="text-2xl sm:text-3xl capitalize md:text-3xl text-blue-800 text-left ">
+              {isContinuing
+                ? `Welcome Back, ${firstName}!`
+                : `Hi ${firstName}, Ready for Your Interview?`}
+            </CardTitle>
+            <p className="text-left text-gray-600 text-sm sm:text-base">
+              {isContinuing
+                ? "Let's continue where you left off"
+                : "Let’s get you set up before we begin."}
+            </p>
+          </CardHeader>
+          <CardContent className="p-4">
+            {/* Mobile/Tablet Warning */}
+            {isMobileOrTablet ? (
+              <Card className="border-2 border-red-200 bg-gradient-to-br from-red-50 to-white">
+                <CardContent className="p-6 text-center">
+                  <div className="inline-flex items-center justify-center w-16 h-16 bg-red-100 rounded-full mb-4">
+                    <Smartphone className="w-8 h-8 text-red-600" />
+                  </div>
+                  <h3 className="text-xl font-bold text-red-900 mb-3">Desktop Required</h3>
+                  <p className="text-gray-700 mb-4">
+                    Video interviews cannot be conducted on mobile devices or tablets.
+                  </p>
+                  <div className="bg-white border border-red-200 rounded-lg p-4 mb-4 text-left">
+                    <p className="font-semibold text-red-800 mb-2">Please use:</p>
+                    <ul className="text-sm text-gray-700 space-y-1">
+                      <li>• A desktop or laptop computer</li>
+                      <li>• A modern web browser (Chrome, Firefox, or Edge)</li>
+                      <li>• A stable internet connection</li>
+                      <li>• A quiet, well-lit environment</li>
+                    </ul>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    This ensures the best interview experience and allows us to properly verify your
+                    identity and monitor the session.
+                  </p>
+                  <Button
+                    onClick={() => navigate("/candidate/profile")}
+                    className="mt-4 w-full bg-gray-600 hover:bg-gray-700 text-white">
+                    Go Back to Dashboard
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : isInitiating ? (
+              <div className="flex flex-col items-center gap-3 py-8">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                <p className="text-gray-600">Setting up your interview...</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {/* Permissions Card */}
+                {!allPermissionsGranted && (
+                  <Card className="border-2 py-0 text-left border-blue-100 bg-gradient-to-br from-blue-50 to-white  ">
+                    <CardContent className="p-2  ">
+                      <h3 className="text-lg sm:text-lg font-semibold text-gray-900 ">
+                        Required Permissions
+                      </h3>
+                      <p className="text-xs font-semibold text-gray-600 mb-4">
+                      To begin your interview, please enable following:
+                      </p>
+
+                      <div className="space-y-3 mb-6 ">
+                        {/* Camera Permission */}
+                        <div className="flex items-center px-3 gap-3 py-1 bg-white rounded-lg border border-gray-200">
+                          <div
+                            className={`flex-shrink-0 p-1 w-6 h-6 rounded-full flex items-center justify-center ${
+                              permissions.camera ? "bg-green-100" : "bg-gray-100"
+                            }`}>
+                            {permissions.camera ? (
+                              <Check className="w-3 h-3 text-green-600" />
+                            ) : (
+                              <Camera className="w-3 h-3 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1  min-w-0">
+                            <p className="font-semibold text-gray-800 text-sm ">Camera Access</p>
+                            <p className="text-xs text-gray-500">
+                            So VERA can understand your expressions & presence
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Microphone Permission */}
+                        <div className="flex items-center px-3 gap-3 py-1 bg-white rounded-lg border border-gray-200">
+                          <div
+                            className={`flex-shrink-0 p-1 w-6 h-6 rounded-full flex items-center justify-center ${
+                              permissions.microphone ? "bg-green-100" : "bg-gray-100"
+                            }`}>
+                            {permissions.microphone ? (
+                              <Check className="w-3 h-3 text-green-600" />
+                            ) : (
+                              <Mic className="w-3 h-3 text-gray-400" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-gray-800 text-sm">Microphone Access</p>
+                            <p className="text-xs text-gray-500">So it can evaluate your responses clearly</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {permissionError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-red-600">{permissionError}</p>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={requestAllPermissions}
+                        disabled={isRequestingPermissions}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-sm sm:text-base">
+                        {isRequestingPermissions
+                          ? "Requesting Permissions..."
+                          : "Grant Permissions"}
+                      </Button>
+                      <>
+                      <Info className="w-3 h-3 text-blue-600 inline-block mr-1 mt-1" />
+                      <small className="text-[9px]  text-gray-500 font-semibold">Your data is secure and used only for evaluation.</small>
+                      </>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Microphone Test Card */}
+                {allPermissionsGranted && !micTestComplete && (
+                  <Card className="border-2 border-green-100 bg-gradient-to-br from-green-50 to-white">
+                    <CardContent className="p-4 sm:p-6 text-left">
+                      <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">
+                        Test Your Microphone
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-4">
+                        Please say a few words to test your microphone. For example, say: "This is a
+                        test of my microphone for the interview."
+                      </p>
+
+                      {micDevices.length > 0 && (
+                        <div className="mb-4">
+                          <label className="block text-sm font-semibold text-gray-800 mb-1">
+                            Choose Microphone
+                          </label>
+                          <select
+                            value={selectedMicDeviceId || micDevices[0]?.deviceId || ""}
+                            onChange={handleMicDeviceChange}
+                            className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm focus:border-green-500 focus:outline-none">
+                            {micDevices.map((device) => (
+                              <option key={device.deviceId} value={device.deviceId}>
+                                {device.label || `Microphone ${device.deviceId}`}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="mt-1 text-xs text-gray-500">
+                            Pick the device you actively use. Switching resets the test.
+                          </p>
+                        </div>
+                      )}
+
+                      <div className="mb-4">
+                        <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                          <span>Input level</span>
+                          <span>{micLevelPercentage}%</span>
+                        </div>
+                        <div className="h-2 w-full rounded-full bg-gray-200 overflow-hidden">
+                          <div
+                            className={`h-full transition-all duration-150 ${micLevelColorClass}`}
+                            style={{ width: `${micLevelPercentage}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {isTesting && (
+                        <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-3">
+                          <div className="animate-pulse">
+                            <Mic className="w-6 h-6 text-blue-600" />
+                          </div>
+                          <p className="text-sm text-blue-900 font-medium">
+                            Listening... Please speak now
+                          </p>
+                        </div>
+                      )}
+
+                      {micTestError && (
+                        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                          <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                          <p className="text-sm text-red-700">{micTestError}</p>
+                        </div>
+                      )}
+
+                      <Button
+                        onClick={startMicTest}
+                        disabled={isTesting}
+                        className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50 text-sm sm:text-base">
+                        {isTesting ? "Listening..." : "Start Microphone Test"}
+                      </Button>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Face Verification Card */}
+                {allPermissionsGranted && (
+                  <Card className="border-2 border-purple-100 bg-gradient-to-br from-purple-50 to-white">
+                    <CardContent className="p-4 sm:p-6 text-left space-y-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <h3 className="text-lg sm:text-xl font-semibold text-gray-900">
+                            Face Verification
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Keep your face centered and visible to proceed.
+                          </p>
+                        </div>
+                        <div
+                          className={`px-3 py-1 text-xs font-semibold rounded-full ${
+                            isFaceReady
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}>
+                          {isFaceReady ? "Verified" : "Adjust Needed"}
+                        </div>
+                      </div>
+                      <div className="relative w-full rounded-xl overflow-hidden border border-purple-200 bg-black">
+                        <video
+                          ref={faceVideoRef}
+                          autoPlay
+                          muted
+                          playsInline
+                          className="w-full h-48 object-cover opacity-90"
+                        />
+                      </div>
+                      <p
+                        className={`text-sm font-medium ${
+                          isFaceReady ? "text-green-700" : "text-yellow-800"
+                        }`}>
+                        {faceDetectionError
+                          ? faceDetectionError
+                          : faceWarning
+                          ? faceWarning
+                          : isFaceReady
+                          ? "Face verified. You are good to go."
+                          : "Align your face in the frame and look straight into the camera."}
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Success Message */}
+                {allPermissionsGranted && micTestComplete && isFaceReady && (
+                  <div className="space-y-4">
+                    <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 flex items-center gap-3">
+                      <div className="flex-shrink-0 w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                        <Check className="w-6 h-6 text-green-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-green-900">All Setup Complete!</p>
+                        <p className="text-sm text-green-700">
+                          All permissions granted and microphone tested successfully
+                        </p>
+                      </div>
+                    </div>
+                    <div className="bg-yellow-50 border-2 border-yellow-200 rounded-lg p-4 flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div className="text-left">
+                        <p className="font-semibold text-yellow-900 mb-2">Important Guidelines</p>
+                        <ul className="text-sm text-yellow-800 space-y-1">
+                          <li>• Do not open any other tabs or applications during the interview</li>
+                          <li>• Stay visible on camera at all times</li>
+                          <li>• Do not use any external assistance or reference materials</li>
+                          <li>• Ensure you are in a quiet, private environment</li>
+                          <li>• Do not use mobile devices or secondary screens</li>
+                          <li>• Maintain proper lighting and clear audio throughout</li>
+                          <li>
+                            • Any suspicious activity will be flagged and may result in
+                            disqualification
+                          </li>
+                        </ul>
+                      </div>
+                    </div>
+                    <Button
+                      onClick={handleProceed}
+                      size="default"
+                      disabled={
+                        !isSpeechSupported ||
+                        isStartingInterview ||
+                        (interviewStage === "continue" && (!currentInterview || isInitiating)) ||
+                        !canProceed
+                      }
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white disabled:opacity-50 text-base sm:text-lg py-6">
+                      <Play className="w-5 h-5 sm:w-6 sm:h-6 mr-2" />
+                      {isStartingInterview ? "Starting..." : "Proceed Now"}
+                    </Button>
+                  </div>
+                )}
+
+                {/* Errors */}
+                {(error || speechError || initError) && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-red-600">{initError || error || speechError}</p>
+                  </div>
+                )}
+
+                {!isSpeechSupported && (
+                  <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-md flex items-start gap-2">
+                    <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                    <p className="text-sm text-yellow-700">
+                      Speech recognition is not supported in this browser. Transcription will be
+                      simulated.
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+};
+
+export default InterviewIdle;

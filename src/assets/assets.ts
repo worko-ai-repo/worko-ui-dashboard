@@ -111,8 +111,12 @@ import cancel from './svgs/cancel.svg';
 import clap from './svgs/clap.svg';
 import chat from './svgs/chat.svg'
 import infinitySquare from './svgs/infinitySquare.svg'
+import InterviewBlobOne from './svgs/InterviewBlobOne.svg'
+import InterviewBlobTwo from './svgs/InterviewBlobTwo.svg'
+import dotSpiral from './backgrounds/dotSpiral.png'
 import folder_open from './svgs/folder_open.svg'
 import Warehouse from './svgs/Warehouse.svg'
+import AI_agent from './gifs/AI_agent.gif';
 export { 
     // Backgrounds
     bg_plexus,
@@ -145,7 +149,7 @@ export {
     c11, c12, c13, c14,
     c21, c22, c23, c24,
     f1, f2, f3, gb_form,joining_success_img,
-
+    dotSpiral,
 
     // Worko Assets
     favicon,
@@ -218,5 +222,10 @@ export {
     email_sync,
     mobile_install,
     cancel,
-    clap
+    clap,
+    InterviewBlobOne,
+    InterviewBlobTwo,
+
+    //Gifs
+    AI_agent
 };
