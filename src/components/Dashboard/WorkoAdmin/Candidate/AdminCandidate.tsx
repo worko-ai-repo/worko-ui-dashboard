@@ -47,7 +47,6 @@ const AdminCandidate = () => {
   const fromDate = filters.fromDate || "";
   const toDate = filters.toDate || "";
 
-
   // Local state for date filter to match InputFromDataToDateFilter's expected type
   const [dateRange, setDateRange] = useState<{ fromDate: string; toDate: string }>({
     fromDate: fromDate,
@@ -64,9 +63,9 @@ const AdminCandidate = () => {
     React.SetStateAction<{ fromDate: string; toDate: string }>
   > = (value) => {
     const newValue = typeof value === "function" ? value(dateRange) : value;
-    
+
     setDateRange(newValue);
-    
+
     // Use setFilters to update both dates atomically instead of individual setFilter calls
     setFilters({
       ...filters,
@@ -184,7 +183,6 @@ const AdminCandidate = () => {
           ...data[index],
           ...(variables.type === "EMAIL" ? { isEmailVerified: true } : { isNumberVerified: true }),
         };
-        
       }
 
       // Mark the query as fresh to prevent automatic refetch
@@ -277,11 +275,7 @@ const AdminCandidate = () => {
               handleClick={() => refetch()}
             />
             <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">
-              <InputFromDataToDateFilter
-                onDateChange={handleDateRangeChange}
-                defaultFromDate={fromDate}
-                defaultToDate={toDate}
-              />
+              <InputFromDataToDateFilter onDateChange={handleDateRangeChange} />
             </div>
           </div>
         </div>
