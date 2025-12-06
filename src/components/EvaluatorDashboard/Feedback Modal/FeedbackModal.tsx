@@ -102,13 +102,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
             htmlDetailedFeedback: `<p>${feedback.replace(/\n/g, '<br />')}</p>`,
             applicantUserEmail: selectedRequest.applicantUserEmail
         };
-
+        console.log(selectedRequest.applicantUserId)
         if (selectedRequest.createdByCorporateUserId) {
             basePayload.evaluationRequesterCorporateUserId = selectedRequest.createdByCorporateUserId;
         } else if (selectedRequest.createdByUserId) {
             basePayload.evaluationRequesterUserId = selectedRequest.createdByUserId;
         }
-
         try {
             if (nextStep === 'reject') {
                 await submitEvaluationResponse({

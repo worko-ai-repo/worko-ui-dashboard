@@ -10,6 +10,7 @@ import { RefreshCcw, LogOut } from 'lucide-react';
 import { Edit, View } from "@AssetsFolder/assets";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import MoveToApplicants from "./modals/MoveToApplicants";
+import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 
 
 
@@ -78,7 +79,7 @@ export default function SearchResultsTable(props: any) {
     ECTC: ["applicantDetails.ECTC"],
     remarks: ["remarks", "remark"],
   };
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
+  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(data, keyFallbacks, {
     tableId: `database`,
     persistInUrl: true,
     persistInLocalStorage: false,
@@ -371,7 +372,7 @@ const columns = [
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTableAgency
+        <DynamicTableTwo
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
@@ -397,7 +398,7 @@ const columns = [
         handlePreviousPage={() => {}}
         handleNextPage={() => {}}
         />
-        {editProfileData && (
+        {/* {editProfileData && (
         <MoveToApplicants
         dashboardType= {"CORPORATE"}
         onClose= {() => setIsAssignJobModelOpen(false)}
@@ -405,7 +406,7 @@ const columns = [
         agencyData={editProfileData}
         userDetails={userDetails}
         />
-        )}
+        )} */}
     </>
   );
 }

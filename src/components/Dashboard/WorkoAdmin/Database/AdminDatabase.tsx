@@ -224,30 +224,30 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     setSelectedRows([])
   }
 
-  const handleBulkCVDownload = async() =>{
-        if (selectedRows.length === 0) {
-            toast.error("Please select at least one candidate to download CVs",getToastOptions({}));
-            return;
-        }
-        for (const row of selectedRows) {
-            if (row.cv) {
-            try {
-                const response = await fetch(row.cv, { mode: "cors" });
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const link = document.createElement("a");
-                link.href = url;
-                link.setAttribute("download", `${row.candidateName || "CV"}.pdf`);
-                document.body.appendChild(link);
-                link.click();
-                link.remove();
-                window.URL.revokeObjectURL(url);
-            } catch (error) {
-                console.error("Failed to download CV:", error);
-            }
-            }
-        }
-  };
+  // const handleBulkCVDownload = async() =>{
+  //       if (selectedRows.length === 0) {
+  //           toast.error("Please select at least one candidate to download CVs",getToastOptions({}));
+  //           return;
+  //       }
+  //       for (const row of selectedRows) {
+  //           if (row.cv) {
+  //           try {
+  //               const response = await fetch(row.cv, { mode: "cors" });
+  //               const blob = await response.blob();
+  //               const url = window.URL.createObjectURL(blob);
+  //               const link = document.createElement("a");
+  //               link.href = url;
+  //               link.setAttribute("download", `${row.candidateName || "CV"}.pdf`);
+  //               document.body.appendChild(link);
+  //               link.click();
+  //               link.remove();
+  //               window.URL.revokeObjectURL(url);
+  //           } catch (error) {
+  //               console.error("Failed to download CV:", error);
+  //           }
+  //           }
+  //       }
+  // };
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -337,11 +337,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={() => console.log("as")}
+            placeholder="Search candidates by email"
           />
         </div>
-
+      <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
       {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
-        <div className="w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
+        <div className="basis-[40%] w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
           <div className="w-full lg:w-auto">
             <input
               type="file"
@@ -353,6 +354,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             />
             <button 
                 type="button"
+                disabled={true}
                 className="w-full lg:w-auto flex-none inline-flex items-center justify-center gap-2 h-9 rounded-xl px-3 text-xs transition shadow-md bg-blue-600 text-white hover:bg-blue-700"
                 >
                 <Upload className="w-4 h-4" />
@@ -371,18 +373,21 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           </div>
           <div className="w-full lg:w-auto">      
               <DatabaseDropdown
+              disabled={true}
               selectTitle="Status"
               tooltipMessage="Filter by status"
               options={SourceFilterDropdown}
               />
           </div>
         </div>
+        </div>
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
         <div className="w-full lg:w-auto">
-          <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible py-1">
+          <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
             <button 
                 onClick={handleBulkBan}
-                disabled={selectedRows.length<1}
+                // disabled={selectedRows.length<1}
+                disabled={true}
                 type="button"
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content={"Ban"}
@@ -391,12 +396,13 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                 // : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
                 >
-                <Ban className="w-4 h-4"/>
+                <Ban className="w-4 h-4" strokeWidth={4}/>
             </button>
             
             <button 
                 onClick={handleBulkDelete}
-                disabled={selectedRows.length<1}
+                // disabled={selectedRows.length<1}
+                disabled={true}
                 type="button"
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content={"Delete"}
@@ -405,7 +411,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                 // : "bg-white text-red-500 hover:bg-red-500 hover:text-white"}`}
                 >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" strokeWidth={2}/>
             </button>
 
             <div className="relative inline-block" ref={dropdownRef}>
@@ -413,7 +419,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 onClick={() => {
                   if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
                 }}                  
-                disabled={selectedRows.length < 1}
+                // disabled={selectedRows.length < 1}
+                // disabled={true}
                 type="button"
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content={"Action"}
@@ -422,7 +429,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                   //   ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                   //   : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
               >
-                <Forward className="w-5 h-6" />
+                <Forward className="w-5 h-6" strokeWidth={3}/>
               </button>
 
               {showDropdown && (
@@ -452,8 +459,9 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             </div>
 
             <button 
-                onClick={handleBulkCVDownload}
-                disabled={selectedRows.length<1}
+                // onClick={handleBulkCVDownload}
+                // disabled={selectedRows.length<1}
+                disabled={true}
                 type="button"
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content={"Download cv"}
@@ -462,7 +470,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
                 // : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
                 >
-                <Download className="w-4 h-4" />
+                <Download className="w-4 h-4" strokeWidth={3}/>
             </button>
           </div>
         </div>    
@@ -487,6 +495,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           sendApplicationToRecruiter={handleSendToRecruiter}
           isBulkEvaluation={!!selectedRows.length}
           onBulkUpdate={onBulkUpdate}
+          // localUpdate={handleLocalUpdate}
+          removeAgencyLocally={removeAgencyLocally}
+          pagination={paginationInfo}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onPageSizeChange={handlePageSizeChange}
         />
         )}
     </div>

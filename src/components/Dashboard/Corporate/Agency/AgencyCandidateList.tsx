@@ -79,6 +79,7 @@ const AgencyCandidateList = () => {
   const [agencyFilter,setAgencyFilter] = useState<any>([]);
   const [selectedAgencyName, setSelectedAgencyName] = useState<string>("");
   const [fetchAgencyData, setFetchAgencyData] = useState<any[]>([]);
+  const [initialIds,setInitialIds] = useState<any[]>([])
   const { userDetails } = useAppContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
 
@@ -134,6 +135,11 @@ const AgencyCandidateList = () => {
             )
           );
           setFetchData(response.data);
+          const fetchingScoreid = response.data
+            .filter(d => d.isFindMatchingScoreInProgress === true)
+            .map(d => d.id);
+
+          setInitialIds(fetchingScoreid);
           if (response.pagination) {
             setPaginationInfo(response.pagination);
   
@@ -438,21 +444,27 @@ const AgencyCandidateList = () => {
     const candidatesToSend = selectedRows.filter(c => !c.score);
     
     if (candidatesToSend.length === 0) {
-      console.log("No candidates need scoring.");
+      // console.log("No candidates need scoring.");
       setScoreLoading(false);
       return;
     }
 
-    console.log("Candidates to send:", candidatesToSend);
-    const payload = { candidates: candidatesToSend };
-    
+    const onlyIds = candidatesToSend.map(details=>{
+      return details.candidateParsedCvDetails.agencyUserSubmissionId
+    })
+
+    const payload = { agencyUserSubmissionIds: onlyIds };
+    // console.log(payload)
     try {
       // Step 2: Start the scoring process once
-      await httpServiceObj.post("/someapi/start-scoring", payload, true, {}, true);
-      console.log("✅ Scoring started, now polling for updates...");
+      const {response, error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/agency-user-submission/find-matching-score/bulk`, payload, true, {}, true);
+      if(response){
+        toast.success(response.message,getToastOptions({}))
+      }
+      console.log(response,error);
 
       const startTime = Date.now();
-      const pollingInterval = 5000;
+      const pollingInterval = 50000;
       let remainingCandidates = [...candidatesToSend]; // Track locally
 
       const poll = async () => {
@@ -531,14 +543,24 @@ const AgencyCandidateList = () => {
 
   }
   const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
-    setFetchData((prevData) =>
-        prevData.map((candidate) =>
-          selectedRows.some((sel) => sel.id === candidate.id)
-            ? { ...candidate, score: 80 }
-            : candidate
-        )
-      );
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+    });
   }, []);
+
+  // const handleLocalUpdateScore = useCallback((jobId: string, updatedData: any) => {
+  //   setFetchData((prevData) =>
+  //       prevData.map((candidate) =>
+  //         selectedRows.some((sel) => sel.id === candidate.id)
+  //           ? { ...candidate, score: 80 }
+  //           : candidate
+  //       )
+  //     );
+  // }, []);
 
   const isMatchingScore = (selectedRows: any[]): boolean => {
     for (const row of selectedRows) {
@@ -551,16 +573,17 @@ const AgencyCandidateList = () => {
 
   return (
     <div>
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2 w-full">
-        <div className="w-full lg:flex-1">
+      <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap lg:items-center gap-2 w-full">
+        <div className="w-full md:basis-full lg:flex-1">
           <SearchBarAgency
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={(e) => console.log(searchBarText)}
+            placeholder="Search candidates by email"
           />
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:w-auto lg:w-auto items-stretch sm:items-center">
           <div className="flex w-full sm:w-auto [&>*]:w-full sm:[&>*]:w-auto">
             <GenericDropdownAgency
               selectTitle="Select job"
@@ -576,7 +599,7 @@ const AgencyCandidateList = () => {
             <GenericDropdownAgency
               selectTitle="Select agency"
               tooltipMessage="Select Status to filter applications"
-              disabled={false}
+              disabled={true}
               options={fetchAgencyData}
               isJobsLoading={isAgencyLoading}
               editable={true}
@@ -584,14 +607,15 @@ const AgencyCandidateList = () => {
           </div>
         </div>
 
-        <div className="w-full lg:w-auto">
-          <div className="flex flex-row gap-2 justify-center items-center overflow-x-auto lg:overflow-visible py-1">
+        <div className="w-full md:w-auto lg:w-auto">
+          <div className="flex flex-row gap-2 justify-center items-center overflow-x-auto lg:overflow-visible">
             <button
               type="button"
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Move to applicants"}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-green-500 text-white hover:bg-green-700 "
-              disabled={selectedRows.length < 1 || acceptingCandidate}
+              // disabled={selectedRows.length < 1 || acceptingCandidate}
+              disabled={true}
               onClick={acceptAndMoveToApplicants}
             >
               <Check className="w-4 h-4 stroke-[3]" />
@@ -600,7 +624,8 @@ const AgencyCandidateList = () => {
             <button
               type="button"
               onClick={() => setIsRejecting(true)}
-              disabled={selectedRows.length < 1 || rejectingCandidate}
+              // disabled={selectedRows.length < 1 || rejectingCandidate}
+              disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Reject"}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md border bg-white text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
@@ -610,7 +635,8 @@ const AgencyCandidateList = () => {
 
             <button
               type="button"
-              disabled={selectedRows.length < 1 || scoreLoading || !isMatchingScore(selectedRows)}
+              // disabled={selectedRows.length < 1 || scoreLoading || !isMatchingScore(selectedRows)}
+              disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Find matching score"}
               onClick={findMatchingScore}
@@ -622,7 +648,8 @@ const AgencyCandidateList = () => {
 
             <button
               type="button"
-              disabled={selectedRows.length < 1}
+              // disabled={selectedRows.length < 1}
+              disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Send to evaluator"}
               onClick={() => setIsEvaluatorForm(true)}
@@ -638,10 +665,10 @@ const AgencyCandidateList = () => {
       <br />
       {isLoading? (
               <SkeletonLoader
-                  showTableHeader={true}
-                  showTableRows={true}
-                  tableColumns={5}
-                  rowCount={5}
+                showTableHeader={true}
+                showTableRows={true}
+                tableColumns={5}
+                rowCount={5}
               />
               ) : (
               <AgencyCandidateListTable
@@ -654,12 +681,19 @@ const AgencyCandidateList = () => {
                 isBulkEvaluation={!!selectedRows.length}
                 onBulkUpdate={onBulkUpdate}
                 scoreLoading={scoreLoading}
+                initialIds={initialIds}
+                setInitialIds={setInitialIds}
                 localUpdate={handleLocalUpdate}
                 setFetchData={setFetchData}
                 setSelectedRows={setSelectedRows}
+                pagination={paginationInfo}
+                currentPage={currentPage}
+                onPageChange={handlePageChange}
+                onPageSizeChange={handlePageSizeChange}
               />
       )}
-        <RejectCandidateModal
+      {/* localupdate required in rejectedcandidatemodal */}
+        {/* <RejectCandidateModal
         onClose={()=>setIsRejecting(false)}
         isOpen={isRejecting}
         data={selectedRows}
@@ -667,7 +701,7 @@ const AgencyCandidateList = () => {
         // rejectCandidate={rejectCandidate}
         type={"multiple"}
         setFetchData={setFetchData}
-        setSelectedRows={setSelectedRows}/>
+        setSelectedRows={setSelectedRows}/> */}
 
       <Modal
         isOpen={isEvaluatorForm}

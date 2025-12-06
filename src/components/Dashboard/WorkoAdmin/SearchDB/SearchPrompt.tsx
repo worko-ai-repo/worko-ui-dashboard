@@ -1,26 +1,57 @@
 import { ArrowRight, Mic, MicOff, RotateCcw, Search, Sparkles } from 'lucide-react';
 import Dropdown from './Dropdown';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { logo_text } from '@AssetsFolder/assets';
 import { useSpeechRecognition } from '@Hooks/useSpeechSynthesis.hook';
 import JobDropdown from './JobDropdown';
+import { useAppContext } from '@Context/App.context';
+import httpServiceObj from '@Services/ApiHandler.service';
 
 const SearchPrompt: React.FC = () => {
-  const [input, setInput] = React.useState("");
-  const [mode, setMode] = React.useState<"jd" | "prompt">("jd");
+  const [input, setInput] = useState("");
+  const [mode, setMode] = useState<"jd" | "prompt">("jd");
+  const [jobsList,setJobsList] = useState([]);
+  const [isFetchingJobs,setIsFetchingJobs] = useState(false);
+  const { userDetails } = useAppContext();
 
-  const jobsList = [
-    { label: "Full-Stack", value: "full-stack" },
-    { label: "Half-Stack", value: "half-stack" },
-    { label: "Frontend", value: "frontend" },
-    { label: "Backend", value: "backend" },
-    { label: "DevOps", value: "devops" },
-    { label: "UI/UX", value: "ui-ux" },
-    { label: "Data Engineer", value: "data-engineer" },
-    { label: "AI/ML", value: "ai-ml" },
-    { label: "QA Tester", value: "qa-tester" },
-    ];
+  useEffect(()=>{
+    const fetchJobs = async() =>{
+    setIsFetchingJobs(true)
+    const params = {
+      pageSize: 200,
+      sortOrder: "desc",
+      dashboard: "ADMIN",
+      // userRole: "ADMIN",
+      status: "PUBLISHED",
+      // companyId,
+    };
+
+    try {
+      const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
+      console.log(response)
+      if(response?.data){
+        setJobsList(response.data)
+      }
+      setIsFetchingJobs(false)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+  fetchJobs()
+  },[])
+
+  // const jobsList = [
+  //   { label: "Full-Stack", value: "full-stack" },
+  //   { label: "Half-Stack", value: "half-stack" },
+  //   { label: "Frontend", value: "frontend" },
+  //   { label: "Backend", value: "backend" },
+  //   { label: "DevOps", value: "devops" },
+  //   { label: "UI/UX", value: "ui-ux" },
+  //   { label: "Data Engineer", value: "data-engineer" },
+  //   { label: "AI/ML", value: "ai-ml" },
+  //   { label: "QA Tester", value: "qa-tester" },
+  //   ];
 
   const navigate = useNavigate();
     const {
@@ -105,13 +136,14 @@ const SearchPrompt: React.FC = () => {
   <div className="flex items-center gap-2 px-4 py-3 w-full">
     <div className="flex-1">
       <JobDropdown
-        jobsList={jobsList}
+        jobsList={[]} // check this part
         input={input}
         setInput={setInput}
         handleSubmit={handleSubmit}
       />
     </div>
     <button
+      disabled={true}
       onClick={handleSubmit}
       className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
     >
@@ -142,6 +174,7 @@ const SearchPrompt: React.FC = () => {
         </button>
       )}
       <button
+        disabled={true}
         onClick={handleSubmit}
         className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
       >

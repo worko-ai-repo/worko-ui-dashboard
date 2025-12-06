@@ -17,6 +17,8 @@ import Modal from "@Components/Shared/Modal";
 import httpServiceObj from "@Services/ApiHandler.service";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
+import { toast } from "react-toastify";
+import { getToastOptions } from "lib-worko-ui";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -55,6 +57,13 @@ export default function CorporateDatabaseTable(props: any) {
     data,
     handleUpdate,
     userType,
+    localUpdate,
+    removeAgencyLocally,
+    pagination,
+    currentPage,
+    onPageChange,
+    onPageSizeChange,
+    jobsList
   } = props as any;
 
   // State required for table interactions
@@ -70,6 +79,7 @@ export default function CorporateDatabaseTable(props: any) {
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
+  const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
@@ -145,6 +155,19 @@ export default function CorporateDatabaseTable(props: any) {
       userType,
     };
     handleUpdate && handleUpdate(payload, row.id, hasRefetch);
+  };
+
+  const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+    if (typeof value === "number") {
+      setPageSize(value);
+      onPageSizeChange(value);
+    } else {
+      setPageSize((prev:any) => {
+        const newValue = value(prev);
+        onPageSizeChange(newValue);
+        return newValue;
+      });
+    }
   };
 
   // Column definitions (kept same as previous "All" view)
@@ -346,6 +369,7 @@ const columns = [
         return (
             <div className='flex justify-center m-auto w-[40px]'>
                 <button 
+                    disabled={true}
                     onClick={()=>{
                         setEditProfileView(true)
                         setEditProfileData(row)
@@ -359,15 +383,56 @@ const columns = [
 ];
 
   const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
+    setEditProfileData(row)
     if(row?.refereeType === "WORKO"){
+      if(!row?.candidateParsedCvDetails?.userDetailId 
+        || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
       try {
         const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
+
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
         setPdfViewDetails(response?.objectUrl)
         setIsViewCVModalOpen(true)
       } catch (error) {
         console.log(error)
       }
-    }else{
+    }else if(row?.refereeType === "INTERNAL"){
+      if(!row?.candidateParsedCvDetails?.companyId 
+        || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        || !row?.candidateParsedCvDetails?.corporateBulkJdId 
+      ){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
+      try {
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")
+
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        setPdfViewDetails(response?.objectUrl)
+        setIsViewCVModalOpen(true)
+      } catch (error) {
+        console.log(error)
+      }      
+    }
+    else{
+      if(!row?.candidateParsedCvDetails?.companyId 
+        || !row?.candidateParsedCvDetails?.jobId 
+        || !row?.candidateParsedCvDetails?.agencyUserId 
+        || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
       const payload = {
         companyId: row?.companyId,
         jobId:row?.jobId,
@@ -375,7 +440,12 @@ const columns = [
         candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
       }
       try {
-        const {response} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+        const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+        
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
         setPdfViewDetails(response.objectUrl)
         setIsViewCVModalOpen(true)
       } catch (error) {
@@ -450,15 +520,15 @@ return (
         allSelected={
             ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)
         }
-        renderExpandedDetails={renderExpandedDetails}
+        // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
-        pageSize={10}
-        setPageSize={() => {}}
-        hasPrevPage={false}
-        hasNextPage={false}
-        handlePreviousPage={() => {}}
-        handleNextPage={() => {}}
+        pageSize={pageSize}
+        setPageSize={handlePageSizeChange}
+        handlePreviousPage={() => onPageChange(currentPage - 1)}
+        handleNextPage={() => onPageChange(currentPage + 1)}
+        hasPrevPage={currentPage > 1}
+        hasNextPage={!!pagination?.lastKey}
         />
         <EditProfileModal
         onClose={()=>{
@@ -477,7 +547,14 @@ return (
           {!pdfViewDetails ? (
             <NoDataPresent />
           ) : (
-            <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+            <CVPreviewRaw 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(undefined)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}/>
           )}
         </Modal>
     </>

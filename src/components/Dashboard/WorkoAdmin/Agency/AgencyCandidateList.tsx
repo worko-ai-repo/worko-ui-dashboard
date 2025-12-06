@@ -111,6 +111,7 @@ const AgencyCandidateList = () => {
     },
   ]);
 
+  const [initialIds,setInitialIds] = useState<any[]>([])
   const { userDetails } = useAppContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
 
@@ -148,7 +149,12 @@ const AgencyCandidateList = () => {
           const { response } = await httpServiceObj.get<AgencyAllCandidatesListApiResponse>(url, true, params, true);
     
           if (response) {
-            setFetchData(response.data);
+          setFetchData(response.data);
+          const fetchingScoreid = response.data
+            .filter(d => d.isFindMatchingScoreInProgress === true)
+            .map(d => d.id);
+
+          setInitialIds(fetchingScoreid);
             if (response.pagination) {
               setPaginationInfo(response.pagination);
     
@@ -407,27 +413,38 @@ const AgencyCandidateList = () => {
   };
 
   const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
-    setFetchData((prevData) =>
-        prevData.map((candidate) =>
-          selectedRows.some((sel) => sel.id === candidate.id)
-            ? { ...candidate, score: 80 }
-            : candidate
-        )
-      );
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+    });
   }, []);
+
+  // const handleLocalUpdateScore = useCallback((jobId: string, updatedData: any) => {
+  //   setFetchData((prevData) =>
+  //       prevData.map((candidate) =>
+  //         selectedRows.some((sel) => sel.id === candidate.id)
+  //           ? { ...candidate, score: 80 }
+  //           : candidate
+  //       )
+  //     );
+  // }, []);
 
   return (
     <div>
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2 w-full">
-        <div className="w-full lg:flex-1">
+      <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap lg:items-center gap-2 w-full">
+        <div className="w-full md:basis-full lg:flex-1">
           <SearchBarAgency
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={(e) => console.log(searchBarText)}
+            placeholder="Search candidates by email"
           />
         </div>
-
-        <div className="flex gap-2 font-semibold w-full sm:w-auto">
+        
+        <div className="flex gap-2 font-semibold w-full sm:w-auto md:flex-1 lg:flex-none">
           <div className="relative overflow-visible w-full min-w-0">
             <input
               type="text"
@@ -442,7 +459,7 @@ const AgencyCandidateList = () => {
 
             {formData.companyName?.trim() && !companySelectionMade && showSuggestions && (
               <ul
-                className="border bg-white rounded shadow-md absolute w-full z-10 max-h-60 overflow-y-auto"
+                className="border bg-white rounded shadow-md absolute w-full z-[40] max-h-60 overflow-y-auto"
                 aria-live="polite"
               >
                 {/* show only while loading */}
@@ -477,7 +494,7 @@ const AgencyCandidateList = () => {
           </div>
         </div>
                   
-        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto items-stretch sm:items-center">
+        <div className="flex flex-col sm:flex-row gap-2 w-full md:flex-1 lg:w-auto items-stretch sm:items-center">
           {/* Dropdown 1 */}
             <div className="flex flex-col sm:flex-row w-full sm:w-auto gap-2 sm:mt-0">
               <div className="flex w-full sm:w-auto font-semibold">
@@ -497,7 +514,8 @@ const AgencyCandidateList = () => {
                 <GenericDropdownAgency
                   selectTitle={"Select agency"}
                   tooltipMessage="Select Status to filter applications"
-                  disabled={!companySelectionMade}
+                  // disabled={!companySelectionMade}
+                  disabled={true}
                   options={fetchAgencyData}
                   isJobsLoading={isAgencyLoading}
                 />
@@ -526,6 +544,8 @@ const AgencyCandidateList = () => {
                 isBulkEvaluation={!!selectedRows.length}
                 onBulkUpdate={onBulkUpdate}
                 scoreLoading={scoreLoading}
+                initialIds={initialIds}
+                setInitialIds={setInitialIds}
                 localUpdate={handleLocalUpdate}
                 setFetchData={setFetchData}
                 setSelectedRows={setSelectedRows}

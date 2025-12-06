@@ -71,7 +71,7 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
   return (
     <div
       ref={wrapperRef}
-      className={`relative w-full sm:w-auto min-w-56 max-w-full ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+      className={`relative w-full sm:w-auto min-w-48 max-w-full ${disabled ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
       data-tooltip-id="dropdown-tooltip"
       data-tooltip-content={tooltipMessage}
     >
@@ -109,7 +109,7 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
 
       {/* Dropdown Panel */}
       {isOpen && !disabled && (
-        <div className="absolute left-0 top-full w-full min-w-0 max-w-[90vw] sm:max-w-none bg-white rounded-2xl rounded-t-none shadow-lg z-50 overflow-auto max-h-60">
+        <div className="absolute left-0 top-full w-full min-w-52 max-w-full sm:max-w-none bg-white rounded-2xl rounded-t-none shadow-lg z-50 overflow-auto max-h-60">
           <div className="flex flex-col gap-1">
             {isJobsLoading && (
                 <button

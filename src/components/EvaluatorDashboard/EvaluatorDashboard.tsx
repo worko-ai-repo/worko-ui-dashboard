@@ -27,6 +27,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ExternalLink } from "lucide-react";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
+import httpServiceObj from "@Services/ApiHandler.service";
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -66,6 +67,8 @@ const EvaluatorView: React.FC = () => {
   //View CV state
 
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
+  const [cvLink, setCVLink] = useState<string>("")
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
 
   const getEvaluationDetails = async () => {
     try {
@@ -108,8 +111,76 @@ const EvaluatorView: React.FC = () => {
     // You can add API calls or state updates here
   };
 
-  const handleViewCV = () => {
+  const handleViewCV = async() => {
     // console.log('Viewing CV for candidate:', selectedCandidateId);
+    if(selectedCandidateDetails?.cvAwsS3SignedUrl){
+      setCVLink(selectedCandidateDetails?.cvAwsS3SignedUrl)
+    }else if(selectedCandidateDetails?.cvAwsS3ResourceType){
+      if(selectedCandidateDetails?.cvAwsS3ResourceType === "USER_RESUME"){
+        if(!selectedCandidateDetails?.userDetailId
+          || !selectedCandidateDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        try {
+          const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${selectedCandidateDetails?.id}/${selectedCandidateDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
+
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setCVLink(response?.objectUrl ?? "")
+        } catch (error) {
+          console.log(error)
+        }
+      }else if(selectedCandidateDetails?.cvAwsS3ResourceType === "BULK_CVS"){
+            if(!selectedCandidateDetails?.companyId 
+              || !selectedCandidateDetails?.cvAwsS3FileName
+              || !selectedCandidateDetails?.corporateBulkJdId 
+            ){
+              toast.error("Missing details",getToastOptions({}))
+              return
+            }
+            try {
+              const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${selectedCandidateDetails?.companyId}/${selectedCandidateDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:selectedCandidateDetails?.corporateBulkJdId }, false, "BASE")
+
+              if(error){
+                toast.error(error.message,getToastOptions({}))
+                return
+              }
+              setCVLink(response?.objectUrl ?? "")
+            } catch (error) {
+              console.log(error)
+            }      
+      }else{
+        if(!selectedCandidateDetails?.companyId 
+          || !selectedCandidateDetails?.jobId 
+          || !selectedCandidateDetails?.agencyUserId 
+          || !selectedCandidateDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        const payload = {
+          companyId: selectedCandidateDetails?.companyId,
+          jobId:selectedCandidateDetails?.jobId,
+          agencyUserId: selectedCandidateDetails?.agencyUserId,
+          candidateCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName,
+        }
+        try {
+          const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+          
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setCVLink(response.objectUrl)
+        } catch (error) {
+          console.log(error)
+        }
+      }
+    }
     setIsViewCVModalOpen(true);
   };
 
@@ -140,28 +211,29 @@ const EvaluatorView: React.FC = () => {
       if (!evaluatorEmail) return;
       const rawData = await fetchEvaluationRequests(evaluatorEmail);
       const filteredRequests: typeof rawData = [];
-      for (const request of rawData) {
-        if (!request.evaluationResponseId || !request.jobApplicationId) {
-          filteredRequests.push(request);
-          continue;
-        }
-        try {
-          const feedback = await getEvaluationResponse(
-            request.jobApplicationId,
-            request.evaluationResponseId
-          );
-          const status = feedback?.status;
-          // Exclude only ON_HOLD or REJECTED
-          if (status !== "ON_HOLD" && status !== "REJECTED") {
-            filteredRequests.push(request);
-          }
-        } catch (err) {
-          console.error(`Failed to fetch feedback for request ID ${request.id}`, err);
-          filteredRequests.push(request);
-        }
-      }
+      // for (const request of rawData) {
+      //   if (!request.evaluationResponseId || !request.jobApplicationId) {
+      //     filteredRequests.push(request);
+      //     continue;
+      //   }
+      //   try {
+      //     const feedback = await getEvaluationResponse(
+      //       request.jobApplicationId,
+      //       request.evaluationResponseId
+      //     );
+      //     const status = feedback?.status;
+      //     // Exclude only ON_HOLD or REJECTED
+      //     if (status !== "ON_HOLD" && status !== "REJECTED") {
+      //       filteredRequests.push(request);
+      //     }
+      //   } catch (err) {
+      //     console.error(`Failed to fetch feedback for request ID ${request.id}`, err);
+      //     filteredRequests.push(request);
+      //   }
+      // }
 
-      setRequests(filteredRequests);
+      // setRequests(filteredRequests);
+      setRequests(rawData);
 
       if (filteredRequests.length > 0) {
         setSelectedRequest(filteredRequests[0]);
@@ -211,17 +283,27 @@ const EvaluatorView: React.FC = () => {
 
         // 2. Fetch Candidate Details
         const candidateEmail = selectedRequest.applicantUserEmail;
-        if (candidateEmail) {
+        const candidateParsedCvId = selectedRequest.candidateParsedCvId;
+        const applicantUserId = selectedRequest.applicantUserId;
+
+        if(candidateEmail && candidateParsedCvId){
+          const {response} = await httpServiceObj.get<any>(`${agencyBaseUrl}/candidate-parsed-cv/${candidateParsedCvId}`,true,{},true);
+          if (response) {
+            setSelectedCandidateDetails(response);
+            setApplicationDetails(response);
+          }
+        }
+        
+        if (candidateEmail && applicantUserId) {
           const candidate = await fetchCandidateDetails(candidateEmail);
           // console.log(candidate)
           if (candidate.length > 0) {
             setSelectedCandidateDetails(candidate[0]);
           }
-        }
-
         // 3. Fetch Application Details
         const applicationDetails = await fetchApplicationDetails(selectedRequest.jobApplicationId);
         setApplicationDetails(applicationDetails); // <- You'll need this state
+        }
       } catch (err) {
         console.error("Failed to fetch details or candidate detail or application detail:", err);
         setDetails(null);
@@ -369,10 +451,10 @@ const EvaluatorView: React.FC = () => {
         Close
       </button> */}
             <button
-              onClick={() => window.open(selectedCandidateDetails?.cvAwsS3SignedUrl, "_blank")}
+              onClick={() => window.open(cvLink, "_blank")}
               aria-label="Open CV in new tab"
               title="Open CV in new tab"
-              disabled={!selectedCandidateDetails?.cvAwsS3SignedUrl}
+              disabled={!cvLink}
               className="p-2 rounded hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed">
               <ExternalLink size={30} className="text-blue-600" />
             </button>
@@ -381,7 +463,7 @@ const EvaluatorView: React.FC = () => {
           {/* CV Viewer */}
           <div className="flex-1 border-2 border-gray-300 rounded-xl overflow-hidden">
             <iframe
-              src={selectedCandidateDetails?.cvAwsS3SignedUrl}
+              src={cvLink}
               title="CV Preview"
               className="w-full h-[calc(100vh-100px)]"
               style={{ border: "none" }}

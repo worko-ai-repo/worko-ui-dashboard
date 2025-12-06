@@ -96,8 +96,6 @@ const AgencyList = () => {
         console.error("Exception in fetchReferrals:", err);
       } finally {
         setIsLoading(false);
-        // setFetchData(dummyData.data)
-        // setPaginationInfo(dummyData.pagination)
       }
     },
     [userDetails, pageSize, filters]

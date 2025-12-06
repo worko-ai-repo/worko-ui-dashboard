@@ -5,9 +5,10 @@ interface SearchBarAgencyProps {
   searchBarText: string | null;
   setSearchBarText: React.Dispatch<React.SetStateAction<string | null>>;
   handleClick: (value?: string | null) => void;
+  placeholder?:string;
 }
 
-const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSearchBarText, handleClick }) => {
+const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSearchBarText, handleClick, placeholder }) => {
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const onClear = useCallback(() => {
@@ -31,7 +32,7 @@ const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSea
               handleClick();
             }
           }}
-          placeholder="Search candidates"
+          placeholder={placeholder ?? "Search candidates"}
           value={searchBarText ?? ""}
           onChange={(e) => setSearchBarText(e.target.value)}
           className="px-3 py-3 relative w-full outline-none bg-[#FAFAFA] text-xs focus:outline-none focus:ring-neutral-50"

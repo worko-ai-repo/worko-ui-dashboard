@@ -7,30 +7,30 @@ import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
 interface EditAgencyModalProps{
-    dashboardType:string;
-    onClose: () => void;
-    isOpen: boolean;
-    data:any;
-    localUpdate: (id: string, updatedData: Partial<FormValues>) => void;
+  dashboardType:string;
+  onClose: () => void;
+  isOpen: boolean;
+  data:any;
+  localUpdate: (id: string, updatedData: Partial<FormValues>) => void;
 }
 
 export interface FormValues {
   agencyName: string;
-  agencyEmail: string;
-  contactPersonName: string;
+  // agencyEmail: string;
+  // contactPersonName: string;
   contactNumber: string;
-  GSTIN: string;
-  contractCopy: FileList;
+  // GSTIN: string;
+  // contractCopy: FileList;
 }
 
 const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,isOpen,data,localUpdate}) => {
-  const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm<FormValues>({ mode: "onChange",
+  const { register, handleSubmit, reset, setValue, watch,formState: { errors, isDirty },} = useForm<FormValues>({ mode: "onChange",
         defaultValues: {
           agencyName: data?.agencyName,
-          agencyEmail: data?.email,
-          contactPersonName:data?.name,
+          // agencyEmail: data?.email,
+          // contactPersonName:data?.name,
           contactNumber: data?.phoneNumberDetails?.number,
-          GSTIN: data?.GSTIN,
+          // GSTIN: data?.GSTIN,
         },
       });
       const [visible, setVisible] = useState(false);
@@ -43,11 +43,11 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       if (isOpen && data) {
             reset({
             agencyName: data.agencyName || "",
-            agencyEmail: data.email || "",
-            contactPersonName: data.name || "",
+            // agencyEmail: data.email || "",
+            // contactPersonName: data.name || "",
             contactNumber: data?.phoneNumberDetails?.number || "",
-            GSTIN: data.GSTIN || "",
-            contractCopy: data.contractCopy,
+            // GSTIN: data.GSTIN || "",
+            // contractCopy: data.contractCopy,
             });
           setVisible(true);
           const timer = setTimeout(() => setIsAnimatingIn(true), 10);
@@ -59,95 +59,56 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       }
       }, [isOpen,data,reset]);
   
-    const formSubmit = async (data: any) => {
-      // setIsSubmitting(true)
+    const formSubmit = async (formData: any) => {
+      setIsSubmitting(true)
 
-      // if(!data.agencyEmail || !data.agencyName || !data.contactNumber || !data.contactPersonName){
-      //   console.log(data)
-      //   toast.error("Please fill all mandatory fields",getToastOptions({}))
-      //   setIsSubmitting(false);
-      //   return
-      // }
-
-      // const hasContract = data?.contractCopy?.length > 0;
-      // if(!hasContract){
-      //   let payload
-
-      //   if(data?.GSTIN?.trim()){
-      //       payload = {
-      //       agencyName: data?.agencyName,
-      //       email: data?.agencyEmail,
-      //       phoneNumberDetails: {
-      //           number: Number(data.contactNumber),
-      //           countryCode: 91
-      //       },
-      //       name:data?.contactPersonName,
-      //       GSTIN: data?.GSTIN,
-      //       companyId:userDetails?.companyId,
-      //     }
-      //   }else{
-      //     payload = {
-      //       agencyName: data?.agencyName,
-      //       email: data?.agencyEmail,
-      //       phoneNumberDetails: {
-      //           number: Number(data.contactNumber),
-      //           countryCode: 91
-      //       },
-      //       name:data?.contactPersonName,
-      //       companyId:userDetails?.companyId,
-      //     }
-      //   }
-      //   console.log(payload,"payload")
-      //   try {
-      //     const uploadResponse:any = await invitingAgency(payload);
-      //     if (!uploadResponse.success) {
-      //       toast.error("Failed to invite agency. Please try again.", getToastOptions({}));
-      //       return; 
-      //     }
-      //     toast.success("Agency invited successfully!", getToastOptions({}));
-      //     // setFetchData((prev:any) => ([...(prev ?? []), uploadResponse.data]));
-      //     reset();
-      //     onClose();
-      //     return
-      //   } catch (error) {
-      //       console.error("Unexpected error:", error);
-      //       toast.error("Failed to invite agency, Please try again later.", getToastOptions({}));
-      //   } finally{
-      //       setIsSubmitting(false)
-      //   }
-      // }
-      
-      const contractFile = data.contractCopy?.[0];
-
-      const updatedData = {
-        name: data.agency,
-        email: data.email,
-        contactName: data.contactName,
-        contactNumber: data.contactNumber,
-        GSTIN: data.GSTIN,
-        contractCopyAwsS3FileName:contractFile.name,
-      };
-      
-      localUpdate(data.id, updatedData);
-
-      reset();
-      onClose();
+      if (!formData.agencyName || !formData.contactNumber) {
+        toast.error("Please fill all mandatory fields", getToastOptions({}));
+        setIsSubmitting(false);
+        return;
       }
 
-      const invitingAgency = async (payload: any) => {
-        try {
-          const { response } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
-          if (response) {
-            return { success: true, data: response };
-          }
-          return { success: false };
-        } catch (error) {
-          console.error("Upload failed:", error);
-          return { success: false, error };
-        }
-      };
+      if (!isDirty) {
+        setIsSubmitting(false);
+        onClose();
+        return;
+      }
 
-//   @TODO handle the already uploaded contract copy and mobile number 
+      const payload:any = {
+        agencyInviteId:data?.id
+      }
+      if(formData.agencyName && formData.agencyName !== data.agencyName) {
+        payload.agencyName = formData.agencyName
+      }
+      if(formData.contactNumber && formData.contactNumber !== data.phoneNumberDetails.number) {
+        payload.phoneNumberDetails = {number:formData.contactNumber,countryCode:91}
+      }
+      console.log(payload)
+      try {
+        const {response, error} = await httpServiceObj.patch(`${agencyBaseUrl}/agency-invite/corp-action`,payload,true,{},true)
+
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          setIsSubmitting(false);
+          return
+        }
+        const updatedData = {
+          ...data, 
+          agencyName: formData.agencyName,
+          phoneNumberDetails: {
+            number: formData.contactNumber, 
+            countryCode: 91
+          }};
+        localUpdate(data.id, updatedData)
+        toast.success("Agency details updated successfully",getToastOptions({}))
+        setIsSubmitting(false);
+        reset();
+        onClose();
+      } catch (error) {
+        console.log("Something went wrong",getToastOptions({}))
+      } 
+      }
+
     return (
       <div
         className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
@@ -179,7 +140,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                 {errors.agencyName && <p className="text-red-500 text-sm mt-1">{errors.agencyName.message}</p>}
             </div>
   
-              <div className='text-left'>
+              {/* <div className='text-left'>
                   <label htmlFor="">Enter agency email<span className='text-red-500'>*</span></label>
                   <input 
                   placeholder='contact@apexmarketing.com'
@@ -194,9 +155,9 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                     })}
                   />
                 {errors.agencyEmail && <p className="text-red-500 text-sm mt-1">{errors.agencyEmail.message}</p>}
-              </div>
+              </div> */}
   
-              <div className='text-left'>
+              {/* <div className='text-left'>
                   <label htmlFor="">Contact person name<span className='text-red-500'>*</span></label>
                   <input 
                   placeholder='Rahul Sharma'
@@ -205,7 +166,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                   {...register("contactPersonName",{required:"Contact person name is required"})}
                   />
                   {errors.contactPersonName && <p className="text-red-500 text-sm mt-1">{errors.contactPersonName.message}</p>}
-              </div>
+              </div> */}
 
               <div className='text-left'>
                   <label htmlFor="">Contact no<span className='text-red-500'>*</span></label>
@@ -229,8 +190,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                   {errors.contactNumber && <p className="text-red-500 text-sm mt-1">{errors.contactNumber.message}</p>}
               </div>
               
-
-              <div className='text-left'>
+              {/* <div className='text-left'>
                   <label htmlFor="">GSTIN</label>
                   <input 
                     placeholder='Enter registered GSTIN no'
@@ -245,9 +205,9 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
                     })}
                   />
                 {errors.GSTIN && <p className="text-red-500 text-sm mt-1">{errors.GSTIN.message}</p>}
-              </div>
+              </div> */}
 
-            <div className='text-left mt-4'>
+            {/* <div className='text-left mt-4'>
             <label htmlFor="contractCopy">Upload Contract Copy (PDF only) max 5MB</label>
             <input
                 type="file"
@@ -270,7 +230,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
             {errors.contractCopy && (
                 <p className="text-red-500 text-sm mt-1">{errors.contractCopy.message}</p>
             )}
-            </div>
+            </div> */}
 
             <div className="flex justify-start mt-4">
               <button

@@ -11,12 +11,12 @@ interface RemoveJobModalProps {
   dashboardType: string;
   onClose: () => void;
   isOpen: boolean;
-  jobsList: JobData[];
   agencyData:AgencyListDetailsDto;
   userDetails:any;
+  localUpdate: (id: string, updatedData: Partial<any>) => void;
 }
 
-const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose, isOpen, jobsList, agencyData, userDetails }) => {
+const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose, isOpen, agencyData, userDetails, localUpdate }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,10 +27,13 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
   const [reasonInput, setReasonInput] = useState('');
   const [selectedJobs, setSelectedJobs] = useState<JobData[]>([]);
   const [selectedReason, setSelectedReason] = useState('');
+  const [jobsList, setJobsList] = useState<JobData[]>([])
+  const [searchBarText, setSearchBarText] = useState<string>('')
+
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   const dropdownRef = useRef<HTMLDivElement>(null);
   const reasondropdownRef = useRef<HTMLDivElement>(null);
-
+  const debounceTimer = useRef<any>(null);
 
   const reasons = [
     "Not getting good applicants",
@@ -49,6 +52,10 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
       return () => clearTimeout(timer);
     }
   }, [isOpen]);
+
+  useEffect(()=>{
+    fetchJobsForRemoving(searchBarText)
+  },[agencyData])
 
   // Close dropdown when clicking outside for jobs
   useEffect(() => {
@@ -75,10 +82,42 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
 }, []);
 
 
+  // fetch jobs which are already assigned
+    const fetchJobsForRemoving = async(searchText:string) =>{
+      console.log(agencyData)
+      const params = {
+        pageSize: 200,
+        sortOrder: "desc",
+        status: "ACTIVE",
+        companyId: userDetails?.companyId,
+        agencyRegisteredEmail:agencyData?.email,
+        assignedByCorporateUserId:userDetails?.id,
+        searchText: searchText || "", 
+      }
+
+      try {
+        const {response} = await httpServiceObj.get<any>(`${agencyBaseUrl}/agency-job-assignment`,true,params,true,)
+        if(response?.data){
+          setJobsList(response.data)
+        }
+        console.log(response.data)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+
   // Input change handler
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-    setIsDropDownOpen(true);
+    const value = e.target.value;
+    setSearchBarText(value); 
+
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    debounceTimer.current = setTimeout(() => {
+      fetchJobsForRemoving(value);
+      setInput(value);
+      setIsDropDownOpen(true);
+    }, 500);
   };
 
   // Reason Input handler 
@@ -124,25 +163,28 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
     })
 
     const payload = {
-      companyId: userDetails?.companyId,
-      jobsToAssign: jobIds,
-      agencyEmail: agencyData.email,
-      agencyInviteId: agencyData.id
+      agencyJobAssignmentIdsToRemove: jobIds,
+      agencyUserInviteId: agencyData.id,
+      reasonForRemoval:selectedReason,
     }
-
+    
     try {
-      const { response } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
+      const { response,error } = await httpServiceObj.patch<any>( `${agencyBaseUrl}/agency-job-assignment/bulk/remove-jobs`, payload, true, {}, true);
 
-      if (!response) {
-        toast.error("Error assigning data, please try again later.", getToastOptions({}));
+      if (error) {
+        toast.error(error.message, getToastOptions({}));
         return;
       }
-
-      if(response.isSuccess){
+        if(agencyData?.totalAssignedJobs){
+            const updatedData = {...agencyData,totalAssignedJobs:agencyData.totalAssignedJobs - selectedJobs.length}
+            localUpdate(agencyData?.id,updatedData)
+        }else{
+            const updatedData = {...agencyData,totalAssignedJobs:0}
+            localUpdate(agencyData?.id,updatedData)
+        }
         toast.success("Job removed successfully!", getToastOptions({}));
         setSelectedJobs([]);
         onClose();
-      }
     // setTimeout(() => {
     //   console.log('Selected Jobs:', selectedJobs,userDetails);
     //   setIsSubmitting(false);
@@ -151,7 +193,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
     // }, 1000);
     } catch (err) {
       console.error("Assignment error:", err);
-      toast.error("removing job failed. Please try again.", getToastOptions({}));
+      toast.error("Removing job failed. Please try again.", getToastOptions({}));
     } finally {
       setIsSubmitting(false);
     }
@@ -234,7 +276,7 @@ const removeSelectedJob = (id: string) => {
         <div className="relative w-full" ref={dropdownRef}>
           <input
             type="text"
-            value={input}
+            value={searchBarText}
             onChange={handleChange}
             onFocus={() => setIsDropDownOpen(true)}
             placeholder="Choose the jobs to be removed"
@@ -266,7 +308,7 @@ const removeSelectedJob = (id: string) => {
                       readOnly
                       className="form-checkbox"
                     />
-                    <span>{`${job?.jobTitle} | ${job?.location?.fullLocation} | ${job?.salaryRange?.min}-${job?.salaryRange?.max} LPA`}</span>
+                    <span>{`${job?.jobTitle}`}</span>
                   </li>
                 ))}
             </ul>

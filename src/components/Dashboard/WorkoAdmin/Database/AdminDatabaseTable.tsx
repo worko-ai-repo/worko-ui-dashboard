@@ -17,6 +17,8 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import Modal from "@Components/Shared/Modal";
+import { getToastOptions } from "lib-worko-ui";
+import { toast } from "react-toastify";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -55,6 +57,12 @@ export default function AdminDatabaseTable(props: any) {
     data,
     handleUpdate,
     userType,
+    localUpdate,
+    removeAgencyLocally,
+    pagination,
+    currentPage,
+    onPageChange,
+    onPageSizeChange,
   } = props as any;
 
   // State required for table interactions
@@ -68,6 +76,7 @@ export default function AdminDatabaseTable(props: any) {
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
   const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false)
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
+  const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
@@ -149,6 +158,19 @@ const keyFallbacks = {
     handleUpdate && handleUpdate(payload, row.id, hasRefetch);
   };
 
+  const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+    if (typeof value === "number") {
+      setPageSize(value);
+      onPageSizeChange(value);
+    } else {
+      setPageSize((prev:any) => {
+        const newValue = value(prev);
+        onPageSizeChange(newValue);
+        return newValue;
+      });
+    }
+  };
+
   // Column definitions (kept same as previous "All" view)
 const columns = [
     {
@@ -201,7 +223,7 @@ const columns = [
     },
     {
       key: "appliedCompany",
-      label: "Applied Company",
+      label: "Applied Companies",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => {
         const companyList = (row?.candidateProfileInCompanies?? []).map(company=>{
@@ -266,7 +288,7 @@ const columns = [
         label: "Added by",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px] bc'>
+        <div className='flex justify-center m-auto w-[150px]'>
             <span 
                 title={row?.addedBy}
                 className="truncate block w-full">{row?.addedBy ?? "NA"}</span>
@@ -278,7 +300,7 @@ const columns = [
         label: "Added for",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] bc'>
+            <div className='flex justify-center m-auto w-[150px]'>
                 <span 
                 title={row?.addedFor}
                 className="truncate block w-full">{row?.addedFor ?? "NA"}</span>
@@ -287,11 +309,11 @@ const columns = [
     },
     {
         key: "coolingPeriod",
-        label: "Cooling period",
+        label: "Cooling period companies",
         sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto bc'>
+            <div className='flex justify-center m-auto'>
                 <span>{row?.coolingPeriod ?? "NA"}</span>
             </div>
         ),
@@ -301,7 +323,7 @@ const columns = [
         label: "Last active",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] bc'>
+            <div className='flex justify-center m-auto w-[150px]'>
                 <span>{row?.lastActive ?? "NA"}</span>
             </div>
         ),
@@ -341,6 +363,7 @@ const columns = [
         return (
             <div className='flex justify-center m-auto w-[40px]'>
                 <button 
+                    disabled={true}
                     onClick={()=>{
                         setEditProfileView(true)
                         setEditProfileData(row)
@@ -353,31 +376,76 @@ const columns = [
     },
 ];
 
-const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
-  if(row?.refereeType === "WORKO"){
-      try {
-        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
-        setPdfViewDetails(response?.objectUrl)
-        setIsViewCVModalOpen(true)
-      } catch (error) {
-        console.log(error)
+  const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
+    setEditProfileData(row)
+    if(row?.refereeType === "WORKO"){
+        if(!row?.candidateParsedCvDetails?.userDetailId 
+          || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        try {
+          const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
+
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setPdfViewDetails(response?.objectUrl)
+          setIsViewCVModalOpen(true)
+        } catch (error) {
+          console.log(error)
+        }
+      }else if(row?.refereeType === "INTERNAL"){
+            if(!row?.candidateParsedCvDetails?.companyId 
+              || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+              || !row?.candidateParsedCvDetails?.corporateBulkJdId 
+            ){
+              toast.error("Missing details",getToastOptions({}))
+              return
+            }
+            try {
+              const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")
+
+              if(error){
+                toast.error(error.message,getToastOptions({}))
+                return
+              }
+              setPdfViewDetails(response?.objectUrl)
+              setIsViewCVModalOpen(true)
+            } catch (error) {
+              console.log(error)
+            }      
+      }else{
+        if(!row?.candidateParsedCvDetails?.companyId 
+          || !row?.candidateParsedCvDetails?.jobId 
+          || !row?.candidateParsedCvDetails?.agencyUserId 
+          || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        const payload = {
+          companyId: row?.candidateParsedCvDetails?.companyId,
+          jobId:row?.candidateParsedCvDetails?.jobId,
+          agencyUserId: row?.candidateParsedCvDetails?.agencyUserId,
+          candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
+        }
+        try {
+          const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+          
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setPdfViewDetails(response.objectUrl)
+          setIsViewCVModalOpen(true)
+        } catch (error) {
+          console.log(error)
+        }
       }
-    }else{
-      const payload = {
-        companyId: row?.candidateParsedCvDetails?.companyId,
-        jobId:row?.candidateParsedCvDetails?.jobId,
-        agencyUserId: row?.candidateParsedCvDetails?.agencyUserId,
-        candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
-      }
-      try {
-        const {response} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
-        setPdfViewDetails(response.objectUrl)
-        setIsViewCVModalOpen(true)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-}
+  }
   // Toggle row expansion
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((r) => r !== id) : [...prev, id]));
@@ -444,15 +512,15 @@ return (
         allSelected={
             ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)
         }
-        renderExpandedDetails={renderExpandedDetails}
+        // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
-        pageSize={10}
-        setPageSize={() => {}}
-        hasPrevPage={false}
-        hasNextPage={false}
-        handlePreviousPage={() => {}}
-        handleNextPage={() => {}}
+        pageSize={pageSize}
+        setPageSize={handlePageSizeChange}
+        handlePreviousPage={() => onPageChange(currentPage - 1)}
+        handleNextPage={() => onPageChange(currentPage + 1)}
+        hasPrevPage={currentPage > 1}
+        hasNextPage={!!pagination?.lastKey}
         />
         <EditProfileModal
         onClose={()=>{
@@ -471,7 +539,14 @@ return (
           {!pdfViewDetails ? (
             <NoDataPresent />
           ) : (
-            <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+          <CVPreviewRaw 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(undefined)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}/>
           )}
         </Modal>
     </>

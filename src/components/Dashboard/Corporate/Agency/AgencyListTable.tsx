@@ -104,6 +104,10 @@ export default function AgencyListTable(props: any) {
       dateActivated: ["createdAt"],
       GSTIN: ["GSTIN"],
       status: ["inviteStatus"],
+      asignedJobs:["totalAssignedJobs"],
+      totalSubmitted:["totalCandidatesSubmitted"],
+      totalRejected:["totalCandidateRejected"],
+      totalHired:["totalCandidateHired"],
   };
 
   // const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
@@ -197,7 +201,7 @@ export default function AgencyListTable(props: any) {
     {
         key: "asignedJobs",
         label: "Assigned Jobs",
-        sortable: false,
+        sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -208,7 +212,7 @@ export default function AgencyListTable(props: any) {
     {
         key: "totalSubmitted",
         label: "Total submitted",
-        sortable: false,
+        sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -220,7 +224,7 @@ export default function AgencyListTable(props: any) {
         key: "totalRejected",
         label: "Total rejected",
         contentWidth: `max-w-none`,
-        sortable: false,
+        sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateRejected ?? "-"}</span>
@@ -231,7 +235,7 @@ export default function AgencyListTable(props: any) {
         key: "totalHired",
         label: "Total hired",
         contentWidth: `max-w-none`,
-        sortable: false,
+        sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateHired ?? "-"}</span>
@@ -249,6 +253,7 @@ export default function AgencyListTable(props: any) {
               <div className='flex justify-start m-auto gap-1'>
                   <div className="flex flex-row">
                       <button
+                          title="Assign jobs"
                           className="btn-sky flex items-center space-x-2"
                           onClick={() => {
                           setIsAssignJobModelOpen(true)
@@ -261,7 +266,10 @@ export default function AgencyListTable(props: any) {
                   </div>
 
                   <div className="flex flex-row">
-                      <button className="btn-blue flex items-center space-x-2"
+                      <button 
+                          title="Remove jobs"
+                          // disabled={true}
+                          className="btn-blue flex items-center space-x-2"
                           onClick={()=>{
                               setIsRemoveJobModelOpen(true)
                               setEditProfileData(row)
@@ -272,6 +280,8 @@ export default function AgencyListTable(props: any) {
                   </div>
 
                   <button className="border rounded-lg p-2"
+                      title="Edit agency"
+                      // disabled={true}
                       onClick={()=>{
                           setIsEditAgencyModelOpen(true)
                           setEditProfileData(row)
@@ -280,6 +290,8 @@ export default function AgencyListTable(props: any) {
                   </button>
 
                   <button className="border rounded-lg p-2"
+                      title={row?.isPaused ? "Resume actions" : "Pause actions"}
+                      disabled={true}
                       onClick={()=>{
                           setIsPauseAgencyModelOpen(true)
                           setEditProfileData(row)
@@ -290,7 +302,9 @@ export default function AgencyListTable(props: any) {
                   </button>
 
                   <button 
-                      disabled={row.isDelete}
+                      // disabled={row.isDelete}
+                      disabled={true}
+                      title="Delete agency"
                       className={`border rounded-lg p-2 ${
                         row.isDelete ? "text-gray-300 cursor-not-allowed" : "bg-red-500 text-white"
                       }`}
@@ -305,7 +319,7 @@ export default function AgencyListTable(props: any) {
     },
     {
         key: "GSTIN",
-        label: "GSTIN no",
+        label: "GSTIN No",
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
@@ -322,7 +336,10 @@ export default function AgencyListTable(props: any) {
           <div className="flex justify-center m-auto w-[40px]">
             <button
               className="flex flex-row justify-center items-center"
-              onClick={() => viewCV(row)}
+              onClick={() => {
+                viewCV(row)
+                setEditProfileData(row)
+              }}
             >
               <img
                 src={View}
@@ -394,7 +411,8 @@ export default function AgencyListTable(props: any) {
           hasPrevPage={currentPage > 1}
           hasNextPage={!!pagination?.lastKey}
         />
-                
+
+      {isAssignJobModelOpen && (      
         <AssignJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => setIsAssignJobModelOpen(false)}
@@ -402,17 +420,22 @@ export default function AgencyListTable(props: any) {
           jobsList={jobsList}
           agencyData={editProfileData}
           userDetails={userDetails}
+          localUpdate={localUpdate}
         />
+      )}
 
+      {isRemoveJobModelOpen && (
         <RemoveJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => setIsRemoveJobModelOpen(false)}
           isOpen= {isRemoveJobModelOpen}
-          jobsList={jobsList}
+          // jobsList={jobsList}
           agencyData={editProfileData}
           userDetails={userDetails}
+          localUpdate={localUpdate}
         />
-
+      )}
+      {isEditAgencyModelOpen && (
         <EditAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => setIsEditAgencyModelOpen(false)}
@@ -420,7 +443,7 @@ export default function AgencyListTable(props: any) {
           data={editProfileData}
           localUpdate={localUpdate}
         />
-
+      )}
         <PauseAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => setIsPauseAgencyModelOpen(false)}
@@ -459,7 +482,16 @@ export default function AgencyListTable(props: any) {
           {!pdfViewDetails ? (
             <NoDataPresent />
           ) : (
-            <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+            <CVPreviewRaw 
+            heading={"Contract copy preview"} 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(null)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}
+            isContractCopy={true}/>
           )}
         </Modal>
     </>

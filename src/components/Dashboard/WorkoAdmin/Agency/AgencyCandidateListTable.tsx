@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Eye, Pencil, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Check, Eye, FileCheck2, Pencil, Send, Trophy, User, X } from "lucide-react";
 import { DynamicTable } from "../../../Shared/DynamicTable";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -19,6 +19,15 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import Modal from "@Components/Shared/Modal";
+import { toast } from "react-toastify";
+import { getToastOptions } from "lib-worko-ui";
+import RejectCandidateModal from "@Components/Dashboard/Corporate/Agency/modals/RejectCandidateModal";
+import EvaluatorForm, { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
+import ResponseEvaluation from "@Components/Shared/ApplicantsPage/ViewEvaluation";
+import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { JobApplicationUpdatePayloadDto } from "../Applicants/Applicants";
+import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
+import { useIsFetching, useQuery } from "@tanstack/react-query";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -57,6 +66,11 @@ export default function AgencyCandidateListTable(props: any) {
     data,
     handleUpdate,
     userType,
+    initialIds,
+    setInitialIds,
+    localUpdate,
+    setFetchData,
+    setSelectedRows,
     pagination,
     currentPage,
     onPageChange,
@@ -67,19 +81,60 @@ export default function AgencyCandidateListTable(props: any) {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
   const [selectedStatusDropdown, setSelectedStatusDropdown] = useState<string>("");
-  const [scorePointsModal, setScorePointsModal] = useState<any>();
+  const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
   const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyAllCandidatesListDetailsDto | undefined>()
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
   const [isAllExpanded, setIsAllExpanded] = React.useState(false);
+  const [isRejecting,setIsRejecting] = useState<boolean>(false);
   const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
+//   const [scoreLoading,setScoreLoading] = useState<boolean>(false);
+  const [isEvaluatorForm,setIsEvaluatorForm] = useState<boolean>(false);
+  const [EvaluatorFormProps, setEvaluatorFormProps] = useState<EvaluatorFormProps | null>(null);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+
+  const currentId = initialIds[0] ?? null;
+  const isFetchingMatchingScore = useIsFetching({queryKey: ["matching-score"]});
+
+  const {data: apidata, isLoading, error, isFetched } = useQuery({
+    queryKey: ["matching-score", currentId],
+    queryFn: () => matchingScoreUpdate(currentId!),
+    enabled: !!currentId,
+    refetchInterval: 50000,
+    refetchOnWindowFocus: false,
+  });
+
+
+  useEffect(() => {
+    if (!currentId) return;
+    if (apidata?.isFindMatchingScoreInProgress === false && apidata?.matchingScoreDetails?.matchingScore) {
+      toast.success(`Score generated for ${apidata?.candidateEmail}`,getToastOptions({}))
+      const updatedData = {...apidata,isFindMatchingScoreInProgress:false,matchingScoreDetails:apidata?.matchingScoreDetails}
+      localUpdate(apidata?.id,updatedData)
+      setInitialIds((prev:any) => prev.slice(1));
+      return;
+    }
+    if(apidata?.isFindMatchingScoreInProgress === false && !apidata?.matchingScoreDetails?.matchingScore){
+      toast.error(`Failed to generate score for ${apidata?.candidateEmail}`,getToastOptions({}))
+      const updatedData = {...apidata,isFindMatchingScoreInProgress:false}
+      localUpdate(apidata?.id,updatedData)
+      setInitialIds((prev:any) => prev.slice(1));
+      return;
+    }
+    if (apidata?.matchingScoreDetails?.matchingScore) {
+      toast.success(`Score generated for ${apidata?.candidateEmail}`,getToastOptions({}))
+      const updatedData = {...apidata,isFindMatchingScoreInProgress:false,matchingScoreDetails:apidata?.matchingScoreDetails}
+      localUpdate(apidata?.id,updatedData)
+      setInitialIds((prev:any) => prev.slice(1));
+      return;
+    }
+  }, [apidata, setInitialIds]);
 
   // Sorting hook (keeps same fallback keys as before)
     const keyFallbacks = {
@@ -99,7 +154,7 @@ export default function AgencyCandidateListTable(props: any) {
         location: ["candidateParsedCvDetails.location"],
         readyToRelocate: ["candidateParsedCvDetails.readyToRelocate"],
         workoScore: ["score", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
-        status: ["jobDetails.status"]
+        status: ["jobApplicationStatus"]
     };
 
     const { sortedData, onSortChange } = useSortableData<AgencyAllCandidatesListDetailsDto>(data, keyFallbacks, {
@@ -172,6 +227,86 @@ export default function AgencyCandidateListTable(props: any) {
         });
       }
     };
+
+  const matchingScoreUpdate = async (passedJobId:string) => {
+      if (!userDetails?.email) return;
+
+      try {
+      const url = `${agencyBaseUrl}/agency-user-submission/${passedJobId}`;
+      const { response } = await httpServiceObj.get<AgencyAllCandidatesListDetailsDto>(url, true, {}, true);
+  
+        if (response) {
+          return response;
+        } else {
+          console.error("Cannot fetch user details");
+        }
+      } catch (err) {
+        console.error("Exception in Agency all candidates list", err);
+      }
+  };
+
+  const findMatchingScoreSingle = async(row:AgencyAllCandidatesListDetailsDto) =>{
+    if(row?.matchingScoreDetails){
+      toast.error("Cannot re-generate score again",getToastOptions({}))
+      return
+    }
+    const updatedData = {...data,isFindMatchingScoreInProgress:true}
+    localUpdate(row?.id,updatedData)
+    const payload = {
+        agencyUserSubmissionId:row?.id
+    }
+    
+    try {
+        const {response, error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/find-matching-score`,payload,true,{},true)
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          const updatedData = {...data,isFindMatchingScoreInProgress:false}
+          localUpdate(row?.id,updatedData)
+        }
+        
+        if(response){
+          setInitialIds((prev:string) => [...prev, row?.id]);
+        }
+    } catch (err) {
+        console.error(err,getToastOptions({}))
+    } finally{
+
+    }
+  }
+  
+  const moveToApplicantSingle = async(row:AgencyAllCandidatesListDetailsDto) =>{
+    if(!userDetails){
+        toast.error("No user details found please login again",getToastOptions({}))
+        return
+    }
+    if ( !row?.candidateParsedCvDetails?.agencyUserSubmissionId || !row?.candidateParsedCvDetails?.jobId || !row?.candidateParsedCvDetails?.email || !row?.jobDetails?.companyName) {
+    toast.error("Candidate data is incomplete. Please refresh and try again.", getToastOptions({}));
+    return;
+    }
+    const payload =  {
+        agencyUserSubmissionId: row?.candidateParsedCvDetails?.agencyUserSubmissionId,
+        jobId: row?.candidateParsedCvDetails?.jobId,
+        companyName: row?.jobDetails?.companyName,
+        jobTitle:row?.jobDetails?.jobTitle,
+        // applicantEmail: row?.candidateParsedCvDetails?.email,
+        }
+    try {
+        const {response, error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/move-to-applicant`,payload,true,{},true)
+        console.log(response,error)
+        if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+        }
+        if(response){
+            const updatedData = {...data,jobApplicationStatus:"ACCEPTED"}
+            localUpdate(row?.id,updatedData)
+            toast.success("candidate moved to applicants successfully",getToastOptions({}))
+        }
+    } catch (error) {
+        console.error("moveToApplicantSingle error:", error);
+        toast.error("Something went wrong while moving the candidate. Please try again.", getToastOptions({}));
+    } 
+  }
 
   // Column definitions (kept same as previous "All" view)
 const columns = [
@@ -356,8 +491,12 @@ const columns = [
         label: "Location",
         sortable: true,
         render: (row: AgencyAllCandidatesListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[100px]'>
-                <span>{row?.candidateParsedCvDetails?.location ?? "NA"}</span>
+            <div className='flex justify-center m-auto w-[100px] text-center'>
+                <span 
+                    title={row?.candidateParsedCvDetails?.location}
+                    className="truncate block w-full">
+                    {row?.candidateParsedCvDetails?.location ?? "NA"}
+                </span>
             </div>
         ),
     },
@@ -377,76 +516,144 @@ const columns = [
         </div>
         ),
     },
-    // {
-    //     key: "anyComment",
-    //     label: "Any comment",
-    //     sortable: true,
-    //     render: (row: AgencyAllCandidatesListDetailsDto) => (
-    //         <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-    //             <span 
-    //             title={row?.comments}
-    //             className={isAllExpanded ? "": "truncate block w-full"}>{row?.comments ?? "NA"}</span>
-    //         </div>
-    //     ),
-    // },
+    {
+        key: "anyComment",
+        label: "Any comment",
+        sortable: true,
+        render: (row: AgencyAllCandidatesListDetailsDto) => (
+            <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+                <span 
+                title={row?.agencyComments}
+                className={isAllExpanded ? "": "truncate block w-full"}>{row?.agencyComments ?? "NA"}</span>
+            </div>
+        ),
+    },
     {
         key: "viewCV",
         label: "CV",
         sortable: false,
         render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className='flex justify-center m-auto w-[40px]'>
-                    <button
-                    className="flex flex-row justify-center items-center"
-                    onClick={()=>{
-                    viewCV(row)
-                    }}>
-                    <img src={View} alt="View" className="w-8 h-8 btn-sky shrink-0 "/>
-                    </button>
+            <button
+            className="flex flex-row justify-center items-center"
+            title="View cv"
+            onClick={()=>{
+            viewCV(row)
+            setEditProfileData(row)
+            }}>
+            <img src={View} alt="View" className="w-8 h-8 btn-sky shrink-0 "/>
+            </button>
         </div>
         )
     },
     {
         key: "workoScore",
         label: "Worko Score",
+        contentWidth: `max-w-none`,
         sortable: false,
         render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className='flex justify-center items-center m-auto'>
-            <ProgressCircle
-            onClick={() => {
-                setFeedbackModalOpen(true);
-                const application = jobApplicationServiceObj.getScoreDetails(row);
-                if (application === null) return;
-                setScorePointsModal({
-                title: application.type === "SCORE",
-                data: application.feedback,
-                matchingScore: row.score ?? 0,
-                candidateName: row.applicantName,
-                details: true,
-                showCloseButton: true,
-                onClose: () => setFeedbackModalOpen(false),
-                });
-                // console.log("Matching Score Details:", scorePointsModal);
-            }}
-            value={row.score}
-            />
+            {/* {(!row?.matchingScoreDetails?.matchingScore && !row.jobApplicationStatus) ? ( */}
+            {(!row?.matchingScoreDetails?.matchingScore && !row.jobApplicationStatus) ? (
+            <button
+                type="button"
+                disabled={row?.isFindMatchingScoreInProgress}
+                // disabled={true}
+                title="Find matching score"
+                onClick={()=>findMatchingScoreSingle(row)}
+                className={`w-28 inline-flex items-center gap-2 rounded-lg text-white text-xs transition p-1 text-center flex-row justify-center
+                    ${row?.isFindMatchingScoreInProgress
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-cyan-400 hover:bg-cyan-600"
+                    }
+                `}
+                >
+                <Trophy className="w-4 h-4 flex items-center justify-center stroke-[2]" />
+                <span className="leading-tight text-[10px] text-left">
+                    {row?.isFindMatchingScoreInProgress ? "Finding score..." : <>Find matching<br />score</>}
+                </span>
+            </button>
+            ) : row?.matchingScoreDetails?.matchingScore ? (
+                <div className="text-xs">
+                    <ProgressCircle
+                        onClick={() => {
+                            setFeedbackModalOpen(true);
+                            
+                            const application = jobApplicationServiceObj.getScoreDetails(row as any);
+                            if (application === null) return;
+                            setScorePointsModal({
+                            title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",
+                            data: row?.matchingScoreDetails?.rejection_feedback || row?.matchingScoreDetails?.scoreDetails,
+                            matchingScore: row?.matchingScoreDetails?.matchingScore ?? 0,
+                            candidateName: row?.candidateParsedCvDetails?.name,
+                            details: true,
+                            showCloseButton: true,
+                            onClose: () => setFeedbackModalOpen(false),
+                        });
+                        }}
+                        value={row?.matchingScoreDetails?.matchingScore}
+                    />
+                </div>
+            ) : row.jobApplicationStatus 
+                ? (null) 
+            : null}
         </div>
         )
     },
     {
         key: "action",
         label: "Action",
+        contentWidth: `max-w-none`,
         sortable: false,
         render: (row: AgencyAllCandidatesListDetailsDto) => {
         return (
-            <div className='flex justify-center m-auto w-[40px]'>
-                <button 
+            <div className='flex justify-center m-auto gap-2 text-[10px]'>
+                {/* <button 
                     onClick={()=>{
                         setEditProfileView(true)
                         setEditProfileData(row)
                     }}>
-                    {/* <Pencil/> */}
                     <img src={Edit} className="w-8 h-8 btn-sky shrink-0" />
-                </button>
+                </button> */}
+                {(row?.jobApplicationStatus )
+                ? (null) 
+                : (                
+                <>
+                    <button
+                    type="button"
+                    title="Accept & move to applicant"
+                    className="inline-flex items-center gap-2 rounded-lg text-xs transition p-1 text-center bg-green-500 text-white hover:bg-green-600"
+                    onClick={()=>moveToApplicantSingle(row)}
+                    >
+                    <Check className="w-6 h-6 flex items-center justify-center stroke-[2]" />
+                    <span className="leading-tight text-[10px]">Accept & move<br />to applicant</span>
+                    </button>
+
+                    {/* <button
+                    type="button"
+                    title="Reject"
+                    className="inline-flex items-center gap-2 rounded-lg bg-red-500 text-white text-xs hover:bg-white hover:text-red-500 transition border border-red-500 p-1 text-center"
+                    onClick={()=>{
+                        setIsRejecting(true)
+                        setEditProfileData(row)
+                    }}
+                    >
+                    <X className="w-6 h-6 flex items-center justify-center stroke-[2]" />
+                    </button> */}
+
+                    {/* <button 
+                        type="button"
+                        title="Accept & send for evaluation"
+                        className="w-auto px-2 flex flex-row items-center justify-center gap-1 rounded-lg bg-blue-500 text-white hover:bg-blue-600 transition text-center"
+                        onClick={()=>{
+                            setIsEvaluatorForm(true)
+                            setEditProfileData(row)
+                        }}
+                        >
+                        <Send className="w-4 h-4" />
+                        <span className="leading-tight text-[10px]">Accept & send<br />for evaluation</span>
+                    </button> */}
+                </>)}
             </div>
         )}
     },
@@ -459,13 +666,13 @@ const columns = [
             //     <span>{row?.currentStatus ?? "NA"}</span>
             // </div>
             const colorClass =
-                statusColors[row?.jobDetails?.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
+                statusColors[row?.jobApplicationStatus as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
     
             return (
                 <div className="flex justify-center  mx-auto p-2 w-fit relative">
                 <span
                     className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
-                    {newDisplayStatus[row?.jobDetails?.status as JobApplicationStatusType]}
+                    {newDisplayStatus[row?.jobApplicationStatus as JobApplicationStatusType]}
                 </span>
                 </div>
             );
@@ -609,6 +816,45 @@ const viewCV = async (row:AgencyAllCandidatesListDetailsDto) =>{
         // mainColumns={["jobProfile","agencyName",'applicantName','email',"viewCV","workoScore","action","currentStatus"]}
         // expandedColumns={['currentCompany',"currentDesignation",'currentCTC','expectedCTC', 'totalYOE','relevantYOE', 'readyToRelocate','anyComment','achievements']}
         />
+        <RejectCandidateModal
+            onClose={()=>setIsRejecting(false)}
+            isOpen={isRejecting}
+            data={editProfileData}
+            // onRefresh={()=>alert("closed")}
+            localUpdate={localUpdate}
+            type={"single"}
+            setSelectedRows={setSelectedRows}
+        />   
+
+        <Modal
+          isOpen={isEvaluatorForm}
+          onClose={() => setIsEvaluatorForm(false)}
+          className="w-[90vw] sm:w-[455px] h-auto">
+          {isEvaluatorForm &&
+            <EvaluatorForm
+              Defaultvalues={{
+                jobApplicationId: [editProfileData?.id ?? ""],
+                jobId: editProfileData?.candidateParsedCvDetails?.jobId ?? "",
+                jobTitle: editProfileData?.jobDetails?.jobTitle ?? "",
+                companyId: editProfileData?.companyId ?? "",
+                candidateParsedCvId:editProfileData?.candidateParsedCvId ?? "",
+                agencyUserSubmissionId:editProfileData?.candidateParsedCvDetails?.agencyUserSubmissionId ?? "",
+                applicantUserId: [""],
+                applicantUserName: [editProfileData?.candidateParsedCvDetails?.name ?? ""],
+                applicantUserEmail: [editProfileData?.candidateParsedCvDetails?.email ?? ""],
+
+                hrName: userDetails?.fullName ?? "",
+                hrCurrentCompanyName: "WORKO",
+            }}
+            isBulk={true}
+            onClose = {()=>setIsEvaluatorForm(false)}
+            formLimit={5}
+            localUpdate={localUpdate}
+            rowData={editProfileData}
+            isAgency={true}/>
+          }
+        </Modal>
+
         <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {
@@ -618,8 +864,22 @@ const viewCV = async (row:AgencyAllCandidatesListDetailsDto) =>{
           {!pdfViewDetails ? (
             <NoDataPresent />
           ) : (
-            <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+            <CVPreviewRaw 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(undefined)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}/>
           )}
+        </Modal>
+
+        <Modal
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            className="py-5">
+            {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
         </Modal>
     </>
   );

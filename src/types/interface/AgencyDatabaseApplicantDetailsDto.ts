@@ -1,3 +1,4 @@
+import { StatusTracker } from '@Interfaces/CorporateDashboard.dto';
 export interface AgencyAllCandidatesListDetailsDto {
   agencyComments: string;
   agencyJobAssignedByCorporateUserId: string;
@@ -15,6 +16,20 @@ export interface AgencyAllCandidatesListDetailsDto {
   jobDetails: JobDetails;
   jobId: string;
   updatedAt: string;
+  jobApplicationStatus:string;
+  matchingScoreDetails:{
+    rejectionFeedbackBySystemForApplicant: string;
+    rejection_feedback: string;
+    matchingScore: number;
+    scoreDetails: string;
+    scoreDetailsForApplicant : string;
+    //fake data
+    score:number;
+  }
+  //fake data
+  applicantName:string;
+  statusTracker:any;
+  isFindMatchingScoreInProgress:boolean;
 }
 
 export interface JobDetails {
@@ -85,6 +100,7 @@ export interface CandidateParsedCvDetails {
   totalYOE: number;
   updatedAt: string;
   userDetailId:String;
+  corporateBulkJdId:string;
   //for admin db listing
   companyId:string;
   jobId:string;
@@ -108,6 +124,24 @@ export interface AgencyDatabaseApplicantDetailsDto {
 
   //fake data
   emailId:string;
+  addedBy:string;
+  addedFor:string;
+  coolingPeriod:string;
+  lastActive:string;
+  remark:string;
+  profileName:string;
+  referredBy:string;
+  candidateName:string;
+  currentCompany:string;
+  contactNumber:string;
+  coreSkills:any;
+  currentDesignation:string;
+  YOE:string;
+  source:string;
+  about:string;
+  CTC:string;
+  ECTC:string;
+  cvLink:string;
 }
 
 export interface CandidateProfileInCompanies{

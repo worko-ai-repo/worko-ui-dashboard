@@ -151,6 +151,8 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
       jobId: selectedJobs[0]?.id,
       companyName: selectedJobs[0]?.companyName,
       applicantEmail: agencyData?.emailId
+      // may need to send job title as well
+      // jobTitle:selectedJobs[0]?.jobDetails?.jobTitle
     }
 
     try {

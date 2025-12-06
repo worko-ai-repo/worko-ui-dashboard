@@ -143,6 +143,7 @@ const SearchPrompt: React.FC = () => {
       />
     </div>
     <button
+      disabled={true}
       onClick={handleSubmit}
       className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
     >
@@ -173,6 +174,7 @@ const SearchPrompt: React.FC = () => {
         </button>
       )}
       <button
+        disabled={true}
         onClick={handleSubmit}
         className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
       >

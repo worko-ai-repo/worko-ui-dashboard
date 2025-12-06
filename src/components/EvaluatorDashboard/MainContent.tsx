@@ -358,28 +358,65 @@ const MainContent: React.FC<MainContentProps> = ({
            //text-indigo-600 */}
 
             <div className="mt-4 text-left">
-              {Array.isArray(EvaluationRequestDetails.scoreDetails) ? (
+            {(() => {
+              let data = EvaluationRequestDetails.scoreDetails;
+              if (typeof data === "string") {
+                try {
+                  const parsed = JSON.parse(data);
+                  const converted = [];
+
+                  if (parsed.RecruiterNote) {
+                    converted.push({
+                      heading: "Recruiter Note",
+                      detail: parsed.RecruiterNote,
+                    });
+                  }
+
+                  if (Array.isArray(parsed.Strengths)) {
+                    converted.push({
+                      heading: "Strengths",
+                      detail: parsed.Strengths.join("\n• "),
+                    });
+                  }
+
+                  if (Array.isArray(parsed.AreasOfConcern)) {
+                    converted.push({
+                      heading: "Areas Of Concern",
+                      detail: parsed.AreasOfConcern.join("\n• "),
+                    });
+                  }
+                  data = converted; 
+                } catch {
+                }
+              }
+
+              return Array.isArray(data) ? (
                 <div className="space-y-4">
-                  {EvaluationRequestDetails.scoreDetails.map((score, index) => (
+                  {data.map((score, index) => (
                     <div key={index} className="flex items-start gap-3">
                       <div
                         className="mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: "#316BFF" }}></div>
+                        style={{ backgroundColor: "#316BFF" }}
+                      ></div>
                       <div>
                         <div className="text-base font-semibold text-slate-800">
                           {score.heading}
                         </div>
-                        <div className="text-base text-slate-700">{score.detail}</div>
+                        <div className="text-base text-slate-700 whitespace-pre-line">
+                          {score.detail}
+                        </div>
                       </div>
                     </div>
                   ))}
                 </div>
               ) : (
                 <p className="text-base text-slate-700 whitespace-pre-line">
-                  {EvaluationRequestDetails.scoreDetails || "No feedback provided."}
+                  {data || "No feedback provided."}
                 </p>
-              )}
-            </div>
+              );
+            })()}
+          </div>
+
           </div>
 
           {/* Recruiter Feedback Card */}

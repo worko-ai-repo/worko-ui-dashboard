@@ -13,6 +13,7 @@ interface AssignJobModalProps {
   // jobsList: JobData[];
   agencyData:AgencyListDetailsDto;
   userDetails:any;
+  localUpdate:(id:string,updatedData:Partial<any>)=>void
 }
 
 export interface CompanyFormData {
@@ -47,7 +48,7 @@ export interface CompanyAPIResponse {
 
 
 
-const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose, isOpen, agencyData, userDetails }) => {
+const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose, isOpen, agencyData, userDetails, localUpdate }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -139,9 +140,12 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
     }
 
     const jobIds = selectedJobs.map((job)=>{
-      return job.id
+      return {
+        jobId:job.id,
+        jobTitle:job.jobTitle
+      }
     })
-
+    
     const payload = {
       companyId: selectedCompany?.id,
       jobsToAssign: jobIds,
@@ -150,14 +154,21 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
     }
 
     try {
-      const { response } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
+      const { response, error } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
 
-      if (!response) {
-        toast.error("Error assigning data, please try again later.", getToastOptions({}));
+      if (error) {
+        toast.error(error.message, getToastOptions({}));
         return;
       }
       if(response.isSuccess){
         toast.success("Job assigned successfully!", getToastOptions({}));
+        if(agencyData?.totalAssignedJobs){
+          const updatedData = {...agencyData,totalAssignedJobs:agencyData.totalAssignedJobs + selectedJobs.length}
+          localUpdate(agencyData?.id,updatedData)
+        }else{
+          const updatedData = {...agencyData,totalAssignedJobs:selectedJobs.length}
+          localUpdate(agencyData?.id,updatedData)
+        }
         setSelectedJobs([]);
         onClose();
       }

@@ -61,11 +61,16 @@ export type EvaluatorFormProps = {
     applicantUserEmail: string[];
     hrName: string;
     hrCurrentCompanyName: string;
+    agencyUserSubmissionId?:string;
+    candidateParsedCvId?:string;
   };
   isBulk: boolean; // Optional mode prop to handle different form behaviors
   onBulkUpdate?: (JobApplicationStatus: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
   onClose: () => void; // Function to close the form/modal
   formLimit: number; // Limit for the number of evaluators
+  localUpdate?: (id: string, updatedData: Partial<any>) => void;
+  rowData?:any;
+  isAgency?:boolean;
 };
 
 const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
@@ -74,6 +79,9 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
   onBulkUpdate,
   onClose,
   formLimit = 10,
+  localUpdate,
+  rowData,
+  isAgency
 }) => {
   const isAdmin = secureStorage
     .getItem<UserRole>(SecureStorageKeyEnum.USERTYPE)
@@ -125,7 +133,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
 
   const [activeTab, setActiveTab] = useState(0);
   const [submittedTabs, setSubmittedTabs] = useState<number[]>([]);
-
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const {
     data: evaluationData,
     isLoading: isEvaluationLoading,
@@ -177,6 +185,103 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
    * and sends the feedback requests to the server. It also handles success and error notifications.
    */
   const onSubmit = async () => {
+    if(!Defaultvalues?.hrCurrentCompanyName){
+      const { response,error} = await httpServiceObj.get<any>(`/company/${userDetails?.companyId}`, true, {});
+      if(error){
+        toast.error("cannot find company name please login again",getToastOptions({}))
+      }
+      if(response){
+        Defaultvalues.hrCurrentCompanyName = response[0].name
+      }
+    }
+    if(isAgency){
+    const allEvaluators = getValues("evaluators");
+    const historyEmails = new Set(
+      (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
+        (h) => (h.evaluatorDetails?.email || "").trim().toLowerCase()
+      )
+    );
+    const validNewEvaluatorsAll = allEvaluators.filter((e) => {
+      const email = (e?.evaluatorDetails?.email || "").trim().toLowerCase();
+      return email && !historyEmails.has(email);
+    });
+
+    const historyCount = (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).length;
+    const activeFieldIndex = activeTab - historyCount;
+    if (activeFieldIndex < 0) {
+      toast.error("This is a read-only tab.", getToastOptions({}));
+      return;
+    }
+    const applicantIds = Defaultvalues.applicantUserId;
+    const jobApplicationIds = Defaultvalues.jobApplicationId;
+    const emails = Defaultvalues.applicantUserEmail;
+    const applicantName = Defaultvalues.applicantUserName;
+    const candidateParsedCvId = Defaultvalues.candidateParsedCvId;
+    
+    if (applicantIds.length !== jobApplicationIds.length || applicantIds.length !== emails.length) {
+      toast.error("Mismatch in applicant data", getToastOptions({}));
+      return;
+    }
+    const validNewEvaluators = validNewEvaluatorsAll;
+    if (validNewEvaluators.length === 0) {
+      toast.error("Please add at least one new evaluator", getToastOptions({}));
+      return;
+    }
+    const payload =  {
+      agencyUserSubmissionId: Defaultvalues?.agencyUserSubmissionId,
+      jobId: Defaultvalues?.jobId,
+      companyName: Defaultvalues?.hrCurrentCompanyName,
+      jobTitle:Defaultvalues?.jobTitle
+   }
+    const {response, error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/send-for-evaluation`,payload,true,{},true)
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+
+    const applicationPayloads = applicantIds.map((applicantId, index) => ({
+      jobApplicationId: jobApplicationIds[index],
+      jobId: Defaultvalues.jobId,
+      jobTitle: Defaultvalues.jobTitle,
+      companyId: Defaultvalues.companyId,
+      applicantUserEmail: emails[index],
+      candidateParsedCvId:candidateParsedCvId,
+      applicantName: applicantName[index],
+      hrName: Defaultvalues.hrName,
+      hrCurrentCompanyName: Defaultvalues.hrCurrentCompanyName,
+    }));
+    try {
+      await Promise.all(
+        validNewEvaluators.map(async (evaluator) => {
+          const payload = {
+            ...applicationPayloads[0],
+            evaluatorDetails: evaluator.evaluatorDetails,
+            hrDetailedFeedback: evaluator.hrDetailedFeedback,
+            hrHtmlDetailedFeedback: evaluator.hrHtmlDetailedFeedback,
+          };
+          const {response,error} = await httpServiceObj.post(`/request-evaluation/`,payload,true,{},false,"JOB")
+          if (error) {
+            throw new Error(error.message || "Error sending evaluation request");
+          }
+          if(localUpdate && rowData){
+            const updatedData = {...rowData,jobApplicationStatus:"UNDER_EVALUATION"}
+            localUpdate(rowData?.id,updatedData)
+          }
+          console.log("Evaluator response:", response);
+        })
+      );
+      toast.success("Evaluation requests sent successfully", getToastOptions({}));
+    } catch (error: any) {
+      toast.error(
+        error instanceof Error ? error.message : "Error sending bulk evaluation requests",
+        getToastOptions({})
+      );
+    } finally {
+      reset();
+      onClose();
+      return
+    }
+    }
     const allEvaluators = getValues("evaluators");
     const historyEmails = new Set(
       (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(

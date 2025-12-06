@@ -1,5 +1,7 @@
+import { useAppContext } from "@Context/App.context";
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
+import { NormalizedUser } from "@Utils/NormalizeUser";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
@@ -10,9 +12,9 @@ interface RejectCandidateModalProps {
   isOpen: boolean;
   data: any;
   // onRefresh: () => void;
-  localUpdate?: (id: string, updatedData: Partial<any>) => void;
+  localUpdate: (id: string, updatedData: Partial<any>) => void;
   // rejectCandidate?:() => void;
-  setFetchData:(data:any)=>void;
+  setFetchData?:(data:any)=>void;
   type:string;
   setSelectedRows: React.Dispatch<React.SetStateAction<any[]>>;
 }
@@ -43,76 +45,70 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isError, setIsError] = useState("");
   const { user } = useDashboardContext();
-
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+  const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
+  
   const handleSubmit = async () => {
-    if(localUpdate){
-      const updatedData = {
-          ...data,
-          currentStatus:"REJECTED"
-        }
-        localUpdate(data.id,updatedData)
-        console.log(updatedData)
-      }
     if (!reason) {
       toast.error("Please select a reason", getToastOptions({}));
       return;
     }
-    if (!comments) {
+    if (reason === "Others" && !comments.trim()) {
       toast.error("Please provide detailed comment", getToastOptions({}));
       return;
     }
-    if (!user) {
-      toast.error("No user found", getToastOptions({}));
-      setIsLoading(false);
+    if (!data || !userDetails) {
+      toast.error("No data found", getToastOptions({}));
       return;
     }
-    // console.log(reason, comments);
+    setIsLoading(true);
     try {
-      const payload = {
-        action: "REJECT",
-        reason: reason,
-        userComment: comments,
-        emailId: user.email,
-        userId: user.sub,
+      const payload:any = {
+        agencyUserSubmissionId: data?.id,
+        rejectApplicantReason: reason,
       };
-      // console.log(referralData, payload);
-      const url = `/referral/${data.id}/action`;
-      const { response } = await httpServiceObj.put(url, payload, true);
-      // console.log(response);
+      if(comments.trim()){
+        payload.rejectApplicantDetailedReason = comments.trim()
+      }
+      console.log(payload)
+      const url = `${agencyBaseUrl}/agency-user-submission/reject-applicant`;
+      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+      console.log(response);
       if (response) {
-        toast.success("Referral rejected", getToastOptions({}));
+        const updatedData = {...data,jobApplicationStatus:"REJECTED"}
+        localUpdate(data.id,updatedData)
+        console.log(updatedData)
+        toast.success("Referral rejected successfully", getToastOptions({}));
         setIsError("");
-        // onRefresh();
         onClose();
       }
-    } catch (error: any) {
-      // console.log(error);
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+      }
+      } catch (error: any) {
       const errorMsg = error?.message || "Something went wrong";
       setIsError(errorMsg);
       toast.error(errorMsg, getToastOptions({}));
     } finally {
       setIsLoading(false);
-
-      //below is the local update for both single and multiple
-      if(type == "multiple"){
-        setFetchData((prevData:any) =>
-            prevData.filter((candidate:any) =>
-              !data.some((sel:any) => sel.id === candidate.id)
-            )
-        );
-        setSelectedRows(()=>[])
-      }else if(type == "single"){
-        setFetchData((prev:any) => prev?.filter((item:any) => item.id !== data.id))
-          setSelectedRows((prev: any[]) =>
-          prev.filter((row) => row.id !== data.id)
-        );
-      }
-      onClose()
+      // if(type == "multiple"){
+      //   setFetchData((prevData:any) =>
+      //       prevData.filter((candidate:any) =>
+      //         !data.some((sel:any) => sel.id === candidate.id)
+      //       )
+      //   );
+      //   setSelectedRows(()=>[])
+      // }else if(type == "single"){
+      //   setFetchData((prev:any) => prev?.filter((item:any) => item.id !== data.id))
+      //     setSelectedRows((prev: any[]) =>
+      //     prev.filter((row) => row.id !== data.id)
+      //   );
+      // }
+      // onClose()
     }
   };
 
   useEffect(() => {
-    // console.log(referralData);
     if (isOpen) {
       setVisible(true);
       const timer = setTimeout(() => setIsAnimatingIn(true), 10);

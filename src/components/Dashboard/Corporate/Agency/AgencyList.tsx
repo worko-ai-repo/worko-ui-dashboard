@@ -54,6 +54,7 @@ const AgencyList = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
   const [jobsList,setJobsList] = useState([]);
+  const [jobsListForRemove,setJobsListForRemove] = useState([]);
   //@TODO use callback maybe to call api
 
   // useEffect(() => {

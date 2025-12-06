@@ -38,6 +38,7 @@ export interface EvaluationRequest {
   createdByUserId?:string;
   createdByCorporateUserId?:string;
   evaluationResponseId?:string;
+  candidateParsedCvId:string;
 }
 
 export interface EvaluationDetails extends EvaluationRequest {
@@ -98,6 +99,14 @@ export interface CandidateDetails {
       workExperience: string[];
     }[];
   };
+  cvAwsS3ResourceType:string;
+  id:string;
+  cvAwsS3FileName:string;
+  companyId:string;
+  corporateBulkJdId:string;
+  jobId:string;
+  agencyUserId:string;
+  userDetailId:string;
 }
 
 export interface ScoreDetail {

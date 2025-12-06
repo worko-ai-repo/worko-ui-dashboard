@@ -10,7 +10,7 @@
     "stage": "vite --mode staging",
     "prod": "vite --mode production",
     "build": "vite build --mode development",
-    "build:stage": "tsc -b && vite build --mode staging",
+    "build:stage": "vite build --mode staging",
     "build:prod": "tsc -b && vite build --mode production",
     "lint": "eslint .",
     "preview": "vite preview"

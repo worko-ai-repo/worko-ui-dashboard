@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { CircleMinus, CirclePause, CirclePlay, Clipboard, ClipboardCheck, Eye, Pause, Pencil, Trash2, User } from "lucide-react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
+import { ClipboardCheck } from "lucide-react";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -11,11 +10,6 @@ import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyListDetailsDto, AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
 import AssignJobModal from "./modals/AssignJobModal";
-import RemoveJobModal from "./modals/RemoveJobModal";
-import EditAgencyModal, { FormValues } from "./modals/EditAgencyModal";
-import PauseAgencyModal from "./modals/PauseAgencyModal";
-import DeleteAgencyModal from "./modals/DeleteAgencyModal";
-import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 import Modal from "@Components/Shared/Modal";
 import { newDisplayStatus, statusColors } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
@@ -83,10 +77,6 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
   const [editProfileData,setEditProfileData] = useState<any>()
   const [feedbackModalOpen,setFeedbackModalOpen] = useState<boolean>(false)
   const [isAssignJobModelOpen,setIsAssignJobModelOpen] = useState<boolean>(false);
-  const [isRemoveJobModelOpen,setIsRemoveJobModelOpen] = useState<boolean>(false);
-  const [isEditAgencyModelOpen,setIsEditAgencyModelOpen] = useState<boolean>(false);
-  const [isPauseAgencyModelOpen,setIsPauseAgencyModelOpen] = useState<boolean>(false);
-  const [isDeleteAgencyModelOpen,setIsDeleteAgencyModelOpen] = useState<boolean>(false);
   const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
@@ -103,6 +93,10 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
       dateActivated: ["createdAt"],
       GSTIN: ["GSTIN"],
       status: ["inviteStatus"],
+      asignedJobs:["totalAssignedJobs"],
+      totalSubmitted:["totalCandidatesSubmitted"],
+      totalRejected:["totalCandidateRejected"],
+      totalHired:["totalCandidateHired"],
   };
   // const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
   const { sortedData, onSortChange } = useSortableData<AgencyListDetailsDto>(data, keyFallbacks, {
@@ -195,7 +189,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
     {
         key: "asignedJobs",
         label: "Assigned Jobs",
-        sortable: false,
+        sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -206,7 +200,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
     {
         key: "totalSubmitted",
         label: "Total submitted",
-        sortable: false,
+        sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -218,7 +212,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "totalRejected",
         label: "Total rejected",
         contentWidth: `max-w-none`,
-        sortable: false,
+        sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateRejected ?? "-"}</span>
@@ -229,7 +223,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "totalHired",
         label: "Total hired",
         contentWidth: `max-w-none`,
-        sortable: false,
+        sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidateHired ?? "-"}</span>
@@ -247,6 +241,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
               <div className='flex justify-start m-auto gap-1'>
                   <div className="flex flex-row">
                       <button
+                          title="Assign jobs"
                           className="btn-sky flex items-center space-x-2"
                           onClick={() => {
                           setIsAssignJobModelOpen(true)
@@ -257,53 +252,12 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
                           <span className="text-xs">Assign jobs</span>
                       </button>
                   </div>
-
-                  <div className="flex flex-row">
-                      <button className="btn-blue flex items-center space-x-2"
-                          onClick={()=>{
-                              setIsRemoveJobModelOpen(true)
-                              setEditProfileData(row)
-                          }}>
-                          <CircleMinus className="w-5 h-5 shrink-0" />
-                          <span className="text-xs">Remove jobs</span>
-                      </button>
-                  </div>
-
-                  <button className="border rounded-lg p-2"
-                      onClick={()=>{
-                          setIsEditAgencyModelOpen(true)
-                          setEditProfileData(row)
-                      }}>
-                      <Pencil className="w-5 h-5 shrink-0 rounded-sm" />
-                  </button>
-
-                  <button className="border rounded-lg p-2"
-                      onClick={()=>{
-                          setIsPauseAgencyModelOpen(true)
-                          setEditProfileData(row)
-                      }}>
-                      {row?.isPaused ? 
-                      <CirclePlay className="w-5 h-5 shrink-0" /> :
-                      <CirclePause className="w-5 h-5 shrink-0" />}
-                  </button>
-
-                  <button 
-                      disabled={row.isDelete}
-                      className={`border rounded-lg p-2 ${
-                        row.isDelete ? "text-gray-300 cursor-not-allowed" : "bg-red-500 text-white"
-                      }`}
-                      onClick={()=>{
-                          setIsDeleteAgencyModelOpen(true)
-                          setEditProfileData(row)
-                      }}>
-                      <Trash2 className="w-5 h-5 shrink-0" />
-                  </button>
               </div>
           )}
     },
     {
         key: "GSTIN",
-        label: "GSTIN no",
+        label: "GSTIN No",
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
@@ -320,7 +274,10 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
             <div className="flex justify-center m-auto w-[40px]">
               <button
                 className="flex flex-row justify-center items-center"
-                onClick={() => viewCV(row)}
+                onClick={() => {
+                  viewCV(row)
+                  setEditProfileData(row)
+                }}
               >
                 <img
                   src={View}
@@ -401,41 +358,8 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
           // jobsList={jobsList}
           agencyData={editProfileData}
           userDetails={userDetails}
-        />
-
-        {/* <RemoveJobModal
-          dashboardType={"ADMIN"}
-          onClose= {() => setIsRemoveJobModelOpen(false)}
-          isOpen= {isRemoveJobModelOpen}
-          jobsList={jobsList}
-          agencyData={editProfileData}
-          userDetails={userDetails}
-        />
-
-        <EditAgencyModal
-          dashboardType={"ADMIN"}
-          onClose= {() => setIsEditAgencyModelOpen(false)}
-          isOpen= {isEditAgencyModelOpen}
-          data={editProfileData}
           localUpdate={localUpdate}
         />
-
-        <PauseAgencyModal
-          dashboardType={"admin"}
-          onClose= {() => setIsPauseAgencyModelOpen(false)}
-          isOpen= {isPauseAgencyModelOpen}
-          data={editProfileData}
-          localUpdate={localUpdate}
-        />
-
-        <DeleteAgencyModal
-          dashboardType={"admin"}
-          onClose= {() => setIsDeleteAgencyModelOpen(false)}
-          isOpen= {isDeleteAgencyModelOpen}
-          localUpdate={localUpdate}
-          data={editProfileData}
-          removeAgencyLocally={removeAgencyLocally}
-        /> */}
         {/* <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {
@@ -458,7 +382,16 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
           {!pdfViewDetails ? (
             <NoDataPresent />
           ) : (
-            <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+            <CVPreviewRaw 
+            heading={"Contract copy preview"} 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(null)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}
+            isContractCopy={true}/>
           )}
         </Modal>
     </>
