@@ -51,6 +51,8 @@ import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedba
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import interviewService from "@Services/Interview.service";
+import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
+import ApplicantExpandedRowDetails from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -129,13 +131,13 @@ export const getLatestInterviewData = (interviewDetails: InterviewDto[], userId:
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
   const latestInterview = sortedInterviews[0];
-  
+
   // Check if the latest interview doesn't have a score and if the current user has already requested it
   const isAlreadyRequested =
-    latestInterview && 
-    !latestInterview?.score && 
-    latestInterview.requestedBy?.some(request => request.corporateUserId === userId);
-    
+    latestInterview &&
+    !latestInterview?.score &&
+    latestInterview.requestedBy?.some((request) => request.corporateUserId === userId);
+
   return { interviewDetails: latestInterview, isAlreadyRequested };
 };
 
@@ -281,8 +283,8 @@ export default function ApplicationTable({
       label: "Applicants name",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <User size={20} />
+        <div className="flex font-semibold items-center justify-center gap-2">
+          {/* <User size={20} /> */}
           <span>{row.applicantDetails.name}</span>
           {updatingApplicationId === row.id && (
             <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
@@ -290,9 +292,78 @@ export default function ApplicationTable({
         </div>
       ),
     },
+    jobProfile: {
+      key: "jobTitle",
+      label: "Job Profile",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span data-tooltip-id="my-tooltip" data-tooltip-content={row?.jobTitle || "NA"}>
+          {row?.jobTitle || "NA"}{" "}
+        </span>
+      ),
+    },
+    //@Changed
+    currentPosition: {
+      key: "currentPosition",
+      label: "Current Position",
+      contentWidth: ` min-w-[200px] `,
+      render: (row: JobApplicationDetailsDto) => {
+        const finalPosAndDesignation = `${
+          getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"
+        }${
+          getCurrentPositionCell(row?.applicantDetails)?.companyName
+            ? ` @ ${getCurrentPositionCell(row?.applicantDetails)?.companyName}`
+            : ""
+        }`;
+        return (
+          <span
+            className="text-wrap line-clamp-3 w-full m-0"
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={finalPosAndDesignation}>
+            {finalPosAndDesignation}
+          </span>
+        );
+      },
+    },
+    //@Changed
+    /* currentCompany: {
+      key: "company",
+      label: "Current Company",
+      render: (row: JobApplicationDetailsDto) => (
+        <span
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}>
+          {getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}{" "}
+        </span>
+      ),
+    }, */
+    currentCTC: {
+      key: "currentCTC",
+      label: "Current CTC",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <span>
+          {typeof row.applicantDetails?.CTC === "number" ? `${row.applicantDetails.CTC} LPA` : "-"}
+        </span>
+      ),
+    },
+    noticePeriod: {
+      key: "noticePeriod",
+      label: "Notice Period",
+      sortable: true,
+      render: (row: JobApplicationDetailsDto) => (
+        <div className="flex items-center justify-center gap-2">
+          <span>
+            {row.applicantDetails?.noticePeriod
+              ? `${row.applicantDetails.noticePeriod} Days`
+              : "N/A"}
+          </span>
+        </div>
+      ),
+    },
     experience: {
       key: "experience",
-      label: "Experience",
+      label: "YOE",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
@@ -303,16 +374,6 @@ export default function ApplicationTable({
                 : `${row.applicantDetails.YOE} years`
               : "0 years"}
           </span>
-        </div>
-      ),
-    },
-    yoe: {
-      key: "yoe",
-      label: "YOE",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <span>{row.applicantDetails.YOE ?? 0}</span>
         </div>
       ),
     },
@@ -382,7 +443,7 @@ export default function ApplicationTable({
     },
     interviewScoreDetails: {
       key: "interviewScoreDetails",
-      label: "Interview Score",
+      label: "Video Score",
       render: (row: JobApplicationDetailsDto) => {
         const hasInterviewDetails = row.applicantDetails?.interviewDetails?.length;
 
@@ -403,9 +464,7 @@ export default function ApplicationTable({
                       position: row.jobTitle,
                       requesterUserName: userDetails.fullName,
                     });
-                    await interviewService.requestInterview(
-                      payload
-                    );
+                    await interviewService.requestInterview(payload);
                     toast.success("Interview requested successfully", getToastOptions({}));
                     // Update the row silently
                     refetch();
@@ -473,9 +532,7 @@ export default function ApplicationTable({
                     position: row.jobTitle,
                     requesterUserName: userDetails.fullName,
                   });
-                  await interviewService.requestInterview(
-                    payload
-                  );
+                  await interviewService.requestInterview(payload);
                   toast.success("Interview requested successfully", getToastOptions({}));
                   // Update the row silently
                   refetch();
@@ -628,10 +685,11 @@ export default function ApplicationTable({
           handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
             setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
           }}
+      
         />
       ),
     },
-    response: {
+    /*  response: {
       key: "response",
       label: "Not Responding",
       render: () => (
@@ -641,52 +699,9 @@ export default function ApplicationTable({
           </button>
         </div>
       ),
-    },
-    currentCompany: {
-      key: "company",
-      label: "Current Company",
-      render: (row: JobApplicationDetailsDto) => (
-        <span
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}>
-          {getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}{" "}
-        </span>
-      ),
-    },
-    jobProfile: {
-      key: "jobTitle",
-      label: "Job Profile",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <span data-tooltip-id="my-tooltip" data-tooltip-content={row?.jobTitle || "NA"}>
-          {row?.jobTitle || "NA"}{" "}
-        </span>
-      ),
-    },
-    currentPosition: {
-      key: "currentPosition",
-      label: "Current Position",
-      render: (row: JobApplicationDetailsDto) => (
-        <span
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={
-            getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"
-          }>
-          {getCurrentPositionCell(row?.applicantDetails)?.designation || "FRESHER"}{" "}
-        </span>
-      ),
-    },
-    currentCTC: {
-      key: "currentCTC",
-      label: "Current CTC",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <span>
-          {typeof row.applicantDetails?.CTC === "number" ? `${row.applicantDetails.CTC} LPA` : "-"}
-        </span>
-      ),
-    },
-    ECTC: {
+    }, */
+
+    /* @Change-T-MoveDown    ECTC: {
       key: "ECTC",
       label: "Expected CTC",
       sortable: true,
@@ -697,7 +712,7 @@ export default function ApplicationTable({
             : "-"}
         </span>
       ),
-    },
+    }, */
   };
 
   /**
@@ -709,10 +724,11 @@ export default function ApplicationTable({
         return [
           commonColumns.name,
           ...(isAllApplicants ? [commonColumns.jobProfile] : []),
-          commonColumns.currentCompany,
+          // commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.currentCTC,
-          commonColumns.ECTC,
+          commonColumns.noticePeriod, //@Changed-New
+          // commonColumns.ECTC,
           commonColumns.experience, // Enhanced from yoe
           // commonColumns.location,
           commonColumns.matchingScore,
@@ -723,16 +739,17 @@ export default function ApplicationTable({
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
-          commonColumns.response,
+          // commonColumns.response,
         ];
       case "Hired":
         return [
           commonColumns.name,
           ...(isAllApplicants ? [commonColumns.jobProfile] : []),
-          commonColumns.currentCompany,
+          // commonColumns.currentCompany,
           commonColumns.currentPosition,
           commonColumns.experience,
           commonColumns.currentCTC,
+          commonColumns.noticePeriod,
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.interviewScoreDetails,
@@ -740,7 +757,7 @@ export default function ApplicationTable({
           // commonColumns.applicationDate,
           // commonColumns.cvViewedDate,
           commonColumns.actions,
-          commonColumns.response,
+          // commonColumns.response,
         ];
       case "Joined":
         return [
@@ -848,150 +865,215 @@ export default function ApplicationTable({
       timeLineProps = jobApplicationServiceObj.getTimelineDetails(row);
     }
     return (
-      <div className="flex justify-evenly flex-nowrap items-start gap-4">
-        {row.status === "JOINED" && activeTab === "Joined" ? (
-          <Timeline steps={timeLineProps} />
-        ) : (
-          <>
-            <div className="">
-              <span className="font-semibold text-gray-500">About</span>
-              <div className="max-w-md">
-                <p
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content={row.applicantDetails.about}
-                  className="text-wrap line-clamp-3">
-                  {row.applicantDetails.about ?? "--------"}
-                </p>
-              </div>
-            </div>
-
-            <div className="">
-              <span className="font-semibold text-gray-500">Email ID</span>
-              <p>{row.applicantDetails?.email}</p>
-            </div>
-
-            <div className="">
-              <span className="font-semibold text-gray-500">Location</span>
-              <p>{row.applicantDetails?.location ?? "Not Disclosed"}</p>
-            </div>
-
-            <div className="">
-              <span className="font-semibold text-gray-500">Application Date</span>
-              <div className="flex items-center justify-center">
-                <span>
-                  {new Date(row.createdAt).toLocaleDateString("en-GB", {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  })}
-                </span>
-              </div>
-            </div>
-
-            {getCvViewDate(row.statusTracker) !== "-" && (
-              <>
-                <div className="">
-                  <span className="font-semibold text-gray-500">CV View Date</span>
-                  <div className="flex items-center justify-center">
-                    <span>{getCvViewDate(row.statusTracker)}</span>
-                  </div>
-                </div>
-
-                <div className="">
-                  <span className="font-semibold text-gray-500">CV Viewed By</span>
-                  <div className="flex items-center justify-center">
-                    <span>
-                      <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
-                    </span>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {row.status === "REJECTED" ? (
-              // Show rejection details
-              <>
-                <div>
-                  <span className="font-semibold text-gray-500">Rejected Date</span>
-                  <p>
-                    {new Date(
-                      row?.rejectedByUserId?.actionDate || row?.updatedAt
-                    ).toLocaleDateString("en-GB", {
-                      day: "numeric",
-                      month: "short",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "2-digit",
-                      hour12: true,
-                    })}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500">Rejected by</span>
-                  <p>
-                    <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
-                  </p>
-                </div>
-
-                <div>
-                  <div className="font-semibold text-gray-500">Rejected Reason</div>
-                  <div className="max-w-lg">
-                    {row.rejectedByUserId ? (
-                      <>
-                        <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-                        {row.rejectedByUserId.userComment && (
-                          <div>
-                            <span className="font-semibold text-gray-500 mt-2 block">Comment</span>
-                            <li className="list-disc list-inside">
-                              {row.rejectedByUserId.userComment}
-                            </li>
-                          </div>
-                        )}
-                      </>
-                    ) : (
-                      <>
-                        {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-                          <p>--------</p>
-                        ) : (
-                          jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-                            <li key={index} className="list-disc list-inside">
-                              {reason}
-                            </li>
-                          ))
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              // Show application details
-              <>
-                {/*     <div>
-                  <span className="font-semibold text-gray-500">Current CTC</span>
-                  <p className="capitalize">
-                    {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
-                  </p>
-                </div>
-                <div>
-                  <span className="font-semibold text-gray-500">Expected CTC</span>
-                  <p className="capitalize">
-                    {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
-                  </p>
-                </div> */}
-                <div>
-                  <span className="font-semibold text-gray-500">Notice period</span>
-                  <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </div>
+      <ApplicantExpandedRowDetails
+        row={row}
+        activeTab={activeTab}
+        jobApplicationServiceObj={jobApplicationServiceObj}
+        getCvViewDate={getCvViewDate}
+        getCvDownloadedById={getCvDownloadedById}
+        getRejectedById={getRejectedById}
+      />
     );
+    // return (
+    //   <div className="flex justify-between flex-nowrap items-start gap-4">
+    //     {row.status === "JOINED" && activeTab === "Joined" ? (
+    //       <Timeline steps={timeLineProps} />
+    //     ) : (
+    //       <>
+    //         {/* WORK EXPERIENCE */}
+    //         <div className="mt-4 text-left max-w-[30%]">
+    //           <span className="font-semibold text-gray-400">Work Experience</span>
+    //           <div className="mt-2 space-y-2">
+    //             {row.applicantDetails.cvExtractParsed?.multipleCandidateExperience?.map(
+    //               (exp, index) => (
+    //                 <div key={index} className="text-sm leading-5">
+    //                   <div className="flex justify-between gap-2 items-center">
+    //                     <span className="font-medium max-w-[100%] truncate">
+    //                       {index + 1}. {exp.designation} at {exp.companyName}
+    //                     </span>
+    //                     <span className="text-gray-600">
+    //                       {exp.startDate ? new Date(exp.startDate).getFullYear() : "N/A"} -{" "}
+    //                       {exp.endDate && !isNaN(new Date(exp.endDate).getFullYear())
+    //                         ? new Date(exp.endDate).getFullYear()
+    //                         : "Present"}
+    //                     </span>
+    //                   </div>
+    //                 </div>
+    //               )
+    //             )}
+    //           </div>
+    //         </div>
+
+    //         {/* EDUCATION */}
+    //         <div className="mt-4 text-left max-w-[30%]">
+    //           <span className="font-semibold text-gray-400">Education</span>
+    //           <div className="mt-2 space-y-2">
+    //             {row.applicantDetails.cvExtractParsed?.education?.map((edu, index) => (
+    //               <div key={index} className="text-sm leading-5">
+    //                 <div className="flex justify-between gap-2 items-center">
+    //                   <span className="font-medium max-w-[100%] truncate">
+    //                     {index + 1}. {edu.degree} at {edu.collage}
+    //                   </span>
+    //                   <span className="text-gray-600">{edu.passingYear}</span>
+    //                 </div>
+    //               </div>
+    //             ))}
+    //           </div>
+    //         </div>
+
+    //         {/* ACHIEVEMENTS */}
+    //         {/* {row.applicantDetails.cvExtractParsed?.achievements?.length > 0 && (
+    //           <div className="mt-4">
+    //             <span className="font-semibold text-gray-00">Achievements</span>
+    //             <div className="mt-2 space-y-2">
+    //               {row.applicantDetails.cvExtractParsed.achievements.map((ach, index) => (
+    //                 <div key={index} className="text-sm">
+    //                   {index + 1}. {ach}
+    //                 </div>
+    //               ))}
+    //             </div>
+    //           </div>
+    //         )} */}
+
+    //         <div className="flex flex-col gap-3 ">
+    //           <>
+    //             <span className="font-semibold text-gray-00">Email ID</span>
+    //             <p>{row.applicantDetails?.email}</p>
+    //           </>
+    //           <>
+    //             <span className="font-semibold text-gray-00 ">Contact</span>
+    //             <p>{row.applicantDetails?.personalDetails?.phone || "----------"} </p>
+    //           </>
+    //         </div>
+
+    //         <div className="flex flex-col gap-3">
+    //           <>
+    //             <span className="font-semibold text-gray-00">Location</span>
+    //             <p className="capitalize">{row.applicantDetails?.location ?? "Not Disclosed"}</p>
+    //           </>
+    //           <>
+    //             <span className="font-semibold text-gray-00">ECTC</span>
+    //             <p className="capitalize">{row.applicantDetails?.ECTC ?? "Not Disclosed"}</p>
+    //           </>
+    //         </div>
+
+    //         <div className="">
+    //           <span className="font-semibold text-gray-00">Application Date</span>
+    //           <div className="flex items-center justify-center">
+    //             <span>
+    //               {new Date(row.createdAt).toLocaleDateString("en-GB", {
+    //                 day: "numeric",
+    //                 month: "short",
+    //                 year: "numeric",
+    //                 hour: "numeric",
+    //                 minute: "2-digit",
+    //                 hour12: true,
+    //               })}
+    //             </span>
+    //           </div>
+    //         </div>
+
+    //         {getCvViewDate(row.statusTracker) !== "-" && (
+    //           <>
+    //             <div className="">
+    //               <span className="font-semibold text-gray-00">CV View Date</span>
+    //               <div className="flex items-center justify-center">
+    //                 <span>{getCvViewDate(row.statusTracker)}</span>
+    //               </div>
+    //             </div>
+
+    //             <div className="">
+    //               <span className="font-semibold text-gray-00">CV Viewed By</span>
+    //               <div className="flex items-center justify-center">
+    //                 <span>
+    //                   <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
+    //                 </span>
+    //               </div>
+    //             </div>
+    //           </>
+    //         )}
+
+    //         {row.status === "REJECTED" ? (
+    //           // Show rejection details
+    //           <>
+    //             <div>
+    //               <span className="font-semibold text-gray-00">Rejected Date</span>
+    //               <p>
+    //                 {new Date(
+    //                   row?.rejectedByUserId?.actionDate || row?.updatedAt
+    //                 ).toLocaleDateString("en-GB", {
+    //                   day: "numeric",
+    //                   month: "short",
+    //                   year: "numeric",
+    //                   hour: "numeric",
+    //                   minute: "2-digit",
+    //                   hour12: true,
+    //                 })}
+    //               </p>
+    //             </div>
+    //             <div>
+    //               <span className="font-semibold text-gray-00">Rejected by</span>
+    //               <p>
+    //                 <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
+    //               </p>
+    //             </div>
+
+    //             <div>
+    //               <div className="font-semibold text-gray-00">Rejected Reason</div>
+    //               <div className="max-w-lg">
+    //                 {row.rejectedByUserId ? (
+    //                   <>
+    //                     <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
+    //                     {row.rejectedByUserId.userComment && (
+    //                       <div>
+    //                         <span className="font-semibold text-gray-00 mt-2 block">Comment</span>
+    //                         <li className="list-disc list-inside">
+    //                           {row.rejectedByUserId.userComment}
+    //                         </li>
+    //                       </div>
+    //                     )}
+    //                   </>
+    //                 ) : (
+    //                   <>
+    //                     {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
+    //                       <p>--------</p>
+    //                     ) : (
+    //                       jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
+    //                         <li key={index} className="list-disc list-inside">
+    //                           {reason}
+    //                         </li>
+    //                       ))
+    //                     )}
+    //                   </>
+    //                 )}
+    //               </div>
+    //             </div>
+    //           </>
+    //         ) : (
+    //           // Show application details
+    //           <>
+    //             {/*     <div>
+    //               <span className="font-semibold text-gray-500">Current CTC</span>
+    //               <p className="capitalize">
+    //                 {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
+    //               </p>
+    //             </div>
+    //             <div>
+    //               <span className="font-semibold text-gray-500">Expected CTC</span>
+    //               <p className="capitalize">
+    //                 {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
+    //               </p>
+    //             </div> */}
+    //             {/*   <div>
+    //               <span className="font-semibold text-gray-500">Notice period</span>
+    //               <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
+    //             </div> */}
+    //           </>
+    //         )}
+    //       </>
+    //     )}
+    //   </div>
+    // );
   };
 
   return (
@@ -1009,7 +1091,7 @@ export default function ApplicationTable({
       </button>
 
       {/* Main table component */}
-      <DynamicTable
+      <DynamicTableAgency
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}
@@ -1186,6 +1268,8 @@ export default function ApplicationTable({
                   applicantUserEmail: [applicantData.applicantDetails.email],
                   hrName: userDetails?.fullName || "",
                   hrCurrentCompanyName: "WORKO",
+                  cvAwsS3ResourceType: [applicantData.applicantDetails.cvAwsS3ResourceType],
+                  candidateParsedCvId: [applicantData?.candidateParsedCvId || ""],
                 },
                 isBulk: false,
                 onClose: () => setIsAddEvaluatorModalOpen(false),

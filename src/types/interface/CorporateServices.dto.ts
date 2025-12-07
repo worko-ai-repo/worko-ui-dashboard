@@ -239,7 +239,7 @@ export interface JobEvaluationRequestDto {
   jobTitle: string;
   companyId: string;
   applicantName: string;
-  applicantUserId: string;
+  applicantUserId?: string;
   applicantUserEmail: string;
   evaluatorDetails: EvaluatorDetails;
   hrName: string;
@@ -258,6 +258,8 @@ export interface BulkJobApplicationUpdateItem {
   applicantName: string;
   oldStatusTracker: StatusTracker[];
   applicantUserId: string;
+  cvAwsS3ResourceType: string;
+  candidateParsedCvId: string;
 }
 export interface BulkJobApplicationUpdatePayloadItem {
   emailId: string;

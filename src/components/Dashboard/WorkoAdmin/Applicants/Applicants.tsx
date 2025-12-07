@@ -124,6 +124,8 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
       applicantName: application.applicantDetails.name,
       oldStatusTracker: application.statusTracker ?? [],
       applicantUserId: application.applicantDetails.userId,
+      cvAwsS3ResourceType: application.applicantDetails.cvAwsS3ResourceType,
+      candidateParsedCvId: application.candidateParsedCvId ?? "",
     }),
     keySelector: (application: BulkJobApplicationUpdateItem) => application.jobApplicationId,
   });
@@ -410,6 +412,8 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
         applicantUserName: ListSelection.selectedRows.map((row) => row.applicantName),
         companyId: firstApp.companyId,
         applicantUserId: ListSelection.selectedRows.map((row) => row.applicantUserId),
+        cvAwsS3ResourceType: ListSelection.selectedRows.map((row) => row.cvAwsS3ResourceType),
+        candidateParsedCvId: ListSelection.selectedRows.map((row) => row.candidateParsedCvId),
         applicantUserEmail: ListSelection.selectedRows.map((row) => row.emailId),
         hrName: userDetails?.fullName ?? "",
         hrCurrentCompanyName: "WORKO",

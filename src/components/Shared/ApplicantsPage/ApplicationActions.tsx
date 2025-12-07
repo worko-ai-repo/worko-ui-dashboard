@@ -247,6 +247,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
               applicantUserEmail: [row.applicantDetails.email],
               hrName: userDetails?.fullName,
               hrCurrentCompanyName: RBAC.can("play_admin") ? "WORKO" : companyDetails?.name || "",
+              cvAwsS3ResourceType: [row.applicantDetails.cvAwsS3ResourceType],
+              candidateParsedCvId: [row?.candidateParsedCvId || ""],
             },
             isBulk: isBulkEvaluation || false,
             onClose: () => setIsAddEvaluatorModalOpen(false),

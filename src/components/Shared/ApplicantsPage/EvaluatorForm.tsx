@@ -19,35 +19,34 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useAppContext } from "@Context/App.context";
 
-
 type FormValues = {
   evaluators: JobEvaluationRequestDto[];
 };
 
 interface OldEvaluationDetails {
-        "companyId":string,
-        "hrDetailedFeedback": string,
-        "applicantName": string,
-        "jobId": string,
-        "createdAt": string,
-        "hrCurrentCompanyName": string,
-        "applicantUserId": string,
-        "applicantUserEmail": string,
-        "GSI1PK": string,
-        "createdByUserId": string,
-        "updatedAt": string,
-        "evaluatorDetails": {
-            "name": string,
-            "email": string
-        },
-        "SK": string,
-        "jobTitle": string,
-        "id": string,
-        "PK": string,
-        "jobApplicationId": string,
-        "hrHtmlDetailedFeedback": string,
-        "hrName": string,
-        "GSI1SK": string
+  companyId: string;
+  hrDetailedFeedback: string;
+  applicantName: string;
+  jobId: string;
+  createdAt: string;
+  hrCurrentCompanyName: string;
+  applicantUserId: string;
+  applicantUserEmail: string;
+  GSI1PK: string;
+  createdByUserId: string;
+  updatedAt: string;
+  evaluatorDetails: {
+    name: string;
+    email: string;
+  };
+  SK: string;
+  jobTitle: string;
+  id: string;
+  PK: string;
+  jobApplicationId: string;
+  hrHtmlDetailedFeedback: string;
+  hrName: string;
+  GSI1SK: string;
 }
 
 export type EvaluatorFormProps = {
@@ -61,6 +60,8 @@ export type EvaluatorFormProps = {
     applicantUserEmail: string[];
     hrName: string;
     hrCurrentCompanyName: string;
+    cvAwsS3ResourceType: string[];
+    candidateParsedCvId: string[];
   };
   isBulk: boolean; // Optional mode prop to handle different form behaviors
   onBulkUpdate?: (JobApplicationStatus: JobApplicationStatusType) => void; // Optional prop for bulk update functionality
@@ -126,6 +127,9 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
   const [activeTab, setActiveTab] = useState(0);
   const [submittedTabs, setSubmittedTabs] = useState<number[]>([]);
 
+  /**
+   * Fetch existing evaluation requests for the given job application ID
+   */
   const {
     data: evaluationData,
     isLoading: isEvaluationLoading,
@@ -139,7 +143,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
           ? { evaluationRequesterAdminUserId: userDetails?.id }
           : { evaluationRequesterCorporateUserId: userDetails?.id }),
       };
-      const { response, error } = await httpServiceObj.get<{data: OldEvaluationDetails[] | null}>(
+      const { response, error } = await httpServiceObj.get<{ data: OldEvaluationDetails[] | null }>(
         `/request-evaluation`,
         true,
         payload,
@@ -179,8 +183,8 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
   const onSubmit = async () => {
     const allEvaluators = getValues("evaluators");
     const historyEmails = new Set(
-      (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
-        (h) => (h.evaluatorDetails?.email || "").trim().toLowerCase()
+      (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map((h) =>
+        (h.evaluatorDetails?.email || "").trim().toLowerCase()
       )
     );
     const validNewEvaluatorsAll = allEvaluators.filter((e) => {
@@ -211,8 +215,12 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
       jobTitle: Defaultvalues.jobTitle,
       applicantName: applicantName[index], // Use empty string if name is not available
       companyId: Defaultvalues.companyId,
-      applicantUserId: applicantId,
       applicantUserEmail: emails[index],
+      ...(Defaultvalues.cvAwsS3ResourceType[index] === "USER_RESUME"
+        ? { applicantUserId: applicantId }
+        : {
+            candidateParsedCvId: Defaultvalues.candidateParsedCvId[index],
+          }),
       hrName: Defaultvalues.hrName,
       hrCurrentCompanyName: Defaultvalues.hrCurrentCompanyName,
     }));
@@ -266,12 +274,18 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
         const corporateUserType = secureStorage.getItem<UserRole>(
           SecureStorageKeyEnum.CORPORATEUSERTYPE
         );
+        //check if data is present for update if not then throw error
+        if (!Defaultvalues.jobApplicationId[0] || !userDetails?.id) {
+          toast.error("Missing data for updating application status", getToastOptions({}));
+          return;
+        }
+
         const applicationUpdatePayload: JobApplicationUpdatePayloadDto = {
           status: "UNDER_EVALUATION",
           userType: isAdmin ? "ADMIN" : corporateUserType || UserRole.CORPORATE_ADMIN,
-          applicantName: Defaultvalues.applicantUserName[0] || "",
-          userId: Defaultvalues.applicantUserId[0] || "",
-          emailId: Defaultvalues.applicantUserEmail[0] || "",
+          applicantName: Defaultvalues.applicantUserName[0],
+          userId: userDetails?.id,
+          emailId: Defaultvalues.applicantUserEmail[0],
         };
         if (isAdmin) {
           await AdminServiceObj.updateApplicationStatus(
@@ -320,14 +334,14 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
     const allEvaluators = getValues("evaluators");
     const normalized = (email || "").trim().toLowerCase();
     const historyEmails = new Set(
-      (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
-        (h) => (h.evaluatorDetails?.email || "").trim().toLowerCase()
+      (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map((h) =>
+        (h.evaluatorDetails?.email || "").trim().toLowerCase()
       )
     );
     const hasEvaulator = allEvaluators.some(
       (evaluator, index) =>
         (evaluator.evaluatorDetails.email || "").trim().toLowerCase() === normalized &&
-        (historyItems.length + index) !== activeTab
+        historyItems.length + index !== activeTab
     );
     const existsInHistory = historyEmails.has(normalized);
     if (hasEvaulator) {
@@ -365,8 +379,12 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
           const isHistory = index < historyCount;
           const fieldIndex = index - historyCount;
           const historyTitle = isHistory
-            ? (historyItems[index].evaluatorDetails?.name || historyItems[index].evaluatorDetails?.email || `Evaluator ${index + 1}`)
-            : (getValues(`evaluators.${fieldIndex}.evaluatorDetails.name`) || getValues(`evaluators.${fieldIndex}.evaluatorDetails.email`) || `Evaluator ${index + 1}`);
+            ? historyItems[index].evaluatorDetails?.name ||
+              historyItems[index].evaluatorDetails?.email ||
+              `Evaluator ${index + 1}`
+            : getValues(`evaluators.${fieldIndex}.evaluatorDetails.name`) ||
+              getValues(`evaluators.${fieldIndex}.evaluatorDetails.email`) ||
+              `Evaluator ${index + 1}`;
           return (
             <div
               key={index}
@@ -378,7 +396,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
                 }`}>
                 {historyTitle}
               </button>
-              {!isHistory && (fields.length > 1) && (
+              {!isHistory && fields.length > 1 && (
                 <button
                   onClick={() => handleRemoveTab(fieldIndex)}
                   className="text-gray-400 text-xs capitalize hover:text-red-500 ml-1"
@@ -454,73 +472,78 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
                   />
                 </div>
               </div>
+            ) : submittedTabs.includes(fieldIndex) ? (
+              <div className="flex flex-col items-center justify-center text-center p-4">
+                <img src={evaluationRequest} className="w-[134px]" />
+                <p className="text-sm font-medium">
+                  Evaluation request has been sent to :{" "}
+                  <span className="font-semibold">
+                    {getValues(`evaluators.${fieldIndex}.evaluatorDetails.name`)}
+                  </span>
+                </p>
+              </div>
             ) : (
-              submittedTabs.includes(fieldIndex) ? (
-                <div className="flex flex-col items-center justify-center text-center p-4">
-                  <img src={evaluationRequest} className="w-[134px]" />
-                  <p className="text-sm font-medium">
-                    Evaluation request has been sent to :{" "}
-                    <span className="font-semibold">
-                      {getValues(`evaluators.${fieldIndex}.evaluatorDetails.name`)}
-                    </span>
-                  </p>
-                </div>
-              ) : (
-                <form
-                  onSubmit={handleSubmit(onSubmit)}
-                  className="flex flex-col h-full gap-12 text-left">
-                  <div className="flex flex-col gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Evaluator Name</label>
-                      <ReusableInput
-                        type="text"
-                        register={register(`evaluators.${fieldIndex}.evaluatorDetails.name`, {
-                          required: "Evaluator name is required",
-                        })}
-                        placeholder="Write evaluator name"
-                        error={errors?.evaluators?.[fieldIndex]?.evaluatorDetails?.name?.message}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Evaluator Email</label>
-                      <ReusableInput
-                        type="email"
-                        register={register(
-                          `evaluators.${fieldIndex}.evaluatorDetails.email`,
-                          validationRules.corporateEmail
-                        )}
-                        placeholder="Write evaluator email address"
-                        error={errors?.evaluators?.[fieldIndex]?.evaluatorDetails?.email?.message}
-                        onChange={(e) => checkEmailExists(e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700">Message</label>
-                      <textarea
-                        {...register(`evaluators.${fieldIndex}.hrDetailedFeedback`)}
-                        placeholder="Write a message to the evaluator"
-                        className="w-full h-[96px] rounded-xl bg-gray-100 p-4 pl-[26px] text-sm focus:outline-none"
-                        rows={3}
-                      />
-                      <p className="text-xs text-gray-500 mt-1">
-                        Use double line breaks for paragraphs. Text will be automatically converted to
-                        HTML format.
-                      </p>
-                    </div>
-
-                    {/* Hidden HTML feedback field - auto-populated */}
-                    <input type="hidden" {...register(`evaluators.${fieldIndex}.hrHtmlDetailedFeedback`)} />
+              <form
+                onSubmit={handleSubmit(onSubmit)}
+                className="flex flex-col h-full gap-12 text-left">
+                <div className="flex flex-col gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Evaluator Name
+                    </label>
+                    <ReusableInput
+                      type="text"
+                      register={register(`evaluators.${fieldIndex}.evaluatorDetails.name`, {
+                        required: "Evaluator name is required",
+                      })}
+                      placeholder="Write evaluator name"
+                      error={errors?.evaluators?.[fieldIndex]?.evaluatorDetails?.name?.message}
+                    />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition">
-                    <Send size={16} />
-                    <span>Submit</span>
-                  </button>
-                </form>
-              )
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Evaluator Email
+                    </label>
+                    <ReusableInput
+                      type="email"
+                      register={register(
+                        `evaluators.${fieldIndex}.evaluatorDetails.email`,
+                        validationRules.corporateEmail
+                      )}
+                      placeholder="Write evaluator email address"
+                      error={errors?.evaluators?.[fieldIndex]?.evaluatorDetails?.email?.message}
+                      onChange={(e) => checkEmailExists(e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">Message</label>
+                    <textarea
+                      {...register(`evaluators.${fieldIndex}.hrDetailedFeedback`)}
+                      placeholder="Write a message to the evaluator"
+                      className="w-full h-[96px] rounded-xl bg-gray-100 p-4 pl-[26px] text-sm focus:outline-none"
+                      rows={3}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Use double line breaks for paragraphs. Text will be automatically converted to
+                      HTML format.
+                    </p>
+                  </div>
+
+                  {/* Hidden HTML feedback field - auto-populated */}
+                  <input
+                    type="hidden"
+                    {...register(`evaluators.${fieldIndex}.hrHtmlDetailedFeedback`)}
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition">
+                  <Send size={16} />
+                  <span>Submit</span>
+                </button>
+              </form>
             )}
           </div>
         );

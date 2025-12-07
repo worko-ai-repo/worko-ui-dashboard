@@ -49,6 +49,7 @@ import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
+import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -802,7 +803,7 @@ export default function ApplicationTable({
         <span>deselect {ListSelection.selectedRows.length} rows</span>
       </button>
 
-      <DynamicTable
+      <DynamicTableAgency
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}
@@ -981,6 +982,8 @@ export default function ApplicationTable({
                   applicantUserEmail: [applicantData.applicantDetails.email],
                   hrName: userDetails?.fullName || "",
                   hrCurrentCompanyName: companyDetails?.name || "",
+                  cvAwsS3ResourceType: [applicantData.applicantDetails.cvAwsS3ResourceType],
+                  candidateParsedCvId: [applicantData?.candidateParsedCvId || ""],
                 },
                 isBulk: false,
                 onClose: () => setIsAddEvaluatorModalOpen(false),

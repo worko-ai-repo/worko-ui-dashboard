@@ -16,6 +16,7 @@ import NoDataPresent from "../NoDataPresent";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import { useQueryClient } from "@tanstack/react-query";
 import { handleViewDocumentClick } from "./ReSendOfferLetter";
+import { useAppContext } from "@Context/App.context";
 
 export interface RequestDocModalProps {
   isOpen: boolean;
@@ -76,6 +77,7 @@ const RequestDocumentModal: React.FC<
   handleStatusUpdate,
   refetch, // Properly destructure refetch here
 }) => {
+  const {userDetails} = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [DocumentSubmissionMode, setDocumentSubmissionMode] =
@@ -166,7 +168,7 @@ const RequestDocumentModal: React.FC<
       setIsLoading(true);
       const payload = {
         jobApplicationId: jobApplication.id,
-        userId: jobApplication.applicantDetails.userId,
+        userId: jobApplication.applicantDetails.id,
         cloudFileNames: [cloudFileName],
       };
 
@@ -203,11 +205,11 @@ const RequestDocumentModal: React.FC<
     setIsLoading(true);
 
     try {
-      if (!userType) {
-        throw new Error("User type not found in secure storage");
+      if (!userType || !userDetails) {
+        throw new Error("User type or user details not found in secure storage");
       }
       const payload: RequestDocumentPayload = {
-        userId: jobApplication.applicantDetails.userId,
+        userId: userDetails?.id,
         emailId: jobApplication.applicantDetails.email,
         userType: userType,
         status: "DOCUMENT_REVISION_REQUESTED",
@@ -254,7 +256,7 @@ const RequestDocumentModal: React.FC<
       }
 
       const payload = {
-        userId: jobApplication.applicantDetails.userId,
+        userId: userDetails?.id,
         emailId: jobApplication.applicantDetails.email,
         userType: userType,
         status: "DOCUMENT_VERIFIED",
@@ -316,12 +318,12 @@ const RequestDocumentModal: React.FC<
     try {
       const isCorporate = window.location.href.includes("corporate");
 
-      if (!userType) {
-        throw new Error("User type not found in secure storage");
+      if (!userType || !userDetails) {
+        throw new Error("User type or user details not found in secure storage");
       }
 
       const payload: RequestDocumentPayload = {
-        userId: jobApplication.applicantDetails.userId,
+        userId: userDetails?.id,
         emailId: jobApplication.applicantDetails.email,
         userType: userType,
         status: DocumentSubmissionMode,

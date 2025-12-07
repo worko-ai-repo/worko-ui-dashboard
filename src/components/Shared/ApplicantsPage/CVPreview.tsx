@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { X, Check, Send, ClipboardCheck, Maximize, Download } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { X, Check, Send, ClipboardCheck, Maximize, Download, Loader2 } from "lucide-react";
 import {
   JobApplicationUpdatePayloadDto,
   handleJobApplicationStatusUpdate,
@@ -18,6 +18,9 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
+import { toast } from "react-toastify";
+import { getToastOptions } from "@Utils/Toast.utils";
+import httpServiceObj from "@Services/ApiHandler.service";
 
 interface CVPreviewProps {
   onClose: () => void;
@@ -34,6 +37,58 @@ interface CVPreviewProps {
   jobApplicationData: JobApplicationDetailsDto;
   activeTab?: TabType;
 }
+
+const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto) => {
+  if (!jobApplicationData) {
+    toast.error("Document file not found", getToastOptions({}));
+    return;
+  }
+  try {
+    switch (jobApplicationData?.applicantDetails.cvAwsS3ResourceType) {
+      case "USER_RESUME": {
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
+          `/file/${jobApplicationData?.applicantDetails.id}/${jobApplicationData?.applicantDetails.CV}/USER_RESUME`,
+          true,
+          {},
+          false,
+          "BASE"
+        );
+        if (error || !response) {
+          toast.error(error?.message || "An unknown error occurred", getToastOptions({}));
+          return;
+        }
+        return response.objectUrl;
+      }
+      case "AGENCY_SUBMIT_USER_CV": {
+        const payload = {
+          companyId: jobApplicationData?.companyId, //Job he applied
+          jobId:jobApplicationData?.jobId, //Job he applied
+          agencyUserId: jobApplicationData?.agencyUserId, // Agency user who submitted the CV
+          candidateCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
+        }
+
+        const { response, error } = await httpServiceObj.post<any>(
+          `${import.meta.env.APP_PROXY_AGENCY_BASE}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,
+          payload,
+          true,
+          {},
+          true
+        );
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+        return response.objectUrl; 
+      }
+     default:
+        toast.error("Unsupported document type", getToastOptions({}));
+        return;
+    }
+  } catch (error) {
+    console.error("Error viewing document:", error);
+    toast.error("Failed to view document", getToastOptions({}));
+  }
+};
 
 const CVPreview = ({
   onClose,
@@ -154,6 +209,17 @@ const CVPreview = ({
     invalidateJobApplication();
   };
 
+  const [cvUrl, setCvUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    let isMounted = true;
+    (async () => {
+      const url = await handleCVUrlGenerator(jobApplicationData);
+      if (isMounted) setCvUrl(url);
+    })();
+    return () => { isMounted = false; };
+  }, [jobApplicationData]);
+
   useEffect(() => {
     const btns: JobApplicationActionType[] = ["ACCEPT", "HIRE_NOW", "REJECT"];
     btns.forEach((btn) => {
@@ -169,25 +235,34 @@ const CVPreview = ({
         <h2 className="text-lg font-semibold">CV</h2>
         <div className="flex flex-col gap-4 w-full">
           <div className="relative flex-1 border-2 border-gray-400 w-full min-h-[82vh] object-fit rounded-xl overflow-hidden">
-            <iframe src={pdfuri} title="CV Preview" className="w-full h-full object-fit" />
+            {cvUrl ? (
+              <iframe src={cvUrl} title="CV Preview" className="w-full h-full object-fit" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <Loader2 className="animate-spin w-8 h-8 text-blue-500" />
+              </div>
+            )}
             <button
               onClick={() => {
-              fetch(pdfuri)
-                .then((response) => response.blob())
-                .then((blob) => {
-                const link = document.createElement("a");
-                const url = URL.createObjectURL(blob);
-                link.href = url;
-                const candidateName = jobApplicationData.applicantDetails.name.replace(/\s+/g, "_");
-                const companyName = (companyDetails?.name || "Company").replace(/\s+/g, "_");
-                const date = new Date().toISOString().split("T")[0];
-                link.download = `Worko_${candidateName}_${jobApplicationData?.applicantDetails?.YOE}_${companyName}_${date}.pdf`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                URL.revokeObjectURL(url);
-                })
-                .catch((error) => console.error("Error downloading the file:", error));
+                fetch(pdfuri)
+                  .then((response) => response.blob())
+                  .then((blob) => {
+                    const link = document.createElement("a");
+                    const url = URL.createObjectURL(blob);
+                    link.href = url;
+                    const candidateName = jobApplicationData.applicantDetails.name.replace(
+                      /\s+/g,
+                      "_"
+                    );
+                    const companyName = (companyDetails?.name || "Company").replace(/\s+/g, "_");
+                    const date = new Date().toISOString().split("T")[0];
+                    link.download = `Worko_${candidateName}_${jobApplicationData?.applicantDetails?.YOE}_${companyName}_${date}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                  })
+                  .catch((error) => console.error("Error downloading the file:", error));
               }}
               className="absolute bottom-4 right-16 border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600">
               <Download className="w-4 h-4" />

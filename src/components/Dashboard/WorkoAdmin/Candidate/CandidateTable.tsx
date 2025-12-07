@@ -48,6 +48,11 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
+  const [pdfViewUserDetails, setPdfViewUserDetails] = useState<{
+    name: string;
+    YOE?: number;
+    companyName?: string;
+  }>();
   const [verifyModalOpen, setVerifyModalOpen] = useState<{
     isOpen: boolean;
     type: "EMAIL" | "MOBILE";
@@ -79,6 +84,11 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
       }
       if (response.objectUrl) {
         setPdfViewDetails(response.objectUrl);
+        setPdfViewUserDetails({
+          name: row.name,
+          YOE: row.YOE,
+          companyName: getCurrentPositionCell(row)?.companyName || "",
+        });
         setIsViewCVModalOpen(true);
       }
     } catch (error) {
@@ -302,7 +312,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         {!pdfViewDetails ? (
           <NoDataPresent />
         ) : (
-          <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+          <CVPreviewRaw pdfUrl={pdfViewDetails}
+          candidateName={
+            pdfViewUserDetails?.name || "Candidate"
+          }
+          companyName={pdfViewUserDetails?.companyName}
+          YOE={pdfViewUserDetails?.YOE}
+          onClose={() => setIsViewCVModalOpen(false)} />
         )}
       </Modal>
       <Modal
