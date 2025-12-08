@@ -52,7 +52,9 @@ import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import interviewService from "@Services/Interview.service";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
-import ApplicantExpandedRowDetails from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
+import ApplicantExpandedRowDetails, {
+  expandedExtraApplicationRow,
+} from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
 
 // Component props interface
 interface ApplicationTableProps {
@@ -325,18 +327,6 @@ export default function ApplicationTable({
         );
       },
     },
-    //@Changed
-    /* currentCompany: {
-      key: "company",
-      label: "Current Company",
-      render: (row: JobApplicationDetailsDto) => (
-        <span
-          data-tooltip-id="my-tooltip"
-          data-tooltip-content={getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}>
-          {getCurrentPositionCell(row?.applicantDetails)?.companyName || "NA"}{" "}
-        </span>
-      ),
-    }, */
     currentCTC: {
       key: "currentCTC",
       label: "Current CTC",
@@ -609,87 +599,41 @@ export default function ApplicationTable({
         );
       },
     },
-    applicationDate: {
-      key: "applicationDate",
-      label: "Application Date",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center">
-          <span>
-            {new Date(row.createdAt).toLocaleDateString("en-GB", {
-              day: "numeric",
-              month: "short",
-              year: "numeric",
-              hour: "numeric",
-              minute: "2-digit",
-              hour12: true,
-            })}
-          </span>
-        </div>
-      ),
-    },
-    cvViewedDate: {
-      key: "cvViewedDate",
-      label: "CV Viewed Date",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center">
-          <span>{getCvViewDate(row.statusTracker)}</span>
-        </div>
-      ),
-    },
-    duplicateCV: {
-      key: "duplicateCV",
-      label: "Duplicate CV",
-      render: (row: JobApplicationDetailsDto) => (
-        <div className="flex justify-center">
-          {row.hiredFromOtherPortal?.portal && row.hiredFromOtherPortal?.date ? (
-            <button
-              className="text-blue-600 hover:text-blue-800 text-sm underline"
-              onClick={() =>
-                row.hiredFromOtherPortal &&
-                viewDuplicacyDetails &&
-                viewDuplicacyDetails(row.hiredFromOtherPortal.portal, row.hiredFromOtherPortal.date)
-              }>
-              View Duplicacy Details
-            </button>
-          ) : (
-            <span>-</span>
-          )}
-        </div>
-      ),
-    },
     actions: {
       key: "actions",
       label: "Actions",
-      contentWidth: `max-w-none ${activeTab !== "Joined" ? "!min-w-auto" : ""} `,
-      render: (row: JobApplicationDetailsDto) => (
-        <JobApplicationActions
-          row={row}
-          activeTab={activeTab}
-          userDetails={userDetails}
-          userType={userType}
-          isBulkEvaluation={isBulkEvaluation}
-          handleStatusUpdate={handleStatusUpdate}
-          setIsViewCVModalOpen={setIsViewCVModalOpen}
-          setPdfViewDetails={setPdfViewDetailsID}
-          setViewEvaluation={setViewEvaluation}
-          setIsHireNowModalOpen={setIsHireNowModalOpen}
-          setIsViewOfferIssue={setIsViewOfferIssue}
-          setIsNoteModalOpen={setIsNoteModalOpen}
-          setIsRejectModalOpen={setIsRejectModalOpen}
-          setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
-          setEvaluatorFormProps={setEvaluatorFormProps}
-          setIsRequestDocModalOpen={setIsRequestDocModalOpen}
-          sendApplicationToRecruiter={sendApplicationToRecruiter}
-          setJoinedModalOpen={setJoinedModalOpen}
-          handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
-            setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
-          }}
-      
-        />
-      ),
+      contentWidth: `border-l border-r max-w-none ${activeTab !== "Joined" ? "!min-w-auto" : ""} `,
+      render: (row: JobApplicationDetailsDto) => {
+        const isExpanded = expandedRows.includes(row.id);
+        return (
+          <JobApplicationActions
+            row={row}
+            activeTab={activeTab}
+            userDetails={userDetails}
+            userType={userType}
+            isBulkEvaluation={isBulkEvaluation}
+            handleStatusUpdate={handleStatusUpdate}
+            setIsViewCVModalOpen={setIsViewCVModalOpen}
+            setPdfViewDetails={setPdfViewDetailsID}
+            setViewEvaluation={setViewEvaluation}
+            setIsHireNowModalOpen={setIsHireNowModalOpen}
+            setIsViewOfferIssue={setIsViewOfferIssue}
+            setIsNoteModalOpen={setIsNoteModalOpen}
+            setIsRejectModalOpen={setIsRejectModalOpen}
+            setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
+            setEvaluatorFormProps={setEvaluatorFormProps}
+            setIsRequestDocModalOpen={setIsRequestDocModalOpen}
+            sendApplicationToRecruiter={sendApplicationToRecruiter}
+            setJoinedModalOpen={setJoinedModalOpen}
+            handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
+              setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
+            }}
+            splitMode={isExpanded ? "main" : "all"}
+          />
+        );
+      },
     },
-    /*  response: {
+    response: {
       key: "response",
       label: "Not Responding",
       render: () => (
@@ -699,20 +643,7 @@ export default function ApplicationTable({
           </button>
         </div>
       ),
-    }, */
-
-    /* @Change-T-MoveDown    ECTC: {
-      key: "ECTC",
-      label: "Expected CTC",
-      sortable: true,
-      render: (row: JobApplicationDetailsDto) => (
-        <span>
-          {typeof row.applicantDetails?.ECTC === "number"
-            ? `${row.applicantDetails.ECTC} LPA`
-            : "-"}
-        </span>
-      ),
-    }, */
+    },
   };
 
   /**
@@ -739,7 +670,7 @@ export default function ApplicationTable({
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
-          // commonColumns.response,
+          commonColumns.response,
         ];
       case "Hired":
         return [
@@ -747,9 +678,9 @@ export default function ApplicationTable({
           ...(isAllApplicants ? [commonColumns.jobProfile] : []),
           // commonColumns.currentCompany,
           commonColumns.currentPosition,
-          commonColumns.experience,
           commonColumns.currentCTC,
           commonColumns.noticePeriod,
+          commonColumns.experience,
           // commonColumns.location,
           commonColumns.matchingScore,
           commonColumns.interviewScoreDetails,
@@ -757,7 +688,7 @@ export default function ApplicationTable({
           // commonColumns.applicationDate,
           // commonColumns.cvViewedDate,
           commonColumns.actions,
-          // commonColumns.response,
+          commonColumns.response,
         ];
       case "Joined":
         return [
@@ -810,24 +741,6 @@ export default function ApplicationTable({
               );
             },
           },
-          /*     {
-            key: "actions",
-            label: "Documents",
-            render: (jobData: JobApplicationDetailsDto) => (
-              <div className="flex gap-2 justify-center">
-                <button
-                  className="flex gap-2 items-center btn-sky"
-                  onClick={() => {
-                    jobData
-                      ? handleViewDocumentClick(jobData)
-                      : toast.error("Failed to view document", getToastOptions({}));
-                  }}>
-                  <Eye size={16} />
-                  View Document
-                </button>
-              </div>
-            ),
-          }, */
           commonColumns.actions,
         ];
       default:
@@ -860,10 +773,36 @@ export default function ApplicationTable({
    * Render expanded row details
    */
   const renderExpandedDetails = (row: JobApplicationDetailsDto) => {
-    let timeLineProps: TimelineStep[] = [];
-    if (row.status === "JOINED") {
-      timeLineProps = jobApplicationServiceObj.getTimelineDetails(row);
-    }
+    const isExpanded = expandedRows.includes(row.id);
+
+    // Generate expanded actions (only secondary actions)
+    const expandedActionsNode = isExpanded ? (
+      <JobApplicationActions
+        row={row}
+        activeTab={activeTab}
+        userDetails={userDetails}
+        userType={userType}
+        isBulkEvaluation={isBulkEvaluation}
+        handleStatusUpdate={handleStatusUpdate}
+        setIsViewCVModalOpen={setIsViewCVModalOpen}
+        setPdfViewDetails={setPdfViewDetailsID}
+        setViewEvaluation={setViewEvaluation}
+        setIsHireNowModalOpen={setIsHireNowModalOpen}
+        setIsViewOfferIssue={setIsViewOfferIssue}
+        setIsNoteModalOpen={setIsNoteModalOpen}
+        setIsRejectModalOpen={setIsRejectModalOpen}
+        setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
+        setEvaluatorFormProps={setEvaluatorFormProps}
+        setIsRequestDocModalOpen={setIsRequestDocModalOpen}
+        handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
+          setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
+        }}
+        sendApplicationToRecruiter={sendApplicationToRecruiter}
+        setJoinedModalOpen={setJoinedModalOpen}
+        splitMode="expanded" // Show only expanded actions
+      />
+    ) : null;
+
     return (
       <ApplicantExpandedRowDetails
         row={row}
@@ -872,208 +811,9 @@ export default function ApplicationTable({
         getCvViewDate={getCvViewDate}
         getCvDownloadedById={getCvDownloadedById}
         getRejectedById={getRejectedById}
+        expandedActions={expandedActionsNode}
       />
     );
-    // return (
-    //   <div className="flex justify-between flex-nowrap items-start gap-4">
-    //     {row.status === "JOINED" && activeTab === "Joined" ? (
-    //       <Timeline steps={timeLineProps} />
-    //     ) : (
-    //       <>
-    //         {/* WORK EXPERIENCE */}
-    //         <div className="mt-4 text-left max-w-[30%]">
-    //           <span className="font-semibold text-gray-400">Work Experience</span>
-    //           <div className="mt-2 space-y-2">
-    //             {row.applicantDetails.cvExtractParsed?.multipleCandidateExperience?.map(
-    //               (exp, index) => (
-    //                 <div key={index} className="text-sm leading-5">
-    //                   <div className="flex justify-between gap-2 items-center">
-    //                     <span className="font-medium max-w-[100%] truncate">
-    //                       {index + 1}. {exp.designation} at {exp.companyName}
-    //                     </span>
-    //                     <span className="text-gray-600">
-    //                       {exp.startDate ? new Date(exp.startDate).getFullYear() : "N/A"} -{" "}
-    //                       {exp.endDate && !isNaN(new Date(exp.endDate).getFullYear())
-    //                         ? new Date(exp.endDate).getFullYear()
-    //                         : "Present"}
-    //                     </span>
-    //                   </div>
-    //                 </div>
-    //               )
-    //             )}
-    //           </div>
-    //         </div>
-
-    //         {/* EDUCATION */}
-    //         <div className="mt-4 text-left max-w-[30%]">
-    //           <span className="font-semibold text-gray-400">Education</span>
-    //           <div className="mt-2 space-y-2">
-    //             {row.applicantDetails.cvExtractParsed?.education?.map((edu, index) => (
-    //               <div key={index} className="text-sm leading-5">
-    //                 <div className="flex justify-between gap-2 items-center">
-    //                   <span className="font-medium max-w-[100%] truncate">
-    //                     {index + 1}. {edu.degree} at {edu.collage}
-    //                   </span>
-    //                   <span className="text-gray-600">{edu.passingYear}</span>
-    //                 </div>
-    //               </div>
-    //             ))}
-    //           </div>
-    //         </div>
-
-    //         {/* ACHIEVEMENTS */}
-    //         {/* {row.applicantDetails.cvExtractParsed?.achievements?.length > 0 && (
-    //           <div className="mt-4">
-    //             <span className="font-semibold text-gray-00">Achievements</span>
-    //             <div className="mt-2 space-y-2">
-    //               {row.applicantDetails.cvExtractParsed.achievements.map((ach, index) => (
-    //                 <div key={index} className="text-sm">
-    //                   {index + 1}. {ach}
-    //                 </div>
-    //               ))}
-    //             </div>
-    //           </div>
-    //         )} */}
-
-    //         <div className="flex flex-col gap-3 ">
-    //           <>
-    //             <span className="font-semibold text-gray-00">Email ID</span>
-    //             <p>{row.applicantDetails?.email}</p>
-    //           </>
-    //           <>
-    //             <span className="font-semibold text-gray-00 ">Contact</span>
-    //             <p>{row.applicantDetails?.personalDetails?.phone || "----------"} </p>
-    //           </>
-    //         </div>
-
-    //         <div className="flex flex-col gap-3">
-    //           <>
-    //             <span className="font-semibold text-gray-00">Location</span>
-    //             <p className="capitalize">{row.applicantDetails?.location ?? "Not Disclosed"}</p>
-    //           </>
-    //           <>
-    //             <span className="font-semibold text-gray-00">ECTC</span>
-    //             <p className="capitalize">{row.applicantDetails?.ECTC ?? "Not Disclosed"}</p>
-    //           </>
-    //         </div>
-
-    //         <div className="">
-    //           <span className="font-semibold text-gray-00">Application Date</span>
-    //           <div className="flex items-center justify-center">
-    //             <span>
-    //               {new Date(row.createdAt).toLocaleDateString("en-GB", {
-    //                 day: "numeric",
-    //                 month: "short",
-    //                 year: "numeric",
-    //                 hour: "numeric",
-    //                 minute: "2-digit",
-    //                 hour12: true,
-    //               })}
-    //             </span>
-    //           </div>
-    //         </div>
-
-    //         {getCvViewDate(row.statusTracker) !== "-" && (
-    //           <>
-    //             <div className="">
-    //               <span className="font-semibold text-gray-00">CV View Date</span>
-    //               <div className="flex items-center justify-center">
-    //                 <span>{getCvViewDate(row.statusTracker)}</span>
-    //               </div>
-    //             </div>
-
-    //             <div className="">
-    //               <span className="font-semibold text-gray-00">CV Viewed By</span>
-    //               <div className="flex items-center justify-center">
-    //                 <span>
-    //                   <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
-    //                 </span>
-    //               </div>
-    //             </div>
-    //           </>
-    //         )}
-
-    //         {row.status === "REJECTED" ? (
-    //           // Show rejection details
-    //           <>
-    //             <div>
-    //               <span className="font-semibold text-gray-00">Rejected Date</span>
-    //               <p>
-    //                 {new Date(
-    //                   row?.rejectedByUserId?.actionDate || row?.updatedAt
-    //                 ).toLocaleDateString("en-GB", {
-    //                   day: "numeric",
-    //                   month: "short",
-    //                   year: "numeric",
-    //                   hour: "numeric",
-    //                   minute: "2-digit",
-    //                   hour12: true,
-    //                 })}
-    //               </p>
-    //             </div>
-    //             <div>
-    //               <span className="font-semibold text-gray-00">Rejected by</span>
-    //               <p>
-    //                 <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
-    //               </p>
-    //             </div>
-
-    //             <div>
-    //               <div className="font-semibold text-gray-00">Rejected Reason</div>
-    //               <div className="max-w-lg">
-    //                 {row.rejectedByUserId ? (
-    //                   <>
-    //                     <li className="list-disc list-inside">{row.rejectedByUserId.reason}</li>
-    //                     {row.rejectedByUserId.userComment && (
-    //                       <div>
-    //                         <span className="font-semibold text-gray-00 mt-2 block">Comment</span>
-    //                         <li className="list-disc list-inside">
-    //                           {row.rejectedByUserId.userComment}
-    //                         </li>
-    //                       </div>
-    //                     )}
-    //                   </>
-    //                 ) : (
-    //                   <>
-    //                     {jobApplicationServiceObj.getRejectionReason(row).length === 0 ? (
-    //                       <p>--------</p>
-    //                     ) : (
-    //                       jobApplicationServiceObj.getRejectionReason(row).map((reason, index) => (
-    //                         <li key={index} className="list-disc list-inside">
-    //                           {reason}
-    //                         </li>
-    //                       ))
-    //                     )}
-    //                   </>
-    //                 )}
-    //               </div>
-    //             </div>
-    //           </>
-    //         ) : (
-    //           // Show application details
-    //           <>
-    //             {/*     <div>
-    //               <span className="font-semibold text-gray-500">Current CTC</span>
-    //               <p className="capitalize">
-    //                 {row.applicantDetails.CTC ? `${row.applicantDetails.CTC} LPA` : "-"}
-    //               </p>
-    //             </div>
-    //             <div>
-    //               <span className="font-semibold text-gray-500">Expected CTC</span>
-    //               <p className="capitalize">
-    //                 {row.applicantDetails.ECTC ? `${row.applicantDetails.ECTC} LPA` : "-"}
-    //               </p>
-    //             </div> */}
-    //             {/*   <div>
-    //               <span className="font-semibold text-gray-500">Notice period</span>
-    //               <p className="capitalize">{row.applicantDetails.noticePeriod}</p>
-    //             </div> */}
-    //           </>
-    //         )}
-    //       </>
-    //     )}
-    //   </div>
-    // );
   };
 
   return (
@@ -1102,6 +842,42 @@ export default function ApplicationTable({
         allSelected={ListSelection.getAllSelected(sortedData)}
         renderExpandedDetails={renderExpandedDetails}
         enableSelect={activeTab !== "Joined"}
+        renderExpandedNodes={(row) => {
+          const isExpanded = expandedRows.includes(row.id);
+
+          // Generate expanded actions (only secondary actions)
+          const expandedActionsNode = isExpanded ? (
+            <JobApplicationActions
+              row={row}
+              activeTab={activeTab}
+              userDetails={userDetails}
+              userType={userType}
+              isBulkEvaluation={isBulkEvaluation}
+              handleStatusUpdate={handleStatusUpdate}
+              setIsViewCVModalOpen={setIsViewCVModalOpen}
+              setPdfViewDetails={setPdfViewDetailsID}
+              setViewEvaluation={setViewEvaluation}
+              setIsHireNowModalOpen={setIsHireNowModalOpen}
+              setIsViewOfferIssue={setIsViewOfferIssue}
+              setIsNoteModalOpen={setIsNoteModalOpen}
+              setIsRejectModalOpen={setIsRejectModalOpen}
+              setIsAddEvaluatorModalOpen={setIsAddEvaluatorModalOpen}
+              setEvaluatorFormProps={setEvaluatorFormProps}
+              setIsRequestDocModalOpen={setIsRequestDocModalOpen}
+              handleMarkAsDuplicateJob={(action: "EDIT" | "VIEW") => {
+                setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
+              }}
+              sendApplicationToRecruiter={sendApplicationToRecruiter}
+              setJoinedModalOpen={setJoinedModalOpen}
+              splitMode="expanded" // Show only expanded actions
+            />
+          ) : null;
+
+          // Return the expanded row details as an array
+          return activeTab !== "Joined"
+            ? expandedExtraApplicationRow(expandedActionsNode, row)
+            : [];
+        }}
         onSortChange={onSortChange}
         pageSize={Pagination.pageSize}
         setPageSize={Pagination.setPageSize}

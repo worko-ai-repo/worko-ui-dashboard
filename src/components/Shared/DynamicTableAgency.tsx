@@ -8,13 +8,20 @@ export interface Column<T> {
   key: (keyof T & string) | string;
   label: string;
   sortable?: boolean;
-  contentWidth?: string; // e.g., "w-32", "w-48"
+  contentWidth?: string;
   render?: (row: T) => React.ReactNode;
 }
 
 interface SplitColumns<T> {
   visibleColumns: Column<T>[];
   expandedColumns: Column<T>[];
+}
+
+// 🆕 NEW: Interface for extra expanded nodes
+interface ExpandedNode {
+  content: React.ReactNode;
+  colSpan?: number; // Optional, defaults to 1
+  className?: string;
 }
 
 interface DynamicTableAgencyProps<T extends { id: string }> {
@@ -28,22 +35,22 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   allSelected?: boolean;
   renderExpandedDetails?: (row: T) => React.ReactNode;
   enableSelect?: boolean;
-  //Added pagination props
   pageSize: number;
   setPageSize: React.Dispatch<React.SetStateAction<number>>;
   handlePreviousPage: () => void;
   handleNextPage: () => void;
   hasPrevPage?: boolean;
   hasNextPage?: boolean;
-  //Added empty state props
   emptyStateMessage?: string;
   emptyStateSubMessage?: string;
   onSortChange?: (columnKey: string) => void;
   sortField?: string;
   sortOrder?: "asc" | "desc";
   hideChevronForRejected?: boolean;
-    mainColumns?: string[]; // list of keys for main view
-  expandedColumns?: string[]; 
+  mainColumns?: string[];
+  expandedColumns?: string[];
+  // 🆕 NEW: Function to render extra nodes for each row
+  renderExpandedNodes?: (row: T) => ExpandedNode[];
 }
 
 export function DynamicTableAgency<T extends { id: string }>({
@@ -57,7 +64,6 @@ export function DynamicTableAgency<T extends { id: string }>({
   allSelected = false,
   renderExpandedDetails,
   enableSelect = true,
-  //  Destructured pagination props with defaults
   pageSize = 10,
   setPageSize,
   hasPrevPage = false,
@@ -65,20 +71,22 @@ export function DynamicTableAgency<T extends { id: string }>({
   handlePreviousPage,
   handleNextPage,
   onSortChange,
-  //  Destructured empty state props with defaults
   emptyStateMessage = "No data available",
   emptyStateSubMessage = "There are no items to display at the moment.",
   hideChevronForRejected = false,
-    mainColumns = [],
+  mainColumns = [],
   expandedColumns = [],
+  renderExpandedNodes, // 🆕 NEW
 }: DynamicTableAgencyProps<T>) {
-  const totalCols = columns.length + (enableSelect ? 1 : 0);
+  const totalCols = columns.length + (enableSelect ? 1 : 1);
+
   function getNestedValue(obj: any, path: string): any {
     return path
       .replace(/\$/g, "_")
       .split("_")
       .reduce((acc, key) => (acc ? acc[key] : undefined), obj);
   }
+
   const getCellValue = (row: T, col: Column<T>): React.ReactNode => {
     const value = getNestedValue(row, col.key);
     return col.render
@@ -88,15 +96,14 @@ export function DynamicTableAgency<T extends { id: string }>({
       : "-";
   };
 
-  //  Render empty state when no rows are available
   if (rows.length === 0) {
     return (
       <div className="bg-white rounded-lg p-2 md:p-4 overflow-x-auto w-full">
         <table className="min-w-full table-auto">
-          <thead className="bg-[#EFFFFF] text-[#94A3B8] ">
+          <thead className="bg-[#EFFFFF] text-[#94A3B8]">
             <tr>
               {enableSelect && (
-                <th className="p-3 text-center rounded-l-xl ">
+                <th className="p-3 text-center rounded-l-xl">
                   <input
                     type="checkbox"
                     checked={allSelected}
@@ -121,7 +128,6 @@ export function DynamicTableAgency<T extends { id: string }>({
           </tbody>
         </table>
 
-        {/*  Empty state component */}
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <div className="w-16 h-16 mb-4 rounded-full bg-gray-100 flex items-center justify-center">
             <svg
@@ -146,119 +152,109 @@ export function DynamicTableAgency<T extends { id: string }>({
 
   const areAllExpanded = rows.length > 0 && expandedRows.length === rows.length;
 
-  // 🆕 If parent provided column split, use that. Otherwise fallback to auto split.
   const { visibleColumns, extraExpandedColumns } = React.useMemo(() => {
-  if (areAllExpanded && (mainColumns.length || expandedColumns.length)) {
-    return {
-      visibleColumns: columns.filter(col => mainColumns.includes(col.key)),
-      extraExpandedColumns: columns.filter(col => expandedColumns.includes(col.key))
-    };
-  }
-
+    if (areAllExpanded && (mainColumns.length || expandedColumns.length)) {
+      return {
+        visibleColumns: columns.filter((col) => mainColumns.includes(col.key)),
+        extraExpandedColumns: columns.filter((col) => expandedColumns.includes(col.key)),
+      };
+    }
     return { visibleColumns: columns, extraExpandedColumns: [] };
   }, [columns, mainColumns, expandedColumns, areAllExpanded]);
 
-
   return (
     <div className="bg-white overflow-x-auto flex flex-col justify-between rounded-lg p-2 md:p-2 max-w-[94vw] h-[calc(100vh-80px)] max-h-[calc(100vh-80px)]">
-      {/* Scroll wrapper */}
-      <div className=" overflow-x-auto overflow-y-scroll  pb-4 rounded-md   h-full max-h-[calc(100vh-80px)]">
+      <div className="overflow-x-auto overflow-y-scroll pb-4 rounded-md h-full max-h-[calc(100vh-80px)]">
         <table className="min-w-full table-auto">
-          <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-30 shadow-sm border-b border-blue-200">
+          <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-30 shadow-sm  border-blue-200">
             <tr>
-              {/* {enableSelect && (
-                <th className="p-3 text-center rounded-l-xl sticky left-0 z-20 bg-blue-50">
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleSelectAll}
-                    className="w-4 h-4"
-                  />
-                </th>
-              )} */}
-              {/* added chevron + checkbox */}
               {(enableSelect || renderExpandedDetails) && (
-               <th className="p-1 text-center rounded-l-xl sticky left-0 z-30 bg-blue-50">
-                <div className="flex items-center justify-center gap-1">
-                  {/* Expand / Collapse all */}
-                  {renderExpandedDetails && toggleExpand && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!toggleExpand) return;
-                      const allExpanded = rows.length > 0 && expandedRows.length === rows.length;
-
-                      if (allExpanded) {
-                        // collapse only those currently expanded
-                        expandedRows.forEach((id) => toggleExpand(id));
-                      } else {
-                        // expand only those not yet expanded
-                        rows.forEach((r) => {
-                          if (!expandedRows.includes(r.id)) toggleExpand(r.id);
-                        });
-                      }
-                    }}
-                    className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border border-gray-300 rounded-full"
-                    aria-label={rows.length > 0 && expandedRows.length === rows.length ? "Collapse all" : "Expand all"}
-                  >
-                    {rows.length > 0 && expandedRows.length === rows.length ? (
-                      <ChevronUpIcon />
-                    ) : (
-                      <ChevronDownIcon />
+                <th className="p-1 text-center rounded-l-xl sticky left-0 z-30 bg-blue-50">
+                  <div className="flex items-center justify-center gap-1">
+                    {renderExpandedDetails && toggleExpand && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!toggleExpand) return;
+                          const allExpanded =
+                            rows.length > 0 && expandedRows.length === rows.length;
+                          if (allExpanded) {
+                            expandedRows.forEach((id) => toggleExpand(id));
+                          } else {
+                            rows.forEach((r) => {
+                              if (!expandedRows.includes(r.id)) toggleExpand(r.id);
+                            });
+                          }
+                        }}
+                        className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border border-gray-300 rounded-full"
+                        aria-label={
+                          rows.length > 0 && expandedRows.length === rows.length
+                            ? "Collapse all"
+                            : "Expand all"
+                        }>
+                        {rows.length > 0 && expandedRows.length === rows.length ? (
+                          <ChevronUpIcon />
+                        ) : (
+                          <ChevronDownIcon />
+                        )}
+                      </button>
                     )}
-                  </button>
-                  )}
-                  {/* Select all */}
-                  {enableSelect && (
-                  <input
-                    type="checkbox"
-                    checked={allSelected}
-                    onChange={toggleSelectAll}
-                    className="w-4 h-4"
-                    aria-label="Select all rows"
-                  />
-                  )}
-                </div>
-              </th>
-            )}
-              {visibleColumns.map((col) => {
-                return (
-                  <th
-                    key={col.key}
-                    className="w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium">
-                    <span className="flex items-center justify-center gap-0 text-center">
-                      {col.label}
-                      {col.sortable && onSortChange && (
-                        <span className="cursor-pointer text-center h-auto w-8">
-                          <img
-                            src={sortOrder}
-                            onClick={(e) => {
-                              onSortChange(col.key);
-                              e.currentTarget.style.transform =
-                                e.currentTarget.style.transform === "rotate(180deg)"
-                                  ? "rotate(0deg)"
-                                  : "rotate(180deg)";
-                            }}
-                            className="inline transition-transform duration-300 text-center"
-                            alt="sortOrder"
-                          />
-                        </span>
-                      )}
-                    </span>
-                  </th>
-                );
-              })}
+                    {enableSelect && (
+                      <input
+                        type="checkbox"
+                        checked={allSelected}
+                        onChange={toggleSelectAll}
+                        className="w-4 h-4"
+                        aria-label="Select all rows"
+                      />
+                    )}
+                  </div>
+                </th>
+              )}
+              {visibleColumns.map((col) => (
+                <th
+                  key={col.key}
+                  className="w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium">
+                  <span className="flex items-center justify-center gap-0 text-center">
+                    {col.label}
+                    {col.sortable && onSortChange && (
+                      <span className="cursor-pointer text-center h-auto w-8">
+                        <img
+                          src={sortOrder}
+                          onClick={(e) => {
+                            onSortChange(col.key);
+                            e.currentTarget.style.transform =
+                              e.currentTarget.style.transform === "rotate(180deg)"
+                                ? "rotate(0deg)"
+                                : "rotate(180deg)";
+                          }}
+                          className="inline transition-transform duration-300 text-center"
+                          alt="sortOrder"
+                        />
+                      </span>
+                    )}
+                  </span>
+                </th>
+              ))}
             </tr>
           </thead>
 
-          <tbody className="">
+          <tbody>
             <tr>
               <td colSpan={totalCols} className="h-2" />
             </tr>
             {rows.map((row, rowIndex) => {
               const isSelected = selectedRows.includes(row.id);
               const isExpanded = expandedRows.includes(row.id);
-              const baseBg = isSelected ? "bg-[#F5F7F7]" : "bg-[#FCFCFC]";
+              const baseBg = isSelected ? "bg-[#F5F7F7]" : "bg-[#F5F7F7]";
+
+              // 🆕 Get expanded nodes for this row
+              const expandedNodes = renderExpandedNodes ? renderExpandedNodes(row) : [];
+              const totalExpandedNodesCols = expandedNodes.reduce(
+                (sum, node) => sum + (node.colSpan || 1),
+                0
+              );
+              const mainContentCols = totalCols - totalExpandedNodesCols;
 
               return (
                 <React.Fragment key={row.id}>
@@ -269,68 +265,61 @@ export function DynamicTableAgency<T extends { id: string }>({
                   )}
 
                   <tr className="h-[56px]">
-                    {/* Checkbox column */}
-                    {/* {enableSelect && (
-                      <td
-                        className={`p-3 text-center border-b rounded-tl-xl sticky left-0 bg-white z-10 ${baseBg} ${
-                          isSelected ? "border-l-4 border-blue-500 border-b-gray-200" : ""
-                        }`}
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isSelected}
-                          onChange={() => toggleRow?.(row.id)}
-                          className="w-4 h-4"
-                        />
-                      </td>
-                    )} */}
-
-                    {/* Single sticky column containing chevron and checkbox */}
                     {(enableSelect || renderExpandedDetails) && (
                       <td
-                        className={`p-1  w-12 text-center border-b sticky left-0 z-20 ${baseBg || ''} rounded-tl-xl
-                            ${isSelected ? "before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-blue-500 border-b-gray-200" : ""}
-                          `}
-                        >
+                        className={`p-1 w-12 text-center ${isExpanded ? "" : "border-b"}  sticky left-0 z-20 ${
+                          baseBg || ""
+                        } rounded-tl-xl
+                          ${
+                            isSelected
+                              ? "before:content-[''] before:absolute before:left-0 before:top-0 before:h-full before:w-1 before:bg-blue-500 border-b-gray-200"
+                              : ""
+                          }
+                        `}>
                         <div className="flex items-center justify-end gap-1">
-                          {/* chevron */}
-                          {(renderExpandedDetails && !hideChevronForRejected || (row as any).currentStatus !== "REJECTED") && (
+                          {((renderExpandedDetails && !hideChevronForRejected) ||
+                            (row as any).currentStatus !== "REJECTED") && (
                             <button
                               type="button"
                               onClick={() => toggleExpand?.(row.id)}
                               className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border-2 border-gray-300 rounded-full"
-                              aria-label={expandedRows.includes(row.id) ? "Collapse" : "Expand"}
-                            >
-                              {expandedRows.includes(row.id) ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                              aria-label={expandedRows.includes(row.id) ? "Collapse" : "Expand"}>
+                              {expandedRows.includes(row.id) ? (
+                                <ChevronUpIcon />
+                              ) : (
+                                <ChevronDownIcon />
+                              )}
                             </button>
                           )}
-                          {/* checkbox */}
                           {enableSelect && (
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => toggleRow?.(row.id)}
-                            className="w-4 h-4"
-                            aria-label="Select row"
-                          />
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => toggleRow?.(row.id)}
+                              className="w-4 h-4"
+                              aria-label="Select row"
+                            />
                           )}
                         </div>
                       </td>
                     )}
 
-
-                    {/* Data columns */}
                     {visibleColumns.map((col, index) => {
                       const isFirstVisibleColumn = !enableSelect && index === 0;
                       return (
                         <td
                           key={col.key}
-                          className={`w-32 px-4 border-b py-1 text-xs whitespace-nowrap ${col.key !== "email" ? "capitalize" : ""} ${baseBg}
+                          className={`w-32 px-4 ${isExpanded ? "" : "border-b"} py-1 text-xs whitespace-nowrap ${
+                            col.key !== "email" ? "capitalize" : ""
+                          } ${baseBg}
+                          ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
-                          ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""}`}>
+                          ${
+                            isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          }`}>
                           <div
-                            className=" truncate cursor-pointer  "
+                            className="truncate cursor-pointer"
                             onDoubleClick={(e) =>
                               navigator.clipboard.writeText(getCellValue(row, col) as string)
                             }
@@ -347,13 +336,11 @@ export function DynamicTableAgency<T extends { id: string }>({
                     })}
                   </tr>
 
-                  {/* Expand Button */}
                   {renderExpandedDetails?.(row) && !isExpanded && (
                     <tr className="relative h-0">
                       <td colSpan={totalCols} className="p-0 border-t-0">
                         <div
                           onClick={() => toggleExpand?.(row.id)}
-                            // just remove opacity and events-none and it will show the chevron in center of table and clickable
                           className="absolute left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 text-blue-600 border rounded-full bg-white shadow-md cursor-pointer opacity-0 pointer-events-none">
                           <ChevronDownIcon />
                         </div>
@@ -363,37 +350,48 @@ export function DynamicTableAgency<T extends { id: string }>({
 
                   {renderExpandedDetails && isExpanded && (
                     <>
-                      <tr>
-                        <td colSpan={totalCols} className="relative bg-white p-0 text-xs text-gray-600">
-                          <div className="p-4 border border-t-0 rounded-b-xl">
+                      <tr >
+                        {/* 🆕 Main content area - dynamically calculated colspan */}
+                        <td
+                          colSpan={mainContentCols}
+                          className="relative bg-white p-0 text-xs h-32 border-r  border-b border-l   text-gray-600">
+                          <div className="px-4 py-2 h-full">
                             {extraExpandedColumns.length > 0 && (
-                            <div className="grid grid-cols-7 gap-2 mb-4 w-full">
-                              {extraExpandedColumns.map((col) => (
-                                <div
-                                  key={col.key}
-                                  className="flex flex-col items-start justify-start gap-2 text-start"
-                                >
-                                  <span className="font-medium text-blue-400 text-nowrap text-start">
-                                    {col.label}
-                                  </span>
-                                  <span className="!text-start !text-gray-900">
-                                    {getCellValue(row, col)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-
-                            {/* Then render the original expanded details */}
+                              <div className="grid grid-cols-7 gap-2  mb-4 w-full" >
+                                {extraExpandedColumns.map((col) => (
+                                  <div
+                                    key={col.key}
+                                    className="flex flex-col items-start justify-start gap-2 text-start">
+                                    <span className="font-medium text-blue-400 text-nowrap text-start">
+                                      {col.label}
+                                    </span>
+                                    <span className="!text-start !text-gray-900">
+                                      {getCellValue(row, col)}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
                             {renderExpandedDetails(row)}
                           </div>
                           <div
                             onClick={() => toggleExpand?.(row.id)}
-                            // just remove opacity and events-none and it will show the chevron in center of table and clickable
                             className="absolute left-1/2 -translate-x-1/2 translate-y-1/2 bottom-0 z-10 w-8 h-8 text-blue-600 flex items-center justify-center bg-white border shadow-md rounded-full cursor-pointer opacity-0 pointer-events-none">
                             <ChevronUpIcon />
                           </div>
                         </td>
+
+                        {/* 🆕 Dynamic expanded nodes */}
+                        {expandedNodes.map((node, nodeIndex) => (
+                          <td
+                            key={nodeIndex}
+                            colSpan={node.colSpan || 1}
+                            className={`relative  border border-t-0 border-l-0  bg-white p-0 text-xs text-gray-600 ${
+                              node.className || ""
+                            }`}>
+                            <div className="px-1 h-full">{node.content}</div>
+                          </td>
+                        ))}
                       </tr>
                       <tr>
                         <td colSpan={totalCols} className="h-4" />
@@ -406,9 +404,8 @@ export function DynamicTableAgency<T extends { id: string }>({
           </tbody>
         </table>
       </div>
-      {/*  Added pagination controls container */}
-      <div className=" h-12 flex flex-col sm:flex-row justify-between items-center">
-        {/*  Page size selector on the left */}
+
+      <div className="h-12 flex flex-col sm:flex-row justify-between items-center">
         <div className="flex items-center z-50">
           <label htmlFor="pageSize" className="text-xs text-gray-600">
             Show rows:
@@ -419,16 +416,14 @@ export function DynamicTableAgency<T extends { id: string }>({
               value={pageSize}
               placeholder="Show rows"
               onChange={(val) => {
-                // console.log("Selected value:", val); // e.g., 20
                 setPageSize(val);
               }}
             />
           </div>
         </div>
 
-        <div className="flex items-center ">
-          {/*  Previous and Next buttons */}
-          <div className="flex gap-2  ">
+        <div className="flex items-center">
+          <div className="flex gap-2">
             <button
               onClick={handlePreviousPage}
               disabled={!hasPrevPage}
