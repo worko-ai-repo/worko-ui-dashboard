@@ -40,6 +40,7 @@ export interface CursorPaginationAdminJobDataParams {
   status: JobStatusType;
   searchText?: string;
   includeCompanyDetails: boolean;
+  includeCountCompanyJobEntityJobApplication: boolean;
   lastKey?: string | undefined;
 }
 

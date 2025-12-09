@@ -86,6 +86,7 @@ const AdminJobs = () => {
     dashboard: "ADMIN",
     status: activeTab,
     includeCompanyDetails: true,
+    includeCountCompanyJobEntityJobApplication:true,
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
 
