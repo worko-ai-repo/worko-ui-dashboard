@@ -180,7 +180,6 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
     const questionsManullaySkipped = interview.interviewHistory?.filter(
       (history) => history.userAnswer.trim() === "Candidate skipped the question" || history.userAnswer.trim() === ""
     ).length || 0;
-    debugger
     const totalAttempted = questionsAttempted - questionsManullaySkipped;
 
     const hasPartialProgress = questionsAttempted > 0 || interview.status === "IN_PROGRESS";

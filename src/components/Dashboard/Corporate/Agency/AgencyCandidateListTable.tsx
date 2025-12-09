@@ -759,9 +759,73 @@ const columns = [
         candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
     }
     try {
-    const {response} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+      if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "USER_RESUME"){
+        if(!row?.candidateParsedCvDetails?.userDetailId 
+          || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        try {
+          const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
 
-    setPdfViewDetails(response.objectUrl)
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setPdfViewDetails(response?.objectUrl)
+          setIsViewCVModalOpen(true)
+        } catch (error) {
+          console.log(error)
+        }
+      }else if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType  === "BULK_CVS"){
+            if(!row?.candidateParsedCvDetails?.companyId 
+              || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+              || !row?.candidateParsedCvDetails?.corporateBulkJdId 
+            ){
+              toast.error("Missing details",getToastOptions({}))
+              return
+            }
+            try {
+              const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")
+
+              if(error){
+                toast.error(error.message,getToastOptions({}))
+                return
+              }
+              setPdfViewDetails(response?.objectUrl)
+              setIsViewCVModalOpen(true)
+            } catch (error) {
+              console.log(error)
+            }      
+      }else{
+        if(!row?.candidateParsedCvDetails?.companyId 
+          || !row?.candidateParsedCvDetails?.jobId 
+          || !row?.candidateParsedCvDetails?.agencyUserId 
+          || !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        ){
+          toast.error("Missing details",getToastOptions({}))
+          return
+        }
+        const payload = {
+          companyId: row?.candidateParsedCvDetails?.companyId,
+          jobId:row?.candidateParsedCvDetails?.jobId,
+          agencyUserId: row?.candidateParsedCvDetails?.agencyUserId,
+          candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
+        }
+        try {
+          const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+          
+          if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+          }
+          setPdfViewDetails(response.objectUrl)
+          setIsViewCVModalOpen(true)
+        } catch (error) {
+          console.log(error)
+        }
+      }
     setIsViewCVModalOpen(true)
     } catch (error) {
     console.error(error)

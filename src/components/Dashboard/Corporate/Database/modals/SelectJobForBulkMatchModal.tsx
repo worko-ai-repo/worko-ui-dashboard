@@ -161,13 +161,13 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
   };
 
   const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
-    if(row?.refereeType === "WORKO"){
+    if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "USER_RESUME"){
       try {
         const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
       } catch (error) {
         console.log(error)
       }
-    }else if(row?.refereeType === "INTERNAL"){
+    }else if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "BULK_CVS"){
       console.log(row)
       try {
         const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")

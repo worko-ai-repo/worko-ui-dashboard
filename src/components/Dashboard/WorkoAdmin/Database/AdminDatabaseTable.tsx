@@ -378,7 +378,7 @@ const columns = [
 
   const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
     setEditProfileData(row)
-    if(row?.refereeType === "WORKO"){
+    if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "USER_RESUME"){
         if(!row?.candidateParsedCvDetails?.userDetailId 
           || !row?.candidateParsedCvDetails?.cvAwsS3FileName
         ){
@@ -397,7 +397,7 @@ const columns = [
         } catch (error) {
           console.log(error)
         }
-      }else if(row?.refereeType === "INTERNAL"){
+      }else if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType  === "BULK_CVS"){
             if(!row?.candidateParsedCvDetails?.companyId 
               || !row?.candidateParsedCvDetails?.cvAwsS3FileName
               || !row?.candidateParsedCvDetails?.corporateBulkJdId 

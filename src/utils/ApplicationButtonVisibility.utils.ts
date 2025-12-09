@@ -386,6 +386,17 @@ export function getActionVisibilityConfig(
       break;
 
     case JobApplicationStatusEnum.JOINED:
+      baseConfig = {
+        ...HIDDEN_ALL,
+        VIEW_DOCUMENT_READ: {
+          visible: true,
+          tabOverrides: { All: false, Hired: true },
+          condition: CONDITIONS.hasDocRequested,
+        },
+        VIEW_CV: { visible: true },
+      };
+      break;
+
     case JobApplicationStatusEnum.REJECTED:
       baseConfig = {
         ...HIDDEN_ALL,

@@ -81,6 +81,11 @@ export default function ApplicantScreeningTable() {
   const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
+  const [pdfViewUserDetails, setPdfViewUserDetails] = useState<{
+    name: string;
+    YOE?: number;
+    companyName?: string;
+  }>({ name: "" });
   const [selectedRows, setSelectedRows] = useState<string[]>([]);
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
   const [pageSize, setPageSize] = useState<number>(10);
@@ -277,6 +282,11 @@ export default function ApplicantScreeningTable() {
                 row?.cloudFileName
               );
               setPdfViewDetails(url);
+              setPdfViewUserDetails({
+                name: row.name,
+                YOE: row.yoe,
+                companyName: row.company,
+              });
               setIsViewCVModalOpen(true);
             }}
             data-tooltip-id="my-tooltip"
@@ -427,7 +437,13 @@ export default function ApplicantScreeningTable() {
         {!pdfViewDetails ? (
           <NoDataPresent />
         ) : (
-          <CVPreviewRaw pdfUrl={pdfViewDetails} onClose={() => setIsViewCVModalOpen(false)} />
+          <CVPreviewRaw
+            pdfUrl={pdfViewDetails}
+            candidateName={pdfViewUserDetails?.name || "Candidate"}
+            companyName={pdfViewUserDetails?.companyName}
+            YOE={pdfViewUserDetails?.YOE}
+            onClose={() => setIsViewCVModalOpen(false)}
+          />
         )}
       </Modal>
     </div>

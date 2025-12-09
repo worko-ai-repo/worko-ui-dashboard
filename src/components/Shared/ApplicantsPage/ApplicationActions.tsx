@@ -85,7 +85,19 @@ type Props = {
   setJoinedModalOpen: React.Dispatch<
     React.SetStateAction<{ isOpen: boolean; jobApplication: JobApplicationDetailsDto }>
   >;
+  splitMode?: "main" | "expanded" | "all"; // NEW
 };
+// ============================================
+// 1. Define split configuration in a constant
+// ============================================
+export const ACTION_SPLIT_CONFIG = {
+  // Always keep these in main row (max 2-3 for best UX)
+  mainRowActions: ["VIEW_CV", "NOTES"] as const,
+
+  // Rest go to expanded section
+  // Leave empty to auto-calculate
+  expandedActions: [] as const,
+} as const;
 
 export const JobApplicationActions: React.FC<Props> = (props) => {
   const {
@@ -108,6 +120,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     handleMarkAsDuplicateJob,
     sendApplicationToRecruiter,
     setJoinedModalOpen,
+    splitMode = "all",
   } = props;
 
   /**
@@ -247,6 +260,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
               applicantUserEmail: [row.applicantDetails.email],
               hrName: userDetails?.fullName,
               hrCurrentCompanyName: RBAC.can("play_admin") ? "WORKO" : companyDetails?.name || "",
+              cvAwsS3ResourceType: [row.applicantDetails.cvAwsS3ResourceType],
+              candidateParsedCvId: [row?.candidateParsedCvId || ""],
             },
             isBulk: isBulkEvaluation || false,
             onClose: () => setIsAddEvaluatorModalOpen(false),
@@ -437,18 +452,37 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       "ONHOLD", // Secondary actions
       "NOTES",
     ];
+    const allVisibleActions: React.ReactNode[] = [];
 
     actionPriority.forEach((action) => {
       if (shouldShowAction(action, row, activeTab)) {
-        // console.log(`Action ${action} is visible for status ${row.status} and tab ${activeTab}`);
         const button = actionButtons[action];
-        if (button) {
-          visibleActions.push(button);
+        if (button) allVisibleActions.push(button);
+      }
+    });
+
+    // If not splitting, return all
+    if (splitMode === "all") return allVisibleActions;
+
+    // Split logic
+    const mainRowKeys = ACTION_SPLIT_CONFIG.mainRowActions;
+    const mainActions: React.ReactNode[] = [];
+    const expandedActions: React.ReactNode[] = [];
+
+    actionPriority.forEach((action) => {
+      if (shouldShowAction(action, row, activeTab)) {
+        const button = actionButtons[action];
+        if (!button) return;
+
+        if (mainRowKeys.includes(action as any)) {
+          mainActions.push(button);
+        } else {
+          expandedActions.push(button);
         }
       }
     });
 
-    return visibleActions;
+    return splitMode === "main" ? mainActions : expandedActions;
   };
 
   const visibleActions = getVisibleActions();
@@ -456,6 +490,19 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
   if (visibleActions.length === 0) {
     return null;
   }
+// For expanded mode: Use flex-wrap for compact, multi-row layout
+if (splitMode === "expanded") {
+  return (
+    <div className="absolute left-0 right-0 -top-4 mx-auto max-w-[80px] flex flex-wrap gap-2 justify-center items-start ">
+      {visibleActions}
+    </div>
+  );
+}
 
-  return <div className="flex gap-2 justify-center h-fit py-1">{visibleActions}</div>;
+// For main row or all mode: Use single row layout
+return (
+  <div className="flex gap-2 justify-center items-center h-fit py-1">
+    {visibleActions}
+  </div>
+);
 };

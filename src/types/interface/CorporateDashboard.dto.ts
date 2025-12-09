@@ -184,12 +184,12 @@ export interface JobDetails {
 }
 
 export interface CandidateExperience {
-  companyName: string;    // e.g. "Worko.ai"
-  designation: string;    // e.g. "Founder"
-  department: string;     // e.g. "Entrepreneurship"
-  startDate: string;      // ISO date, e.g. "2023-07-01"
-  endDate: string;        // ISO date, e.g. "2024-06-01"
-  YOE: number;            // Years of experience, e.g. 1
+  companyName: string; // e.g. "Worko.ai"
+  designation: string; // e.g. "Founder"
+  department: string; // e.g. "Entrepreneurship"
+  startDate: string; // ISO date, e.g. "2023-07-01"
+  endDate: string; // ISO date, e.g. "2024-06-01"
+  YOE: number; // Years of experience, e.g. 1
 }
 
 export interface JobApplicationDetailsDto {
@@ -198,10 +198,12 @@ export interface JobApplicationDetailsDto {
   jobId: string;
   jobTitle: string;
   companyName: string;
+  agencyUserId?: string;
   updatedByUserId?: string;
   updatedByCorporateUserId?: string;
   jobCreatedByCorporateUserId?: string;
   jobCreatedByUserId?: string;
+  candidateParsedCvId?: string;
   offerLetterDetails?: Array<{
     userType: string;
     userId: string;
@@ -209,7 +211,7 @@ export interface JobApplicationDetailsDto {
     remarks: string;
     cloudFileName: string;
   }>;
-  action:string;
+  action: string;
   offerLetterIssueRaisedDetails: Array<{
     userId: string;
     userType: string;
@@ -230,7 +232,7 @@ export interface JobApplicationDetailsDto {
     userId: string;
   };
   rejectionFeedbackBySystem?: string;
-  rejectionFeedbackBySystemForApplicant?:string;
+  rejectionFeedbackBySystemForApplicant?: string;
   jdMatchErrorCode?: number;
   jdMatchErrorDesc?: string;
   scoreDetails?: string;
@@ -306,6 +308,8 @@ export interface ApplicantDetails {
   profileImage: string;
   profileImageAwsS3SignedUrl: string;
   cvAwsS3SignedUrl: string;
+  cvAwsS3ResourceType: string;
+  agencyUserId?: string;
   companyName?: string;
   CV: string;
   country: string;
@@ -332,7 +336,7 @@ export interface ApplicantDetails {
   userType: string[];
   cvExtract: string;
   cvExtractDate: string;
-  cvExtractParsedDate: string;
+  cvExtractParsedDate: any;
   GSI1PK: string;
   GSI1SK: string;
   SK: string;
@@ -346,19 +350,49 @@ export interface ApplicantDetails {
   };
 }
 
-interface UsersPersonalDetails {
+
+export interface CVExtractParsed {
+  preferedIndustry: string[];
+  preferedRoles: string[];
+  about: string;
+
+  personalDetails: UsersPersonalDetails;
+
+  otherSocialPlatForms: OtherSocialPlatforms;
+
+  education: Education[];
+
+  multipleCandidateExperience: CandidateExperience[];
+}
+
+export interface UsersPersonalDetails {
   name: string;
   phone: string;
   email: string;
 }
-export interface CVExtractParsed {
-  personalDetails: UsersPersonalDetails;
-  roleAndResponsibilities: RoleAndResponsibility[];
-  industryExperience: IndustryExperience[];
-  education: Education[];
-  professionalExperience: ProfessionalExperience[];
+
+export interface OtherSocialPlatforms {
+  github: string;
+  linkedin: string;
+  twiter: string;
 }
 
+export interface Education {
+  degree: string;
+  passingYear: number;
+  collage: string;
+  createdAt: string;
+}
+
+export interface CandidateExperience {
+  responsibilities: string[];
+  endDate: string;
+  companyName: string;
+  designation: string;
+  department: string;
+  YOE: number;
+  startDate: string;
+}
 export interface RoleAndResponsibility {
   role: string;
   responsibilities: string[];
@@ -404,7 +438,7 @@ export interface ReferralDetailsDto {
     detail: string;
   }[];
   matchingScore: number;
-  userDetails:any;
+  userDetails: any;
   jobPortal: string;
   jdExtracted?: string;
   userSubscriptionId: string;
