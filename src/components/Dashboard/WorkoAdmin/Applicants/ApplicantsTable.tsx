@@ -51,7 +51,7 @@ import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedba
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import interviewService from "@Services/Interview.service";
-import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
+import { DynamicTableApplications } from "@Components/Shared/DynamicTableApplications";
 import ApplicantExpandedRowDetails, {
   expandedExtraApplicationRow,
 } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
@@ -831,7 +831,7 @@ export default function ApplicationTable({
       </button>
 
       {/* Main table component */}
-      <DynamicTableAgency
+      <DynamicTableApplications
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}

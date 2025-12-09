@@ -53,7 +53,7 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   renderExpandedNodes?: (row: T) => ExpandedNode[];
 }
 
-export function DynamicTableAgency<T extends { id: string }>({
+export function DynamicTableApplications<T extends { id: string }>({
   columns,
   rows,
   selectedRows = [],

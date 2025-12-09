@@ -49,8 +49,10 @@ import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
-import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
-import ApplicantExpandedRowDetails, { expandedExtraApplicationRow } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
+import { DynamicTableApplications } from "@Components/Shared/DynamicTableApplications";
+import ApplicantExpandedRowDetails, {
+  expandedExtraApplicationRow,
+} from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
 
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -700,7 +702,7 @@ export default function ApplicationTable({
         <span>deselect {ListSelection.selectedRows.length} rows</span>
       </button>
 
-      <DynamicTableAgency
+      <DynamicTableApplications
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}
