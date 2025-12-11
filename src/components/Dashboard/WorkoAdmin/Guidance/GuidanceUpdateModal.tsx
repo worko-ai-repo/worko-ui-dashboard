@@ -105,8 +105,6 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
           { value: "MENTOR_ASSIGNED", label: "Assign a Mentor" },
           { value: "REJECTED", label: "Reject" },
         ];
-      case "MEETING_CONFIRMED":
-        return [{ value: "PROJECT_COMPLETED", label: "Project Completed" }];
       case "PAYMENT_CONFIRMATION_PENDING":
         return [{ value: "PAYMENT_CONFIRMATION_DONE", label: "Payment Confirmation Done" }];
       case "PAYMENT_CONFIRMATION_DONE":
