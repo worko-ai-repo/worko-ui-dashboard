@@ -77,7 +77,7 @@ const RequestDocumentModal: React.FC<
   handleStatusUpdate,
   refetch, // Properly destructure refetch here
 }) => {
-  const {userDetails} = useAppContext();
+  const { userDetails } = useAppContext();
   const [isLoading, setIsLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [DocumentSubmissionMode, setDocumentSubmissionMode] =
@@ -300,7 +300,7 @@ const RequestDocumentModal: React.FC<
       .filter((name) => name !== "");
 
     if (documentNames.length === 0) {
-      toast.info("Please enter at least one document name",getToastOptions());
+      toast.info("Please enter at least one document name", getToastOptions());
       return;
     }
 
@@ -309,7 +309,8 @@ const RequestDocumentModal: React.FC<
       toast.info(
         `Cannot request more than ${MAX_DOCUMENTS} documents total. You can request ${
           MAX_DOCUMENTS - currentRequestedCount
-        } more documents.`,getToastOptions()
+        } more documents.`,
+        getToastOptions()
       );
       return;
     }
@@ -371,7 +372,10 @@ const RequestDocumentModal: React.FC<
 
   const handleAddDocument = () => {
     if (currentRequestedCount + fields.length >= MAX_DOCUMENTS) {
-      toast.info(`Cannot add more documents. Maximum ${MAX_DOCUMENTS} documents allowed.`,getToastOptions());
+      toast.info(
+        `Cannot add more documents. Maximum ${MAX_DOCUMENTS} documents allowed.`,
+        getToastOptions()
+      );
       return;
     }
     append({ name: "" });
@@ -583,14 +587,26 @@ const RequestDocumentModal: React.FC<
         {mode !== "READ_ONLY" && (
           <button
             onClick={handleVerifyAndApprove}
-            disabled={isVerifying || documents.some((doc) => !doc.submittedOn)}
+            disabled={
+              isVerifying ||
+              documents.some((doc) => !doc.submittedOn) ||
+              jobApplication.statusTracker.some((entry) => entry.newStatus === "DOCUMENT_VERIFIED")
+            }
             className="w-48 h-11 pl-px pr-2.5 py-2.5 text-sm leading-3 tracking-tight font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed rounded-[10px] flex justify-center items-center gap-1">
             {isVerifying ? (
               <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <Verified className="w-4 h-4" />
             )}
-            {isVerifying ? "Verifying..." : "Verified & approve"}
+            {isVerifying
+              ? "Verifying..."
+              : jobApplication.statusTracker.some(
+                  (entry) => entry.newStatus === "DOCUMENT_VERIFIED"
+                )
+              ? "Verified & approve"
+              : documents.some((doc) => !doc.submittedOn)
+              ? "Verify & approve"
+              : "Verify & approve"}
           </button>
         )}
       </div>

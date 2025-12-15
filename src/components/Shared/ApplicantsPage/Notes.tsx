@@ -124,7 +124,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
   const [isAddingNote, setIsAddingNote] = useState<boolean>(false);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [newNoteDetails, setNewNoteDetails] = useState<NewNoteDetail[]>([
-    { title: "", detailedDescription: "" },
+    { title: "", detailedDescription: "NA" },
   ]);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -227,7 +227,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
       }
 
       // Silent success - just refresh and reset form
-      setNewNoteDetails([{ title: "", detailedDescription: "" }]);
+      setNewNoteDetails([{ title: "", detailedDescription: "NA" }]);
       setIsAddingNote(false);
       await fetchNotes(); // Silent refetch
     } catch (err) {
@@ -285,7 +285,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
     // So we'll keep at least one empty note detail
     const finalNoteDetails =
       updatedNoteDetails.length === 0
-        ? [{ title: "", detailedDescription: "" }]
+        ? [{ title: "", detailedDescription: "NA" }]
         : updatedNoteDetails;
 
     await handleUpdateNote(noteId, finalNoteDetails);
@@ -293,11 +293,11 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
 
   // Delete entire note by setting empty note details
   const handleDeleteNote = async (noteId: string): Promise<void> => {
-    await handleUpdateNote(noteId, [{ title: "", detailedDescription: "" }]);
+    await handleUpdateNote(noteId, [{ title: "", detailedDescription: "NA" }]);
   };
 
   const addNewNoteDetail = () => {
-    setNewNoteDetails([...newNoteDetails, { title: "", detailedDescription: "" }]);
+    setNewNoteDetails([...newNoteDetails, { title: "", detailedDescription: "NA" }]);
   };
 
   const removeNoteDetail = (index: number) => {
@@ -313,7 +313,7 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
   };
 
   const cancelAdd = (): void => {
-    setNewNoteDetails([{ title: "", detailedDescription: "" }]);
+    setNewNoteDetails([{ title: "", detailedDescription: "NA" }]);
     setIsAddingNote(false);
   };
 
@@ -407,21 +407,11 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
                   )}
                 </div>
 
-                <input
-                  type="text"
-                  placeholder="Note title..."
+                <textarea
+                  placeholder="Write your note here..."
                   value={detail.title}
                   onChange={(e) => updateNewNoteDetail(index, "title", e.target.value)}
-                  className="w-full p-3 border border-gray-300 rounded-lg mb-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-                />
-
-                <textarea
-                  placeholder="Detailed description..."
-                  value={detail.detailedDescription}
-                  onChange={(e) =>
-                    updateNewNoteDetail(index, "detailedDescription", e.target.value)
-                  }
-                  rows={3}
+                  rows={5}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-vertical"
                 />
               </div>
@@ -549,7 +539,7 @@ const NoteDetailCard: React.FC<NoteDetailCardProps> = ({
   const [isEditing, setIsEditing] = useState<boolean>(false);
   const [edited, setEdited] = useState<NoteDetail>({
     title: detail.title || "",
-    detailedDescription: detail.detailedDescription || "",
+    detailedDescription: detail.detailedDescription || "NA",
   });
 
   const handleSave = async () => {
@@ -596,11 +586,8 @@ const NoteDetailCard: React.FC<NoteDetailCardProps> = ({
       {!isEditing ? (
         <div className="space-y-2 text-left capitalize">
           {detail.title && (
-            <h4 className="font-semibold text-gray-900 text-lg">{detail.title}</h4>
-          )}
-          {detail.detailedDescription && (
-            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed">
-              {detail.detailedDescription}
+            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed text-base">
+              {detail.title}
             </div>
           )}
           <div className="text-xs text-gray-400 mt-2">
@@ -612,19 +599,12 @@ const NoteDetailCard: React.FC<NoteDetailCardProps> = ({
         </div>
       ) : (
         <div className="space-y-3">
-          <input
-            type="text"
+          <textarea
             value={edited.title}
             onChange={(e) => setEdited((p) => ({ ...p, title: e.target.value }))}
-            className="w-full p-3 border border-gray-300 rounded-lg mb-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-            placeholder="Note title..."
-          />
-          <textarea
-            value={edited.detailedDescription}
-            onChange={(e) => setEdited((p) => ({ ...p, detailedDescription: e.target.value }))}
-            rows={3}
+            rows={5}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-vertical"
-            placeholder="Detailed description..."
+            placeholder="Write your note here..."
           />
           <div className="flex gap-2">
             <button
@@ -637,7 +617,7 @@ const NoteDetailCard: React.FC<NoteDetailCardProps> = ({
             </button>
             <button
               onClick={() => {
-                setEdited({ title: detail.title || "", detailedDescription: detail.detailedDescription || "" });
+                setEdited({ title: detail.title || "", detailedDescription: detail.detailedDescription || "NA" });
                 setIsEditing(false);
               }}
               disabled={loading}
