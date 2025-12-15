@@ -268,7 +268,7 @@ const CVPreview = ({
               <Download className="w-4 h-4" />
             </button>
             <button
-              onClick={() => window.open(pdfuri, "_blank")}
+              onClick={() => window.open(cvUrl, "_blank")}
               className="absolute bottom-4 right-3  px-3 py-2 bg-blue-200 rounded-md shadow text-blue-600">
               <Maximize className="w-4 h-4" />
             </button>

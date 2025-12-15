@@ -69,6 +69,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   const keyFallbacksforJobs = {
     countCompanyJob_allJobApplicationCounts_total: ["countCompanyJob.allJobApplicationCounts.total"],
     countCompanyJob_allJobApplicationCounts_applied: ["countCompanyJob.allJobApplicationCounts.applied"],
+    location: ["location.fullLocation", "location.city", "location.state", "location.country"],
   };
   // Enhanced sortable data hook with URL params persistence
   const { sortedData, sortConfig, onSortChange } = useSortableData(
@@ -131,7 +132,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           row.location.city ||
           row.location.state ||
           row.location.country || ["Not specified"];
-        return <span className="capitalize">{locations.join(", ")}</span>;
+        return <span 
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={locations.join(", ")}
+        className="capitalize">{locations.join(", ")}</span>;
       },
     },
     {

@@ -97,11 +97,11 @@ const AdminCompany = () => {
       } else if (action === "updateLogo") {
         const result = await AdminServiceObj.patchCompanyLogo(companyId, updateData);
         if (!result) throw new Error("Failed to update company logo");
-        return result;
+        return { action, companyId, data: result };
       } else {
         const result = await AdminServiceObj.putCompanyDetails(companyId, updateData);
         if (!result) throw new Error("Failed to update company");
-        return result;
+        return { action, companyId, data: result };
       }
     },
     onMutate: async ({ companyId, updateData, action }) => {
@@ -112,27 +112,50 @@ const AdminCompany = () => {
 
       // Optimistically update the cache
       queryClient.setQueryData(actualQueryKey, (oldData: any) => {
-        if (!oldData?.pages) return oldData;
+        if (!oldData) return oldData;
 
-        return {
-          ...oldData,
-          pages: oldData.pages.map((page: any) => ({
-            ...page,
-            data:
-              action === "delete"
-                ? page.data.filter((company: CompanyDto) => company.id !== companyId)
-                : page.data.map((company: CompanyDto) => {
-                    if (company.id === companyId && updateData) {
-                      return {
-                        ...company,
-                        ...updateData,
-                        updatedAt: new Date().toISOString(),
-                      };
-                    }
-                    return company;
-                  }),
-          })),
-        };
+        // Handle array structure (direct data array)
+        if (Array.isArray(oldData)) {
+          if (action === "delete") {
+            return oldData.filter((company: CompanyDto) => company.id !== companyId);
+          } else {
+            return oldData.map((company: CompanyDto) => {
+              if (company.id === companyId && updateData) {
+                return {
+                  ...company,
+                  ...updateData,
+                  updatedAt: new Date().toISOString(),
+                };
+              }
+              return company;
+            });
+          }
+        }
+
+        // Handle paginated structure
+        if (oldData?.pages) {
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => ({
+              ...page,
+              data:
+                action === "delete"
+                  ? page.data.filter((company: CompanyDto) => company.id !== companyId)
+                  : page.data.map((company: CompanyDto) => {
+                      if (company.id === companyId && updateData) {
+                        return {
+                          ...company,
+                          ...updateData,
+                          updatedAt: new Date().toISOString(),
+                        };
+                      }
+                      return company;
+                    }),
+            })),
+          };
+        }
+
+        return oldData;
       });
 
       return { previousData, actualQueryKey };
@@ -145,23 +168,42 @@ const AdminCompany = () => {
       toast.error("Failed to update company. Please try again.", getToastOptions({}));
     },
     onSuccess: (result, variables) => {
+      const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
       if (variables.action === "delete") {
         toast.success("Company deleted successfully!", getToastOptions({}));
       } else {
-        toast.success("Company updated successfully!", getToastOptions({}));
+        // Update cache with actual server response
+        if (result && typeof result === "object" && "data" in result) {
+          queryClient.setQueryData(actualQueryKey, (oldData: any) => {
+            if (!oldData) return oldData;
 
-        // Patch the updated data into local array
-        if (result && typeof result === "object" && "id" in result) {
-          const updatedCompany = result as CompanyDto;
-          if (!data || !Array.isArray(data)) return;
+            // Handle array structure
+            if (Array.isArray(oldData)) {
+              return oldData.map((company: CompanyDto) =>
+                company.id === variables.companyId
+                  ? { ...company, ...(result.data as any) }
+                  : company
+              );
+            }
 
-          const index = (data as CompanyDto[]).findIndex(
-            (company: CompanyDto) => company.id === updatedCompany.id
-          );
-          if (index !== -1) {
-            (data as CompanyDto[])[index] = { ...data[index], ...updatedCompany };
-            console.log(`✅ Patched company ${updatedCompany.id} in local data.`);
-          }
+            // Handle paginated structure
+            if (oldData?.pages) {
+              return {
+                ...oldData,
+                pages: oldData.pages.map((page: any) => ({
+                  ...page,
+                  data: page.data.map((company: CompanyDto) =>
+                    company.id === variables.companyId
+                      ? { ...company, ...(result.data as any) }
+                      : company
+                  ),
+                })),
+              };
+            }
+
+            return oldData;
+          });
         }
       }
     },
@@ -276,7 +318,7 @@ const AdminCompany = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[15px]">
         <div className="flex flex-col ">
           <div className="flex flex-col my-3 sm:flex-row justify-between items-center gap-1">
             {/* Search Bar */}
@@ -304,7 +346,7 @@ const AdminCompany = () => {
           </div>
         </div>
 
-        {queryIsJobsLoading ? (
+        {queryIsJobsLoading && (!data || data.length === 0) ? (
           <SkeletonLoader
             showTableHeader={true}
             showTableRows={true}

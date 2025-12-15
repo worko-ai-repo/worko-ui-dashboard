@@ -215,11 +215,13 @@ export default function ApplicationTable({
 
   const keyFallbacks = {
     yoe: ["yoe", "applicantDetails.YOE"],
+    name: ["applicantDetails.name"],
     matchingScore: [
       "matchingScore",
       "scoreDetails.matchingScore",
       "scoreDetails.matchingScorePercentage",
     ],
+    noticePeriod: ["applicantDetails.noticePeriod"],
     profile: ["applicantDetails.candidateExperience.designation"],
     location: ["applicantDetails.location"],
     applicantDetails_candidateExperience_designation: [
@@ -605,7 +607,7 @@ export default function ApplicationTable({
             label: "Designation",
             sortable: true,
           },
-          { key: "hiredBy", label: "Hired By" },
+          // { key: "hiredBy", label: "Hired By" },
           {
             key: "status_actionDate",
             label: "Joining Date",
@@ -619,11 +621,12 @@ export default function ApplicationTable({
               const joiningDate: Date | null = joinedStatus?.actionDate
                 ? new Date(joinedStatus.actionDate)
                 : null;
-
+              // Check if the date is valid
+              const isValidDate = joiningDate && !isNaN(joiningDate.getTime());
               return (
                 <div className="flex items-center justify-center gap-2">
                   <span>
-                    {joiningDate
+                    {isValidDate
                       ? joiningDate.toLocaleDateString("en-GB", {
                           day: "numeric",
                           month: "short",
@@ -886,7 +889,7 @@ export default function ApplicationTable({
         }}
         className="!p-0 m-0  ">
         {isViewEvaluator.jobApplicationData.status === "PROCESSING_INTERVIEW" && (
-          <div className="processing_interview no-scrl no-scrl-web bg-blue-300 absolute bottom-0 text-xs  p-1 text-blue-600 mx-0 left-0 right-0 ">
+          <div className="processing_interview no-scrl no-scrl-web text-center mx-auto bg-blue-300 absolute bottom-0 text-xs  p-1 text-blue-600 left-0 right-0 ">
             Under interview process
           </div>
         )}

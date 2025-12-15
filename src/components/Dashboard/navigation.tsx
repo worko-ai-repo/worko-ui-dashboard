@@ -149,7 +149,7 @@ const navigationItems: NavItem[] = [
   {
     id: "aGuidance",
     label: "Guidance",
-    icon: HomeIcon,
+    icon: Guidance,
     dashboardTypes: ["ADMIN"],
   },
   {
@@ -167,7 +167,7 @@ const navigationItems: NavItem[] = [
   {
     id: "Refer-n-Earn",
     label: "Refer & Earn",
-    icon: HomeIcon,
+    icon: InterviewIcon,
     dashboardTypes: ["ADMIN"],
   },
 /*   { //@NEXT-RELEASE : NEXT RELEASE

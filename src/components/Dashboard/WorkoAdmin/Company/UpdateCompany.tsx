@@ -141,17 +141,19 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
         setLogoPreview(companyData.logoUrl);
       }
       // Store initial form data for change detection
-      setInitialFormData(JSON.stringify({
-        name: companyData.name || "",
-        website: companyData.website || "",
-        linkedIn: companyData.linkedIn || "",
-        carrierPage: companyData.carrierPage || "",
-        logoUrl: companyData.logoUrl || "",
-        industry: companyData.industry || "",
-        teamSize: companyData.teamSize || 0,
-        aboutCompany: companyData.aboutCompany || "",
-        isCompanyRequestPageFlag: companyData.isCompanyRequestPageFlag || false,
-      }));
+      setInitialFormData(
+        JSON.stringify({
+          name: companyData.name || "",
+          website: companyData.website || "",
+          linkedIn: companyData.linkedIn || "",
+          carrierPage: companyData.carrierPage || "",
+          logoUrl: companyData.logoUrl || "",
+          industry: companyData.industry || "",
+          teamSize: companyData.teamSize || 0,
+          aboutCompany: companyData.aboutCompany || "",
+          isCompanyRequestPageFlag: companyData.isCompanyRequestPageFlag || false,
+        })
+      );
     }
   }, [companyData, setValue, mode]);
 
@@ -408,8 +410,8 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
       }
 
       // Refresh company data and close modal
-      // Commented out refetch - using optimistic updates
-      // fetchCompany();
+      // Using optimistic updates - no refetch needed
+      fetchCompany();
       onClose();
     } catch (error) {
       console.error(`Error ${mode.toLowerCase()}ing company:`, error);

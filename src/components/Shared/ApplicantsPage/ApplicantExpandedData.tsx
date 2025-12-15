@@ -168,7 +168,7 @@ const ApplicantExpandedRowDetails: React.FC<ExpandedRowDetailsProps> = ({
                   </div>
                   <div>
                     <span className="font-medium text-gray-600">Phone:</span>
-                    <p>{row.applicantDetails?.personalDetails?.phone || "Not provided"}</p>
+                    <p>{row?.applicantDetails?.number || row.applicantDetails?.personalDetails?.phone || "Not provided"}</p>
                   </div>
                 </div>
               </div>

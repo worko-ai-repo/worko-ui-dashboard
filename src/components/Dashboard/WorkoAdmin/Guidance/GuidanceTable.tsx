@@ -65,6 +65,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
     userDetails_name: ["name", "userDetails.name"],
     userDetails_about: ["about", "userDetails.about"],
     dateNeededBy: ["guidanceRequestDeadline"],
+    guidanceType: ["guidanceRequestType"],
   };
 
   const [modalState, dispatch] = useReducer(modalReducer, {

@@ -96,6 +96,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (row: ApplicantDetails) => (
         <div className="flex items-center gap-2">
           <span className="w-full capitalize">{row?.name}</span>

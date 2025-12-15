@@ -82,7 +82,7 @@ const AdminGuidance = () => {
             />
           </div>
         </div> */}
-        {queryIsJobsLoading ? (
+        {queryIsJobsLoading && (!data || data.length === 0) ? (
           <SkeletonLoader
             showTableHeader={true}
             showTableRows={true}

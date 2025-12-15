@@ -50,7 +50,7 @@ const CorporateReferrals = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[15px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails key={`header-details-${companyId}`} pageType="referrals" />

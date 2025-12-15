@@ -314,6 +314,7 @@ const ResponseEvaluation: React.FC<Props> = ({
             <button
               onClick={() => {
                 handleUpdate("PROCESSING_INTERVIEW", jobApplicationData, true);
+                onClose();
               }}
               className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
               <PaperAirplaneIcon className="-rotate-45 w-4 h-4" />
@@ -326,6 +327,7 @@ const ResponseEvaluation: React.FC<Props> = ({
             <button
               onClick={() => {
                 handleUpdate("HIRING_IN_PROCESS", jobApplicationData, true);
+                onClose();
               }}
               className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition">
               <Check className="w-4 h-4" />
@@ -360,6 +362,7 @@ const ResponseEvaluation: React.FC<Props> = ({
             className="text-blue-700 font-medium transition border p-2.5 rounded-lg"
             onClick={() => {
               handleUpdate("ON_HOLD", jobApplicationData, true);
+              onClose();
             }}>
             On Hold
           </button>

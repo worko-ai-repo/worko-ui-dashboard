@@ -43,6 +43,7 @@ interface JobsTableProps {
 export const keyFallbacksforJobs = {
   totalApplicants: ["countCompanyJob.allJobApplicationCounts.total"],
   newApplicants: ["countCompanyJob.allJobApplicationCounts.applied"],
+  location: ["location.fullLocation", "location.city", "location.state", "location.country"],
 };
 
 const JobTableWrapper: React.FC<JobsTableProps> = ({
@@ -145,7 +146,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           row.location.city ||
           row.location.state ||
           row.location.country || ["Not specified"];
-        return <span className="capitalize">{locations.join(", ")}</span>;
+        return <span 
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content={locations.join(", ")}
+        className="capitalize">{locations.join(", ")}</span>;
       },
     },
     {
