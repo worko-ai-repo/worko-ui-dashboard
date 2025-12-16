@@ -160,5 +160,6 @@ export interface EvaluationRequestDetails {
   scoreDetails?: ScoreDetail[] | string;
   evaluationResponseId?:string;
   email?: string;
+  applicantUserId?:string;
 }
 

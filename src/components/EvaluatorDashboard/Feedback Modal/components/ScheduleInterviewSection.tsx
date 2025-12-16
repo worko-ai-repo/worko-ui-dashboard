@@ -136,6 +136,7 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
       <div className="space-y-4">
         {/* <label className="block text-sm font-medium text-gray-900">Pick a date</label> */}
         <div className="relative">
+          <div className="relative inline-block">
           <DatePicker
             selected={new Date(currentSlot.date)}
             onChange={(date: Date | null) => {
@@ -150,7 +151,9 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
             placeholderText="Select a date"
             className="w-full py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-sm"
             calendarClassName="!z-50"
+            popperPlacement="bottom-start"
           />
+          </div>
 
           {/* <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none">
             <Calendar size={30} />

@@ -91,6 +91,13 @@ const MainContent: React.FC<MainContentProps> = ({
   const { userDetails } = useAppContext();
 
   useEffect(() => {
+    if (
+      !EvaluationRequestDetails?.email ||
+      !EvaluationRequestDetails?.applicantUserId
+    ) {
+      setSocialLinks({});
+      return;
+    }
     const fetchSocialLinks = async () => {
       // const {isLoggedIn} = useAppContext()
 
@@ -107,7 +114,8 @@ const MainContent: React.FC<MainContentProps> = ({
         return;
       }
 
-      if (EvaluationRequestDetails.email) {
+      if (EvaluationRequestDetails.email && EvaluationRequestDetails.applicantUserId) {
+        console.log(EvaluationRequestDetails.applicantUserId)
         try {
           const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
           const filteredSocialLinks: any = {};
@@ -126,7 +134,7 @@ const MainContent: React.FC<MainContentProps> = ({
     };
 
     fetchSocialLinks();
-  }, [location.search, EvaluationRequestDetails.email]);
+  }, [location.search, EvaluationRequestDetails.email, EvaluationRequestDetails.applicantUserId]);
 
   // useEffect(() => {
   //   const getEvaluationDetails = async () => {
@@ -202,6 +210,7 @@ const MainContent: React.FC<MainContentProps> = ({
     queryKey: ["interviews", evaluatorDetails?.applicantUserEmail],
     queryFn: fetchInterviews,
     enabled: !!evaluatorDetails?.applicantUserEmail,
+    refetchOnWindowFocus:false,
   });
 
   useEffect(() => {

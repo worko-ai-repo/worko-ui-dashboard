@@ -273,6 +273,7 @@ const EvaluatorView: React.FC = () => {
     if (!selectedRequest) return;
 
     const fetchDetailsData = async () => {
+      setIsLoadingData(true)
       try {
         // 1. Fetch Evaluation Details
         const details = await fetchEvaluationDetails(
@@ -300,13 +301,15 @@ const EvaluatorView: React.FC = () => {
           if (candidate.length > 0) {
             setSelectedCandidateDetails(candidate[0]);
           }
+        }
         // 3. Fetch Application Details
         const applicationDetails = await fetchApplicationDetails(selectedRequest.jobApplicationId);
-        setApplicationDetails(applicationDetails); // <- You'll need this state
-        }
+        setApplicationDetails(applicationDetails);
       } catch (err) {
         console.error("Failed to fetch details or candidate detail or application detail:", err);
         setDetails(null);
+      } finally {
+        setIsLoadingData(false)
       }
     };
 
@@ -314,6 +317,9 @@ const EvaluatorView: React.FC = () => {
   }, [selectedRequest]);
 
   const handleCandidateSelect = (id: string) => {
+    setSelectedCandidateDetails(null)
+    setApplicationDetails(null)
+    setDetails(null)
     const request = requests.find((r) => r.id === id);
     if (request) setSelectedRequest(request);
   };
@@ -337,6 +343,8 @@ const EvaluatorView: React.FC = () => {
         onCandidateSelect={handleCandidateSelect}
         userName={selectedRequest?.evaluatorDetails.name || "Evaluator"}
         companyLogo=""
+        isLoadingData={isLoadingData}
+        setIsLoadingData={setIsLoadingData}
       />
 
       <MainContent
@@ -374,6 +382,7 @@ const EvaluatorView: React.FC = () => {
                 })(),
                 evaluationResponseId: selectedRequest?.evaluationResponseId,
                 email: selectedRequest?.applicantUserEmail ?? "",
+                applicantUserId:details?.applicantUserId,
               }
             : {
                 id: "",

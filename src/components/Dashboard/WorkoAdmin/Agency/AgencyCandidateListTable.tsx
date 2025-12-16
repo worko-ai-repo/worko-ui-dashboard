@@ -184,6 +184,7 @@ export default function AgencyCandidateListTable(props: any) {
     noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
     location: ["candidateParsedCvDetails.location"],
     readyToRelocate: ["candidateParsedCvDetails.readyToRelocate"],
+    anyComment:["agencyComments"],
     workoScore: ["score", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
     status: ["jobApplicationStatus"],
   };

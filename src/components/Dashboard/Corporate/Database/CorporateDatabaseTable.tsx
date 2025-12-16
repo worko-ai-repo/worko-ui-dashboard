@@ -87,7 +87,7 @@ export default function CorporateDatabaseTable(props: any) {
     refereeType: ["refereeType"],
     contact: ["candidateParsedCvDetails.phoneNumberDetails.number"],
     date: ["createdAt"],
-    profileName: ["profileName", "candidateParsedCvDetails.name"],
+    profileName: ["profileName"],
     candidateName: ["candidateParsedCvDetails.name"],
     currentCompany: ["candidateParsedCvDetails.currentCompany"],
     currentDesignation: ["candidateParsedCvDetails.currentDesignation"],

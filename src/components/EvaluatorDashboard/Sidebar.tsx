@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Users, FileText } from 'lucide-react';
 import { Candidate } from 'src/types/index';
 import { toTitleCase } from "@Utils/Titlecase.utils";
@@ -10,6 +10,8 @@ interface SidebarProps {
   onCandidateSelect: (candidateId: string) => void;
   userName: string;
   companyLogo: string;
+  isLoadingData:boolean;
+  setIsLoadingData:(value:boolean) => void;
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -17,9 +19,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   selectedCandidateId,
   onCandidateSelect,
   userName,
-  companyLogo
+  companyLogo,
+  isLoadingData,
+  setIsLoadingData
 }) => {
   
+  useEffect(() => {
+    if (candidates.length === 0) return
+    if (selectedCandidateId) return
+    setIsLoadingData(true)
+    onCandidateSelect(candidates[0].id)
+    setIsLoadingData(false)
+  }, [candidates, selectedCandidateId])
+
   const handleLogout = async () => {
   try {
     await CognitoServiceObj.handleSignOut();
