@@ -83,7 +83,6 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       if(formData.contactNumber && formData.contactNumber !== data.phoneNumberDetails.number) {
         payload.phoneNumberDetails = {number:formData.contactNumber,countryCode:91}
       }
-      console.log(payload)
       try {
         const {response, error} = await httpServiceObj.patch(`${agencyBaseUrl}/agency-invite/corp-action`,payload,true,{},true)
 

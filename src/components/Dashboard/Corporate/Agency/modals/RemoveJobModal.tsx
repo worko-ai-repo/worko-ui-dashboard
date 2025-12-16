@@ -84,7 +84,6 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
 
   // fetch jobs which are already assigned
     const fetchJobsForRemoving = async(searchText:string) =>{
-      console.log(agencyData)
       const params = {
         pageSize: 200,
         sortOrder: "desc",
@@ -100,7 +99,6 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
         if(response?.data){
           setJobsList(response.data)
         }
-        console.log(response.data)
       } catch (error) {
         console.log(error)
       }
@@ -215,7 +213,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
 const removeSelectedJob = (id: string) => {
   setSelectedJobs(prev => {
     const filtered = prev.filter(job => job.id !== id);
-    console.log("After:", filtered.map(job => job.id));
+    // console.log("After:", filtered.map(job => job.id));
     return filtered;
   });
 };

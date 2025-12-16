@@ -168,7 +168,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
         console.log(error)
       }
     }else if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "BULK_CVS"){
-      console.log(row)
       try {
         const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")
       } catch (error) {
@@ -201,7 +200,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
       if (!response) {
         throw new Error("Failed to parse job description");
       }
-      console.log(response)
       setData(response);
       onSubmit(response)
       // setIsBulkCvFormOpen(true);
@@ -261,7 +259,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
         if (!request || !("id" in request)) {
           throw new Error("Failed to create bulk screening request or missing 'id' property");
         }
-        console.log(request)
         const bulkJdId = request.id;
         // setBulkResumeId(bulkJdId);
         // // Use this id to store the data in ddb
@@ -272,7 +269,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
           cvAwsS3ResourceType: "USER_RESUME"
         }]
         const response = await CorporateServiceObj.bulkScreeningUpload(filePayload, bulkJdId);
-        console.log(response)
         // await storeDataToS3(filePayload, bulkJdId);
         // setBulkScreenDone(true);
       } catch (error) {
@@ -287,7 +283,7 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
   const removeSelectedJob = (id: string) => {
     setSelectedJobs(prev => {
       const filtered = prev.filter(job => job.id !== id);
-      console.log("After:", filtered.map(job => job.id));
+      // console.log("After:", filtered.map(job => job.id));
       return filtered;
     });
   };
@@ -306,7 +302,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
       }
     try {
       const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
-      console.log(response)
       if (response?.data) {
         setCompanyJobs(response.data);
       } else {

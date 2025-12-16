@@ -362,7 +362,7 @@ export default function AgencyCandidateListTable(props: any) {
         {},
         true
       );
-      console.log(response, error);
+
       if (error) {
         toast.error(error.message, getToastOptions({}));
         return;

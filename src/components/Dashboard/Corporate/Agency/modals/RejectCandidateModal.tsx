@@ -70,14 +70,11 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
       if(comments.trim()){
         payload.rejectApplicantDetailedReason = comments.trim()
       }
-      console.log(payload)
       const url = `${agencyBaseUrl}/agency-user-submission/reject-applicant`;
       const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
-      console.log(response);
       if (response) {
         const updatedData = {...data,jobApplicationStatus:"REJECTED"}
         localUpdate(data.id,updatedData)
-        console.log(updatedData)
         toast.success("Referral rejected successfully", getToastOptions({}));
         setIsError("");
         onClose();

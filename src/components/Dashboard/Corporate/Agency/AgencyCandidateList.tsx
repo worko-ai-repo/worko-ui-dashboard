@@ -495,7 +495,6 @@ const AgencyCandidateList = () => {
 
             // Stop if all scored
             if (remainingCandidates.length === 0) {
-              console.log("✅ All scores received, stopping polling.");
               clearInterval(intervalId);
               setDataFromParent([]);
               setScoreLoading(false);

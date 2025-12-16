@@ -33,7 +33,6 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ itemsRaw, onSave,
       return;
     }
     let obj: { [key: string]: string } = {};
-    console.log(itemsRaw,"itemsRaw")
     Object.keys(itemsRaw).forEach((social) => {
       const socialLower = social.toLowerCase();
       if (socialLower === "linkedin" || socialLower === "github" || socialLower === "twitter") {
@@ -63,7 +62,6 @@ const SocialLinksEditor: React.FC<SocialLinksEditorProps> = ({ itemsRaw, onSave,
     );
     
     setEditedItems(formattedArray);
-    console.log(formattedArray)
   }, [itemsRaw]);
 
   const handleAddItem = () => {

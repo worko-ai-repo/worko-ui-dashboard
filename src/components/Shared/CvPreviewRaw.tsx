@@ -25,7 +25,7 @@ const CVPreviewRaw: React.FC<CVPreviewRawProps> = ({
   isContractCopy 
 }) => {
   useEffect(() => {
-    console.log(candidateFullDetails);
+    // console.log(candidateFullDetails);
   }, [candidateFullDetails]);
 
   const handleDownload = () => {

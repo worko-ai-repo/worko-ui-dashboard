@@ -62,8 +62,6 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
   
     const formSubmit = (data: any) => {
         const contractFile = data.contractCopy?.[0];
-        console.log("Form Data:", data);
-        console.log("Uploaded PDF File:", contractFile);
         reset()
         onClose()
       }

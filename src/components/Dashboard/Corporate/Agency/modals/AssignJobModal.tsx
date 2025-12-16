@@ -157,7 +157,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
   const removeSelectedJob = (id: string) => {
     setSelectedJobs(prev => {
       const filtered = prev.filter(job => job.id !== id);
-      console.log("After:", filtered.map(job => job.id));
+      // console.log("After:", filtered.map(job => job.id));
       return filtered;
     });
   };

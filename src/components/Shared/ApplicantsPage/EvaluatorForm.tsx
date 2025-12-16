@@ -271,7 +271,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
             const updatedData = {...rowData,jobApplicationStatus:"UNDER_EVALUATION"}
             localUpdate(rowData?.id,updatedData)
           }
-          console.log("Evaluator response:", response);
+          // console.log("Evaluator response:", response);
         })
       );
       toast.success("Evaluation requests sent successfully", getToastOptions({}));

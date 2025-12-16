@@ -157,7 +157,7 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
   const removeSelectedJob = (id: string) => {
     setSelectedJobs(prev => {
       const filtered = prev.filter(job => job.id !== id);
-      console.log("After:", filtered.map(job => job.id));
+      // console.log("After:", filtered.map(job => job.id));
       return filtered;
     });
   };
@@ -176,7 +176,6 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
       }
     try {
       const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
-      console.log(response)
       if (response?.data) {
         setCompanyJobs(response.data);
       } else {

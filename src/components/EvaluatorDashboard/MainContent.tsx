@@ -115,7 +115,7 @@ const MainContent: React.FC<MainContentProps> = ({
       }
 
       if (EvaluationRequestDetails.email && EvaluationRequestDetails.applicantUserId) {
-        console.log(EvaluationRequestDetails.applicantUserId)
+        // console.log(EvaluationRequestDetails.applicantUserId)
         try {
           const data = await fetchCandidateSocial(EvaluationRequestDetails.email);
           const filteredSocialLinks: any = {};

@@ -266,7 +266,6 @@ const fetchDatabaseData = useCallback(
       });
     }, []);
     const handleBulkBan = () =>{
-      console.log(fetchData)
       setFetchData((prevData:any) =>
         prevData.filter((candidate:any) =>
           !selectedRows.some((sel) => sel.id === candidate.id)
@@ -276,7 +275,6 @@ const fetchDatabaseData = useCallback(
     }
 
     const handleBulkDelete = () =>{
-      console.log(fetchData)
       setFetchData((prevData:any) =>
         prevData.filter((candidate:any) =>
           !selectedRows.some((sel) => sel.id === candidate.id)
@@ -499,10 +497,8 @@ const fetchDatabaseData = useCallback(
       toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
       return;
     }
-    console.log(pdfFiles);
     const payload = pdfFiles
     const uploadResponse:any = await invitingAgency(payload);
-    console.log(uploadResponse,"uploadResponse")
     if (!uploadResponse.success) {
       toast.error("File upload failed. Please try again.", getToastOptions({}));
       return; 
@@ -514,7 +510,6 @@ const fetchDatabaseData = useCallback(
       fileMimeType: "application/pdf",
     }
     const responseFromAws = await uploadContractToAws(payloadForAws);
-    console.log(responseFromAws,"response from aws")
     if (!responseFromAws.success) {
       toast.error("Failed to upload contract copy", getToastOptions({}));
       return;

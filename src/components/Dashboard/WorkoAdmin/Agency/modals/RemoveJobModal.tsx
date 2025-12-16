@@ -109,7 +109,6 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
   const handleSubmit = () => {
     setIsSubmitting(true);
     setTimeout(() => {
-      console.log('Selected Jobs:', selectedJobs);
       setIsSubmitting(false);
       setSelectedJobs([])
       onClose();
@@ -132,7 +131,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
 const removeSelectedJob = (id: string) => {
   setSelectedJobs(prev => {
     const filtered = prev.filter(job => job.id !== id);
-    console.log("After:", filtered.map(job => job.id));
+    // console.log("After:", filtered.map(job => job.id));
     return filtered;
   });
 };

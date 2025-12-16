@@ -198,7 +198,6 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
               contractCopyAwsS3FileName: responseFromAws?.data?.cloudFileName,
             }
           const createResponse = await createAgencyProfile(updatedPayload);
-            console.log(createResponse,'createResponse')
           if (!createResponse?.success) {
             toast.error("Adding new agency failed. Please try again.", getToastOptions({}));
             return;

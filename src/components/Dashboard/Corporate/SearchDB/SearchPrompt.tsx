@@ -30,7 +30,6 @@ const SearchPrompt: React.FC = () => {
 
     try {
       const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
-      console.log(response)
       if(response?.data){
         setJobsList(response.data)
       }
