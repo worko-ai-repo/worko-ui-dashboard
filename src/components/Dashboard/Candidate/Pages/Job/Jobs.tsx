@@ -198,11 +198,8 @@ const StatusFilterDropdown = [
   // Fetch counts
 
     const fetchCounts = async () => {
-      if(!userDetails?.email) {
-        return
-      }
+      if(!user?.email) return
         const { response } = await httpServiceObj.get<CountsProps>(`/counts/${user?.email}/JOB_APPLICATION/user`, true, {}, false,"JOB");
-        // console.log(response?.userJobApplicationCounts)
         setStats([
           { label: 'Total Applicants', value: response?.userJobApplicationCounts?.total ?? null },
           { label: 'Applied', value:  response?.userJobApplicationCounts?.applied ?? null },
@@ -222,10 +219,6 @@ const StatusFilterDropdown = [
       fetchJobs(1, pageSize, '');
     }
   }, [user, fetchJobs, pageSize, data]);
-
-  useEffect(() => {
-    console.log(data)
-  }, [data])
   
   // Clean up debounced function on unmount
   useEffect(() => {

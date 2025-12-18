@@ -54,10 +54,10 @@ interface Stat {
     const [lastKeyMap, setLastKeyMap] = useState<Record<number, string>>({});
     const [stats, setStats] = useState<Stat[]>([
       { label: 'Total Applicants', value: null },
-      { label: 'Rejected', value: null },
-      { label: 'Pending', value: null },
       { label: 'New Applicants', value: null },
+      { label: 'Pending', value: null },
       { label: 'Hired', value: null },
+      { label: 'Rejected', value: null },
     ]);
 
     const StatusFilterDropdown = [
@@ -148,15 +148,14 @@ interface Stat {
   };
 
   const fetchCounts = async()=>{
-    if(!userDetails?.email) return
-      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFER_AND_EARN/user`,true,{},false,"JOB")
-      // console.log(response)
+    if(!user?.email) return
+      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${user?.email}/REFER_AND_EARN/user`,true,{},false,"JOB")
         setStats([
         { label: 'Total Applicants', value: response?.referAndEarnJobApplicationCounts?.total ?? null },
-        { label: 'Rejected', value: response?.referAndEarnJobApplicationCounts?.rejected ?? null },
-        { label: 'Pending', value: response?.referAndEarnJobApplicationCounts?.pending ?? null },
         { label: 'New Applicants', value: response?.referAndEarnJobApplicationCounts?.applied ?? null },
+        { label: 'Pending', value: response?.referAndEarnJobApplicationCounts?.pending ?? null },
         { label: 'Hired', value: response?.referAndEarnJobApplicationCounts?.hired ?? null },
+        { label: 'Rejected', value: response?.referAndEarnJobApplicationCounts?.rejected ?? null },
       ]);
   }
 
