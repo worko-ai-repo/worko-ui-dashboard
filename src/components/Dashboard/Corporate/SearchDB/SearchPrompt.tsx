@@ -10,9 +10,11 @@ import httpServiceObj from '@Services/ApiHandler.service';
 
 const SearchPrompt: React.FC = () => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"jobs" | "prompt">("jobs");
+  const [mode, setMode] = useState<"jobs" | "prompt">("prompt");
   const [jobsList,setJobsList] = useState([]);
   const [isFetchingJobs,setIsFetchingJobs] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string>("");
+
   const { userDetails } = useAppContext();
 
   useEffect(()=>{
@@ -94,9 +96,17 @@ const SearchPrompt: React.FC = () => {
   ];
 
   const handleSubmit = () => {
-    if (!input.trim()) return;
-    // console.log(mode,input)
-    navigate(`/corporate/aSearchDB/results?${mode}=${encodeURIComponent(input.trim())}`);
+    if (mode === "jobs") {
+      if (!selectedJobId) return;
+      navigate(
+        `/corporate/aSearchDB/results?jobs=${encodeURIComponent(selectedJobId)}`
+      );
+    } else {
+      if (!input.trim()) return;
+      navigate(
+        `/corporate/aSearchDB/results?prompt=${encodeURIComponent(input.trim())}`
+      );
+    }
   };
 
   return (
@@ -138,11 +148,11 @@ const SearchPrompt: React.FC = () => {
         jobsList={jobsList}
         input={input}
         setInput={setInput}
+        setSelectedJobId={setSelectedJobId}
         handleSubmit={handleSubmit}
       />
     </div>
     <button
-      disabled={true}
       onClick={handleSubmit}
       className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
     >
@@ -173,7 +183,7 @@ const SearchPrompt: React.FC = () => {
         </button>
       )}
       <button
-        disabled={true}
+        // disabled={true}
         onClick={handleSubmit}
         className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
       >

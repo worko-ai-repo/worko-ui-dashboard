@@ -12,7 +12,11 @@ import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 import httpServiceObj from "@Services/ApiHandler.service";
 import MoveToApplicants from "./modals/MoveToApplicants";
-
+import { toast } from "react-toastify";
+import { getToastOptions } from "lib-worko-ui";
+import Modal from "@Components/Shared/Modal";
+import NoDataPresent from "@Components/Shared/NoDataPresent";
+import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -51,6 +55,11 @@ export default function SearchResultsTable(props: any) {
     data,
     handleUpdate,
     userType,
+    currentPage,
+    pageSize,
+    hasMore,
+    onPageChange,
+    onPageSizeChange,
   } = props as any;
 
   // State required for table interactions
@@ -63,20 +72,24 @@ export default function SearchResultsTable(props: any) {
   const [editProfileView,setEditProfileView] = useState<boolean>(false)
   const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
   const [isAssignJobModelOpen,setIsAssignJobModelOpen] = useState<boolean>(false);
+  const [pdfViewDetails, setPdfViewDetails] = useState<string>();
+  const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false)
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
-
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
-    yoe: ["yoe", "applicantDetails.YOE"],
-    matchingScore: ["matchingScore", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
-    experience: ["applicantDetails.YOE", "yoe"],
-    location: ["applicantDetails.location"],
-    applicantDetails_candidateExperience_designation: ["applicantDetails.candidateExperience.designation"],
-    applicantDetails_CTC: ["applicantDetails.CTC"],
-    current_CTC: ["applicantDetails.CTC"], //changed currentCTC to current_CTC
-    ECTC: ["applicantDetails.ECTC"],
-    remarks: ["remarks", "remark"],
+    candidateName: ["name"],
+    currentCompany: ["currentCompany"],
+    email: ["email"],
+    contact: ["phoneNumberDetails.number"],
+    coreSkills: ["coreSkills.skillName"],
+    currentDesignation: ["currentDesignation"],
+    relevantYOE: ["relevantYOE"],
+    source: ["source"],
+    about: ["about"],
+    currentCTC: ["currentCTC"],
+    expectedCTC: ["expectedCTC"],
   };
   const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(data, keyFallbacks, {
     tableId: `database`,
@@ -141,12 +154,12 @@ const columns = [
     {
         key: "candidateName",
         label: "Candidate Name",
-        sortable: false,
+        sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
                 <span 
-                title={row?.candidateName}
-                className="truncate block w-full">{row?.candidateName ?? "NA"}</span>
+                title={row?.name}
+                className="truncate block w-full">{row?.name ?? "NA"}</span>
             </div>
         ),
     },
@@ -156,7 +169,9 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.currentCompany ?? "NA"}</span>
+                <span
+                title={row?.currentCompany}
+                className="truncate block w-full">{row?.currentCompany ?? "NA"}</span>
             </div>
         ),
     },
@@ -166,7 +181,9 @@ const columns = [
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.emailId ?? "NA"}</span>
+                <span 
+                title={row?.email}
+                className="truncate block w-full">{row?.email ?? "NA"}</span>
             </div>
         ),
     },
@@ -175,25 +192,36 @@ const columns = [
         label: "Contact no",
         sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.contactNumber ?? "NA"}</span>
+        <div className='flex justify-center m-auto'>
+                <span 
+                title={row?.phoneNumberDetails?.number.toString()}
+                className="truncate block w-full">+{row?.phoneNumberDetails?.countryCode ?? ""} {row?.phoneNumberDetails?.number ?? "NA"}</span>
             </div>
         ),
     },
     {
         key: "coreSkills",
         label: "Core skills",
-        sortable: false,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-start'>
-                <span title={row?.coreSkills} className="truncate block w-full">{row?.coreSkills ?? "NA"}</span>
+        sortable: true,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => {
+            const skillsText = row.coreSkills
+            .map(skill => skill.skillName)
+            .join(", ");
+
+            return (
+            <div
+                className="w-[150px] truncate"
+                title={skillsText}
+            >
+                {skillsText}
             </div>
-        ),
+            );
+        },
     },
     {
         key: "currentDesignation",
         label: "Current Designation",
-        sortable: false,
+        sortable: true,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto w-[150px]'>
                 <span 
@@ -208,30 +236,36 @@ const columns = [
         sortable: true,
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto bc'>
-            <span>{row?.YOE ?? "NA"}</span>
+        <div className='flex justify-center m-auto'>
+            <span>{row?.relevantYOE ?? "NA"}</span>
         </div>
         ),
     },
     {
-    key: "source",
-    label: "Source",
-    sortable: true,
-    render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-            <span 
-                title={row?.source}
-                className="truncate block w-full">{row?.source ?? "NA"}</span>
-        </div>
-    ),
+        key: "source",
+        label: "Source",
+        sortable: false,
+        render: (row: AgencyDatabaseApplicantDetailsDto) => (
+            <div className='flex justify-center m-auto w-[150px]'>
+                <span 
+                    title={row?.source}
+                    className="truncate block w-full">
+                    {row?.source ?? "NA"}
+                </span>
+            </div>
+        ),
     },
     {
         key: "about",
         label: "About",
         sortable: false,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-start'>
-                <span title={row?.about}className="truncate block w-full">{row?.about ?? "NA"}</span>
+            <div className='flex justify-center m-auto w-[150px] text-center'>
+                <span 
+                    title={row?.about}
+                    className="truncate block w-full">
+                    {row?.about ?? "NA"}
+                </span>
             </div>
         ),
     },
@@ -242,7 +276,7 @@ const columns = [
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.CTC ?? "NA"}</span>
+                <span>{row?.currentCTC ?? "NA"}</span>
             </div>
         ),
     },
@@ -253,20 +287,25 @@ const columns = [
         contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.ECTC ?? "NA"}</span>
+                <span>{row?.expectedCTC ?? "NA"}</span>
             </div>
         ),
     },
     {
-        key: "link",
-        label: "CV link",
+        key: "viewCV",
+        label: "CV",
         sortable: false,
-        contentWidth: `max-w-none`,
         render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto'>
-                <a href={row?.cvLink} className="text-blue-400">Link</a>
-            </div>
-        ),
+        <div className='flex justify-center m-auto w-[40px]'>
+            <button
+            className="flex flex-row justify-center items-center"
+            onClick={()=>{
+            viewCV(row)
+            }}>
+            <img src={View} alt="View" className="w-8 h-8 btn-sky shrink-0 "/>
+            </button>
+        </div>
+        )
     },
     {
         key: "action",
@@ -360,6 +399,76 @@ const columns = [
 //   );
 // };
 
+  const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
+    setEditProfileData(row)
+    if(row?.cvAwsS3ResourceType === "USER_RESUME"){
+      if(!row?.userDetailId || !row?.cvAwsS3FileName){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
+      try {
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.userDetailId}/${row?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
+
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        setPdfViewDetails(response?.objectUrl)
+        setIsViewCVModalOpen(true)
+      } catch (error) {
+        console.log(error)
+      }
+    }else if(row?.cvAwsS3ResourceType === "BULK_CVS"){
+      if(!row?.companyId 
+        || !row?.cvAwsS3FileName
+        || !row?.corporateBulkJdId 
+      ){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
+      try {
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.companyId}/${row?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.corporateBulkJdId }, false, "BASE")
+
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        setPdfViewDetails(response?.objectUrl)
+        setIsViewCVModalOpen(true)
+      } catch (error) {
+        console.log(error)
+      }      
+    }
+    else{
+      if(!row?.companyId 
+        || !row?.jobId 
+        || !row?.agencyUserId 
+        || !row?.cvAwsS3FileName
+      ){
+        toast.error("Missing details",getToastOptions({}))
+        return
+      }
+      const payload = {
+        companyId: row?.companyId,
+        jobId:row?.jobId,
+        agencyUserId: row?.agencyUserId,
+        candidateCvAwsS3FileName: row?.cvAwsS3FileName,
+      }
+      try {
+        const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
+        
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        setPdfViewDetails(response.objectUrl)
+        setIsViewCVModalOpen(true)
+      } catch (error) {
+        console.log(error)
+      }
+    }
+  }
+
   return (
     <>
       {/* Deselect button - only show when rows are selected */}
@@ -390,12 +499,12 @@ const columns = [
         // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
-        pageSize={10}
-        setPageSize={() => {}}
-        hasPrevPage={false}
-        hasNextPage={false}
-        handlePreviousPage={() => {}}
-        handleNextPage={() => {}}
+        pageSize={pageSize}
+        setPageSize={onPageSizeChange}
+        hasPrevPage={currentPage > 1}
+        hasNextPage={hasMore}
+        handlePreviousPage={() => onPageChange(currentPage - 1)}
+        handleNextPage={() => onPageChange(currentPage + 1)}
         />
         {editProfileData && (
         <MoveToApplicants
@@ -406,6 +515,25 @@ const columns = [
           userDetails={userDetails}
           />
         )}
+        <Modal
+          isOpen={isViewCVModalOpen}
+          onClose={() => {
+            setIsViewCVModalOpen(false);
+          }}
+          className="w-[90vw] sm:max-w-4xl h-full">
+          {!pdfViewDetails ? (
+            <NoDataPresent />
+          ) : (
+            <CVPreviewRaw 
+            pdfUrl={pdfViewDetails} 
+            onClose={() => {
+              setIsViewCVModalOpen(false)
+              setEditProfileData(undefined)
+            }} 
+            candidateFullDetails={editProfileData}
+            showDownload={true}/>
+          )}
+        </Modal>
     </>
   );
 }

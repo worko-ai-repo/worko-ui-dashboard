@@ -122,6 +122,15 @@ export interface AgencyDatabaseApplicantDetailsDto {
   refereeType: string;
   updatedAt: string;
   candidateProfileInCompanies: CandidateProfileInCompanies[];
+  name:string;
+  email:string;
+  relevantYOE:number;
+  currentCTC:number;
+  expectedCTC:number;
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS";
+  cvAwsS3FileName:string;
+  userDetailId:string;
+  corporateBulkJdId:string;
 
   //fake data
   emailId: string;
@@ -135,7 +144,9 @@ export interface AgencyDatabaseApplicantDetailsDto {
   candidateName: string;
   currentCompany: string;
   contactNumber: string;
-  coreSkills: any;
+  coreSkills: {
+    skillName:string;
+  }[];
   currentDesignation: string;
   YOE: string;
   source: string;
