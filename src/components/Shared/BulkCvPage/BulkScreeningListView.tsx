@@ -1,5 +1,5 @@
 import { FunctionComponent, useState, useCallback, useMemo, useEffect } from "react";
-import { Column, DynamicTable } from "../DynamicTable";
+import { Column, NewDynamicTable } from "../NewDynamicTable";
 import { eyeIcon } from "@AssetsFolder/assets";
 import { BulkScreeningListItemDto } from "src/types/interface/CorporateServices.dto";
 import { useAppContext } from "@Context/App.context";
@@ -45,7 +45,7 @@ const ScreeningListView: FunctionComponent = () => {
     screenOnDate: ["createdAt", "createdAt"],
     doneBy: ["createdByCorporateUserId", "createdByCorporateUserId"],
   };
- 
+
   const params: Omit<CursorPaginationAdminBulkScreenedJobsParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "descending",
@@ -56,7 +56,7 @@ const ScreeningListView: FunctionComponent = () => {
       queryKey: ["CorporateJobsApplicationQuery", params],
       queryFn: CorporateServiceObj.fetchBulkScreenedJobs,
       baseParams: params,
-       enabled: !!companyId, // only run if companyId exists
+      enabled: !!companyId, // only run if companyId exists
     });
 
   /**
@@ -87,23 +87,21 @@ const ScreeningListView: FunctionComponent = () => {
               day: "numeric",
             })
           : "Not mentioned",
-        doneBy: item?.corporateUserDetails?.firstName 
-          ? `${item.corporateUserDetails.firstName}${item.corporateUserDetails.lastName || ''}`
-          : (item)?.userDetails?.name || "Not mentioned",
+        doneBy: item?.corporateUserDetails?.firstName
+          ? `${item.corporateUserDetails.firstName}${item.corporateUserDetails.lastName || ""}`
+          : item?.userDetails?.name || "Not mentioned",
       }));
     } else {
       console.warn("Data is not in the expected format or is empty.");
       return [];
     }
   }, [data]); // Only recalculate when data changes
-  const { sortedData, onSortChange } = useSortableData(transformedData, keyFallbacks,
-    {
-      tableId:"screening-applicant-view",
-      defaultSort:null,
-      persistInLocalStorage:false,
-      persistInUrl:true
-    }
-  );
+  const { sortedData, onSortChange } = useSortableData(transformedData, keyFallbacks, {
+    tableId: "screening-applicant-view",
+    defaultSort: null,
+    persistInLocalStorage: false,
+    persistInUrl: true,
+  });
   const returnUrl = useMemo(() => {
     const search = location.search || "?tab=screening-list";
     return `${location.pathname}${search}`;
@@ -186,24 +184,22 @@ const ScreeningListView: FunctionComponent = () => {
   return isLoading ? (
     <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
   ) : (
-
-      <div className="p-6">
-        <div className="max-w-full mx-auto">
-          <DynamicTable
-            columns={columns}
-            rows={sortedData ?? []}
-            enableSelect={false}
-            onSortChange={onSortChange}
-            pageSize={pageSize}
-            setPageSize={setPageSize}
-            handlePreviousPage={goToPreviousPage}
-            handleNextPage={goToNextPage}
-            hasNextPage={hasNextPage}
-            hasPrevPage={hasPreviousPage}
-          />
-        </div>
+    <div className="p-6">
+      <div className="max-w-full mx-auto">
+        <NewDynamicTable
+          columns={columns}
+          rows={sortedData ?? []}
+          enableSelect={false}
+          onSortChange={onSortChange}
+          pageSize={pageSize}
+          setPageSize={setPageSize}
+          handlePreviousPage={goToPreviousPage}
+          handleNextPage={goToNextPage}
+          hasNextPage={hasNextPage}
+          hasPrevPage={hasPreviousPage}
+        />
       </div>
-
+    </div>
   );
 };
 

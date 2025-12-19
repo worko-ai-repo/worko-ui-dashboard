@@ -1,4 +1,4 @@
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
@@ -453,7 +453,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
 
   return (
     <>
-      <DynamicTable<CorporateUserPageRecDataDto>
+      <NewDynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

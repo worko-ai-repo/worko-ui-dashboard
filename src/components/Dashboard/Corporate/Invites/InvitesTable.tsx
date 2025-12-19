@@ -4,7 +4,6 @@ import Modal from "../../../Shared/Modal";
 import InviteForm from "../../../Shared/CorporateInvite/SendInviteForm";
 import RevokeForm from "../../../Shared/CorporateInvite/RevokeForm";
 import { CorporateInvite } from "@Interfaces/CorporateDashboard.dto";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 import { handleInvitePatch } from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUserTable";
 import { CorporateUserPageRecDataDto } from "@Interfaces/AdminServices.dto";
@@ -13,6 +12,7 @@ import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 interface InviteTableProps {
   data: CorporateUserPageRecDataDto[];
@@ -37,8 +37,8 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
   const KeyFallback = {
     name: ["firstName", "lastName"],
   };
-  const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback,{
-    defaultSort:null,
+  const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback, {
+    defaultSort: null,
     tableId: "invite-table",
     persistInUrl: true,
     persistInLocalStorage: false,
@@ -144,39 +144,44 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
         </>
       ),
     },
-    ...(secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) === UserRole.CORPORATE_ADMIN  ? [{
-      key: "revoke",
-      label: "Revoke",
-      render: (row: (typeof data)[0]) => (
-        <>
-          {row.inviteStatus !== "DELETED" && (
-            <button
-              onClick={async () => {
-                if (row.inviteStatus === "ACCEPTED") {
-                  if (row?.corporateUserDetails?.id) {
-                    await handleInvitePatch(
-                      row.corporateUserDetails.id,
-                      "DELETE_CORPORATE_USER",
-                      fetchInvites
-                    );
-                  }
-                } else {
-                  setIsRevokedModalOpen(true);
-                  setSelectedInviteId(row.id);
-                }
-              }}
-              className="p-1 rounded-full border-2 border-red-500 hover:bg-gray-100">
-              <Minus className="text-red-500 font-bold" size={16} />
-            </button>
-          )}
-        </>
-      ),
-    }] : [])
+    ...(secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) ===
+    UserRole.CORPORATE_ADMIN
+      ? [
+          {
+            key: "revoke",
+            label: "Revoke",
+            render: (row: (typeof data)[0]) => (
+              <>
+                {row.inviteStatus !== "DELETED" && (
+                  <button
+                    onClick={async () => {
+                      if (row.inviteStatus === "ACCEPTED") {
+                        if (row?.corporateUserDetails?.id) {
+                          await handleInvitePatch(
+                            row.corporateUserDetails.id,
+                            "DELETE_CORPORATE_USER",
+                            fetchInvites
+                          );
+                        }
+                      } else {
+                        setIsRevokedModalOpen(true);
+                        setSelectedInviteId(row.id);
+                      }
+                    }}
+                    className="p-1 rounded-full border-2 border-red-500 hover:bg-gray-100">
+                    <Minus className="text-red-500 font-bold" size={16} />
+                  </button>
+                )}
+              </>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (
     <>
-      <DynamicTable<CorporateUserPageRecDataDto>
+      <NewDynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
         rows={sortedData ?? []}
         onSortChange={onSortChange}

@@ -1,10 +1,9 @@
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
-import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 
-import { Eye, Link, Loader2 } from "lucide-react";
+import {Link, Loader2 } from "lucide-react";
 import { useState } from "react";
 import ProgressCircle from "@Components/Shared/CircularBar";
 import Timeline, { TimelineStep } from "@Components/Shared/Timeline";
@@ -14,7 +13,6 @@ import CommonDashboardServicesObj, {
 import { ReferralStatusType } from "src/types/JobsAndApplication.type";
 import { ReferralDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { View } from "@AssetsFolder/assets";
-import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewExtraReferrakDetailsModal";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import ScorePointsModal from "@Components/Shared/DetailedAnalysis";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
@@ -31,7 +29,6 @@ interface ReferralTableProps {
 
 const ReferralTable: React.FC<ReferralTableProps> = ({
   data,
-  fetchReferrals,
   queryKey,
   pagination,
 }) => {
@@ -261,7 +258,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({
 
   return (
     <>
-      <DynamicTable<ReferralDetailsDto>
+      <NewDynamicTable<ReferralDetailsDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

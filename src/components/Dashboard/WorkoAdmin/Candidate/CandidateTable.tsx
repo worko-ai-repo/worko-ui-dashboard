@@ -1,7 +1,7 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -288,7 +288,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   };
   return (
     <>
-      <DynamicTable<ApplicantDetails>
+      <NewDynamicTable<ApplicantDetails>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}
@@ -312,13 +312,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         {!pdfViewDetails ? (
           <NoDataPresent />
         ) : (
-          <CVPreviewRaw pdfUrl={pdfViewDetails}
-          candidateName={
-            pdfViewUserDetails?.name || "Candidate"
-          }
-          companyName={pdfViewUserDetails?.companyName}
-          YOE={pdfViewUserDetails?.YOE}
-          onClose={() => setIsViewCVModalOpen(false)} />
+          <CVPreviewRaw
+            pdfUrl={pdfViewDetails}
+            candidateName={pdfViewUserDetails?.name || "Candidate"}
+            companyName={pdfViewUserDetails?.companyName}
+            YOE={pdfViewUserDetails?.YOE}
+            onClose={() => setIsViewCVModalOpen(false)}
+          />
         )}
       </Modal>
       <Modal

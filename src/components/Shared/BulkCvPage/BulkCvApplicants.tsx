@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, FileText, ArrowLeft } from "lucide-react";
-import { DynamicTable, Column } from "../DynamicTable";
+import { NewDynamicTable, Column } from "../NewDynamicTable";
 import ProgressCircle from "@Components/Shared/CircularBar";
 
 import { useAppContext } from "@Context/App.context";
@@ -404,7 +404,7 @@ export default function ApplicantScreeningTable() {
       </div>
 
       {/* Table Section */}
-      <DynamicTable
+      <NewDynamicTable
         columns={columns}
         renderExpandedDetails={renderExpandedDetails}
         toggleExpand={toggleExpand}

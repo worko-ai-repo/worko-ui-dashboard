@@ -11,7 +11,6 @@ import RequestDocumentModal, {
   RequestDocModalProps,
 } from "@Components/Shared/ApplicantsPage/RequestDocModal";
 import Modal from "../../../Shared/Modal";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Assets and interfaces
@@ -51,7 +50,7 @@ import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedba
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import interviewService from "@Services/Interview.service";
-import { DynamicTableApplications } from "@Components/Shared/DynamicTableApplications";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ApplicantExpandedRowDetails, {
   expandedExtraApplicationRow,
 } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
@@ -833,7 +832,7 @@ export default function ApplicationTable({
       </button>
 
       {/* Main table component */}
-      <DynamicTableApplications
+      <NewDynamicTable
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}

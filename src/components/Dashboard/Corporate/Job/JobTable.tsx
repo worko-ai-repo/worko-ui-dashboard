@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { Filter, X, Link, Loader2 } from "lucide-react";
-import { DynamicTable, Column } from "../../../Shared/DynamicTable";
 import Modal from "../../../Shared/Modal";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
@@ -15,6 +14,7 @@ import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -37,7 +37,7 @@ interface JobsTableProps {
   fetchNextPage: () => void;
   fetchPreviousPage: () => void;
   pageSize: number;
-  setPageSize:any;
+  setPageSize: any;
   getAllSelected: (data: JobData[]) => boolean;
   isUpdating?: boolean;
 }
@@ -67,22 +67,23 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   } | null>(null);
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const keyFallbacksforJobs = {
-    countCompanyJob_allJobApplicationCounts_total: ["countCompanyJob.allJobApplicationCounts.total"],
-    countCompanyJob_allJobApplicationCounts_applied: ["countCompanyJob.allJobApplicationCounts.applied"],
+    countCompanyJob_allJobApplicationCounts_total: [
+      "countCompanyJob.allJobApplicationCounts.total",
+    ],
+    countCompanyJob_allJobApplicationCounts_applied: [
+      "countCompanyJob.allJobApplicationCounts.applied",
+    ],
     location: ["location.fullLocation", "location.city", "location.state", "location.country"],
   };
   // Enhanced sortable data hook with URL params persistence
-  const { sortedData, sortConfig, onSortChange } = useSortableData(
-    data,
-    keyFallbacksforJobs,
-    {
-      tableId: `corporate-jobs-${activeTab}`, // Unique ID per tab
-      persistInUrl: true,
-      defaultSort: activeTab === "PUBLISHED" 
+  const { sortedData, sortConfig, onSortChange } = useSortableData(data, keyFallbacksforJobs, {
+    tableId: `corporate-jobs-${activeTab}`, // Unique ID per tab
+    persistInUrl: true,
+    defaultSort:
+      activeTab === "PUBLISHED"
         ? { key: "createdAt", order: "desc" }
-        : { key: "updatedAt", order: "desc" }
-    }
-  );
+        : { key: "updatedAt", order: "desc" },
+  });
 
   const nav = useNavigate();
 
@@ -117,9 +118,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             data-tooltip-delay-hide={500}>
             {row.jobTitle}
           </span>
-          {updatingJobId === row.id && (
-            <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-          )}
+          {updatingJobId === row.id && <Loader2 className="w-4 h-4 animate-spin text-blue-500" />}
         </div>
       ),
     },
@@ -132,10 +131,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           row.location.city ||
           row.location.state ||
           row.location.country || ["Not specified"];
-        return <span 
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={locations.join(", ")}
-        className="capitalize">{locations.join(", ")}</span>;
+        return (
+          <span
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={locations.join(", ")}
+            className="capitalize">
+            {locations.join(", ")}
+          </span>
+        );
       },
     },
     {
@@ -146,8 +149,22 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       },
     },
     { key: "department", label: "Department", sortable: true },
-    { key: "countCompanyJob_allJobApplicationCounts_total", label: "Total Applicants", sortable: true,render: (row: JobData) => <div>{row?.countCompanyJob?.allJobApplicationCounts?.total || 0}</div> },
-    { key: "countCompanyJob_allJobApplicationCounts_applied", label: "New Applicants", sortable: true, render: (row: JobData) => <div>{row?.countCompanyJob?.allJobApplicationCounts?.applied || 0}</div> },
+    {
+      key: "countCompanyJob_allJobApplicationCounts_total",
+      label: "Total Applicants",
+      sortable: true,
+      render: (row: JobData) => (
+        <div>{row?.countCompanyJob?.allJobApplicationCounts?.total || 0}</div>
+      ),
+    },
+    {
+      key: "countCompanyJob_allJobApplicationCounts_applied",
+      label: "New Applicants",
+      sortable: true,
+      render: (row: JobData) => (
+        <div>{row?.countCompanyJob?.allJobApplicationCounts?.applied || 0}</div>
+      ),
+    },
     // { key: "pendingApplicants", label: "Pending", sortable: true },
     { key: "department", label: "Department", sortable: true },
     ...(activeTab === "PUBLISHED"
@@ -292,7 +309,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               className: "btn-blue shrink-0",
               tooltip: "Archive Job",
               onClick: () =>
-                handleUpdateJobStatus("ARCHIVED", { id: row.id, companyId: row?.companyDetails?.id }),
+                handleUpdateJobStatus("ARCHIVED", {
+                  id: row.id,
+                  companyId: row?.companyDetails?.id,
+                }),
               disabled: isRowUpdating,
             },
           ],
@@ -322,7 +342,10 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               className: "btn-sky shrink-0",
               tooltip: "Repost Job",
               onClick: () =>
-                handleUpdateJobStatus("PUBLISHED", { id: row.id, companyId: row?.companyDetails?.id }),
+                handleUpdateJobStatus("PUBLISHED", {
+                  id: row.id,
+                  companyId: row?.companyDetails?.id,
+                }),
               disabled: isRowUpdating,
             },
             {
@@ -353,7 +376,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             {buttons.map((btn, idx) => (
               <button
                 key={idx}
-                className={`${btn.className} ${btn.disabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                className={`${btn.className} ${
+                  btn.disabled ? "opacity-50 cursor-not-allowed" : ""
+                }`}
                 onClick={btn.onClick}
                 title={btn.tooltip}
                 disabled={btn.disabled}>
@@ -384,7 +409,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         </span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
-      <DynamicTable<JobData>
+      <NewDynamicTable<JobData>
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}

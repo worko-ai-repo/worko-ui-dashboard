@@ -1,4 +1,4 @@
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+
 import Modal from "@Components/Shared/Modal";
 
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -11,7 +11,6 @@ import CommonDashboardServicesObj, {
 } from "@Utils/CommonDashboard.utils";
 
 import { View } from "@AssetsFolder/assets";
-import ViewExtraReferralDetailsModal from "@Components/Modals/SharedModals/ViewExtraReferrakDetailsModal";
 import { GuidanceRequestDto } from "@Interfaces/AdminServices.dto";
 import GuidanceModal from "./GuidanceModal";
 import GuidanceUpdateModal from "./GuidanceUpdateModal";
@@ -19,6 +18,7 @@ import { GUIDANCE_REQUEST_TYPE_LABELS } from "@TypesAndConstants/common.constant
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 interface GuidancePageTableProps {
   data: GuidanceRequestDto[];
@@ -272,7 +272,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
   };
   return (
     <>
-      <DynamicTable<GuidanceRequestDto>
+      <NewDynamicTable<GuidanceRequestDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}
