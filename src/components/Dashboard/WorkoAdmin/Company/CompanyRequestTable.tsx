@@ -127,7 +127,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       contentWidth: "max-w-none",
       render: (row: CompanyRequestDto) => (
         <span
-          className={`px-3 py-0 rounded-full text-white font-semibold ${
+          className={`px-3 py-0.5  rounded-full text-white font-semibold ${
             row.status === "approved"
               ? "bg-green-500"
               : row.status === "denied"
@@ -143,9 +143,11 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       key: "action",
       label: "Actions",
       render: (row: CompanyRequestDto) => (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex justify-center flex-col sm:flex-row gap-2">
           <button
             disabled={row.status === "denied" || row.status === "approved" || isUpdating}
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="Approve Company Request"
             onClick={() => {
               //form the companyrequest data to company data type
               const rowAsCompany: CompanyDto = {
@@ -178,6 +180,8 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
             <CheckCircle2Icon className=" text-white p-1" />
           </button>
           <button
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="Delete Company Request"
             disabled={row.status === "denied" || row.status === "approved" || isUpdating}
             onClick={() =>
               dispatch({

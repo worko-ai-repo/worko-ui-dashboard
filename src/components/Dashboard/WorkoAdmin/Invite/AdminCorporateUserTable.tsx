@@ -382,7 +382,9 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 }
                 disabled={isDeleted}
                 className=" btn_disabled px-2 py-2 rounded-lg text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Delete User">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Delete User"
+                >
                 <Trash size={14} />
               </button>
             )}
@@ -393,7 +395,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 disabled={CantRevoke}
                 onClick={() => handleResendInvite(subRow?.id)}
                 className="btn_disabled px-2 py-1.5 rounded-lg text-white bg-blue-500 hover:bg-blue-600"
-                title="Resend Invite">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Resend Invite">
                 <Send size={14} />
               </button>
             )}
@@ -404,7 +407,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 disabled={CantRevoke}
                 onClick={() => handleRevokeInviteForMainTable(subRow?.id)}
                 className="btn_disabled p-1 rounded-full border-2 border-red-600 hover:bg-red-50"
-                title="Revoke Invite">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Revoke Invite">
                 <Minus className="text-red-500 font-bold" size={14} />
               </button>
             )}

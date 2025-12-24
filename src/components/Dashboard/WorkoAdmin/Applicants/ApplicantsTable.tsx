@@ -638,7 +638,7 @@ export default function ApplicationTable({
       label: "Not Responding",
       render: () => (
         <div className="flex items-center justify-center">
-          <button title="Not Responding">
+          <button data-tooltip-id="my-tooltip" data-tooltip-content="Mark as Not Responding">
             <img src={`${Not_Responding}`} alt="Not Responding" className="w-8 h-8" />
           </button>
         </div>

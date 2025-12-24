@@ -173,7 +173,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
       render: (row: ApplicantDetails) => (
         <button
           key="view-cv"
-          title="View CV"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content="View CV"
           onClick={async () => {
             await handleFetchAndOpenCV(row);
           }}
@@ -193,6 +194,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
           <div className="flex gap-3 px-2 justify-between">
             <button
               disabled={row.isNumberVerified === true || isUpdating || isRowUpdating}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Verify Mobile Number"
               onClick={() => {
                 handleVerifyClick("MOBILE", row);
               }}
@@ -209,6 +212,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
 
             <button
               disabled={row.isEmailVerified === true || isUpdating || isRowUpdating}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Verify Email Address"
               onClick={() => {
                 handleVerifyClick("EMAIL", row);
               }}

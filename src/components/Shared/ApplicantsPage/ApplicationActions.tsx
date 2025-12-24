@@ -25,6 +25,9 @@ import {
   Forward,
   Fingerprint,
   FileStack,
+  HelpingHand,
+  LucideFileCheck2,
+  ClipboardEditIcon,
 } from "lucide-react";
 import { CompanyDetails, JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
@@ -143,7 +146,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     ACCEPT: (
       <button
         key="accept"
-        title="Accept"
+        Data-tooltip-id="my-tooltip"
+        Data-tooltip-content="Accept Application"
         onClick={() => handleAcceptForAdmin(row)}
         className="btn-success">
         <Check size={16} />
@@ -153,7 +157,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     REJECT: (
       <button
         key="reject"
-        title="Reject"
+        Data-tooltip-id="my-tooltip"
+        Data-tooltip-content="Reject Application"
         onClick={() => {
           const payload: JobApplicationUpdatePayloadDto = {
             applicantName: row.applicantDetails.name,
@@ -172,7 +177,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     HIRE: (
       <button
         key="hire"
-        title="Initiate Hiring"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Initiate Hiring"
         onClick={() => handleStatusUpdate("HIRING_IN_PROCESS", row)}
         className="btn-hiring flex gap-2 items-center">
         <UserCheck size={16} />
@@ -182,7 +188,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     HIRE_NOW: (
       <button
         key="hire-now"
-        title="Hire Now"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Hire Now"
         onClick={() => setIsHireNowModalOpen({ isOpen: true, jobData: row })}
         className="btn-hiring flex gap-2 items-center">
         <SquareCheckBig size={16} />
@@ -192,7 +199,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     ONHOLD: (
       <button
         key="hold"
-        title="Hold"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Hold Application"
         className="flex gap-2 items-center btn-warning"
         onClick={() => handleStatusUpdate("ON_HOLD", row)}>
         <Pause size={16} />
@@ -201,7 +209,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     VIEW_CV: (
       <button
         key="view-cv"
-        title="View CV"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View CV"
         onClick={() => {
           setPdfViewDetails(row.id);
           setIsViewCVModalOpen(true);
@@ -217,7 +226,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     NOTES: (
       <button
         key="notes"
-        title="Notes"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Add/View Notes"
         className="flex gap-2 items-center btn-info"
         onClick={() =>
           setIsNoteModalOpen({
@@ -232,7 +242,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     VIEW_EVALUATION: (
       <button
         key="view-eval"
-        title="View Evaluation"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View Evaluation"
         onClick={() => setViewEvaluation({ isOpen: true, jobApplicationData: row })}
         className="flex items-center gap-2 btn-info">
         <FileCheck2 size={16} />
@@ -242,7 +253,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     SEND_TO_EVALUATOR: (
       <button
         key="send-eval"
-        title="Send to Evaluator"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Send to Evaluator"
         onClick={() => {
           const companyDetails: CompanyDetails | null = secureStorage.getItem(
             SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
@@ -276,7 +288,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     PROCESS_INTERVIEW: (
       <button
         key="process-interview"
-        title="Process Interview"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Process Interview"
         onClick={() => handleStatusUpdate("PROCESSING_INTERVIEW", row)}
         className="btn-process flex gap-2 items-center">
         <Clipboard className="w-4 h-4" />
@@ -286,7 +299,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     INTERVIEW_DONE: (
       <button
         key="interview-done"
-        title="Interview Done"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Interview Done"
         onClick={() => handleStatusUpdate("INTERVIEW_DONE", row)}
         className="btn-process flex gap-2 items-center">
         <ClipboardCheck className="w-4 h-4" />
@@ -296,7 +310,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     REQUEST_DOCUMENT: (
       <button
         key="req-doc"
-        title="Request Document"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Request Document"
         onClick={() =>
           setIsRequestDocModalOpen({
             isOpen: true,
@@ -320,6 +335,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         disabled={!row?.hiredFromOtherPortal?.portal || !row?.hiredFromOtherPortal?.date}
         key="mark-dup"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Mark as Duplicate"
         onClick={() => handleMarkAsDuplicateJob("EDIT")}
         className={`btn-outline btn_disabled ${
           row?.hiredFromOtherPortal && row?.hiredFromOtherPortal?.portal === "exist"
@@ -333,6 +350,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     VIEW_DUPLICACY: (
       <div
         key="view-dup"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View Duplicacy"
         onClick={() => handleMarkAsDuplicateJob("VIEW")}
         className="btn-outline cursor-pointer ">
         <Eye size={16} />
@@ -343,14 +362,13 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         disabled={jobApplicationServiceObj.showPushToRecruiterButton(row) === false}
         key="push-recruiter"
-        title="Send to Recruiter"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Push to Recruiter"
         onClick={() =>
           !row.displayToCorporate &&
           sendApplicationToRecruiter &&
           sendApplicationToRecruiter(row.id)
         }
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content="Send to Recruiter"
         className={`btn_disabled flex gap-2 items-center bg-green-600 text-white p-2 rounded-xl ${
           row.displayToCorporate ? "btn-gray cursor-not-allowed opacity-60" : "btn-sky"
         }`}>
@@ -360,9 +378,12 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
 
     VIEW_DOCUMENT: (
       <button
-        className="btn-info"
+        className="btn-info bg-orange-500
+        hover:bg-orange-600
+        "
         key="view-doc"
-        title="View Document"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Request Document & Verify."
         onClick={() =>
           setIsRequestDocModalOpen({
             isOpen: true,
@@ -377,14 +398,15 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
               }),
           })
         }>
-        <FileText size={16} />
+        <ClipboardEditIcon size={16} />
       </button>
     ),
     VIEW_DOCUMENT_READ: (
       <button
         className="btn-info-2"
         key="view-doc-read"
-        title="Check Document"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View All Document (Read Only)"
         onClick={() =>
           setIsRequestDocModalOpen({
             isOpen: true,
@@ -399,7 +421,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
               }),
           })
         }>
-        <Fingerprint size={16} />
+        <LucideFileCheck2 size={16} />
       </button>
     ),
 
@@ -407,7 +429,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       <button
         className="btn-warning"
         key="view-issues"
-        title="View Issues"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View Offer Letter Issues"
         onClick={() => setIsViewOfferIssue({ isOpen: true, jobData: row })}>
         <AlertTriangle size={16} />
       </button>
@@ -416,7 +439,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     JOINED: (
       <button
         key="joined"
-        title="Joined"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Mark as Joined"
         onClick={() => setJoinedModalOpen({ isOpen: true, jobApplication: row })}
         className="btn-success flex gap-2 items-center">
         <Award size={16} />

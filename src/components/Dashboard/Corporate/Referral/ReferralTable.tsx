@@ -66,7 +66,10 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       key: "jobUrl",
       label: "Job Url",
       render: (row: ReferralDetailsDto) => (
-        <a href={row?.jobUrl}>
+        <a
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Open Job Link in new tab"
+        >
           <Link
             size={34}
             onClick={(e) => {
@@ -133,6 +136,8 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       label: "Actions",
       render: (row: ReferralDetailsDto) => (
         <button
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View Candidate CV"
           onClick={async () => {
             handleViewExtraDetails(row);
           }}

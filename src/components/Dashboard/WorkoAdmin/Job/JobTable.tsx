@@ -402,7 +402,8 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   btn.disabled ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={btn.onClick}
-                title={btn.tooltip}
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={btn.tooltip}
                 disabled={btn.disabled}>
                 {btn.icon}
               </button>

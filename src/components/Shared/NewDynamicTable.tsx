@@ -281,7 +281,7 @@ export function NewDynamicTable<T extends { id: string }>({
                               : ""
                           }
                         `}>
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-center gap-1">
                           {((renderExpandedDetails && !hideChevronForRejected) ||
                             (row as any).currentStatus !== "REJECTED") && (
                             <button
@@ -314,7 +314,7 @@ export function NewDynamicTable<T extends { id: string }>({
                       return (
                         <td
                           key={col.key}
-                          className={`w-32 px-4 ${isExpanded ? "" : "border-b"}  py-1 text-xs whitespace-nowrap ${
+                          className={`w-min max-w-60 w-32 px-4 ${isExpanded ? "" : "border-b"}  py-1 text-xs whitespace-nowrap ${
                             col.key !== "email" ? "capitalize" : ""
                           } ${baseBg}
                           ${col.contentWidth || ""}
@@ -324,7 +324,7 @@ export function NewDynamicTable<T extends { id: string }>({
                             isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
                           }`}>
                           <div
-                            className="truncate cursor-pointer"
+                            className="truncate cursor-pointer h-full w-full p-1" 
                             onDoubleClick={(e) =>
                               navigator.clipboard.writeText(getCellValue(row, col) as string)
                             }
