@@ -203,32 +203,31 @@ const AgencyList = () => {
 
   return (
     <div>
-    <div className='flex flex-row gap-2 justify-center items-center'>
+     <div className='mt-1 flex flex-row gap-2 justify-center items-center'>
     </div>
 
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
+      {/*<div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
         <div className="flex flex-row justify-end items-center">
           <div className="flex flex-wrap gap-4">
           </div>
-           {/* Search Bar */}
-            {/* <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3">
                 <SearchBar
                 searchBarText={searchBarText}
                 setSearchBarText={setSearchBarText}
                 handleClick={() => console.log("as")}
                 />
-            </div> */}
-            {/* <div className='flex flex-col mt-4'>         
+            </div>
+            <div className='flex flex-col mt-4'>         
               <button 
               onClick={()=>setIsAddAgencyModelOpen(!isAddAgencyModelOpen)}
               className='border rounded-lg px-4 py-3 text-xs flex flex-row justify-center items-center gap-1 text-white bg-gradient-to-t from-blue-500 to-cyan-300 font-semibold'>
                 <Plus className='h-4 w-auto font-semibold'/>
                 Add Agency
               </button>
-            </div> */}
+            </div>
         </div>
       </div>
-      <br />
+      <br /> */}
       {isLoading ? (
         <SkeletonLoader
             showTableHeader={true}

@@ -20,9 +20,10 @@ interface JobDropdownProps {
   setInput: (value: string) => void;
   handleSubmit: () => void;
   setSelectedJobId: (id: string) => void;
+  isJobsLoading:boolean
 }
 
-const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput, setSelectedJobId }) => {
+const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput, setSelectedJobId,isJobsLoading }) => {
   const [filtered, setFiltered] = useState<JobOption[]>(jobsList);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -86,7 +87,7 @@ useEffect(() => {
           <ChevronDown className="h-5 w-auto" />
         </button>
       </div>
-      {isOpen && filtered.length > 0 && (
+      {isOpen && filtered.length > 0 && !isJobsLoading && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto text-sm">
           {filtered.map((job) => (
             <li
@@ -97,6 +98,15 @@ useEffect(() => {
               {job?.jobTitle} | {job?.location?.fullLocation} | {job?.salaryRange?.min}-{job?.salaryRange?.max} LPA
             </li>
           ))}
+        </ul>
+      )}
+      {isOpen && isJobsLoading && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto text-sm">
+            <li
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start"
+            >
+              Loading jobs...
+            </li>
         </ul>
       )}
     </div>

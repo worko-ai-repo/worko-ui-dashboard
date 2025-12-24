@@ -279,11 +279,10 @@ const fetchReferrals = useCallback(
   }
 
   return (
-    <div className="w-full space-y-[35px] px-0 mt-5">
-      {/* stats cards */}
-      <div className="flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between">
+    <div className="w-full space-y-[16px] px-0 mt-5">
+      <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
+          <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
             {stats.map((stat) => (
               // <div
               //   key={stat.label}

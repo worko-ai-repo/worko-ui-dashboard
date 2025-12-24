@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Eye, Pencil, User } from "lucide-react";
 import { DynamicTable } from "../../../Shared/DynamicTable";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -92,15 +92,26 @@ const keyFallbacks = {
   YOE: ["candidateParsedCvDetails.totalYOE",],
   currentCTC: ["candidateParsedCvDetails.currentCTC",],
   expectedCTC: ["candidateParsedCvDetails.expectedCTC",],
-  appliedCompany: [ "candidateProfileInCompanies", "candidateProfileInCompanies.companyName", "companyName",],
+  appliedCompany: [ "appliedCompaniesSortValue",],
   addedBy: ["addedBy"],
   addedFor: ["addedFor"],
   coolingPeriod: ["coolingPeriod"],
   lastActive: ["lastActive"],
 };
 
+  const sortableData = useMemo(() => {
+    return (data ?? []).map((row:any) => ({
+        ...row,
+        appliedCompaniesSortValue: row.candidateProfileInCompanies
+        ?.map((s:any) => s.companyName)
+        // .sort()
+        .join(", ")
+        .toLowerCase() || "",
+    }));
+  }, [data]);
 
-  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(data, keyFallbacks, {
+    //below instead of data we used sortableData cause applied companies need to be looped 
+  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(sortableData, keyFallbacks, {
   tableId: `database`,
   persistInUrl: true,
   persistInLocalStorage: false,
@@ -226,14 +237,16 @@ const columns = [
       label: "Applied Companies",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => {
-        const companyList = (row?.candidateProfileInCompanies?? []).map(company=>{
-          return company.companyName
-        }).join(", ") || "-"
+        const companyList = (row?.candidateProfileInCompanies?? [])
+        .map(company => company.companyName)
+        .join(", ");
         return (
           <div className='flex justify-center m-auto w-[150px]'>
               <span 
               title={companyList}
-              className="truncate block w-full">{companyList ?? "NA"}</span>
+              className="truncate block w-full">
+                {companyList.length ? companyList: "NA"}
+              </span>
           </div>)
           }
     },

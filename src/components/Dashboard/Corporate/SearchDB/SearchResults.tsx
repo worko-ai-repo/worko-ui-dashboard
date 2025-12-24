@@ -51,9 +51,11 @@ export const initialPaginationState: PaginationInfo = {
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedJobId, setSelectedJobId] = useState<string>("");
+    const [isJobsLoading, setIsJobsLoading] = useState<boolean>(false);
     const navigate = useNavigate();
 
       useEffect(()=>{
+        setIsJobsLoading(true)
       const fetchJobs = async() =>{
       const params = {
         pageSize: 200,
@@ -72,6 +74,8 @@ export const initialPaginationState: PaginationInfo = {
         }
       } catch (error) {
         console.log(error)
+      } finally{
+        setIsJobsLoading(false)
       }
     }
     fetchJobs()
@@ -95,7 +99,22 @@ export const initialPaginationState: PaginationInfo = {
       };
     }, []);
 
-    const { transcript, interimTranscript, isListening, isSupported, error, startListening, stopListening,resetTranscript,} = useSpeechRecognition();
+    const {
+      transcript,
+      interimTranscript,
+      isListening,
+      isSupported,
+      error,
+      startListening,
+      stopListening,
+      resetTranscript,
+    } = useSpeechRecognition();
+
+    useEffect(() => {
+      if (transcript && transcript.trim()) {
+        setInput(transcript);
+      }
+    }, [transcript]);
 
   const fetchCandidates = useCallback(
     async (
@@ -261,7 +280,6 @@ const handlePageChange = useCallback(
   setIsSuggestionsOpen(false);
   setCurrentPage(1);
 
-  // ✅ Update URL
   navigate(
     `/corporate/aSearchDB/results?${mode}=${encodeURIComponent(queryValue)}`
   );
@@ -274,6 +292,27 @@ const handlePageChange = useCallback(
       startListening();
     }
   };
+
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+    });
+  }, []);
+
+  const handleLocalUpdateForMatchingScore = useCallback((jobId: string, updatedData: any) => {
+  setFetchData((prevData:any) => {
+  if (!prevData || !Array.isArray(prevData)) return prevData;
+
+  return prevData.map(job =>
+    job.candidateJobMatchingId === jobId ? { ...job, ...updatedData } : job
+  );
+  });
+}, []);
+
     return (
       <div>
         <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
@@ -314,7 +353,8 @@ const handlePageChange = useCallback(
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
-              setSelectedJobId={setSelectedJobId} 
+              setSelectedJobId={setSelectedJobId}
+              isJobsLoading={isJobsLoading}
             />
           </div>
           <button
@@ -447,6 +487,10 @@ const handlePageChange = useCallback(
             hasMore={hasMore}
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
+            mode={mode}
+            selectedJobId={selectedJobId}
+            localUpdate={handleLocalUpdate}
+            handleLocalUpdateForMatchingScore={handleLocalUpdateForMatchingScore}
           />
           )}
       </div>

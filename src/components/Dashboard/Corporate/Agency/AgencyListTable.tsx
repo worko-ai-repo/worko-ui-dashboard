@@ -415,7 +415,10 @@ export default function AgencyListTable(props: any) {
       {isAssignJobModelOpen && (      
         <AssignJobModal
           dashboardType={"CORPORATE"}
-          onClose= {() => setIsAssignJobModelOpen(false)}
+          onClose= {() => {
+            setIsAssignJobModelOpen(false);
+            setEditProfileData(null)
+          }}
           isOpen= {isAssignJobModelOpen}
           jobsList={jobsList}
           agencyData={editProfileData}
@@ -427,7 +430,10 @@ export default function AgencyListTable(props: any) {
       {isRemoveJobModelOpen && (
         <RemoveJobModal
           dashboardType={"CORPORATE"}
-          onClose= {() => setIsRemoveJobModelOpen(false)}
+          onClose= {() => {
+            setIsRemoveJobModelOpen(false);
+            setEditProfileData(null)
+          }}
           isOpen= {isRemoveJobModelOpen}
           // jobsList={jobsList}
           agencyData={editProfileData}
@@ -438,7 +444,10 @@ export default function AgencyListTable(props: any) {
       {isEditAgencyModelOpen && (
         <EditAgencyModal
           dashboardType={"CORPORATE"}
-          onClose= {() => setIsEditAgencyModelOpen(false)}
+          onClose= {() => {
+            setIsEditAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
           isOpen= {isEditAgencyModelOpen}
           data={editProfileData}
           localUpdate={localUpdate}
@@ -446,7 +455,10 @@ export default function AgencyListTable(props: any) {
       )}
         <PauseAgencyModal
           dashboardType={"CORPORATE"}
-          onClose= {() => setIsPauseAgencyModelOpen(false)}
+          onClose= {() => {
+            setIsPauseAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
           isOpen= {isPauseAgencyModelOpen}
           data={editProfileData}
           localUpdate={localUpdate}
@@ -454,7 +466,10 @@ export default function AgencyListTable(props: any) {
 
         <DeleteAgencyModal
           dashboardType={"CORPORATE"}
-          onClose= {() => setIsDeleteAgencyModelOpen(false)}
+          onClose= {() => {
+            setIsDeleteAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
           isOpen= {isDeleteAgencyModelOpen}
           localUpdate={localUpdate}
           data={editProfileData}
@@ -477,6 +492,7 @@ export default function AgencyListTable(props: any) {
           isOpen={isViewCVModalOpen}
           onClose={() => {
             setIsViewCVModalOpen(false);
+            setEditProfileData(null);
           }}
           className="w-[90vw] sm:max-w-4xl h-full">
           {!pdfViewDetails ? (

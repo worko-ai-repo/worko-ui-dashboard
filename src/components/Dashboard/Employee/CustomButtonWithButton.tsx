@@ -68,7 +68,8 @@ const handleActiveFrame = async (frame: SignupMode) => {
 };
 
   return (
-    <div className="group relative flex w-full rounded-xl border-4 border-white bg-[#F6F6F6] shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,_rgba(0,0,0,0.3)_0px_3px_7px_-3px] p-1">
+    <div className="group relative flex w-full rounded-xl bg-white p-1 shadow-md mb-2">
+      {/* <div className="group relative flex w-full rounded-xl border-4 border-white bg-[#F6F6F6] shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,_rgba(0,0,0,0.3)_0px_3px_7px_-3px] p-1"> */}
       {/* Sliding background */}
       <div
         className={`absolute inset-y-1 w-[calc(50%-4px)] rounded-xl bg-blue-500 transition-all duration-300 ease-in-out ${

@@ -150,6 +150,7 @@ const SearchPrompt: React.FC = () => {
         setInput={setInput}
         setSelectedJobId={setSelectedJobId}
         handleSubmit={handleSubmit}
+        isJobsLoading={isFetchingJobs}
       />
     </div>
     <button
