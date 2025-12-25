@@ -60,9 +60,11 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
         return response.objectUrl;
       }
       case "AGENCY_SUBMIT_USER_CV": {
+        const splittedCvAwsS3FilePath = jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")
+        const jobIdFromCvAwsS3FilePath = splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length-2]
         const payload = {
           companyId: jobApplicationData?.companyId, //Job he applied
-          jobId:jobApplicationData?.jobId, //Job he applied
+          jobId:jobIdFromCvAwsS3FilePath, //Job he applied
           agencyUserId: jobApplicationData?.agencyUserId, // Agency user who submitted the CV
           candidateCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
         }

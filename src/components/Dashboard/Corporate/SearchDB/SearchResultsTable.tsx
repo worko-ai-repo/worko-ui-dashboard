@@ -665,13 +665,17 @@ const columns = [
         || !row?.jobId 
         || !row?.agencyUserId 
         || !row?.cvAwsS3FileName
+        || !row?.cvAwsS3FilePath
       ){
         toast.error("Missing details",getToastOptions({}))
         return
       }
+      const splittedCvAwsS3FilePath = row?.cvAwsS3FilePath.split("/")
+      const jobIdFromCvAwsS3FilePath = splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length-2]
+
       const payload = {
         companyId: row?.companyId,
-        jobId:row?.jobId,
+        jobId:jobIdFromCvAwsS3FilePath,
         agencyUserId: row?.agencyUserId,
         candidateCvAwsS3FileName: row?.cvAwsS3FileName,
       }

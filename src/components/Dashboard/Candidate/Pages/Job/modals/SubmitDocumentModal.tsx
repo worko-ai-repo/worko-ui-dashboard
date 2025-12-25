@@ -56,7 +56,8 @@ const SubmitDocumentModal = ({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [allDocuments, setAllDocuments] = useState<DocumentItem[]>([]);
   const [isUploading, setIsUploading] = useState(false);
-  
+  const [requestedDate, setRequestedDate] = useState<string | null>(null)
+
   const {
     control,
     handleSubmit,
@@ -209,6 +210,12 @@ const SubmitDocumentModal = ({
   // Initialize documents and form when modal opens
   useEffect(() => {
     if (show && documents) {
+      const documentsLength = documents?.requestedDocumentDetails;
+      if (documentsLength?.length) {
+        const newDate = documentsLength[documentsLength.length - 1].actionDate;
+        setRequestedDate(newDate ? new Date(newDate).toLocaleDateString('en-GB') : null)
+      }
+
       const allDocs = getAllDocuments();
       setAllDocuments(allDocs);
 
@@ -222,6 +229,7 @@ const SubmitDocumentModal = ({
       setAllDocuments([]);
       reset({});
     }
+    return () => setRequestedDate(null)
   }, [documents, show, reset]);
 
   if (!isVisible && !show) return null;
@@ -414,7 +422,7 @@ const SubmitDocumentModal = ({
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b">
           <h3 className="text-lg font-semibold">Upload document</h3>
-          <h3 className="text-xs text-gray-400">document requested on 23-08-2025</h3>
+          <h3 className="text-xs text-gray-400">document requested on {requestedDate}</h3>
           <button
             onClick={onClose}
             className="p-1 rounded-full hover:bg-gray-100"

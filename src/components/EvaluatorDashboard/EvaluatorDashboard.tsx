@@ -158,13 +158,17 @@ const EvaluatorView: React.FC = () => {
           || !selectedCandidateDetails?.jobId 
           || !selectedCandidateDetails?.agencyUserId 
           || !selectedCandidateDetails?.cvAwsS3FileName
+          || !selectedCandidateDetails?.cvAwsS3FilePath
         ){
           toast.error("Missing details",getToastOptions({}))
           return
         }
+        const splittedCvAwsS3FilePath = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
+        const jobIdFromCvAwsS3FilePath = splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length-2]
+
         const payload = {
           companyId: selectedCandidateDetails?.companyId,
-          jobId:selectedCandidateDetails?.jobId,
+          jobId:jobIdFromCvAwsS3FilePath,
           agencyUserId: selectedCandidateDetails?.agencyUserId,
           candidateCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName,
         }

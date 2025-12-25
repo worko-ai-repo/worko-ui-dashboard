@@ -10,8 +10,77 @@ interface StepperProps {
 }
 
 // Function to convert status tracker to application steps
-export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep[] {
-  // Define all possible steps in order
+// export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep[] {
+//   // Define all possible steps in order
+//   const allSteps = [
+//     { key: "APPLIED", label: "Applied" },
+//     { key: "CV_DOWNLOADED", label: "CV downloaded" },
+//     { key: "UNDER_EVALUATION", label: "Under evaluation" },
+//     { key: "PROCESSING_INTERVIEW", label: "Interview processing" },
+//     { key: "INTERVIEW_DONE", label: "Interviewed" },
+//     { key: "HIRING_IN_PROCESS", label: "Hiring-in Process" },
+//     { key: "DOCUMENT_REQUESTED", label: "Document requested" },
+//     { key: "DOCUMENT_SUBMITTED", label: "Document submitted" },
+//     { key: "OFFER_SENT", label: "Offer received" },
+//     { key: "HIRED", label: "Hired" },
+//     { key: "JOINED", label: "Joined" },
+//   ];
+
+//   // console.log(statusTracker)
+//   // Find the latest status from the tracker
+//   let latestStatus = statusTracker.newStatus; // Default to APPLIED
+//   let latestDate = "";
+  
+//   if (statusTracker && Array.isArray(statusTracker) && statusTracker.length > 0) {
+//     // Sort by date (newest first)
+//     const sortedTracker = [...statusTracker].sort((a, b) => 
+//       new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
+//     );
+    
+//     latestStatus = sortedTracker[0].newStatus;
+//     latestDate = new Date(sortedTracker[0].actionDate).toLocaleDateString();
+//   } else if (statusTracker && statusTracker.newStatus) {
+//     // Handle case where statusTracker might be a single object with newStatus
+//     latestStatus = statusTracker.newStatus;
+//     latestDate = statusTracker.actionDate ? new Date(statusTracker.actionDate).toLocaleDateString() : "";
+//   }
+
+//   if (latestStatus === "ACCEPTED") {
+//   latestStatus = "UNDER_EVALUATION";
+//   }
+//   if(latestStatus === "DOCUMENT_ADDITIONAL_REQUESTED" || latestStatus === "DOCUMENT_REVISION_REQUESTED"){
+//     latestStatus = "DOCUMENT_REQUESTED";
+//   }
+//   if(latestStatus === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" || latestStatus === "DOCUMENT_REVISION_REQUEST_SUBMITTED"){
+//     latestStatus = "DOCUMENT_SUBMITTED";
+//   }
+//   if(latestStatus === "REVISED_OFFER_SENT"){
+//     latestStatus = "OFFER_SENT";
+//   }
+//   // Find the index of the latest status in our steps array
+//   const latestStatusIndex = allSteps.findIndex(step => step.key === latestStatus);
+//   if (latestStatusIndex === -1) return []; // If status not found, return empty array
+  
+//   // use below if we want to show all remaining steps as well
+//   // return allSteps.map((step, index) => ({
+//   // step: step.label,
+//   // date: index === latestStatusIndex ? latestDate : "",
+//   // completed: index <= latestStatusIndex
+//   // }));
+
+//   // Create the steps array with completed flags
+//   return allSteps
+//     .slice(0, latestStatusIndex + 1)
+//     .map((step, index) => ({
+//       step: step.label,
+//       date: index === latestStatusIndex ? latestDate : "",
+//       completed: true
+//     }));
+// }
+
+export function convertStatusTrackerToSteps(statusTracker: any[]): ApplicationStep[] {
+  if (!Array.isArray(statusTracker) || statusTracker.length === 0) return [];
+
   const allSteps = [
     { key: "APPLIED", label: "Applied" },
     { key: "CV_DOWNLOADED", label: "CV downloaded" },
@@ -26,57 +95,46 @@ export function convertStatusTrackerToSteps(statusTracker: any): ApplicationStep
     { key: "JOINED", label: "Joined" },
   ];
 
-  // console.log(statusTracker)
-  // Find the latest status from the tracker
-  let latestStatus = statusTracker.newStatus; // Default to APPLIED
-  let latestDate = "";
-  
-  if (statusTracker && Array.isArray(statusTracker) && statusTracker.length > 0) {
-    // Sort by date (newest first)
-    const sortedTracker = [...statusTracker].sort((a, b) => 
-      new Date(b.actionDate).getTime() - new Date(a.actionDate).getTime()
-    );
-    
-    latestStatus = sortedTracker[0].newStatus;
-    latestDate = new Date(sortedTracker[0].actionDate).toLocaleDateString();
-  } else if (statusTracker && statusTracker.newStatus) {
-    // Handle case where statusTracker might be a single object with newStatus
-    latestStatus = statusTracker.newStatus;
-    latestDate = statusTracker.actionDate ? new Date(statusTracker.actionDate).toLocaleDateString() : "";
-  }
+  // normalize backend → UI step
+  const normalize = (status: string) => {
+    if (status === "ACCEPTED") return "UNDER_EVALUATION";
+    if (
+      status === "DOCUMENT_ADDITIONAL_REQUESTED" ||
+      status === "DOCUMENT_REVISION_REQUESTED"
+    ) return "DOCUMENT_REQUESTED";
+    if (
+      status === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" ||
+      status === "DOCUMENT_REVISION_REQUEST_SUBMITTED"
+    ) return "DOCUMENT_SUBMITTED";
+    if (status === "REVISED_OFFER_SENT") return "OFFER_SENT";
+    return status;
+  };
 
-  if (latestStatus === "ACCEPTED") {
-  latestStatus = "UNDER_EVALUATION";
-  }
-  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUESTED" || latestStatus === "DOCUMENT_REVISION_REQUESTED"){
-    latestStatus = "DOCUMENT_REQUESTED";
-  }
-  if(latestStatus === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" || latestStatus === "DOCUMENT_REVISION_REQUEST_SUBMITTED"){
-    latestStatus = "DOCUMENT_SUBMITTED";
-  }
-  if(latestStatus === "REVISED_OFFER_SENT"){
-    latestStatus = "OFFER_SENT";
-  }
-  // Find the index of the latest status in our steps array
-  const latestStatusIndex = allSteps.findIndex(step => step.key === latestStatus);
-  if (latestStatusIndex === -1) return []; // If status not found, return empty array
-  
-  // use below if we want to show all remaining steps as well
-  // return allSteps.map((step, index) => ({
-  // step: step.label,
-  // date: index === latestStatusIndex ? latestDate : "",
-  // completed: index <= latestStatusIndex
-  // }));
+  // build timeline in order
+  const timeline = statusTracker.map(item => ({
+    key: normalize(item.newStatus),
+    date: new Date(item.actionDate).toLocaleDateString(),
+  }));
 
-  // Create the steps array with completed flags
-  return allSteps
-    .slice(0, latestStatusIndex + 1)
-    .map((step, index) => ({
+  // latest visible step
+  const lastKey = timeline[timeline.length - 1].key;
+  const lastIndex = allSteps.findIndex(s => s.key === lastKey);
+  if (lastIndex === -1) return [];
+
+  let lastDate = "";
+
+  return allSteps.slice(0, lastIndex + 1).map(step => {
+    const hit = timeline.find(t => t.key === step.key);
+    if (hit) lastDate = hit.date;
+
+    return {
       step: step.label,
-      date: index === latestStatusIndex ? latestDate : "",
-      completed: true
-    }));
+      date: lastDate,
+      completed: true,
+    };
+  });
 }
+
 
 const Stepper: FunctionComponent<StepperProps> = ({ steps, statusTracker }) => {
   // If statusTracker is provided, convert it to steps

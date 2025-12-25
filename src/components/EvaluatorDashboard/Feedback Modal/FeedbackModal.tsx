@@ -129,6 +129,26 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                 toast.success('Feedback submitted successfully!',getToastOptions({}));
             }
             else if (nextStep === 'schedule') {
+                const now = new Date();
+                const buildDateTimeFromHour = (date: string, hour: number) => {
+                    const d = new Date(date + 'T00:00:00');
+
+                    const hours = Math.floor(hour);
+                    const minutes = Math.round((hour - hours) * 60);
+
+                    d.setHours(hours, minutes, 0, 0);
+                    return d;
+                };
+
+                const invalidSlot = scheduledSlots.find(slot => {
+                    if (!slot.date || typeof slot.startTime !== 'number') return true;
+                    const slotDateTime = buildDateTimeFromHour(slot.date, slot.startTime);
+                    return slotDateTime <= now;
+                });
+                if (invalidSlot) {
+                    toast.error('Interview date and time must be in the future.',getToastOptions({}));
+                    return;
+                }
                 const scheduledInterviewDetails = scheduledSlots
                     .filter(slot => slot.date && slot.timeSlot)
                     .map(slot => ({

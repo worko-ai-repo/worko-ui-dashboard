@@ -142,6 +142,7 @@ const ScheduleInterviewSection: React.FC<ScheduleInterviewSectionProps> = ({ ava
             onChange={(date: Date | null) => {
               if (date) handleDateChange(date);
             }}
+            minDate={new Date()}
             customInput={
               <button className="p-2 border rounded bg-white shadow hover:bg-gray-100" type="button">
                 <Calendar size={24} />

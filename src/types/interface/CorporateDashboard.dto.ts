@@ -348,6 +348,7 @@ export interface ApplicantDetails {
     department: string;
     designation: string;
   };
+    cvAwsS3FilePath:string;
 }
 
 

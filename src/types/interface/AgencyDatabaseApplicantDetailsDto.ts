@@ -105,6 +105,7 @@ export interface CandidateParsedCvDetails {
   updatedAt: string;
   userDetailId: String;
   corporateBulkJdId: string;
+  cvAwsS3FilePath:string;
   //for admin db listing
   companyId: string;
   jobId: string;
@@ -132,6 +133,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   expectedCTC:number;
   cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS";
   cvAwsS3FileName:string;
+  cvAwsS3FilePath:string;
   userDetailId:string;
   corporateBulkJdId:string;
   isFindMatchingScoreInProgress:boolean;

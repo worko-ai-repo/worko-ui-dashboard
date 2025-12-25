@@ -160,35 +160,6 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
     // }
   };
 
-  const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
-    if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "USER_RESUME"){
-      try {
-        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`, true, {}, false, "BASE")
-      } catch (error) {
-        console.log(error)
-      }
-    }else if(row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "BULK_CVS"){
-      try {
-        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(`/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`, true, { corporateBulkJdId:row?.candidateParsedCvDetails?.corporateBulkJdId }, false, "BASE")
-      } catch (error) {
-        console.log(error)
-      }      
-    }
-    else{
-      const payload = {
-        companyId: row?.companyId,
-        jobId:row?.jobId,
-        agencyUserId: row?.agencyUserId,
-        candidateCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
-      }
-      try {
-        const {response} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
-      } catch (error) {
-        console.log(error)
-      }
-    }
-  }
-
     async function handleParseJd(jobDescription: string) {
     setLoader(true);
     try {

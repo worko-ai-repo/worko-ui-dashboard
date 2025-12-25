@@ -107,6 +107,7 @@ export interface CandidateDetails {
   jobId:string;
   agencyUserId:string;
   userDetailId:string;
+  cvAwsS3FilePath:string;
 }
 
 export interface ScoreDetail {

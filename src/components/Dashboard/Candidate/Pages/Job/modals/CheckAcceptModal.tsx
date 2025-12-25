@@ -5,6 +5,7 @@ import { getToastOptions } from 'lib-worko-ui';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { JobTypes } from '../JobTypes';
+import { Download, Maximize } from 'lucide-react';
 
 type CheckAcceptModalProps = {
   userDetails: any;
@@ -105,6 +106,39 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
     }
   };
 
+  const handleDownload = () => {
+    console.log(userDetails,job,"sad")
+    fetch(pdfUrl)
+      .then((response) => response.blob())
+      .then((blob) => {
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.href = url;
+        
+        // Use candidateFullDetails if available (new logic), otherwise fall back to props (old logic)
+        let fileName;
+        if (userDetails && job) {
+          const name = userDetails?.name?.replace(/\s+/g, "_")          
+          const company = job?.companyName.replace(/\s+/g, "_");
+          const date = new Date().toISOString().split("T")[0];
+          fileName = `${name}_${"Offer_letter"}_${company}_${date}.pdf`;
+        } else {
+          // Fallback to original props-based logic
+          const name = userDetails?.name?.replace(/\s+/g, "_") || "Candidate";
+          const company = (job?.companyName || "Company").replace(/\s+/g, "_");
+          const date = new Date().toISOString().split("T")[0];
+          fileName = `${name}_${"Offer_letter"}_${company}_${date}.pdf`;
+        }
+        
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      })
+      .catch((error) => console.error("Error downloading the file:", error));
+  };
+
   useEffect(() => {
     if (
       !job ||
@@ -171,6 +205,21 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           className="absolute top-4 right-4 text-gray-900 hover:text-gray-800"
         >
           ✕
+        </button>
+
+
+        <button
+            onClick={handleDownload}
+            className="absolute bottom-32 right-28 border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600 mx-2"
+          >
+            <Download className="w-4 h-4" />
+          </button>
+
+        <button
+          onClick={() => window.open(pdfUrl, "_blank")}
+          className="absolute bottom-32 right-16 bg-white text-blue px-4 py-2 rounded shadow hover:text-blue-600"
+        >
+          <Maximize className="w-4 h-4" />
         </button>
 
         {/* PDF Preview */}

@@ -618,7 +618,8 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
         return null;
       }
       if (row.statusTracker && row.statusTracker.length > 0) {
-        return <Stepper statusTracker={row.statusTracker[row.statusTracker.length - 1]} />;
+        return <Stepper statusTracker={row.statusTracker} />;
+        // return <Stepper statusTracker={row.statusTracker[row.statusTracker.length - 1]} />;
       }
       return null;
     };
