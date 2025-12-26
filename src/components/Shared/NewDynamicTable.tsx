@@ -269,7 +269,7 @@ export function NewDynamicTable<T extends { id: string }>({
                     </tr>
                   )}
 
-                  <tr className="h-[56px]">
+                  <tr className="h-[56px] bg-[#F5F7F7]">
                     {(enableSelect || renderExpandedDetails) && (
                       <td
                         className={`p-1 w-12  text-center ${isExpanded ? "" : "border-b"}  sticky left-0 z-20 ${

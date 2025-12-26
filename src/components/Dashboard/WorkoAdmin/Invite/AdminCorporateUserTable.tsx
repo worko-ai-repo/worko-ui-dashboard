@@ -153,6 +153,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   );
   const [subDataCompanyId, setSubDataCompanyId] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [expandedCompanyIds, setExpandedCompanyIds] = useState<string[]>([]);
 
   const params: Omit<CursorPaginationCorporateUserRecDataParams, "lastKey"> = {
     pageSize: 200,
@@ -440,17 +441,21 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => {
       if (prev.includes(id)) {
-        // Collapse the row if it's already expanded
-        setSubDataCompanyId("");
-        return [];
-      } else {
-        // Expand the new row and collapse others
+        // Collapse the row
         const company = data.find((d) => d.id === id);
         if (company?.companyId) {
-          setSubDataCompanyId(company.companyId);
-          refetch(); // Explicitly trigger the API call
+          setExpandedCompanyIds((prevIds) => prevIds.filter((cId) => cId !== company.companyId));
         }
-        return [id];
+        return prev.filter((r) => r !== id);
+      } else {
+        // Expand the row
+        const company = data.find((d) => d.id === id);
+        if (company?.companyId) {
+          setExpandedCompanyIds((prevIds) => [...prevIds, company.companyId]);
+          setSubDataCompanyId(company.companyId);
+          refetch();
+        }
+        return [...prev, id];
       }
     });
   };

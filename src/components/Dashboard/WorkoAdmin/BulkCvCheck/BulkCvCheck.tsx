@@ -83,12 +83,12 @@ const BulkCVCheck: React.FC = () => {
   }, [location.state, isScreeningNew, navigate]);
 
   const handleTabChange = (isFormOpen: boolean) => {
-    setisScreeningNew(isFormOpen);
     const tab = isFormOpen ? "new-screening" : "screening-list";
     navigate({
       pathname: location.pathname,
       search: `?tab=${tab}`,
     });
+    // State will be updated by useEffect when URL changes
   };
 
   async function handleParseJd(jobDescription: string) {
