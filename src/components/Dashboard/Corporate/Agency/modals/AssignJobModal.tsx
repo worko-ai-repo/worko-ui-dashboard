@@ -231,7 +231,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
           </button>
 
           {isDropDownOpen && jobsList.length > 0 && (
-            <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-90 overflow-y-auto text-sm">
+            <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-96 overflow-y-auto text-sm">
               {jobsList
                 .filter(job =>
                   job?.jobTitle?.toLowerCase().includes(input.toLowerCase())

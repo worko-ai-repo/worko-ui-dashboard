@@ -52,8 +52,8 @@ const Referrals = () => {
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [stats,setStats] = useState<Stat[]>([
   { label: "Total Referrals", value: null },
+  { label: "Awaiting", value: null },
   { label: "Accepted", value: null },
-  { label: "Pending", value: null },
   { label: "Done", value: null },
   { label: "Rejected", value: null },
 ])
@@ -179,13 +179,12 @@ const fetchReferrals = useCallback(
   }, []);
 
   const fetchCounts = async()=>{
-    if(!userDetails?.email) return
-      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${userDetails.email}/REFERRAL/user`, true, {}, false,"JOB");
-      // console.log(response)
+    if(!user?.email) return
+      const {response} = await httpServiceObj.get<CountsProps>(`/counts/${user?.email}/REFERRAL/user`, true, {}, false,"JOB");
       setStats([
-        { label: 'Total Referrals', value: response?.candidateReferralCounts?.total ?? null },
-        { label: 'Accepted', value: response?.candidateReferralCounts?.accepted ?? null },
+        { label: 'Total Referrals', value: response?.candidateReferralCounts?.total ?? null },    
         { label: 'Awaiting', value: response?.candidateReferralCounts?.awaiting ?? null },
+        { label: 'Accepted', value: response?.candidateReferralCounts?.accepted ?? null },
         { label: "Done", value: response?.candidateReferralCounts?.done ?? null },
         { label: 'Rejected', value: response?.candidateReferralCounts?.rejected ?? null },
       ]);

@@ -7,8 +7,8 @@ import React from "react";
 // }
 
 interface DropdownProps {
-  mode: "jd" | "prompt";
-  setMode: (mode: "jd" | "prompt") => void;
+  mode: "jobs" | "prompt";
+  setMode: (mode: "jobs" | "prompt") => void;
   onSubmit: () => void;
   // jobsList: JobOption[];
   setInput: (value: string) => void;
@@ -24,12 +24,12 @@ const Dropdown: React.FC<DropdownProps> = ({
   const [jobDropdownOpen, setJobDropdownOpen] = React.useState(false);
 
   const toggleMode = () => {
-    if (mode === "jd") {
+    if (mode === "jobs") {
       setMode("prompt");
       setSelectedJob("");
       setInput("");
     } else {
-      setMode("jd");
+      setMode("jobs");
       setInput(""); // Clear input if switching back
     }
   };
@@ -37,7 +37,7 @@ const Dropdown: React.FC<DropdownProps> = ({
   return (
     <div className="flex items-center gap-2">
       {/* JD-specific job selection */}
-      {/* {mode === "jd" && (
+      {/* {mode === "jobs" && (
         <div className="relative inline-block text-left">
           <button
             onClick={() => setJobDropdownOpen((prev) => !prev)}
@@ -83,7 +83,7 @@ const Dropdown: React.FC<DropdownProps> = ({
       >
         <FileText className="w-4 h-4" />
         <span>
-          {mode === "jd" ? "Search by Prompt" : "Search by Job Post "}
+          {mode === "jobs" ? "Search by Prompt" : "Search by Job Post "}
         </span>
       </button>
     </div>

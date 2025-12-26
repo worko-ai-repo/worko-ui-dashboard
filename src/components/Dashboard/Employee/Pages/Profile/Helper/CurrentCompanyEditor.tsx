@@ -261,9 +261,9 @@ useEffect(() => {
     <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
       visible ? "bg-black bg-opacity-50" : "bg-black bg-opacity-0"
     }`}>
-      <div className={`bg-white rounded-l-xl p-6 max-w-xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
+    <div className={`bg-white rounded-l-xl p-6 max-w-xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
         visible ? "translate-x-0" : "translate-x-full"
-      }`}>
+      } overflow-y-auto`}>
         <h2 className="text-xl font-semibold mb-4">Edit Current Company</h2>
 
         {/* Company Name */}
@@ -275,7 +275,7 @@ useEffect(() => {
               <input
                 type="text"
                 placeholder="Enter company name"
-                className="border px-3 py-2 rounded-xl w-full mb-4"
+                className="border px-3 py-2 rounded-xl w-full mb-3"
                 value={formData.companyName}
                 onChange={(e) => {
                   handleChange('companyName', e.target.value);
@@ -315,7 +315,7 @@ useEffect(() => {
         <input
           type="text"
           placeholder="Enter job title"
-          className="border px-3 py-2 rounded-xl w-full mb-4"
+          className="border px-3 py-2 rounded-xl w-full mb-3"
           value={formData.designation || ''}
           onChange={(e) => handleChange('designation', e.target.value)}
         />
@@ -327,7 +327,7 @@ useEffect(() => {
         <input
           type="text"
           placeholder="Enter department"
-          className="border px-3 py-2 rounded-xl w-full mb-4"
+          className="border px-3 py-2 rounded-xl w-full mb-3"
           value={formData.department || ''}
           onChange={(e) => handleChange('department', e.target.value)}
         />
@@ -340,7 +340,7 @@ useEffect(() => {
           type="number"
           min={0}
           placeholder="E.g. 12"
-          className="border px-3 py-2 rounded-xl w-full mb-4"
+          className="border px-3 py-2 rounded-xl w-full mb-3"
           value={formData.experienceInMonths || ''}
           onChange={(e) => handleChange('experienceInMonths', e.target.value)}
         />
@@ -348,7 +348,7 @@ useEffect(() => {
         <label className="text-sm font-medium mb-1">
           Email ID <span className="text-red-500">*</span>
         </label>
-        <div className="relative mb-4">
+        <div className="relative mb-3">
           <input
             type="email"
             placeholder="Enter official company email"
@@ -379,7 +379,7 @@ useEffect(() => {
                 maxLength={6}
                 pattern="\d{6}"
                 placeholder="- - - - - -"
-                className="border px-3 py-2 rounded-xl w-full text-center tracking-widest text-xl mb-4"
+                className="border px-3 py-2 rounded-xl w-full text-center tracking-widest text-xl mb-3"
                 value={otp}
                 onChange={(e) => {
                   const val = e.target.value.replace(/\D/g, '');

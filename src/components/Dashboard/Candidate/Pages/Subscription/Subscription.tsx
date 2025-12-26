@@ -14,6 +14,8 @@ import OrderDetailsModal from "./modals/OrderDetailsModal";
     creditedReferrals: number;
     availableReferrals: number;
     requestedReferrals:number;
+    completedReferrals:number;
+    acceptedReferrals:number;
   }
   interface UserDetails {
   name: string;
@@ -63,6 +65,7 @@ const Subscription = () => {
     setIsLoading(true);
     try {
       const data = await profileService.getSubscriptionPlan(user.email);
+      console.log(data)
       if (data && data.length > 0) {
         setSubscriptionData(data[data.length-1]);
         setActivePlan(data[data.length-1].name);
@@ -164,7 +167,7 @@ const Subscription = () => {
               <div className="flex items-center justify-between mb-4">
                 <div className="font-semibold text-sm">Referrals Consumed</div>
                 <div className="bg-[#f6f6f6] text-[#316bff] font-semibold w-12 h-[30px] flex items-center justify-center rounded-lg border border-[#c0b7b7]">
-                  {subscriptionData.requestedReferrals}
+                  {subscriptionData.completedReferrals + subscriptionData.acceptedReferrals + subscriptionData.requestedReferrals}
                 </div>
               </div>            
               <div className="flex items-center justify-between mb-4">

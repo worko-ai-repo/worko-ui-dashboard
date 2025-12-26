@@ -226,6 +226,20 @@ const ReferralsTable = memo(
         ),
       },
       {
+        key: "refereeDesignation",
+        label: "Referee Designation",
+        render: (row: ReferralDetailsDto) => (
+        <div className='flex justify-center m-auto w-[150px]'>
+        <span 
+          className="truncate block w-full"
+          title={""}
+          >
+          {"N/A"}
+          </span>
+        </div>
+      ),
+      },
+      {
         key: "update",
         label: "Update",
         render: (row: ReferralDetailsDto) => {

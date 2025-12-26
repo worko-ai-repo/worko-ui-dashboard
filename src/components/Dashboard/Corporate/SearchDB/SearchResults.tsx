@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
@@ -7,89 +7,22 @@ import { RefreshCcw, LogOut, Sparkles, ArrowRight, MicOff, Mic, Search } from 'l
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
 import SearchResultsTable from "./SearchResultsTable";
-import JobDropdown from "./JobDropdown";
+import JobDropdown, { JobOption } from "./JobDropdown";
 import Dropdown from "./Dropdown";
 import { useSpeechRecognition } from "@Hooks/useSpeechSynthesis.hook";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useAppContext } from "@Context/App.context";
+import { PaginationInfo } from "../Agency/AgencyCandidateList";
 
-const dummyData = [
-  {
-    id: 1,
-    candidateName: "Aarav Mehta",
-    currentCompany: "Infosys",
-    coreSkills: "Java, Spring Boot, Microservices",
-    currentDesignation: "Backend Developer",
-    YOE: "3",
-    source: "LinkedIn",
-    about: "A passionate backend developer with strong experience in building scalable APIs.",
-    CTC: "8 LPA",
-    ECTC: "10 LPA",
-    cvLink: "https://example.com/cv/aarav-mehta",
-    emailId:"asad@gmail.com",
-    contactNumber:"+91 8899006655"
-  },
-  {
-    id: 2,
-    candidateName: "Sanya Kapoor",
-    currentCompany: "TCS",
-    coreSkills: "React, Redux, TypeScript",
-    currentDesignation: "Frontend Engineer",
-    YOE: "4",
-    source: "Naukri",
-    about: "Frontend specialist with a strong eye for design and usability.",
-    CTC: "9.5 LPA",
-    ECTC: "12 LPA",
-    cvLink: "https://example.com/cv/sanya-kapoor",
-    emailId:"asad@gmail.com",
-    contactNumber:"+91 8899006655"
-  },
-  {
-    id: 3,
-    candidateName: "Rohan Iyer",
-    currentCompany: "Wipro",
-    coreSkills: "Python, Django, REST APIs",
-    currentDesignation: "Software Engineer",
-    YOE: "2",
-    source: "Referral",
-    about: "Full-stack developer with a focus on Python and backend services.",
-    CTC: "6.2 LPA",
-    ECTC: "8.5 LPA",
-    cvLink: "https://example.com/cv/rohan-iyer",
-    emailId:"asad@gmail.com",
-    contactNumber:"+91 8899006655"
-  },
-  {
-    id: 4,
-    candidateName: "Megha Sharma",
-    currentCompany: "Cognizant",
-    coreSkills: "Angular, HTML, SCSS, RxJS",
-    currentDesignation: "UI Developer",
-    YOE: "5",
-    source: "Job Portal",
-    about: "UI/UX enthusiast with over 5 years of experience in building responsive web applications.",
-    CTC: "11 LPA",
-    ECTC: "13 LPA",
-    cvLink: "https://example.com/cv/megha-sharma",
-    emailId:"asad@gmail.com",
-    contactNumber:"+91 8899006655"
-  },
-  {
-    id: 5,
-    candidateName: "Nikhil Verma",
-    currentCompany: "HCL Technologies",
-    coreSkills: "Node.js, MongoDB, AWS",
-    currentDesignation: "Full Stack Developer",
-    YOE: "6",
-    source: "Company Career Page",
-    about: "Experienced full-stack developer with a knack for building cloud-native applications.",
-    CTC: "14 LPA",
-    ECTC: "16.5 LPA",
-    cvLink: "https://example.com/cv/nikhil-verma",
-    emailId:"asad@gmail.com",
-    contactNumber:"+91 8899006655"
-  }
-];
+export const initialPaginationState: PaginationInfo = {
+  count: 0,
+  pageSize: 10,
+  sortOrder: "descending",
+  timesQueried: 0,
+  queriedCount: 0,
+  lastKey: "",
+  hasMore: false,
+};
 
   const suggestions = [
     "Show candidates with 3+ years of experience available to join in less than 30 days",
@@ -106,15 +39,23 @@ const dummyData = [
     const [isLoading,setIsLoading] = useState<boolean>(false)
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
     const [input, setInput] = React.useState("");
-    const [mode, setMode] = React.useState<"jobs" | "prompt">("jobs");
+    const [mode, setMode] = React.useState<"jobs" | "prompt">("prompt");
     const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
     const suggestRef = useRef<HTMLDivElement>(null);
     const baseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
     const [fetchData,setFetchData] = useState<any>([])
     const { userDetails } = useAppContext();
-    const [jobsList,setJobsList] = useState([]);
-    
+    const [jobsList,setJobsList] = useState<JobOption[]>([]);
+    const [pageSize,setPageSize] = useState<number>(10);
+    const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
+    const [hasMore, setHasMore] = useState<boolean>(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const [selectedJobId, setSelectedJobId] = useState<string>("");
+    const [isJobsLoading, setIsJobsLoading] = useState<boolean>(false);
+    const navigate = useNavigate();
+
       useEffect(()=>{
+        setIsJobsLoading(true)
       const fetchJobs = async() =>{
       const params = {
         pageSize: 200,
@@ -133,6 +74,8 @@ const dummyData = [
         }
       } catch (error) {
         console.log(error)
+      } finally{
+        setIsJobsLoading(false)
       }
     }
     fetchJobs()
@@ -156,82 +99,220 @@ const dummyData = [
       };
     }, []);
 
-    const { transcript, interimTranscript, isListening, isSupported, error, startListening, stopListening,resetTranscript,} = useSpeechRecognition();
+    const {
+      transcript,
+      interimTranscript,
+      isListening,
+      isSupported,
+      error,
+      startListening,
+      stopListening,
+      resetTranscript,
+    } = useSpeechRecognition();
 
-  const fetchCandidates = async () => {
-    const q = input.trim();
-    if (!q) return;
+    useEffect(() => {
+      if (transcript && transcript.trim()) {
+        setInput(transcript);
+      }
+    }, [transcript]);
+
+  const fetchCandidates = useCallback(
+    async (
+    q: string,
+    currentMode: "jobs" | "prompt",
+    page = 1,
+    size = pageSize
+  ) => {
+    if (!q.trim()) return;
 
     setIsLoading(true);
     try {
-      const params = { mode, query: q };
-      const { response } = await httpServiceObj.get<any>(`${baseUrl}/fetch-candidate`,true,params,true);
-      setFetchData(response?.data ?? dummyData);
+      const params =
+        currentMode === "prompt"
+          ? { searchByPrompt: q, pageNumber: page, pageSize: size }
+          : { searchByJobId: q, pageNumber: page, pageSize: size };
+
+      const { response } = await httpServiceObj.get<any>(`${baseUrl}/candidate-parsed-cv/search-in-db/corp-action`,true,params,true);
+
+      setFetchData(response?.data);
+      setHasMore(response?.pagination?.hasMore || false);
     } catch (err) {
-      console.error(err);
       toast.error("Failed to fetch candidates.", getToastOptions());
-      setFetchData(dummyData);
     } finally {
       setIsLoading(false);
     }
+  },
+  []
+);
+
+
+  useEffect(() => {
+    const q = searchParams.get("jobs") || searchParams.get("prompt") || "";
+    if (!q) return;
+
+    const currentMode = searchParams.has("jobs") ? "jobs" : "prompt";
+
+    setMode(currentMode);
+
+    if (currentMode === "jobs") {
+      setSelectedJobId(q);
+    } else {
+      setInput(q);
+    }
+
+    fetchCandidates(q, currentMode, 1, pageSize);
+  }, [searchParams]);
+
+  // to populate the first search
+  useEffect(() => {
+    if (mode === "jobs" && selectedJobId && jobsList.length) {
+      const job = jobsList.find(j => j.id === selectedJobId);
+      if (job) {
+        setInput(job.jobTitle);
+      }
+    }
+  }, [mode, selectedJobId, jobsList]);
+
+
+
+  // useEffect(() => {
+  //   const q = searchParams.get("jobs") || searchParams.get("prompt") || "";
+  //   let currentMode: "jobs" | "prompt" = "prompt";
+    
+  //   if (searchParams.has("jobs")) {
+  //     currentMode = "jobs";
+  //     setMode("jobs");
+  //   } else if (searchParams.has("prompt")) {
+  //     currentMode = "prompt";
+  //     setMode("prompt");
+  //   }
+    
+  //   setInput(q);
+  //   console.log(mode,q)
+  //   // Call API with the determined mode
+  //   if(q && currentMode) {
+  //     const fetchCandidatesForMode = async () => {
+  //       setIsLoading(true);
+  //       try {
+  //         let params;
+  //         if(currentMode === "prompt"){
+  //           params = {
+  //             // companyId: userDetails?.companyId,
+  //             searchByPrompt: q,
+  //             pageNumber:1,
+  //             pageSize:pageSize
+  //           };
+  //         } else {
+  //           params = {
+  //             // companyId: userDetails?.companyId,
+  //             searchByJobId: q,
+  //             pageNumber:1,
+  //             pageSize:pageSize
+  //           };
+  //         }
+  //         const { response } = await httpServiceObj.get<any>(`${baseUrl}/candidate-parsed-cv/search-in-db/corp-action`, true, params, true);
+  //         setFetchData(response?.data);
+  //       } catch (err) {
+  //         console.error(err);
+  //         toast.error("Failed to fetch candidates.", getToastOptions());
+  //       } finally {
+  //         setIsLoading(false);
+  //       }
+  //     };
+  //     fetchCandidatesForMode();
+  //   }
+  // }, [searchParams, userDetails?.companyId]);
+    
+
+const handlePageChange = useCallback(
+  (page: number) => {
+    const queryValue = mode === "jobs" ? selectedJobId : input;
+    setCurrentPage(page);
+    fetchCandidates(queryValue, mode, page, pageSize);
+  },
+  [input, selectedJobId, mode, pageSize]
+);
+
+
+
+  const handlePageSizeChange = useCallback(
+    (size: number) => {
+      setPageSize(size);
+      setCurrentPage(1);
+      fetchCandidates(input, mode, 1, size);
+    },
+    [input, mode]
+  );
+
+  const toggleRow = (row: any) => {
+    setSelectedRows((prev) =>
+      prev.some((r) => r.id === row.id)
+        ? prev.filter((r) => r.id !== row.id)
+        : [...prev, row]
+    );
   };
 
-    useEffect(() => {
-      const q = searchParams.get("jobs") || searchParams.get("prompt") || "";
-      if (searchParams.has("jobs")) {
-        setMode("jobs");
-        setInput(q);
-      } else if (searchParams.has("prompt")) {
-        setMode("prompt");
-        setInput(q);
-      }
-      if(q && mode){
-        fetchCandidates()
-      }
-    }, [searchParams]);
+  const toggleSelectAll = (rows: any[]) => {
+      if (selectedRows.length === rows.length) setSelectedRows([]);
+      else setSelectedRows(rows);
+  };
     
-        const toggleRow = (row: any) => {
-        setSelectedRows((prev) =>
-          prev.some((r) => r.id === row.id)
-            ? prev.filter((r) => r.id !== row.id)
-            : [...prev, row]
-        );
-      };
-    
-        const toggleSelectAll = (rows: any[]) => {
-            if (selectedRows.length === rows.length) setSelectedRows([]);
-            else setSelectedRows(rows);
-        };
-    
-        const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
-        const reset = () => setSelectedRows([]);
-        
-        const refetch = () => {};
-        const handleJobApplicationStatusUpdate = () => {};
-        const handleSendToRecruiter = () => {};
-        const onBulkUpdate = () => {};
-    
-        const ListSelection = {
-        selectedRows,
-        toggleSelectAll,
-        toggleRow,
-        getAllSelected,
-        reset,
-        };
-    
-        const handleSubmit = () => {
-          if (!input.trim()) return;
-          setIsSuggestionsOpen(false);
-          fetchCandidates();
-        };
+  const getAllSelected = (rows: any[]) => selectedRows.length === rows.length;
+  const reset = () => setSelectedRows([]);
+  
+  const refetch = () => {};
+  const handleJobApplicationStatusUpdate = () => {};
+  const handleSendToRecruiter = () => {};
+  const onBulkUpdate = () => {};
 
-        const handleMicToggle = () => {
-      if (isListening) {
-        stopListening();
-      } else {
-        startListening();
-      }
-    };
+  const ListSelection = {
+  selectedRows,
+  toggleSelectAll,
+  toggleRow,
+  getAllSelected,
+  reset,
+  };
+    
+  const handleSubmit = () => {
+    const queryValue = mode === "jobs" ? selectedJobId : input;
+  if (!queryValue.trim()) return;
+
+  setIsSuggestionsOpen(false);
+  setCurrentPage(1);
+
+  navigate(
+    `/corporate/aSearchDB/results?${mode}=${encodeURIComponent(queryValue)}`
+  );
+  };
+
+  const handleMicToggle = () => {
+    if (isListening) {
+      stopListening();
+    } else {
+      startListening();
+    }
+  };
+
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+    });
+  }, []);
+
+  const handleLocalUpdateForMatchingScore = useCallback((jobId: string, updatedData: any) => {
+  setFetchData((prevData:any) => {
+  if (!prevData || !Array.isArray(prevData)) return prevData;
+
+  return prevData.map(job =>
+    job.candidateJobMatchingId === jobId ? { ...job, ...updatedData } : job
+  );
+  });
+}, []);
+
     return (
       <div>
         <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
@@ -260,7 +341,7 @@ const dummyData = [
           handleSubmit();
         }
       }}
-      onFocus={() => setIsSuggestionsOpen(true)}   // ← add this
+      onFocus={() => setIsSuggestionsOpen(true)}
       placeholder="Write your prompt here..."
       className="w-full h-36 resize-none px-4 py-3 pr-24 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none rounded-2xl"
     />
@@ -272,6 +353,8 @@ const dummyData = [
               input={input}
               setInput={setInput}
               handleSubmit={handleSubmit}
+              setSelectedJobId={setSelectedJobId}
+              isJobsLoading={isJobsLoading}
             />
           </div>
           <button
@@ -391,7 +474,7 @@ const dummyData = [
           />
           ) : (
           <SearchResultsTable
-            data={dummyData}
+            data={fetchData}
             userType="CORPORATE"
             refetch={refetch}
             ListSelection={ListSelection}
@@ -399,6 +482,15 @@ const dummyData = [
             sendApplicationToRecruiter={handleSendToRecruiter}
             isBulkEvaluation={!!selectedRows.length}
             onBulkUpdate={onBulkUpdate}
+            currentPage={currentPage}
+            pageSize={pageSize}
+            hasMore={hasMore}
+            onPageChange={handlePageChange}
+            onPageSizeChange={handlePageSizeChange}
+            mode={mode}
+            selectedJobId={selectedJobId}
+            localUpdate={handleLocalUpdate}
+            handleLocalUpdateForMatchingScore={handleLocalUpdateForMatchingScore}
           />
           )}
       </div>

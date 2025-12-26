@@ -182,7 +182,18 @@ const ReferralsTable = ({
       ),
     },
 
-    { key: "phone", label: "Phone" },
+    { key: "phone",
+      label: "Phone" , 
+      sortable:true,
+      render: (row: any) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span className="truncate block w-full" 
+            title={row?.phone}>
+            +91 {row?.phone?? ""}
+          </span>
+        </div>
+      ),
+    },
     { key: "dateReferred", label: "Date Referred", sortable: true },
     { key: "dateApplied", label: "Date Applied", sortable: true },
     {

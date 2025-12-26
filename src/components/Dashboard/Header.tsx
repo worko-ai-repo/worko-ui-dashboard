@@ -49,7 +49,7 @@ const getInitialFrame = () => {
      
       <div className="absolute bottom-0 left-0 w-full border-b border-gray-200" />
       
-      <div className="flex flex-col sm:flex-row flex-wrap w-full items-center z-10 gap-4 sm:gap-0">
+      <div className="flex flex-col sm:flex-row flex-wrap w-full items-center z-10 gap-4 sm:gap-0 overflow-hidden">
         <div className="w-full sm:w-1/3 flex justify-between sm:justify-start">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-grow">
             <div className="flex items-center justify-between w-full sm:w-auto">

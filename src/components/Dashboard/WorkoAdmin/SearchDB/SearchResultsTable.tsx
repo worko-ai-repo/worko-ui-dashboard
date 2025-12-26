@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -71,28 +71,38 @@ export default function SearchResultsTable(props: any) {
 
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
-    yoe: ["yoe", "applicantDetails.YOE"],
-    matchingScore: [
-      "matchingScore",
-      "scoreDetails.matchingScore",
-      "scoreDetails.matchingScorePercentage",
-    ],
-    experience: ["applicantDetails.YOE", "yoe"],
-    location: ["applicantDetails.location"],
-    applicantDetails_candidateExperience_designation: [
-      "applicantDetails.candidateExperience.designation",
-    ],
-    applicantDetails_CTC: ["applicantDetails.CTC"],
-    current_CTC: ["applicantDetails.CTC"], //changed currentCTC to current_CTC
-    ECTC: ["applicantDetails.ECTC"],
-    remarks: ["remarks", "remark"],
+    candidateName: ["name"],
+    currentCompany: ["currentCompany"],
+    email: ["email"],
+    contactNumber: ["phoneNumberDetails.number"],
+    coreSkills: ["coreSkillsSortValue"],
+    currentDesignation: ["currentDesignation"],
+    relevantYOE: ["relevantYOE"],
+    source: ["source"],
+    about: ["about"],
+    currentCTC: ["currentCTC"],
+    expectedCTC: ["expectedCTC"],
   };
+
+  const sortableData = useMemo(() => {
+    return (data ?? []).map((row: any) => ({
+      ...row,
+      coreSkillsSortValue:
+        row.coreSkills
+          ?.map((s: any) => s.skillName)
+          // .sort()
+          .join(", ")
+          .toLowerCase() || "",
+    }));
+  }, [data]);
+
+  //below instead of data we used sortableData cause coreskills need to be looped
   const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(
-    data,
+    sortableData,
     keyFallbacks,
     {
       tableId: `database`,
-      persistInUrl: true,
+      persistInUrl: false,
       persistInLocalStorage: false,
       defaultSort: null,
     }
@@ -206,14 +216,16 @@ export default function SearchResultsTable(props: any) {
     {
       key: "coreSkills",
       label: "Core skills",
-      sortable: false,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px] text-start">
-          <span title={row?.coreSkills} className="truncate block w-full">
-            {row?.coreSkills ?? "NA"}
-          </span>
-        </div>
-      ),
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => {
+        const skillsText = (row.coreSkills ?? []).map((skill) => skill?.skillName).join(", ");
+
+        return (
+          <div className="w-[150px] truncate" title={skillsText}>
+            {skillsText.length ? skillsText : "NA"}
+          </div>
+        );
+      },
     },
     {
       key: "currentDesignation",

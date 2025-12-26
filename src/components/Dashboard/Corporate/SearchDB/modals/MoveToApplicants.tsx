@@ -4,15 +4,19 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import { getToastOptions } from 'lib-worko-ui';
 import { ChevronDown, Plus, SendIcon, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useSearchParams } from "react-router-dom";
 import { toast } from 'react-toastify';
 
 interface MoveToApplicantsProps {
   dashboardType: string;
+  textToDisplay:string;
   onClose: () => void;
   isOpen: boolean;
-  // jobsList: JobData[];
-  agencyData:AgencyDatabaseApplicantDetailsDto;
+  jobsList: JobData[];
+  candidateData:AgencyDatabaseApplicantDetailsDto;
   userDetails:any;
+  submitFunction:((row:any,currentText:string,selectedJobId:string)=>void)
+  selectedJobId:string;
 }
 
 export interface CompanyFormData {
@@ -47,7 +51,7 @@ export interface CompanyAPIResponse {
 
 
 
-const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onClose, isOpen, agencyData, userDetails }) => {
+const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, textToDisplay, onClose, isOpen, candidateData, userDetails, submitFunction , jobsList, selectedJobId}) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -60,7 +64,6 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
   const [companyJobs, setCompanyJobs] = useState<JobData[]>([]);
   const [isLoadingCompany, setIsLoadingCompany] = useState(false);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
-
   // Modal open/close animation
   useEffect(() => {
     if (isOpen) {
@@ -103,56 +106,92 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
 };
 
   // Submit handler
-  const handleSubmit = async() => {
-    setIsSubmitting(true);
-    if(!userDetails){
-      toast.error("No user details found please login again",getToastOptions({}))
-      setIsSubmitting(false);
-      return
-    }
+const handleSubmit = async () => {
+  setIsSubmitting(true);
 
-    if(selectedJobs.length <= 0){
-      toast.error("Atleast one job needs to be selected",getToastOptions({}))
-      setIsSubmitting(false);
-      return
-    }
+  try {
+    await submitFunction(
+      candidateData,
+      textToDisplay,
+      selectedJobs[0]?.id,
+    );
 
-    const jobIds = selectedJobs.map((job)=>{
-      return job.id
-    })
+    setSelectedJobs([]);
+    onClose();
+  } catch (error) {
+    console.error(error);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
-    const payload = {
-      jobId: selectedJobs[0]?.id,
-      companyName: selectedJobs[0]?.companyName,
-      applicantEmail: agencyData?.emailId,
-      // may need to send job title as well
-      // jobTitle:selectedJobs[0]?.jobDetails?.jobTitle
-    }
 
-    try {
-      const {response, error} = await httpServiceObj.post<any>(`/job-application/move-to-applicant`,payload,true,{},false,"JOB")
+  // const handleSubmit = async() => {
+  //   setIsSubmitting(true);
+  //   if(!userDetails){
+  //     toast.error("No user details found please login again",getToastOptions({}))
+  //     setIsSubmitting(false);
+  //     return
+  //   }
 
-      if (error) {
-        if(error?.message){
-          toast.error(error.message, getToastOptions({}));
-          return;
-        }else{
-          toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
-          return;
-        }
-      }
-      if(response){
-        toast.success("Job moved to applicant successfully", getToastOptions({}));
-        setSelectedJobs([]);
-        onClose();
-      }
-    } catch (err) {
-      console.error("Assignment error:", err);
-      toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  //   if(selectedJobs.length <= 0){
+  //     toast.error("Atleast one job needs to be selected",getToastOptions({}))
+  //     setIsSubmitting(false);
+  //     return
+  //   }
+
+  //   const jobIds = selectedJobs.map((job)=>{
+  //     return job.id
+  //   })
+
+  //   let payload:any = {
+  //     jobId: selectedJobs[0]?.id,
+  //     candidateParsedCvId: candidateData.id,
+  //   }
+
+  //   if(text === "Move to applicants"){
+  //     payload = {
+  //       ...payload,
+  //       companyName: selectedJobs[0].companyName,
+  //       jobTitle: selectedJobs[0].jobTitle,
+  //     }
+  //   }
+  //   try {
+  //     let url = text === "Find matching score"
+  //     ? `${agencyBaseUrl}/candidate-parsed-cv/find-matching-score`
+  //     : `${agencyBaseUrl}/candidate-parsed-cv/move-to-applicant`;
+
+  //     const {response, error} = await httpServiceObj.post<any>(url,payload,true,{},true)
+
+  //     if (error) {
+  //       if(error?.message){
+  //         toast.error(error.message, getToastOptions({}));
+  //         return;
+  //       }else{
+  //         if(text === "Find matching score") toast.error("Find matching score failed. Please try again.", getToastOptions({}));
+  //         if(text === "Move to applicants") toast.error("Candidate moving to applicant failed. Please try again.", getToastOptions({}));
+  //         return;
+  //       }
+  //     }
+  //     if(response){
+  //       if(text === "Find matching score") {
+  //         toast.success("Find Score initiated please wait", getToastOptions({}));
+  //         return
+  //       }
+  //       if(text === "Move to applicants") {
+  //         toast.success("Candidate moved to applicant successfully", getToastOptions({}));
+  //         return
+  //       } 
+  //       setSelectedJobs([]);
+  //       onClose();
+  //     }
+  //   } catch (err) {
+  //     console.error("Assignment error:", err);
+  //     toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
+  //   } finally {
+  //     setIsSubmitting(false);
+  //   }
+  // };
 
   const removeSelectedJob = (id: string) => {
     setSelectedJobs(prev => {
@@ -218,7 +257,7 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, onCl
           ×
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-left">Move to applicants</h2>
+        <h2 className="text-xl font-semibold mb-4 text-left">{textToDisplay}</h2>
       
         {/* Input & dropdown */}
         <div className="relative w-full" ref={dropdownRef}>

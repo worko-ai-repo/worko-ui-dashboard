@@ -10,7 +10,7 @@ import httpServiceObj from '@Services/ApiHandler.service';
 
 const SearchPrompt: React.FC = () => {
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<"jd" | "prompt">("jd");
+  const [mode, setMode] = useState<"jobs" | "prompt">("prompt");
   const [jobsList,setJobsList] = useState([]);
   const [isFetchingJobs,setIsFetchingJobs] = useState(false);
   const { userDetails } = useAppContext();
@@ -118,7 +118,7 @@ const SearchPrompt: React.FC = () => {
         </div>
 
         <div className="border border-border rounded-2xl shadow-sm bg-white z-9999">
-        <div className={`relative border border-border ${mode === "jd" ? "rounded-2xl" : "rounded-t-2xl"} shadow-sm bg-white`}>
+        <div className={`relative border border-border ${mode === "jobs" ? "rounded-2xl" : "rounded-t-2xl"} shadow-sm bg-white`}>
   {mode === "prompt" ? (
     <textarea
       value={input}
@@ -159,7 +159,7 @@ const SearchPrompt: React.FC = () => {
   )}
 
   {/* Mic + Arrow buttons (only in prompt mode) */}
-  {mode !== "jd" && (
+  {mode !== "jobs" && (
     <div className="absolute top-3 right-3 flex gap-2 items-center">
       {isSupported && (
         <button

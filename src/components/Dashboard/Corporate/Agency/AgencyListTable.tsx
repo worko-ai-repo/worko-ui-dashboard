@@ -450,8 +450,11 @@ export default function AgencyListTable(props: any) {
       {isAssignJobModelOpen && (
         <AssignJobModal
           dashboardType={"CORPORATE"}
-          onClose={() => setIsAssignJobModelOpen(false)}
-          isOpen={isAssignJobModelOpen}
+          onClose= {() => {
+            setIsAssignJobModelOpen(false);
+            setEditProfileData(null)
+          }}
+          isOpen= {isAssignJobModelOpen}
           jobsList={jobsList}
           agencyData={editProfileData}
           userDetails={userDetails}
@@ -462,8 +465,11 @@ export default function AgencyListTable(props: any) {
       {isRemoveJobModelOpen && (
         <RemoveJobModal
           dashboardType={"CORPORATE"}
-          onClose={() => setIsRemoveJobModelOpen(false)}
-          isOpen={isRemoveJobModelOpen}
+          onClose= {() => {
+            setIsRemoveJobModelOpen(false);
+            setEditProfileData(null)
+          }}
+          isOpen= {isRemoveJobModelOpen}
           // jobsList={jobsList}
           agencyData={editProfileData}
           userDetails={userDetails}
@@ -473,29 +479,38 @@ export default function AgencyListTable(props: any) {
       {isEditAgencyModelOpen && (
         <EditAgencyModal
           dashboardType={"CORPORATE"}
-          onClose={() => setIsEditAgencyModelOpen(false)}
-          isOpen={isEditAgencyModelOpen}
+          onClose= {() => {
+            setIsEditAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
+          isOpen= {isEditAgencyModelOpen}
           data={editProfileData}
           localUpdate={localUpdate}
         />
       )}
-      <PauseAgencyModal
-        dashboardType={"CORPORATE"}
-        onClose={() => setIsPauseAgencyModelOpen(false)}
-        isOpen={isPauseAgencyModelOpen}
-        data={editProfileData}
-        localUpdate={localUpdate}
-      />
+        <PauseAgencyModal
+          dashboardType={"CORPORATE"}
+          onClose= {() => {
+            setIsPauseAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
+          isOpen= {isPauseAgencyModelOpen}
+          data={editProfileData}
+          localUpdate={localUpdate}
+        />
 
-      <DeleteAgencyModal
-        dashboardType={"CORPORATE"}
-        onClose={() => setIsDeleteAgencyModelOpen(false)}
-        isOpen={isDeleteAgencyModelOpen}
-        localUpdate={localUpdate}
-        data={editProfileData}
-        removeAgencyLocally={removeAgencyLocally}
-      />
-      {/* <Modal
+        <DeleteAgencyModal
+          dashboardType={"CORPORATE"}
+          onClose= {() => {
+            setIsDeleteAgencyModelOpen(false);
+            setEditProfileData(null)
+          }}
+          isOpen= {isDeleteAgencyModelOpen}
+          localUpdate={localUpdate}
+          data={editProfileData}
+          removeAgencyLocally={removeAgencyLocally}
+        />
+        {/* <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {
             setIsViewCVModalOpen(false);
@@ -508,18 +523,19 @@ export default function AgencyListTable(props: any) {
             jobApplicationData={editProfileData}
           />
         </Modal> */}
-      <Modal
-        isOpen={isViewCVModalOpen}
-        onClose={() => {
-          setIsViewCVModalOpen(false);
-        }}
-        className="w-[90vw] sm:max-w-4xl h-full">
-        {!pdfViewDetails ? (
-          <NoDataPresent />
-        ) : (
-          <CVPreviewRaw
-            heading={"Contract copy preview"}
-            pdfUrl={pdfViewDetails}
+        <Modal
+          isOpen={isViewCVModalOpen}
+          onClose={() => {
+            setIsViewCVModalOpen(false);
+            setEditProfileData(null);
+          }}
+          className="w-[90vw] sm:max-w-4xl h-full">
+          {!pdfViewDetails ? (
+            <NoDataPresent />
+          ) : (
+            <CVPreviewRaw 
+            heading={"Contract copy preview"} 
+            pdfUrl={pdfViewDetails} 
             onClose={() => {
               setIsViewCVModalOpen(false);
               setEditProfileData(null);

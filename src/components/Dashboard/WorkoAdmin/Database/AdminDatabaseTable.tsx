@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Eye, Pencil, User } from "lucide-react";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
@@ -91,37 +91,41 @@ export default function AdminDatabaseTable(props: any) {
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 
   // Sorting hook (keeps same fallback keys as before)
-  const keyFallbacks = {
-    candidateName: ["candidateParsedCvDetails.name"],
-    email: ["candidateParsedCvDetails.email"],
-    contact: ["phoneNumberDetails.number"],
-    currentDesignation: ["candidateParsedCvDetails.currentDesignation"],
-    currentLocation: ["candidateParsedCvDetails.location"],
-    noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
-    YOE: ["candidateParsedCvDetails.totalYOE"],
-    currentCTC: ["candidateParsedCvDetails.currentCTC"],
-    expectedCTC: ["candidateParsedCvDetails.expectedCTC"],
-    appliedCompany: [
-      "candidateProfileInCompanies",
-      "candidateProfileInCompanies.companyName",
-      "companyName",
-    ],
-    addedBy: ["addedBy"],
-    addedFor: ["addedFor"],
-    coolingPeriod: ["coolingPeriod"],
-    lastActive: ["lastActive"],
-  };
+const keyFallbacks = {
+  candidateName: ["candidateParsedCvDetails.name"],
+  email: ["candidateParsedCvDetails.email"],
+  contact: ["phoneNumberDetails.number"],
+  currentDesignation: ["candidateParsedCvDetails.currentDesignation",],
+  currentLocation: ["candidateParsedCvDetails.location"],
+  noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
+  YOE: ["candidateParsedCvDetails.totalYOE",],
+  currentCTC: ["candidateParsedCvDetails.currentCTC",],
+  expectedCTC: ["candidateParsedCvDetails.expectedCTC",],
+  appliedCompany: [ "appliedCompaniesSortValue",],
+  addedBy: ["addedBy"],
+  addedFor: ["addedFor"],
+  coolingPeriod: ["coolingPeriod"],
+  lastActive: ["lastActive"],
+};
 
-  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(
-    data,
-    keyFallbacks,
-    {
-      tableId: `database`,
-      persistInUrl: true,
-      persistInLocalStorage: false,
-      defaultSort: null,
-    }
-  );
+  const sortableData = useMemo(() => {
+    return (data ?? []).map((row:any) => ({
+        ...row,
+        appliedCompaniesSortValue: row.candidateProfileInCompanies
+        ?.map((s:any) => s.companyName)
+        // .sort()
+        .join(", ")
+        .toLowerCase() || "",
+    }));
+  }, [data]);
+
+    //below instead of data we used sortableData cause applied companies need to be looped 
+  const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(sortableData, keyFallbacks, {
+  tableId: `database`,
+  persistInUrl: true,
+  persistInLocalStorage: false,
+  defaultSort: null,
+  });
 
   // Helpers for status transitions
   const shouldShowUpdateIcon = (row: any) => {
@@ -258,20 +262,18 @@ export default function AdminDatabaseTable(props: any) {
       label: "Applied Companies",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => {
-        const companyList =
-          (row?.candidateProfileInCompanies ?? [])
-            .map((company) => {
-              return company.companyName;
-            })
-            .join(", ") || "-";
+        const companyList = (row?.candidateProfileInCompanies?? [])
+        .map(company => company.companyName)
+        .join(", ");
         return (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span title={companyList} className="truncate block w-full">
-              {companyList ?? "NA"}
-            </span>
-          </div>
-        );
-      },
+          <div className='flex justify-center m-auto w-[150px]'>
+              <span 
+              title={companyList}
+              className="truncate block w-full">
+                {companyList.length ? companyList: "NA"}
+              </span>
+          </div>)
+          }
     },
     {
       key: "currentCTC",

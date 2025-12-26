@@ -26,6 +26,9 @@ export interface AgencyAllCandidatesListDetailsDto {
     //fake data
     score: number;
   };
+  matchingScore:number;
+  scoreDetails:string;
+  
   //fake data
   applicantName: string;
   statusTracker: any;
@@ -122,7 +125,19 @@ export interface AgencyDatabaseApplicantDetailsDto {
   refereeType: string;
   updatedAt: string;
   candidateProfileInCompanies: CandidateProfileInCompanies[];
-
+  name:string;
+  email:string;
+  relevantYOE:number;
+  currentCTC:number;
+  expectedCTC:number;
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS";
+  cvAwsS3FileName:string;
+  userDetailId:string;
+  corporateBulkJdId:string;
+  isFindMatchingScoreInProgress:boolean;
+  matchingScore:number;
+  candidateMovedToApplicants:boolean;
+  scoreDetails:string;
   //fake data
   emailId: string;
   addedBy: string;
@@ -135,7 +150,9 @@ export interface AgencyDatabaseApplicantDetailsDto {
   candidateName: string;
   currentCompany: string;
   contactNumber: string;
-  coreSkills: any;
+  coreSkills: {
+    skillName:string;
+  }[];
   currentDesignation: string;
   YOE: string;
   source: string;
@@ -143,6 +160,15 @@ export interface AgencyDatabaseApplicantDetailsDto {
   CTC: string;
   ECTC: string;
   cvLink: string;
+  matchingScoreDetails: {
+    rejectionFeedbackBySystemForApplicant: string;
+    rejection_feedback: string;
+    matchingScore: number;
+    scoreDetails: string;
+    scoreDetailsForApplicant: string;
+    //fake data
+    score: number;
+  };
 }
 
 export interface CandidateProfileInCompanies {
