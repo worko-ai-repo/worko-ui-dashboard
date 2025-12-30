@@ -11,7 +11,6 @@ import RequestDocumentModal, {
   RequestDocModalProps,
 } from "@Components/Shared/ApplicantsPage/RequestDocModal";
 import Modal from "../../../Shared/Modal";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import NotesApp from "@Components/Shared/ApplicantsPage/Notes";
 
 // Assets and interfaces
@@ -51,7 +50,7 @@ import RejectionFeedback from "@Components/Shared/ApplicantsPage/RejectionFeedba
 import { InterviewDto } from "@TypesAndConstants/Interview.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import interviewService from "@Services/Interview.service";
-import { DynamicTableApplications } from "@Components/Shared/DynamicTableApplications";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ApplicantExpandedRowDetails, {
   expandedExtraApplicationRow,
 } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
@@ -639,7 +638,7 @@ export default function ApplicationTable({
       label: "Not Responding",
       render: () => (
         <div className="flex items-center justify-center">
-          <button title="Not Responding">
+          <button data-tooltip-id="my-tooltip" data-tooltip-content="Mark as Not Responding">
             <img src={`${Not_Responding}`} alt="Not Responding" className="w-8 h-8" />
           </button>
         </div>
@@ -833,7 +832,7 @@ export default function ApplicationTable({
       </button>
 
       {/* Main table component */}
-      <DynamicTableApplications
+      <NewDynamicTable
         columns={applicationColumns}
         rows={sortedData ?? []}
         selectedRows={ListSelection.selectedRows.map((row) => row.id)}

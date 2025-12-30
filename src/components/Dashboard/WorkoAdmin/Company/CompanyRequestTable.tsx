@@ -1,4 +1,4 @@
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -12,7 +12,11 @@ import UpdateCompany from "./UpdateCompany";
 interface CompanyRequestTableProps {
   data: CompanyRequestDto[];
   fetchCompany: () => void;
-  handleCompanyUpdate: (companyId: string, updateData: any, successMessage?: string) => Promise<void>;
+  handleCompanyUpdate: (
+    companyId: string,
+    updateData: any,
+    successMessage?: string
+  ) => Promise<void>;
   handleCompanyRequestDelete: (companyId: string) => Promise<void>;
   isUpdating: boolean;
   pagination: CommonCursorPaginationProp;
@@ -65,11 +69,11 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
     data: null,
     fetchCompany: undefined,
   });
-  
+
   const keyFallbacks = {
-    companyDetail_industry:["companyDetail.industry",]
+    companyDetail_industry: ["companyDetail.industry"],
   };
-  
+
   let { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
     tableId: "admin-company-request",
     defaultSort: null,
@@ -123,7 +127,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       contentWidth: "max-w-none",
       render: (row: CompanyRequestDto) => (
         <span
-          className={`px-3 py-0 rounded-full text-white font-semibold ${
+          className={`px-3 py-0.5  rounded-full text-white font-semibold ${
             row.status === "approved"
               ? "bg-green-500"
               : row.status === "denied"
@@ -139,9 +143,11 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
       key: "action",
       label: "Actions",
       render: (row: CompanyRequestDto) => (
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex justify-center flex-col sm:flex-row gap-2">
           <button
             disabled={row.status === "denied" || row.status === "approved" || isUpdating}
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="Approve Company Request"
             onClick={() => {
               //form the companyrequest data to company data type
               const rowAsCompany: CompanyDto = {
@@ -174,6 +180,8 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
             <CheckCircle2Icon className=" text-white p-1" />
           </button>
           <button
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="Delete Company Request"
             disabled={row.status === "denied" || row.status === "approved" || isUpdating}
             onClick={() =>
               dispatch({
@@ -228,10 +236,10 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   };
   // use sk as id in sorted data and data
   sortedData = sortedData?.map((item) => ({ ...item, id: item.SK }));
-  
+
   return (
     <>
-      <DynamicTable<CompanyRequestDto>
+      <NewDynamicTable<CompanyRequestDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

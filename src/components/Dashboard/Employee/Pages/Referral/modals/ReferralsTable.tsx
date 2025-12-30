@@ -1,6 +1,6 @@
 import React, { memo, useMemo, useState } from "react";
 import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo } from "./ReferralTypes";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import { chat, eyeIcon } from "@AssetsFolder/assets";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { toast } from "react-toastify";
@@ -60,7 +60,7 @@ const ReferralsTable = memo(
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
     const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
     const [viewDetailsContent, setViewDetailsContent] = useState<string>("");
-    const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
+    const [showChatWindow, setShowChatWindow] = useState<boolean>(false);
 
     const { user } = useDashboardContext();
 
@@ -104,8 +104,13 @@ const ReferralsTable = memo(
         }
         // console.log(userEmail);
         const { response } = await httpServiceObj.get<UserDetails[]>(
-          `/user/${userEmail}/details`, true, {}, false, "BASE");
-        
+          `/user/${userEmail}/details`,
+          true,
+          {},
+          false,
+          "BASE"
+        );
+
         if (!response || response.length === 0) {
           toast.error("No CV found", getToastOptions({}));
           return;
@@ -177,8 +182,8 @@ const ReferralsTable = memo(
             <MatchingScoreCircle
               score={row.matchingScore ?? 0}
               scoreDetails={row}
-              status={row.status}  
-              />
+              status={row.status}
+            />
           </div>
         ),
       },
@@ -230,17 +235,17 @@ const ReferralsTable = memo(
         key: "chat",
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
-          row.status !== "REJECTED" && row.status !== "AWAITING"? (
+          row.status !== "REJECTED" && row.status !== "AWAITING" ? (
             <div className="flex justify-center m-auto w-[150px]">
-            <button
-            onClick={() => {
+              <button
+                onClick={() => {
                   setReferralData(row);
                   setShowChatWindow(true);
                 }}>
-            <a className="text-blue-600 hover:underline">
-              <img src={chat} alt="" />
-            </a>
-            </button>
+                <a className="text-blue-600 hover:underline">
+                  <img src={chat} alt="" />
+                </a>
+              </button>
             </div>
           ) : (
             <div className="flex justify-center m-auto w-[150px]">
@@ -310,18 +315,18 @@ const ReferralsTable = memo(
       },
     ];
 
-const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
-  if (typeof value === "number") {
-    setPageSize(value);
-    onPageSizeChange(value);
-  } else {
-    setPageSize((prev) => {
-      const newValue = value(prev);
-      onPageSizeChange(newValue);
-      return newValue;
-    });
-  }
-};
+    const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+      if (typeof value === "number") {
+        setPageSize(value);
+        onPageSizeChange(value);
+      } else {
+        setPageSize((prev) => {
+          const newValue = value(prev);
+          onPageSizeChange(newValue);
+          return newValue;
+        });
+      }
+    };
 
     const sortData = (rows: ReferralDetailsDto[], field: string): ReferralDetailsDto[] => {
       if (!field) return rows;
@@ -364,35 +369,34 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
 
     const MatchingScoreCircle = memo(
       ({ score, scoreDetails, status }: { score: number; scoreDetails?: any; status?: string }) => (
-    <div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
-      <div className="w-16 relative h-16 flex items-center justify-center">
-        <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
-          <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-          <circle
-            cx="32.5" 
-            cy="32.5" 
-            r="30" 
-            fill="none" 
-            stroke="#4cbc9a" 
-            strokeWidth="5"
-            strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-            transform="rotate(-90 32.5 32.5)"
-          />
-        </svg>
-        <div className="absolute font-semibold text-xs">{score}%</div>
-      </div>
-            {status !== "REJECTED" && (
-              <button
-                onClick={() => {
-                  setShowViewDetails(true);
-                  setViewDetailsContent(scoreDetails);
-                }}
-                className="text-[9px] font-semibold text-gray-500 text-center leading-none"
-        >
-          View details
-        </button>
-      )}
-    </div>
+        <div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
+          <div className="w-16 relative h-16 flex items-center justify-center">
+            <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
+              <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
+              <circle
+                cx="32.5"
+                cy="32.5"
+                r="30"
+                fill="none"
+                stroke="#4cbc9a"
+                strokeWidth="5"
+                strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+                transform="rotate(-90 32.5 32.5)"
+              />
+            </svg>
+            <div className="absolute font-semibold text-xs">{score}%</div>
+          </div>
+          {status !== "REJECTED" && (
+            <button
+              onClick={() => {
+                setShowViewDetails(true);
+                setViewDetailsContent(scoreDetails);
+              }}
+              className="text-[9px] font-semibold text-gray-500 text-center leading-none">
+              View details
+            </button>
+          )}
+        </div>
       )
     );
 
@@ -419,7 +423,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     return (
       <div className="w-full font-poppins">
         <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
-          <DynamicTable<ReferralDetailsDto>
+          <NewDynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}
             pageSize={pageSize}
@@ -445,57 +449,57 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
             onClose={() => setShowViewDetails(false)}
           />
           {/* {showAcceptModal && ( */}
-            <AcceptRefferralModal
-              onClose={() => setShowAcceptModal(false)}
-              isOpen={showAcceptModal}
-              referralData={referralData}
-              onLocalUpdate={onLocalUpdate}
-              // onRefresh={onRefresh}
-            />
+          <AcceptRefferralModal
+            onClose={() => setShowAcceptModal(false)}
+            isOpen={showAcceptModal}
+            referralData={referralData}
+            onLocalUpdate={onLocalUpdate}
+            // onRefresh={onRefresh}
+          />
           {/* )} */}
           {/* {showRejectModal && ( */}
-            <RejectRefferralModal
-              onClose={() => setShowRejectModal(false)}
-              isOpen={showRejectModal}
-              referralData={referralData}
-              onRefresh={onRefresh}
-            />
+          <RejectRefferralModal
+            onClose={() => setShowRejectModal(false)}
+            isOpen={showRejectModal}
+            referralData={referralData}
+            onRefresh={onRefresh}
+          />
           {/* )} */}
           {/* {showRaiseIssueModal && ( */}
-            <RaiseIssueModal
-              onClose={() => setShowRaiseIssueModal(false)}
-              isOpen={showRaiseIssueModal}
-              referralData={referralData}
-              // onRefresh={onRefresh}
-              isCandidate={false}
-            />
+          <RaiseIssueModal
+            onClose={() => setShowRaiseIssueModal(false)}
+            isOpen={showRaiseIssueModal}
+            referralData={referralData}
+            // onRefresh={onRefresh}
+            isCandidate={false}
+          />
           {/* )} */}
           {/* {showCompletedModal && ( */}
-            <CompletedReferralModal
-              onClose={() => setShowCompletedModal(false)}
-              isOpen={showCompletedModal}
-              referralData={referralData}
-              onLocalUpdate={onLocalUpdate}
-              // onRefresh={onRefresh}
-              isCandidate={false}
-            />
+          <CompletedReferralModal
+            onClose={() => setShowCompletedModal(false)}
+            isOpen={showCompletedModal}
+            referralData={referralData}
+            onLocalUpdate={onLocalUpdate}
+            // onRefresh={onRefresh}
+            isCandidate={false}
+          />
           {/* )} */}
           {/* {showProvideFeedback && ( */}
-            <ProvideFeedbackModal
-              onClose={() => setShowProvideFeedback(false)}
-              isOpen={showProvideFeedback}
-              referralData={referralData}
-              // onRefresh={onRefresh}
-              isCandidate={false}
-            />
+          <ProvideFeedbackModal
+            onClose={() => setShowProvideFeedback(false)}
+            isOpen={showProvideFeedback}
+            referralData={referralData}
+            // onRefresh={onRefresh}
+            isCandidate={false}
+          />
           {/* )} */}
-            {/* {showChatWindow && ( */}
-            <ChatWindow
-              onClose={()=>setShowChatWindow(false)}
-              show={showChatWindow}  
-              referralData={referralData}      
-              user={"employee"}   
-            />
+          {/* {showChatWindow && ( */}
+          <ChatWindow
+            onClose={() => setShowChatWindow(false)}
+            show={showChatWindow}
+            referralData={referralData}
+            user={"employee"}
+          />
           {/* )} */}
         </div>
       </div>

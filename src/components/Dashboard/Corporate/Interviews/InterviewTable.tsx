@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
+
 import { Calendar, Eye } from "lucide-react";
 import Modal from "../../../Shared/Modal";
 import DateTimePicker from "./DateTimePicker/DateTimePicker";
 import ProgressCircle from "../../../Shared/CircularBar";
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
-
 
 type Applicant = {
   id: string;
@@ -91,7 +90,17 @@ export default function InterviewTable() {
     {
       key: "status",
       label: "Status",
-      render: (row: Applicant) => <div>{row.status === "Document requested" ? <span className="text-sky-500 font-medium text-sm bg-sky-200/50 rounded-full px-2 py-1">{row.status}</span> : <div className="flex gap-2"></div>}</div>,
+      render: (row: Applicant) => (
+        <div>
+          {row.status === "Document requested" ? (
+            <span className="text-sky-500 font-medium text-sm bg-sky-200/50 rounded-full px-2 py-1">
+              {row.status}
+            </span>
+          ) : (
+            <div className="flex gap-2"></div>
+          )}
+        </div>
+      ),
     },
     {
       key: "actions",
@@ -100,11 +109,15 @@ export default function InterviewTable() {
         <div className="flex gap-2 min-w-[150px]">
           {row.status === "Pending" && (
             <div className="flex gap-2 justify-center items-center w-full">
-              <button onClick={() => setIsViewCVModalOpen(true)} className="flex items-center gap-2 btn-sky">
+              <button
+                onClick={() => setIsViewCVModalOpen(true)}
+                className="flex items-center gap-2 btn-sky">
                 <Eye size={16} />
                 View CV
               </button>
-              <button onClick={() => setIsScheduleModalOpen(true)} className="flex gap-2 items-center btn-blue">
+              <button
+                onClick={() => setIsScheduleModalOpen(true)}
+                className="flex gap-2 items-center btn-blue">
                 <Calendar size={16} />
                 Schedule
               </button>
@@ -157,10 +170,12 @@ export default function InterviewTable() {
     <>
       {/* <DynamicTable columns={columns} rows={staticApplicants} selectedRows={selected} expandedRows={expanded} toggleSelectAll={toggleSelectAll} toggleRow={toggleRow} toggleExpand={toggleExpand} allSelected={selected.length === staticApplicants.length} renderExpandedDetails={renderExpandedDetails} /> */}
 
-      <Modal isOpen={isScheduleModalOpen} onClose={() => setIsScheduleModalOpen(false)} className="w-[90vw] sm:w-[1000px] h-full">
+      <Modal
+        isOpen={isScheduleModalOpen}
+        onClose={() => setIsScheduleModalOpen(false)}
+        className="w-[90vw] sm:w-[1000px] h-full">
         <DateTimePicker />
       </Modal>
-
     </>
   );
 }

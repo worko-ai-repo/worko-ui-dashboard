@@ -1,6 +1,11 @@
 import React, { memo, useMemo, useState } from "react";
-import { ReferralApiResponse, ReferralDetailsDto, PaginationInfo, ReferralStatus } from "./ReferralTypes";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import {
+  ReferralApiResponse,
+  ReferralDetailsDto,
+  PaginationInfo,
+  ReferralStatus,
+} from "./ReferralTypes";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import { chat } from "@AssetsFolder/assets";
 import WithdrawRefferralModal from "./WithdrawRefferralModal";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -13,7 +18,7 @@ import RaiseIssueModal from "@Components/Dashboard/Employee/Pages/Referral/modal
 import CompletedReferralModal from "@Components/Dashboard/Employee/Pages/Referral/modals/CompletedReferralModal";
 import ProvideFeedbackModal from "@Components/Dashboard/Employee/Pages/Referral/modals/ProvideFeedbackModal";
 import ChatWindow from "./ChatWindow";
-import { useAppContext } from '@Context/App.context';
+import { useAppContext } from "@Context/App.context";
 
 interface ReferralsTableProps {
   data: ReferralApiResponse | null;
@@ -52,11 +57,11 @@ const ReferralsTable = memo(
     const [showCompletedModal, setShowCompletedModal] = useState(false);
     const [referralData, setReferralData] = useState<any>(null);
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
-    const [showChatWindow,setShowChatWindow] = useState<boolean>(false);
+    const [showChatWindow, setShowChatWindow] = useState<boolean>(false);
 
     const APP_API_URI = import.meta.env.APP_API_URI;
     const { user } = useDashboardContext();
-    const {userDetails} = useAppContext()
+    const { userDetails } = useAppContext();
     const referrals = data?.data || [];
 
     // const keyExtractor = (item: ReferralDetailsDto) => item.id?.toString() ?? Math.random().toString();
@@ -81,8 +86,8 @@ const ReferralsTable = memo(
           setSelectedRow(null);
           setWithdrawComments("");
           setWithdrawReason("");
-          onLocalUpdate(id || "" , { 
-            status: "WITHDRAWN" as ReferralStatus
+          onLocalUpdate(id || "", {
+            status: "WITHDRAWN" as ReferralStatus,
           });
           // onRefresh();
         } else if (error) {
@@ -175,19 +180,19 @@ const ReferralsTable = memo(
         key: "chat",
         label: "Chat",
         render: (row: ReferralDetailsDto) =>
-        row.status === "ACCEPTED" ? (
-          <div className="flex justify-center m-auto w-[150px]">
-            <button
-            onClick={() => {
+          row.status === "ACCEPTED" ? (
+            <div className="flex justify-center m-auto w-[150px]">
+              <button
+                onClick={() => {
                   setReferralData(row);
                   setShowChatWindow(true);
                 }}>
-            <a className="text-blue-600 hover:underline">
-              <img src={chat} alt="" />
-            </a>
-            </button>
-          </div>
-        ) : row.status === "AWAITING" ? (
+                <a className="text-blue-600 hover:underline">
+                  <img src={chat} alt="" />
+                </a>
+              </button>
+            </div>
+          ) : row.status === "AWAITING" ? (
             <div className="flex justify-center m-auto w-[150px]">
               <button
                 onClick={() => {
@@ -211,15 +216,14 @@ const ReferralsTable = memo(
         key: "refereeName",
         label: "Referee Name",
         render: (row: ReferralDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-        <span 
-          className="truncate block w-full"
-          title={row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
-          >
-          {row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
-          </span>
-        </div>
-      ),
+          <div className="flex justify-center m-auto w-[150px]">
+            <span
+              className="truncate block w-full"
+              title={row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}>
+              {row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
+            </span>
+          </div>
+        ),
       },
       {
         key: "refereeDesignation",
@@ -278,19 +282,18 @@ const ReferralsTable = memo(
       },
     ];
 
-const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
-  if (typeof value === "number") {
-    setPageSize(value);
-    onPageSizeChange(value);
-  } else {
-    setPageSize((prev) => {
-      const newValue = value(prev);
-      onPageSizeChange(newValue);
-      return newValue;
-    });
-  }
-};
-
+    const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (value) => {
+      if (typeof value === "number") {
+        setPageSize(value);
+        onPageSizeChange(value);
+      } else {
+        setPageSize((prev) => {
+          const newValue = value(prev);
+          onPageSizeChange(newValue);
+          return newValue;
+        });
+      }
+    };
 
     const sortData = (rows: ReferralDetailsDto[], field: string): ReferralDetailsDto[] => {
       if (!field) return rows;
@@ -333,35 +336,34 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
 
     const MatchingScoreCircle = memo(
       ({ score, scoreDetails, status }: { score: number; scoreDetails?: any; status?: string }) => (
-<div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
-      <div className="w-16 relative h-16 flex items-center justify-center">
-        <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
-          <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
-          <circle
-            cx="32.5" 
-            cy="32.5" 
-            r="30" 
-            fill="none" 
-            stroke="#4cbc9a" 
-            strokeWidth="5"
-            strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
-            transform="rotate(-90 32.5 32.5)"
-          />
-        </svg>
-        <div className="absolute font-semibold text-xs">{score}%</div>
-      </div>
-            {status !== "REJECTED" && (
-              <button
-                onClick={() => {
-                  setShowViewDetails(true);
-                  setViewDetailsContent(scoreDetails);
-                }}
-               className="text-[9px] font-semibold text-gray-500 text-center leading-none"
-        >
-          View details
-        </button>
-      )}
-    </div>
+        <div className="w-20 flex flex-col items-center justify-center gap-1 text-base text-green-500">
+          <div className="w-16 relative h-16 flex items-center justify-center">
+            <svg className="absolute scale-[80%]" width="65" height="65" viewBox="0 0 65 65">
+              <circle cx="32.5" cy="32.5" r="30" fill="none" stroke="#eee" strokeWidth="5" />
+              <circle
+                cx="32.5"
+                cy="32.5"
+                r="30"
+                fill="none"
+                stroke="#4cbc9a"
+                strokeWidth="5"
+                strokeDasharray={`${(score / 100) * 2 * Math.PI * 30} ${2 * Math.PI * 30}`}
+                transform="rotate(-90 32.5 32.5)"
+              />
+            </svg>
+            <div className="absolute font-semibold text-xs">{score}%</div>
+          </div>
+          {status !== "REJECTED" && (
+            <button
+              onClick={() => {
+                setShowViewDetails(true);
+                setViewDetailsContent(scoreDetails);
+              }}
+              className="text-[9px] font-semibold text-gray-500 text-center leading-none">
+              View details
+            </button>
+          )}
+        </div>
       )
     );
 
@@ -402,7 +404,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
     return (
       <div className="w-full font-poppins">
         <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
-          <DynamicTable<ReferralDetailsDto>
+          <NewDynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}
             pageSize={pageSize}
@@ -470,13 +472,13 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
             />
           )}
           {/* {showChatWindow && ( */}
-            <ChatWindow
-              onClose={()=>setShowChatWindow(false)}
-              show={showChatWindow}  
-              referralData={referralData}
-              candidateDetails={userDetails?.id}
-              user={"candidate"} 
-            />
+          <ChatWindow
+            onClose={() => setShowChatWindow(false)}
+            show={showChatWindow}
+            referralData={referralData}
+            candidateDetails={userDetails?.id}
+            user={"candidate"}
+          />
           {/* )} */}
         </div>
       </div>

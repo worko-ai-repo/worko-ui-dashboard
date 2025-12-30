@@ -1,4 +1,3 @@
-import { DynamicTable } from "../../../Shared/DynamicTable";
 
 const rowData = [
   {
@@ -7,7 +6,8 @@ const rowData = [
     header: "avijitduttagupta51@gmail.com",
     ticketNo: "98716855741",
     date: "02-12-2025",
-    details: "Currently no popular reader. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard.",
+    details:
+      "Currently no popular reader. Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard.",
     status: "Raised",
   },
   {
@@ -16,7 +16,8 @@ const rowData = [
     header: "avijitduttagupta51@gmail.com",
     ticketNo: "98316855741",
     date: "02-12-2025",
-    details: "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s. It has survived not only five centuries, but also the leap into electronic typesetting.",
+    details:
+      "Lorem Ipsum has been the industry's standard dummy text ever since the 1500s. It has survived not only five centuries, but also the leap into electronic typesetting.",
     status: "In process",
   },
   {
@@ -25,7 +26,8 @@ const rowData = [
     header: "avijitduttagupta51@gmail.com",
     ticketNo: "8283858581",
     date: "02-12-2025",
-    details: "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature.",
+    details:
+      "Contrary to popular belief, Lorem Ipsum is not simply random text. It has roots in a piece of classical Latin literature.",
     status: "Resolved",
   },
   {
@@ -34,7 +36,8 @@ const rowData = [
     header: "avijitduttagupta51@gmail.com",
     ticketNo: "9820185781",
     date: "02-12-2025",
-    details: "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
+    details:
+      "It is a long established fact that a reader will be distracted by the readable content of a page when looking at its layout.",
     status: "Resolved",
   },
 ];
@@ -55,14 +58,23 @@ const columns = [
     label: "Details",
     render: (row: (typeof rowData)[0]) => (
       <div className="flex justify-center">
-        <div className="max-w-xs whitespace-pre-wrap break-words text-sm text-gray-700 text-center">{row.details}</div>
+        <div className="max-w-xs whitespace-pre-wrap break-words text-sm text-gray-700 text-center">
+          {row.details}
+        </div>
       </div>
     ),
   },
   {
     key: "status",
     label: "Status",
-    render: (row: (typeof rowData)[0]) => <span className={`px-3 py-1 rounded-full text-sm font-medium ${statusColors[row.status] || "bg-gray-100 text-gray-600"}`}>{row.status}</span>,
+    render: (row: (typeof rowData)[0]) => (
+      <span
+        className={`px-3 py-1 rounded-full text-sm font-medium ${
+          statusColors[row.status] || "bg-gray-100 text-gray-600"
+        }`}>
+        {row.status}
+      </span>
+    ),
   },
 ];
 

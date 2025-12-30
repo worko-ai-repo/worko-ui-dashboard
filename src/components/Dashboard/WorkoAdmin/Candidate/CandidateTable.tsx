@@ -1,7 +1,7 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -173,7 +173,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
       render: (row: ApplicantDetails) => (
         <button
           key="view-cv"
-          title="View CV"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content="View CV"
           onClick={async () => {
             await handleFetchAndOpenCV(row);
           }}
@@ -193,6 +194,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
           <div className="flex gap-3 px-2 justify-between">
             <button
               disabled={row.isNumberVerified === true || isUpdating || isRowUpdating}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Verify Mobile Number"
               onClick={() => {
                 handleVerifyClick("MOBILE", row);
               }}
@@ -209,6 +212,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
 
             <button
               disabled={row.isEmailVerified === true || isUpdating || isRowUpdating}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Verify Email Address"
               onClick={() => {
                 handleVerifyClick("EMAIL", row);
               }}
@@ -288,7 +293,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
   };
   return (
     <>
-      <DynamicTable<ApplicantDetails>
+      <NewDynamicTable<ApplicantDetails>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}
@@ -312,13 +317,13 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         {!pdfViewDetails ? (
           <NoDataPresent />
         ) : (
-          <CVPreviewRaw pdfUrl={pdfViewDetails}
-          candidateName={
-            pdfViewUserDetails?.name || "Candidate"
-          }
-          companyName={pdfViewUserDetails?.companyName}
-          YOE={pdfViewUserDetails?.YOE}
-          onClose={() => setIsViewCVModalOpen(false)} />
+          <CVPreviewRaw
+            pdfUrl={pdfViewDetails}
+            candidateName={pdfViewUserDetails?.name || "Candidate"}
+            companyName={pdfViewUserDetails?.companyName}
+            YOE={pdfViewUserDetails?.YOE}
+            onClose={() => setIsViewCVModalOpen(false)}
+          />
         )}
       </Modal>
       <Modal

@@ -1,8 +1,5 @@
 import { useDashboardContext } from "@Context/Dashboard.context";
-import httpServiceObj from "@Services/ApiHandler.service";
 import { useState, useEffect, useReducer } from "react";
-import Table from "@Components/Dashboard/Candidate/SharedComponents/Table";
-import WithdrawDialog from "./WithdrawDialog";
 import { CommonCursorPaginationProp } from "@Interfaces/CorporateServices.dto";
 import { ReferAndEarnDto, ReferAndEarnUpdateApiDto } from "@Interfaces/AdminServices.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -11,15 +8,12 @@ import {
   ReferAndEarnJobStatusOptionsArray,
   ReferAndEarnStatusOptionsLabel,
 } from "@TypesAndConstants/common.constants";
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import { Check, Edit, RefreshCcw, X } from "lucide-react";
 import Modal from "@Components/Shared/Modal";
 import ReferNearnProcessPayment from "./ReferNearnProcessPayment";
 import ReferNearnRejectReferral from "./ReferNearnRejectReferral";
 import ReferAndEarnReferralStatusUpdateModal from "./ReferAndEarnReferralStatusUpdateModal";
-import AdminServiceObj from "../Services/Admin.service";
-import { toast } from "react-toastify";
-import { getToastOptions } from "@Utils/Toast.utils";
 
 interface ReferAndEarnTableProps {
   data: ReferAndEarnDto[];
@@ -314,7 +308,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
 
   return (
     <>
-      <DynamicTable<ReferAndEarnDto>
+      <NewDynamicTable<ReferAndEarnDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

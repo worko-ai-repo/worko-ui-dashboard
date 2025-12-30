@@ -1,4 +1,4 @@
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -24,7 +24,7 @@ interface ReferralTableProps {
 const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pagination }) => {
   const keyFallbacks = {};
 
-  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks,{
+  const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {
     tableId: "referral-table",
     persistInUrl: true,
     persistInLocalStorage: true,
@@ -66,7 +66,10 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       key: "jobUrl",
       label: "Job Url",
       render: (row: ReferralDetailsDto) => (
-        <a href={row?.jobUrl}>
+        <a
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Open Job Link in new tab"
+        >
           <Link
             size={34}
             onClick={(e) => {
@@ -133,6 +136,8 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
       label: "Actions",
       render: (row: ReferralDetailsDto) => (
         <button
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="View Candidate CV"
           onClick={async () => {
             handleViewExtraDetails(row);
           }}
@@ -144,9 +149,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
     },
   ];
   const renderExpandedDetails = (row: ReferralDetailsDto) => {
-    const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(
-      row
-    );
+    const timeLineProps: TimelineStep[] = CommonDashboardServicesObj.getReferralTimeline(row);
     return timeLineProps ? (
       <div className="p-4 flex justify-evenly gap-4">
         <Timeline steps={timeLineProps} />
@@ -164,7 +167,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({ data, fetchReferrals, pag
   };
   return (
     <>
-      <DynamicTable<ReferralDetailsDto>
+      <NewDynamicTable<ReferralDetailsDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

@@ -60,7 +60,7 @@ const BulkCVCheck: React.FC = () => {
   }, [location.state, isScreeningNew, navigate]);
   
   const handleTabChange = (isFormOpen: boolean) => {
-    setisScreeningNew(isFormOpen);
+    // setisScreeningNew(isFormOpen);
     const tab = isFormOpen ? "new-screening" : "screening-list";
     navigate({
       pathname: location.pathname,

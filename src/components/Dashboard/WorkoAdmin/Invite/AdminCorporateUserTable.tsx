@@ -1,4 +1,4 @@
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useCursorPagination } from "@Hooks/usePaginatedQuery.hook";
@@ -153,6 +153,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   );
   const [subDataCompanyId, setSubDataCompanyId] = useState<string>("");
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
+  const [expandedCompanyIds, setExpandedCompanyIds] = useState<string[]>([]);
 
   const params: Omit<CursorPaginationCorporateUserRecDataParams, "lastKey"> = {
     pageSize: 200,
@@ -382,7 +383,9 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 }
                 disabled={isDeleted}
                 className=" btn_disabled px-2 py-2 rounded-lg text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Delete User">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Delete User"
+                >
                 <Trash size={14} />
               </button>
             )}
@@ -393,7 +396,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 disabled={CantRevoke}
                 onClick={() => handleResendInvite(subRow?.id)}
                 className="btn_disabled px-2 py-1.5 rounded-lg text-white bg-blue-500 hover:bg-blue-600"
-                title="Resend Invite">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Resend Invite">
                 <Send size={14} />
               </button>
             )}
@@ -404,7 +408,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
                 disabled={CantRevoke}
                 onClick={() => handleRevokeInviteForMainTable(subRow?.id)}
                 className="btn_disabled p-1 rounded-full border-2 border-red-600 hover:bg-red-50"
-                title="Revoke Invite">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Revoke Invite">
                 <Minus className="text-red-500 font-bold" size={14} />
               </button>
             )}
@@ -436,24 +441,28 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   const toggleExpand = (id: string) => {
     setExpandedRows((prev) => {
       if (prev.includes(id)) {
-        // Collapse the row if it's already expanded
-        setSubDataCompanyId("");
-        return [];
-      } else {
-        // Expand the new row and collapse others
+        // Collapse the row
         const company = data.find((d) => d.id === id);
         if (company?.companyId) {
-          setSubDataCompanyId(company.companyId);
-          refetch(); // Explicitly trigger the API call
+          setExpandedCompanyIds((prevIds) => prevIds.filter((cId) => cId !== company.companyId));
         }
-        return [id];
+        return prev.filter((r) => r !== id);
+      } else {
+        // Expand the row
+        const company = data.find((d) => d.id === id);
+        if (company?.companyId) {
+          setExpandedCompanyIds((prevIds) => [...prevIds, company.companyId]);
+          setSubDataCompanyId(company.companyId);
+          refetch();
+        }
+        return [...prev, id];
       }
     });
   };
 
   return (
     <>
-      <DynamicTable<CorporateUserPageRecDataDto>
+      <NewDynamicTable<CorporateUserPageRecDataDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

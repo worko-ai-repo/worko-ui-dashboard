@@ -247,8 +247,8 @@ export function getActionVisibilityConfig(
         VIEW_CV: { visible: true },
         HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
         NOTES: { visible: true },
-        REJECT: { visible: true },
-        ONHOLD: { visible: true },
+        REJECT: { visible: true, tabOverrides: { All: false, Hired: true } },
+        ONHOLD: { visible: true , tabOverrides: { All: false, Hired: true }},
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -270,8 +270,8 @@ export function getActionVisibilityConfig(
     case JobApplicationStatusEnum.DOCUMENT_SUBMITTED:
       baseConfig = {
         ...HIDDEN_ALL,
-        REJECT: { visible: true },
-        ONHOLD: { visible: true },
+        REJECT: { visible: true , tabOverrides: { All: false, Hired: true }},
+        ONHOLD: { visible: true, tabOverrides: { All: false, Hired: true }},
         VIEW_CV: { visible: true },
         NOTES: { visible: true },
         VIEW_DOCUMENT: {
@@ -298,8 +298,8 @@ export function getActionVisibilityConfig(
     case JobApplicationStatusEnum.DOCUMENT_VERIFIED:
       baseConfig = {
         ...HIDDEN_ALL,
-        REJECT: { visible: true },
-        ONHOLD: { visible: true },
+        REJECT: { visible: true, tabOverrides: { All: false, Hired: true } },
+        ONHOLD: { visible: true, tabOverrides: { All: false, Hired: true } },
         VIEW_CV: { visible: true },
         NOTES: { visible: true },
         VIEW_EVALUATION: {
@@ -331,9 +331,9 @@ export function getActionVisibilityConfig(
         REJECT: {
           visible: true,
           condition: () => RBAC.can("manage_users"),
-          tabOverrides: { All: true, Hired: true },
+          tabOverrides: { All: false, Hired: true },
         },
-        ONHOLD: { visible: true },
+        ONHOLD: { visible: true, tabOverrides: { All: false, Hired: true } },
         VIEW_CV: { visible: true },
         NOTES: { visible: true },
         VIEW_OFFER_LETTER_ISSUE: {
@@ -367,7 +367,7 @@ export function getActionVisibilityConfig(
         // REJECT: { visible: false, tabOverrides: { All: true, Hired: true } },
         ONHOLD: {
           visible: true,
-          tabOverrides: { All: true, Hired: true },
+          tabOverrides: { All: false, Hired: true },
         },
         VIEW_EVALUATION: {
           visible: true,

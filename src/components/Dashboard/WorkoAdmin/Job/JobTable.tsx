@@ -1,18 +1,18 @@
-import React, { useState } from "react";
-import { Filter, X, Link, Building2, Loader2 } from "lucide-react";
 import CloseJob from "./CloseJob";
-import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
-import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 import { toast } from "react-toastify";
+import React, { useState } from "react";
 import { SelectedRow } from "./AdminJobs";
-import { getToastOptions } from "@Utils/Toast.utils";
-import { useNavigate } from "react-router-dom";
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
 import Modal from "@Components/Shared/Modal";
-import { JobStatusType } from "src/types/JobsAndApplication.type";
-import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
-import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { useNavigate } from "react-router-dom";
+import { getToastOptions } from "@Utils/Toast.utils";
 import CompanyLogoRender from "../Company/CompanyLogoRender";
+import { JobData } from "@Interfaces/CorporateDashboard.dto";
+import { useSortableData } from "@Hooks/useSortTableData.hook";
+import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
+import { JobStatusType } from "src/types/JobsAndApplication.type";
+import { Building2, Filter, Link, Loader2, X } from "lucide-react";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
+import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
 interface JobsTableProps {
   activeTab: JobStatusType;
@@ -146,10 +146,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           row.location.city ||
           row.location.state ||
           row.location.country || ["Not specified"];
-        return <span 
-        data-tooltip-id="my-tooltip"
-        data-tooltip-content={locations.join(", ")}
-        className="capitalize">{locations.join(", ")}</span>;
+        return (
+          <span
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={locations.join(", ")}
+            className="capitalize">
+            {locations.join(", ")}
+          </span>
+        );
       },
     },
     {
@@ -398,7 +402,8 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   btn.disabled ? "opacity-50 cursor-not-allowed" : ""
                 }`}
                 onClick={btn.onClick}
-                title={btn.tooltip}
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={btn.tooltip}
                 disabled={btn.disabled}>
                 {btn.icon}
               </button>
@@ -425,7 +430,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         </span>
         <span>deselect {selectedRows?.length} rows</span>
       </button>
-      <DynamicTable<JobData>
+      <NewDynamicTable<JobData>
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={selectedRows.map((row) => row.jobId)}

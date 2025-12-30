@@ -1,4 +1,4 @@
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { InteractiveInput } from "@Components/Shared/ui/Input.shared";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
@@ -207,7 +207,7 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
   };
   return (
     <>
-      <DynamicTable<CompanyDto>
+      <NewDynamicTable<CompanyDto>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}

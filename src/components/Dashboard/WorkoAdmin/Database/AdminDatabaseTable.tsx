@@ -1,6 +1,5 @@
 import React, { useMemo, useState } from "react";
 import { Eye, Pencil, User } from "lucide-react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -35,9 +34,14 @@ export const getCvViewDate = (statusTracker: any[]) => {
 };
 
 export const getCvDownloadedById = (row: any) => {
-  const cvDownloadedEntry = row.statusTracker?.find((entry:any) => entry.newStatus === "CV_DOWNLOADED");
-  const isUserIdTypeULID = cvDownloadedEntry?.userId?.length === 26 || cvDownloadedEntry?.userId?.includes("-");
-  return isUserIdTypeULID ? { updatedByUserId: cvDownloadedEntry?.userId || "" } : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
+  const cvDownloadedEntry = row.statusTracker?.find(
+    (entry: any) => entry.newStatus === "CV_DOWNLOADED"
+  );
+  const isUserIdTypeULID =
+    cvDownloadedEntry?.userId?.length === 26 || cvDownloadedEntry?.userId?.includes("-");
+  return isUserIdTypeULID
+    ? { updatedByUserId: cvDownloadedEntry?.userId || "" }
+    : { updatedByCorporateUserId: cvDownloadedEntry?.userId || "" };
 };
 
 export const getCurrentPositionCell = (row: any) => {
@@ -49,7 +53,6 @@ export const getCurrentPositionCell = (row: any) => {
   }
   return currentExperience || null;
 };
-
 
 export default function AdminDatabaseTable(props: any) {
   const {
@@ -71,15 +74,21 @@ export default function AdminDatabaseTable(props: any) {
   const [selectedStatusDropdown, setSelectedStatusDropdown] = useState<string>("");
   const [scorePointsModal, setScorePointsModal] = useState<any>();
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
-  const [duplicateModalOpen, setDuplicateModalOpen] = useState({ isOpen: false, applicant: {} as any, action: "EDIT" as "EDIT" | "VIEW" });
-  const [editProfileView,setEditProfileView] = useState<boolean>(false)
-  const [editProfileData,setEditProfileData] = useState<AgencyDatabaseApplicantDetailsDto | undefined>()
-  const [isViewCVModalOpen,setIsViewCVModalOpen] = useState<boolean>(false)
+  const [duplicateModalOpen, setDuplicateModalOpen] = useState({
+    isOpen: false,
+    applicant: {} as any,
+    action: "EDIT" as "EDIT" | "VIEW",
+  });
+  const [editProfileView, setEditProfileView] = useState<boolean>(false);
+  const [editProfileData, setEditProfileData] = useState<
+    AgencyDatabaseApplicantDetailsDto | undefined
+  >();
+  const [isViewCVModalOpen, setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
-  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 
   // Sorting hook (keeps same fallback keys as before)
 const keyFallbacks = {
@@ -124,12 +133,22 @@ const keyFallbacks = {
   };
 
   const toggleDropdown = (rowIndex: string) => {
-    setDropdownVisibleRows((prev) => (prev.includes(rowIndex) ? prev.filter((id) => id !== rowIndex) : [...prev, rowIndex]));
+    setDropdownVisibleRows((prev) =>
+      prev.includes(rowIndex) ? prev.filter((id) => id !== rowIndex) : [...prev, rowIndex]
+    );
   };
 
   const isDropdownVisible = (rowIndex: string) => dropdownVisibleRows.includes(rowIndex);
 
-  const statusArray = ["APPLIED", "CV_DOWNLOADED", "UNDER_EVALUATION", "PROCESSING_INTERVIEW", "INTERVIEW_DONE", "HIRED", "REJECTED"];
+  const statusArray = [
+    "APPLIED",
+    "CV_DOWNLOADED",
+    "UNDER_EVALUATION",
+    "PROCESSING_INTERVIEW",
+    "INTERVIEW_DONE",
+    "HIRED",
+    "REJECTED",
+  ];
 
   const isOptionDisabled = (option: string, currentStatus: string) => {
     const statusOrder: Record<string, number> = {
@@ -174,7 +193,7 @@ const keyFallbacks = {
       setPageSize(value);
       onPageSizeChange(value);
     } else {
-      setPageSize((prev:any) => {
+      setPageSize((prev: any) => {
         const newValue = value(prev);
         onPageSizeChange(newValue);
         return newValue;
@@ -183,53 +202,59 @@ const keyFallbacks = {
   };
 
   // Column definitions (kept same as previous "All" view)
-const columns = [
+  const columns = [
     {
-        key: "candidateName",
-        label: "Candidate Name",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span 
-                title={row?.candidateParsedCvDetails?.name}
-                className="truncate block w-full">{row?.candidateParsedCvDetails?.name ?? "NA"}</span>
-            </div>
-        ),
-    },
-    {
-        key: "email",
-        label: "Email",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span 
-                title={row?.candidateParsedCvDetails?.email} 
-                className="truncate block w-full">{row?.candidateParsedCvDetails?.email ?? "NA"}</span>
-            </div>
-        ),
-    },
-    {
-        key: "contact",
-        label: "Contact Number",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-              {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number
-              ? <span>+{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}</span>
-              : <span>{"NA"}</span>}     
+      key: "candidateName",
+      label: "Candidate Name",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span title={row?.candidateParsedCvDetails?.name} className="truncate block w-full">
+            {row?.candidateParsedCvDetails?.name ?? "NA"}
+          </span>
         </div>
-        ),
+      ),
+    },
+    {
+      key: "email",
+      label: "Email",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px] text-center">
+          <span title={row?.candidateParsedCvDetails?.email} className="truncate block w-full">
+            {row?.candidateParsedCvDetails?.email ?? "NA"}
+          </span>
+        </div>
+      ),
+    },
+    {
+      key: "contact",
+      label: "Contact Number",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number ? (
+            <span>
+              +{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}
+            </span>
+          ) : (
+            <span>{"NA"}</span>
+          )}
+        </div>
+      ),
     },
     {
       key: "currentDesignation",
       label: "Current Designation",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-          <div className='flex justify-center m-auto w-[150px]'>
-              <span 
-              title={row?.candidateParsedCvDetails?.currentDesignation}
-              className="truncate block w-full">{row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}</span>
-          </div>
+        <div className="flex justify-center m-auto w-[150px]">
+          <span
+            title={row?.candidateParsedCvDetails?.currentDesignation}
+            className="truncate block w-full">
+            {row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}
+          </span>
+        </div>
       ),
     },
     {
@@ -256,9 +281,9 @@ const columns = [
       sortable: true,
       contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-          <div className='flex justify-center m-auto'>
-              <span>{row?.candidateParsedCvDetails?.currentCTC ?? "NA"}</span>
-          </div>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.currentCTC ?? "NA"}</span>
+        </div>
       ),
     },
     {
@@ -267,9 +292,9 @@ const columns = [
       sortable: true,
       contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-          <div className='flex justify-center m-auto'>
-              <span>{row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}</span>
-          </div>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}</span>
+        </div>
       ),
     },
     {
@@ -278,10 +303,11 @@ const columns = [
       sortable: true,
       contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-          <div className='flex justify-center m-auto'>
-              <span 
-              className="truncate block w-full">{row?.candidateParsedCvDetails?.noticePeriod ?? "NA"}</span>
-          </div>
+        <div className="flex justify-center m-auto">
+          <span className="truncate block w-full">
+            {row?.candidateParsedCvDetails?.noticePeriod ?? "NA"}
+          </span>
+        </div>
       ),
     },
     {
@@ -289,105 +315,106 @@ const columns = [
       label: "Current location",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-          <div className='flex justify-center m-auto'>
-              <span 
-              title={row?.candidateParsedCvDetails?.location}
-              className="truncate block w-full">{row?.candidateParsedCvDetails?.location ?? "NA"}</span>
-          </div>
+        <div className="flex justify-center m-auto">
+          <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
+            {row?.candidateParsedCvDetails?.location ?? "NA"}
+          </span>
+        </div>
       ),
     },
     {
-        key: "addedBy",
-        label: "Added by",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-            <span 
-                title={row?.addedBy}
-                className="truncate block w-full">{row?.addedBy ?? "NA"}</span>
+      key: "addedBy",
+      label: "Added by",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span title={row?.addedBy} className="truncate block w-full">
+            {row?.addedBy ?? "NA"}
+          </span>
         </div>
-        ),
+      ),
     },
     {
-        key: "addedFor",
-        label: "Added for",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span 
-                title={row?.addedFor}
-                className="truncate block w-full">{row?.addedFor ?? "NA"}</span>
-            </div>
-        ),
-    },
-    {
-        key: "coolingPeriod",
-        label: "Cooling period companies",
-        sortable: true,
-        contentWidth: `max-w-none`,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto'>
-                <span>{row?.coolingPeriod ?? "NA"}</span>
-            </div>
-        ),
-    },
-        {
-        key: "lastActive",
-        label: "Last active",
-        sortable: true,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.lastActive ?? "NA"}</span>
-            </div>
-        ),
-    },
-    {
-        key: "YOE",
-        label: "YOE",
-        sortable: true,
-        contentWidth: `max-w-none`,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className='flex justify-center m-auto'>
-            <span>{row?.candidateParsedCvDetails?.totalYOE ?? "NA"}</span>
+      key: "addedFor",
+      label: "Added for",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span title={row?.addedFor} className="truncate block w-full">
+            {row?.addedFor ?? "NA"}
+          </span>
         </div>
-        ),
+      ),
+    },
+    {
+      key: "coolingPeriod",
+      label: "Cooling period companies",
+      sortable: true,
+      contentWidth: `max-w-none`,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+          <span>{row?.coolingPeriod ?? "NA"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "lastActive",
+      label: "Last active",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto w-[150px]">
+          <span>{row?.lastActive ?? "NA"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "YOE",
+      label: "YOE",
+      sortable: true,
+      contentWidth: `max-w-none`,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.totalYOE ?? "NA"}</span>
+        </div>
+      ),
     },
     {
       key: "viewCV",
       label: "CV",
       sortable: false,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-      <div className='flex justify-center m-auto w-[40px]'>
+        <div className="flex justify-center m-auto w-[40px]">
           <button
-          className="flex flex-row justify-center items-center"
-          onClick={()=>{
-          viewCV(row)
-          }}>
-          <img src={View} alt="View" className="w-8 h-8 btn-sky shrink-0 "/>
+            className="flex flex-row justify-center items-center"
+            onClick={() => {
+              viewCV(row);
+            }}>
+            <img src={View} alt="View" className="w-8 h-8 btn-sky shrink-0 " />
           </button>
-      </div>
-      )
+        </div>
+      ),
     },
     {
-        key: "action",
-        label: "Action",
-        sortable: false,
-        render: (row: AgencyDatabaseApplicantDetailsDto) => {
+      key: "action",
+      label: "Action",
+      sortable: false,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => {
         return (
-            <div className='flex justify-center m-auto w-[40px]'>
-                <button 
-                    disabled={true}
-                    onClick={()=>{
-                        setEditProfileView(true)
-                        setEditProfileData(row)
-                    }}>
-                    {/* <Pencil/> */}
-                    <img src={Edit} className="w-8 h-8 btn-sky shrink-0" />
-                </button>
-            </div>
-        )}
+          <div className="flex justify-center m-auto w-[40px]">
+            <button
+              disabled={true}
+              onClick={() => {
+                setEditProfileView(true);
+                setEditProfileData(row);
+              }}>
+              {/* <Pencil/> */}
+              <img src={Edit} className="w-8 h-8 btn-sky shrink-0" />
+            </button>
+          </div>
+        );
+      },
     },
-];
+  ];
 
   const viewCV = async (row:AgencyDatabaseApplicantDetailsDto) =>{
     setEditProfileData(row)
@@ -469,66 +496,65 @@ const columns = [
   };
 
   const renderExpandedDetails = (row: any) => {
-return (
-    <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
-      <div>
-        <span className="font-semibold text-black">Last Rejection Date</span>
-        <p>
-          {row.lastRejectionDate
-            ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-              })
-            : "NA"}
-        </p>
-      </div>
+    return (
+      <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
+        <div>
+          <span className="font-semibold text-black">Last Rejection Date</span>
+          <p>
+            {row.lastRejectionDate
+              ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
+                  day: "numeric",
+                  month: "short",
+                  year: "numeric",
+                })
+              : "NA"}
+          </p>
+        </div>
 
-      <div>
-        <span className="font-semibold text-black">Rejected By</span>
-        <p>{row.rejectedBy ?? "NA"}</p>
-      </div>
+        <div>
+          <span className="font-semibold text-black">Rejected By</span>
+          <p>{row.rejectedBy ?? "NA"}</p>
+        </div>
 
-      <div>
-        <span className="font-semibold text-black">Cooling Period</span>
-        <p>{row.coolingPeriod ?? "NA"}</p>
-      </div>
+        <div>
+          <span className="font-semibold text-black">Cooling Period</span>
+          <p>{row.coolingPeriod ?? "NA"}</p>
+        </div>
 
-      <div className="max-w-sm">
-        <span className="font-semibold text-black">Rejection Reason</span>
-        <p className="break-words">{row.rejectedReason ?? "NA"}</p>
+        <div className="max-w-sm">
+          <span className="font-semibold text-black">Rejection Reason</span>
+          <p className="break-words">{row.rejectedReason ?? "NA"}</p>
+        </div>
       </div>
-    </div>
-  );
-};
+    );
+  };
 
   return (
     <>
       {/* Deselect button - only show when rows are selected */}
       <button
-        className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${ListSelection?.selectedRows?.length === 0 ? "hidden" : ""}`}
-        onClick={() => ListSelection.reset && ListSelection.reset()}
-      >
-        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">&minus;</span>
+        className={`text-sm text-blue-600 flex items-center gap-1 mb-2 ${
+          ListSelection?.selectedRows?.length === 0 ? "hidden" : ""
+        }`}
+        onClick={() => ListSelection.reset && ListSelection.reset()}>
+        <span className="w-4 h-4 flex items-center justify-center bg-blue-600 rounded-full text-white text-base">
+          &minus;
+        </span>
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTableTwo
+      <DynamicTableTwo
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
         expandedRows={expandedRows}
-        toggleSelectAll={() =>
-            ListSelection.toggleSelectAll && ListSelection.toggleSelectAll(data)
-        }
+        toggleSelectAll={() => ListSelection.toggleSelectAll && ListSelection.toggleSelectAll(data)}
         toggleRow={(id: string) => {
-            const row = data.find((r: any) => r.id === id);
-            ListSelection.toggleRow && row && ListSelection.toggleRow(row);
+          const row = data.find((r: any) => r.id === id);
+          ListSelection.toggleRow && row && ListSelection.toggleRow(row);
         }}
         toggleExpand={toggleExpand}
-        allSelected={
-            ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)
-        }
+        allSelected={ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)}
         // renderExpandedDetails={renderExpandedDetails}
         enableSelect={true}
         onSortChange={onSortChange}
@@ -538,34 +564,35 @@ return (
         handleNextPage={() => onPageChange(currentPage + 1)}
         hasPrevPage={currentPage > 1}
         hasNextPage={!!pagination?.lastKey}
-        />
-        <EditProfileModal
-        onClose={()=>{
-            setEditProfileView(false)
-            setEditProfileData(undefined)
+      />
+      <EditProfileModal
+        onClose={() => {
+          setEditProfileView(false);
+          setEditProfileData(undefined);
         }}
         isOpen={editProfileView}
         fullDetails={editProfileData}
-        />
-        <Modal
-          isOpen={isViewCVModalOpen}
-          onClose={() => {
-            setIsViewCVModalOpen(false);
-          }}
-          className="w-[90vw] sm:max-w-4xl h-full">
-          {!pdfViewDetails ? (
-            <NoDataPresent />
-          ) : (
-          <CVPreviewRaw 
-            pdfUrl={pdfViewDetails} 
+      />
+      <Modal
+        isOpen={isViewCVModalOpen}
+        onClose={() => {
+          setIsViewCVModalOpen(false);
+        }}
+        className="w-[90vw] sm:max-w-4xl h-full">
+        {!pdfViewDetails ? (
+          <NoDataPresent />
+        ) : (
+          <CVPreviewRaw
+            pdfUrl={pdfViewDetails}
             onClose={() => {
-              setIsViewCVModalOpen(false)
-              setEditProfileData(undefined)
-            }} 
+              setIsViewCVModalOpen(false);
+              setEditProfileData(undefined);
+            }}
             candidateFullDetails={editProfileData}
-            showDownload={true}/>
-          )}
-        </Modal>
+            showDownload={true}
+          />
+        )}
+      </Modal>
     </>
   );
 }

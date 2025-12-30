@@ -49,11 +49,11 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   hideChevronForRejected?: boolean;
   mainColumns?: string[];
   expandedColumns?: string[];
-  // 🆕 NEW: Function to render extra nodes for each row
+  // NEW: Function to render extra nodes for each row
   renderExpandedNodes?: (row: T) => ExpandedNode[];
 }
 
-export function DynamicTableApplications<T extends { id: string }>({
+export function NewDynamicTable<T extends { id: string }>({
   columns,
   rows,
   selectedRows = [],
@@ -211,31 +211,36 @@ export function DynamicTableApplications<T extends { id: string }>({
                   </div>
                 </th>
               )}
-              {visibleColumns.map((col) => (
-                <th
-                  key={col.key}
-                  className="w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium">
-                  <span className="flex items-center justify-center gap-0 text-center">
-                    {col.label}
-                    {col.sortable && onSortChange && (
-                      <span className="cursor-pointer text-center h-auto w-8">
-                        <img
-                          src={sortOrder}
-                          onClick={(e) => {
-                            onSortChange(col.key);
-                            e.currentTarget.style.transform =
-                              e.currentTarget.style.transform === "rotate(180deg)"
-                                ? "rotate(0deg)"
-                                : "rotate(180deg)";
-                          }}
-                          className="inline transition-transform duration-300 text-center"
-                          alt="sortOrder"
-                        />
-                      </span>
-                    )}
-                  </span>
-                </th>
-              ))}
+              {visibleColumns.map((col, index) => {
+                const isFirstVisibleColumn = index === 0;
+                return (
+                  <th
+                    key={col.key}
+                    className={`w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium ${
+                      isFirstVisibleColumn ? `sticky ${enableSelect ? "left-12" : "left-6"} z-30 bg-blue-50` : ""
+                    }`}>
+                    <span className="flex items-center justify-center gap-0 text-center">
+                      {col.label}
+                      {col.sortable && onSortChange && (
+                        <span className="cursor-pointer text-center h-auto w-8">
+                          <img
+                            src={sortOrder}
+                            onClick={(e) => {
+                              onSortChange(col.key);
+                              e.currentTarget.style.transform =
+                                e.currentTarget.style.transform === "rotate(180deg)"
+                                  ? "rotate(0deg)"
+                                  : "rotate(180deg)";
+                            }}
+                            className="inline transition-transform duration-300 text-center"
+                            alt="sortOrder"
+                          />
+                        </span>
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
 
@@ -248,7 +253,7 @@ export function DynamicTableApplications<T extends { id: string }>({
               const isExpanded = expandedRows.includes(row.id);
               const baseBg = isSelected ? "bg-[#F5F7F7]" : "bg-[#F5F7F7]";
 
-              // 🆕 Get expanded nodes for this row
+              // Get expanded nodes for this row
               const expandedNodes = renderExpandedNodes ? renderExpandedNodes(row) : [];
               const totalExpandedNodesCols = expandedNodes.reduce(
                 (sum, node) => sum + (node.colSpan || 1),
@@ -264,10 +269,10 @@ export function DynamicTableApplications<T extends { id: string }>({
                     </tr>
                   )}
 
-                  <tr className="h-[56px]">
+                  <tr className="h-[56px] bg-[#F5F7F7]">
                     {(enableSelect || renderExpandedDetails) && (
                       <td
-                        className={`p-1 w-12 text-center ${isExpanded ? "" : "border-b"}  sticky left-0 z-20 ${
+                        className={`p-1 w-12  text-center ${isExpanded ? "" : "border-b"}  sticky left-0 z-20 ${
                           baseBg || ""
                         } rounded-tl-xl
                           ${
@@ -276,7 +281,7 @@ export function DynamicTableApplications<T extends { id: string }>({
                               : ""
                           }
                         `}>
-                        <div className="flex items-center justify-end gap-1">
+                        <div className="flex items-center justify-center gap-1">
                           {((renderExpandedDetails && !hideChevronForRejected) ||
                             (row as any).currentStatus !== "REJECTED") && (
                             <button
@@ -305,21 +310,21 @@ export function DynamicTableApplications<T extends { id: string }>({
                     )}
 
                     {visibleColumns.map((col, index) => {
-                      const isFirstVisibleColumn = !enableSelect && index === 0;
+                      const isFirstVisibleColumn =  index === 0;
                       return (
                         <td
                           key={col.key}
-                          className={`w-32 px-4 ${isExpanded ? "" : "border-b"} py-1 text-xs whitespace-nowrap ${
+                          className={`w-min max-w-60 w-32 px-4 ${isExpanded ? "" : "border-b"}  py-1 text-xs whitespace-nowrap ${
                             col.key !== "email" ? "capitalize" : ""
                           } ${baseBg}
                           ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
-                          ${isFirstVisibleColumn ? "rounded-tl-xl" : ""}
+                          ${isFirstVisibleColumn  ? `sticky ${enableSelect ? "left-12" :"left-6"} z-20` : ""}
                           ${
                             isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
                           }`}>
                           <div
-                            className="truncate cursor-pointer"
+                            className="truncate cursor-pointer h-full w-full p-1" 
                             onDoubleClick={(e) =>
                               navigator.clipboard.writeText(getCellValue(row, col) as string)
                             }

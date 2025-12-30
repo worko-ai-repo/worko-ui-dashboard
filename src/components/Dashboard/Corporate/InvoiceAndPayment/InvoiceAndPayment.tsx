@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import { Eye } from "lucide-react";
 
 type InvoiceStatus = "To be validated" | "Validated" | "Invoice raised" | "Invoice resend" | "Paid";
@@ -86,7 +85,9 @@ export default function InvoiceAndPayment() {
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
 
   const toggleExpand = (id: string) => {
-    setExpandedRows((prev) => (prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]));
+    setExpandedRows((prev) =>
+      prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
+    );
   };
 
   const columns = [
@@ -100,7 +101,12 @@ export default function InvoiceAndPayment() {
     {
       key: "status",
       label: "Status",
-      render: (row: InvoiceRow) => <span className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[row.status]}`}>{row.status}</span>,
+      render: (row: InvoiceRow) => (
+        <span
+          className={`px-3 py-1 text-xs font-semibold rounded-full ${statusColors[row.status]}`}>
+          {row.status}
+        </span>
+      ),
     },
     {
       key: "actions",
@@ -112,9 +118,26 @@ export default function InvoiceAndPayment() {
             View Invoice
           </button>
           <button className="flex gap-1 items-center px-3 py-[10px] text-white text-sm bg-[#316BFF] rounded-[10px] ">
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="25" viewBox="0 0 24 25" fill="none">
-              <path d="M2.99609 12.9004C2.99609 7.93039 7.02609 3.90039 11.9961 3.90039C16.9661 3.90039 20.9961 7.93039 20.9961 12.9004C20.9961 17.8704 16.9661 21.9004 11.9961 21.9004C7.02609 21.9004 2.99609 17.8704 2.99609 12.9004Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M7.99609 12.9004L10.9961 15.9004L15.9961 10.9004" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="25"
+              viewBox="0 0 24 25"
+              fill="none">
+              <path
+                d="M2.99609 12.9004C2.99609 7.93039 7.02609 3.90039 11.9961 3.90039C16.9661 3.90039 20.9961 7.93039 20.9961 12.9004C20.9961 17.8704 16.9661 21.9004 11.9961 21.9004C7.02609 21.9004 2.99609 17.8704 2.99609 12.9004Z"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+              <path
+                d="M7.99609 12.9004L10.9961 15.9004L15.9961 10.9004"
+                stroke="white"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
             </svg>
             Confirm Payment
           </button>

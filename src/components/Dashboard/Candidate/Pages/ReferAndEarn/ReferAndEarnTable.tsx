@@ -1,7 +1,7 @@
 import { useDashboardContext } from "@Context/Dashboard.context";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useState, useEffect, useMemo } from "react";
-import { DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import WithdrawDialog from "./WithdrawDialog";
 
 const ReferralsTable = ({
@@ -315,7 +315,7 @@ const ReferralsTable = ({
         </div>
       ) : (
         <div className="bg-white rounded-2xl shadow">
-          <DynamicTable
+          <NewDynamicTable
             columns={columns}
             rows={sortedData}
             pageSize={pagination.pageSize}

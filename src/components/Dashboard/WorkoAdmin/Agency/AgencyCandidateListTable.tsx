@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { Check, Eye, FileCheck2, Pencil, Send, Trophy, User, X } from "lucide-react";
-import { DynamicTable } from "../../../Shared/DynamicTable";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -184,7 +183,7 @@ export default function AgencyCandidateListTable(props: any) {
     noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
     location: ["candidateParsedCvDetails.location"],
     readyToRelocate: ["candidateParsedCvDetails.readyToRelocate"],
-    anyComment:["agencyComments"],
+    anyComment: ["agencyComments"],
     workoScore: ["score", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
     status: ["jobApplicationStatus"],
   };

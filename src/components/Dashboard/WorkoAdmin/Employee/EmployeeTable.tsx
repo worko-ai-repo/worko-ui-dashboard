@@ -1,6 +1,6 @@
 import { Archive, email_sync, mobile_install } from "@AssetsFolder/assets";
 import VerifyUserContact from "@Components/Modals/SharedModals/VerifyUserContact";
-import { Column, DynamicTable } from "@Components/Shared/DynamicTable";
+import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import Modal from "@Components/Shared/Modal";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { ApplicantDetails } from "@Interfaces/CorporateDashboard.dto";
@@ -15,7 +15,10 @@ import { getCurrentPositionCell } from "../Applicants/ApplicantsTable";
 interface EmployeeTableProps {
   data: ApplicantDetails[];
   fetchEmployees: () => void;
-  handleVerifyContact?: (userEmail: string, type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL") => Promise<void>;
+  handleVerifyContact?: (
+    userEmail: string,
+    type: "EMAIL" | "MOBILE" | "COMPANY_EMAIL"
+  ) => Promise<void>;
   handleDeleteUser?: (userId: string) => Promise<void>;
   isUpdating?: boolean;
   pagination: CommonCursorPaginationProp;
@@ -34,13 +37,13 @@ export async function handleDeleteUsers(row: ApplicantDetails) {
   }
 }
 
-const EmployeeTable: React.FC<EmployeeTableProps> = ({ 
-  data, 
-  fetchEmployees, 
+const EmployeeTable: React.FC<EmployeeTableProps> = ({
+  data,
+  fetchEmployees,
   handleVerifyContact,
   handleDeleteUser,
   isUpdating = false,
-  pagination 
+  pagination,
 }) => {
   const keyFallbacks = {
     candidateExperience_companyName: ["companyName", "candidateExperience.companyName"],
@@ -162,7 +165,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
       contentWidth: "max-w-none w-96",
       render: (row: ApplicantDetails) => {
         const isRowUpdating = updatingUserId === row.userId;
-        
+
         return (
           <div className="flex gap-3 px-2 justify-between">
             <button
@@ -184,7 +187,12 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
             </button>
 
             <button
-              disabled={row.isCurrentCompEmailVerified === true || !row.companyEmailId || isUpdating || isRowUpdating}
+              disabled={
+                row.isCurrentCompEmailVerified === true ||
+                !row.companyEmailId ||
+                isUpdating ||
+                isRowUpdating
+              }
               data-tooltip-id="my-tooltip"
               data-tooltip-content={
                 !row.companyEmailId
@@ -277,7 +285,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
 
   return (
     <>
-      <DynamicTable<ApplicantDetails>
+      <NewDynamicTable<ApplicantDetails>
         columns={columns}
         rows={sortedData ?? []}
         enableSelect={false}
