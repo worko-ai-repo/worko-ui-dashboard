@@ -226,13 +226,14 @@ const GuidanceTable = memo(
         key: "guidanceRequestType",
         label: "Guidance Type",
         sortable: true,
-        render: (row: GuidanceRequest) => <div>{formatGuidanceType(row.guidanceRequestType)}</div>,
+        render: (row: GuidanceRequest) => formatGuidanceType(row.guidanceRequestType),
       },
       {
         key: "companyName",
         label: "Company",
         sortable: true,
-        render: (row: GuidanceRequest) => <div className="text-center">{row.companyName}</div>,
+        contentWidth: `min-w-[150px]`,
+        render: (row: GuidanceRequest) => row.companyName
       },
       {
         key: "dateNeeded",
@@ -265,7 +266,6 @@ const GuidanceTable = memo(
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Click to view full details"}
               onClick={() => {
-                console.log("Opening modal with:", row.guidanceRequestDescription);
                 setViewViewDetailsModal(true);
                 setFullDetails(row.guidanceRequestDescription?.toString() || "N/A");
               }}>
@@ -282,7 +282,9 @@ const GuidanceTable = memo(
           return (
             <div
               className={`w-32 rounded-full px-1 py-3 text-xs font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
-              title={color.label}>
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={color.label}
+              data-tooltip-place="top">
               <span className="truncate block max-w-full text-center">{color.label}</span>
             </div>
             //     <div className="flex justify-center ">

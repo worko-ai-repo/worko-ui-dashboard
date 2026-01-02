@@ -137,13 +137,14 @@ const ReferralsTable = memo(
         key: "candidateName",
         label: "Candidate Name",
         sortable: true,
-        render: (row: ReferralDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span className="truncate block w-full" title={row.userDetails.name}>
-              {row.userDetails.name}
-            </span>
-          </div>
-        ),
+        render: (row: ReferralDetailsDto) => row.userDetails.name
+        //   (
+        //   <div className="flex justify-center m-auto w-[150px]">
+        //     <span className="truncate block w-full" title={row.userDetails.name}>
+        //       {row.userDetails.name}
+        //     </span>
+        //   </div>
+        // ),
       },
       {
         key: "referredJobURL",
@@ -153,6 +154,7 @@ const ReferralsTable = memo(
           row.jobUrl ? (
             <div className="flex justify-center m-auto w-[150px]">
               <a
+                target="_blank"
                 className="text-blue-500 visited:text-blue-500 truncate block w-full"
                 href={row.jobUrl}>
                 Link
@@ -194,6 +196,9 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
             <div
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row.status.replace(/_/g, " ")}
+              data-tooltip-place="top"
               className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${
                 row.status === "ACCEPTED"
                   ? "bg-green-100 text-green-500"
@@ -202,7 +207,7 @@ const ReferralsTable = memo(
                   : row.status === "AWAITING"
                   ? "bg-blue-100 text-blue-500"
                   : row.status === "DONE"
-                  ? "bg-gray-100 text-gray-600"
+                  ? "bg-gray-100 text-gray-600 border border-gray-600"
                   : "bg-red-400 text-white"
               }`}>
               {row.status}
@@ -214,7 +219,11 @@ const ReferralsTable = memo(
         key: "viewCV",
         label: "View CV",
         render: (row: ReferralDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
+          <div 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="View cv"
+              data-tooltip-place="top"
+              className="flex justify-center m-auto w-[150px]">
             <a
               href="#"
               onClick={async (e) => {
@@ -263,7 +272,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => {
           return row.status === "AWAITING" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
@@ -278,7 +287,7 @@ const ReferralsTable = memo(
             </div>
           ) : row.status === "ACCEPTED" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""

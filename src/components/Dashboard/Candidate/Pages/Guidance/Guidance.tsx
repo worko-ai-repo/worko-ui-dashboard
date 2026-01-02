@@ -290,7 +290,7 @@ const Guidance = () => {
   return (
     <div className="w-full relative rounded-xl overflow-hidden text-base text-slate-900 font-poppins">
       {/* Help button container at top with right alignment */}
-      <div className="w-full flex justify-end p-2">
+      <div className="w-full flex justify-end p-2 mt-2">
         <button 
         onClick={handleRedirect}
         className="relative rounded-lg bg-[#316bff] h-11 flex flex-row items-center justify-center p-4 px-4 box-border gap-1.5 cursor-pointer text-center text-xs text-white font-poppins">

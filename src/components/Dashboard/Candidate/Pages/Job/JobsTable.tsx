@@ -539,7 +539,10 @@ const JobsTable = memo(
         sortable: true,
         render: (row: JobApplicationDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <span className="truncate block w-full" title={row.jobTitle}>
+            <span className="truncate block w-full" 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row?.jobTitle}
+              data-tooltip-place="top">
               {row.jobTitle}
             </span>
           </div>
@@ -549,13 +552,15 @@ const JobsTable = memo(
         key: "companyName",
         label: "Company",
         sortable: true,
-        render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span className="truncate block w-full" title={row.companyName}>
-              {row.companyName}
-            </span>
-          </div>
-        ),
+        contentWidth: `max-w-[150px]`,
+        render: (row: JobApplicationDetailsDto) => row.companyName
+        //   (
+        //   <div className="flex justify-center m-auto w-[150px]">
+        //     <span className="truncate block w-full">
+        //       {row.companyName}
+        //     </span>
+        //   </div>
+        // ),
       },
       {
         key: "createdAt",
@@ -584,10 +589,13 @@ const JobsTable = memo(
         sortable: true,
         contentWidth: "max-w-none !min-w-52",
         render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <StatusBadge status={row.status} />
+          <div className="flex justify-center m-auto w-[150px]"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row?.status?.replace(/_/g, " ")}
+              data-tooltip-place="top">
+            <StatusBadge status={row?.status} />
           </div>
-        ),
+        )
       },
       {
         key: "action",
@@ -622,6 +630,9 @@ const JobsTable = memo(
                     <img
                       src={askQuestion}
                       alt="Ask question"
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content={`${!isDisabled ? `Request a follow up` : ""}`}
+                      data-tooltip-place="top"
                       className={`transition-all ${isDisabled ? "opacity-60" : ""}`}
                     />
                   </button>
@@ -724,14 +735,22 @@ const JobsTable = memo(
     const toggleExpand = (id: string) => {
       const row = sortedData.find((item) => item.id === id);
       const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
+      const isCurrentlyExpanded = expandedRows.includes(id);
 
-      if (latestStatus === "REJECTED") {
+      // Allow collapsing any row, but prevent expanding REJECTED rows
+      if (!isCurrentlyExpanded && latestStatus === "REJECTED") {
         return; // Don't allow expansion for rejected rows
       }
 
       setExpandedRows((prev) =>
         prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
       );
+    };
+
+    // Function to check if a row is expandable
+    const isRowExpandable = (row: JobApplicationDetailsDto): boolean => {
+      const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
+      return latestStatus !== "REJECTED";
     };
 
     /* console.log({
@@ -762,6 +781,7 @@ const JobsTable = memo(
             sortOrder={sortOrder}
             expandedRows={expandedRows}
             toggleExpand={toggleExpand}
+            isRowExpandable={isRowExpandable}
           />
         </div>
 

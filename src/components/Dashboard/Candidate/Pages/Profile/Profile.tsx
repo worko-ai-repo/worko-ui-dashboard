@@ -1126,7 +1126,7 @@ const Profile = () => {
     );
 
   return (
-    <div className="flex flex-col lg:flex-row w-full min-h-screen">
+    <div className="flex flex-col lg:flex-row w-full min-h-screen mt-4">
       {/* Quick Links Sidebar - Hidden on mobile, visible on desktop */}
       <div className="hidden xl:block">
         <QuickLinks />
