@@ -184,7 +184,7 @@ const ScreeningListView: FunctionComponent = () => {
   return isLoading ? (
     <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
   ) : (
-    <div className="p-6">
+    <div className="p-1">
       <div className="max-w-full mx-auto">
         <NewDynamicTable
           columns={columns}

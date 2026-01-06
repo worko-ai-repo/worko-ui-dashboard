@@ -473,7 +473,7 @@ const Applicants = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[25px]">
         <div className="flex  flex-col mt-2">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails

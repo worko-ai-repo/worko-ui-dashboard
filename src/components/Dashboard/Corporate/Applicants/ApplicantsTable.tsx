@@ -216,15 +216,15 @@ export default function ApplicationTable({
       "scoreDetails.matchingScore",
       "scoreDetails.matchingScorePercentage",
     ],
-    noticePeriod: ["applicantDetails.noticePeriod"],
-    profile: ["applicantDetails.candidateExperience.designation"],
+    experience: ["applicantDetails.YOE", "yoe"],
     location: ["applicantDetails.location"],
+    noticePeriod: ["applicantDetails.noticePeriod"],
     applicantDetails_candidateExperience_designation: [
       "applicantDetails.candidateExperience.designation",
     ],
     applicantDetails_CTC: ["applicantDetails.CTC"],
-    ECTC: ["applicantDetails.ECTC"],
     currentCTC: ["applicantDetails.CTC"],
+    ECTC: ["applicantDetails.ECTC"],
   };
 
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {

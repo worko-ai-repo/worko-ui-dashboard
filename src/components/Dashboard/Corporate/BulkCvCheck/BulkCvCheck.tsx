@@ -101,7 +101,7 @@ const BulkCVCheck: React.FC = () => {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex flex-wrap justify-center mb-4 mt-2 border-gray-200">
+      <div className="flex flex-wrap justify-center mb-4 mt-1 border-gray-200">
         <button
           className={`px-4 py-2 font-medium ${
             isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"

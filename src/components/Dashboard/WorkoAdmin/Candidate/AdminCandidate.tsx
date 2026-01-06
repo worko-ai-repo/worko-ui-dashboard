@@ -260,7 +260,7 @@ const AdminCandidate = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[25px]">
         <div className="flex flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails key="admin-candidate-stats" pageType="candidates" />
