@@ -15,6 +15,9 @@ import CompletedReferralModal from "./CompletedReferralModal";
 import ProvideFeedbackModal from "./ProvideFeedbackModal";
 import ViewDetailsModal from "@Components/Dashboard/Candidate/Pages/Job/modals/ViewDetailsModal";
 import ChatWindow from "@Components/Dashboard/Candidate/Pages/Referral/modals/ChatWindow";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import Modal from "@Components/Shared/Modal";
+import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 
 interface UserDetails {
   cvAwsS3SignedUrl?: string;
@@ -61,7 +64,8 @@ const ReferralsTable = memo(
     const [showViewDetails, setShowViewDetails] = useState<boolean>(false);
     const [viewDetailsContent, setViewDetailsContent] = useState<string>("");
     const [showChatWindow, setShowChatWindow] = useState<boolean>(false);
-
+    const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
+    const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
     const { user } = useDashboardContext();
 
     const referrals = data?.data || [];
@@ -181,11 +185,53 @@ const ReferralsTable = memo(
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <MatchingScoreCircle
+            {/* <MatchingScoreCircle
               score={row.matchingScore ?? 0}
               scoreDetails={row}
               status={row.status}
-            />
+            /> */}
+            <ProgressCircle
+                onClick={() => {
+                let strengths = [];
+                const applicantRaw = row?.scoreDetailsForApplicant;
+                if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
+                  try {
+                    const parsed = JSON.parse(applicantRaw);
+                    if (parsed.CandidateNote) {
+                      strengths = parsed.CandidateNote;
+                    }
+                  } catch (e) {
+                    console.error('Failed to parse scoreDetailsForApplicant:', e);
+                  }
+                }
+
+                if (strengths.length === 0) {
+                  const recruiterRaw = row?.scoreDetails;
+                  if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
+                    try {
+                      const parsed = JSON.parse(recruiterRaw);
+                      if (parsed.RecruiterNote) {
+                        strengths = parsed.RecruiterNote;
+                      }
+                    } catch (e) {
+                      console.error('Failed to parse scoreDetails:', e);
+                    }
+                  }
+                }
+                  setFeedbackModalOpen(true);
+                  setScorePointsModal({
+                    title: `Feedback summary`,
+                    data:strengths,
+                    matchingScore: row.matchingScore ?? 0,
+                    candidateName: row?.jobTitle ?? "N/A",
+                    details: true,
+                    showCloseButton: true,
+                    onClose: () => setFeedbackModalOpen(false),
+                    isShowDetails:true
+                  });
+                }}
+                value={row?.matchingScore ?? 0}
+              />
           </div>
         ),
       },
@@ -199,7 +245,7 @@ const ReferralsTable = memo(
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row.status.replace(/_/g, " ")}
               data-tooltip-place="top"
-              className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${
+              className={`w-32 text-center rounded-full px-1 py-2 text-sm font-medium ${
                 row.status === "ACCEPTED"
                   ? "bg-green-100 text-green-500"
                   : row.status === "PENDING"
@@ -272,7 +318,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => {
           return row.status === "AWAITING" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-2 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
@@ -287,7 +333,7 @@ const ReferralsTable = memo(
             </div>
           ) : row.status === "ACCEPTED" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-2 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
@@ -302,7 +348,7 @@ const ReferralsTable = memo(
             </div>
           ) : row.status === "DONE" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-yellow-200 text-black">
+              <div className="truncate block w-full text-center rounded-full px-1 py-2 text-sm font-medium bg-yellow-200 text-black">
                 <button
                   className="truncate w-full overflow-hidden whitespace-nowrap"
                   onClick={() => {
@@ -509,6 +555,12 @@ const ReferralsTable = memo(
             referralData={referralData}
             user={"employee"}
           />
+          <Modal
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            className="py-5">
+            {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
+          </Modal>
           {/* )} */}
         </div>
       </div>

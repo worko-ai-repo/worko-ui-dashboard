@@ -28,6 +28,9 @@ export interface ReferralDetailsDto {
     name:string,
     id:string,
   }
+  scoreDetailsForApplicant:any,
+  scoreDetails:any,
+  jobTitle:string;
 }
 
 export type ReferralStatus = 

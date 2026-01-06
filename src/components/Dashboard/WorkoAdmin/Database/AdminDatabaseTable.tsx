@@ -18,6 +18,7 @@ import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import Modal from "@Components/Shared/Modal";
 import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -207,55 +208,61 @@ const keyFallbacks = {
       key: "candidateName",
       label: "Candidate Name",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.candidateParsedCvDetails?.name} className="truncate block w-full">
-            {row?.candidateParsedCvDetails?.name ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.name ?? "NA"
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.candidateParsedCvDetails?.name} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.name ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "email",
       label: "Email",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px] text-center">
-          <span title={row?.candidateParsedCvDetails?.email} className="truncate block w-full">
-            {row?.candidateParsedCvDetails?.email ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => 
+        row?.candidateParsedCvDetails?.email ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px] text-center">
+      //     <span title={row?.candidateParsedCvDetails?.email} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.email ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "contact",
       label: "Contact Number",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number ? (
-            <span>
-              +{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}
-            </span>
-          ) : (
-            <span>{"NA"}</span>
-          )}
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => 
+        `+${row?.phoneNumberDetails?.countryCode} ${row?.phoneNumberDetails?.number}`
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number ? (
+      //       <span>
+      //         +{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}
+      //       </span>
+      //     ) : (
+      //       <span>{"NA"}</span>
+      //     )}
+      //   </div>
+      // ),
     },
     {
       key: "currentDesignation",
       label: "Current Designation",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span
-            title={row?.candidateParsedCvDetails?.currentDesignation}
-            className="truncate block w-full">
-            {row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.currentDesignation ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span
+      //       title={row?.candidateParsedCvDetails?.currentDesignation}
+      //       className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "appliedCompany",
@@ -266,10 +273,12 @@ const keyFallbacks = {
         .map(company => company.companyName)
         .join(", ");
         return (
-          <div className='flex justify-center m-auto w-[150px]'>
+          <div>
               <span 
-              title={companyList}
-              className="truncate block w-full">
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={companyList}
+                data-tooltip-place="top"
+                className="truncate block w-full">
                 {companyList.length ? companyList: "NA"}
               </span>
           </div>)
@@ -314,37 +323,40 @@ const keyFallbacks = {
       key: "currentLocation",
       label: "Current location",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto">
-          <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
-            {row?.candidateParsedCvDetails?.location ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.location ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto">
+      //     <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.location ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "addedBy",
       label: "Added by",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.addedBy} className="truncate block w-full">
-            {row?.addedBy ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedBy ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.addedBy} className="truncate block w-full">
+      //       {row?.addedBy ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "addedFor",
       label: "Added for",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.addedFor} className="truncate block w-full">
-            {row?.addedFor ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedFor ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.addedFor} className="truncate block w-full">
+      //       {row?.addedFor ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "coolingPeriod",
@@ -385,6 +397,9 @@ const keyFallbacks = {
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className="flex justify-center m-auto w-[40px]">
           <button
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content="View CV"
+            data-tooltip-place="top"
             className="flex flex-row justify-center items-center"
             onClick={() => {
               viewCV(row);
@@ -402,6 +417,9 @@ const keyFallbacks = {
         return (
           <div className="flex justify-center m-auto w-[40px]">
             <button
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Edit details"
+              data-tooltip-place="top"
               disabled={true}
               onClick={() => {
                 setEditProfileView(true);
@@ -543,7 +561,7 @@ const keyFallbacks = {
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-      <DynamicTableTwo
+      <NewDynamicTable
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

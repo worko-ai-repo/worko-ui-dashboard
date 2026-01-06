@@ -279,6 +279,7 @@ export interface JobApplicationDetailsDto {
   followUpRequest?: Array<{
     actionDate: string;
   }>;
+  scoreDetailsForApplicant:string;
 }
 
 export type JobApplicationDocumentStatusType =

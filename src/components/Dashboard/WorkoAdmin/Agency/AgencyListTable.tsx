@@ -20,6 +20,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -125,66 +126,77 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "agencyName",
         label: "Agency Name",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span 
-                title={row?.agencyName}
-                className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
-            </div>
-        ),
+        render: (row: AgencyListDetailsDto) => row?.agencyName ?? "NA" 
+        // (
+        //     <div className='flex justify-center m-auto w-[150px] text-center'>
+        //         <span 
+        //         title={row?.agencyName}
+        //         className="truncate block w-full">{row?.agencyName ?? "NA"}</span>
+        //     </div>
+        // ),
     },
     {
         key: "email",
         label: "Email ID",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px] text-center'>
-                <span title={row?.email}
-                className="truncate block w-full">{row?.email ?? "NA"}</span>
-            </div>
-        ),
+        render: (row: AgencyListDetailsDto) => row?.email ?? "NA"
+        // (
+        //     <div className='flex justify-center m-auto w-[150px] text-center'>
+        //         <span title={row?.email}
+        //         className="truncate block w-full">{row?.email ?? "NA"}</span>
+        //     </div>
+        // ),
     },
     {
         key: "contactName",
         label: "Contact person name",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span 
-                title={row?.name}
-                className="truncate block w-full">{row?.name ?? "NA"}</span>
-            </div>
-        ),
+        render: (row: AgencyListDetailsDto) => row?.name ?? "NA"
+        // (
+        //     <div className='flex justify-center m-auto w-[150px]'>
+        //         <span 
+        //         title={row?.name}
+        //         className="truncate block w-full">{row?.name ?? "NA"}</span>
+        //     </div>
+        // ),
     },
     {
         key: "contactNumber",
         label: "Ph no",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-              {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number
-              ? <span>+{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}</span>
-              : <span>{"NA"}</span>}     
-            </div>
-        ),
+        render: (row: AgencyListDetailsDto) => `+${row?.phoneNumberDetails?.countryCode} ${row?.phoneNumberDetails?.number}`
+        // (
+        //     <div className='flex justify-center m-auto w-[150px]'>
+        //       {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number
+        //       ? <span>+{row?.phoneNumberDetails?.countryCode} {row?.phoneNumberDetails?.number}</span>
+        //       : <span>{"NA"}</span>}     
+        //     </div>
+        // ),
     },
     {
         key: "dateActivated",
         label: "Date activated",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-        <span>
-          {row?.createdAt
+        render: (row: AgencyListDetailsDto) => row?.createdAt
             ? new Date(row.createdAt).toLocaleDateString("en-GB", {
                 day: "2-digit",
                 month: "2-digit",
                 year: "numeric",
               })
-            : "NA"}
-        </span>
-        </div>
-        ),
+            : "NA"
+        // (
+        // <div className='flex justify-center m-auto w-[150px]'>
+        // <span>
+        //   {row?.createdAt
+        //     ? new Date(row.createdAt).toLocaleDateString("en-GB", {
+        //         day: "2-digit",
+        //         month: "2-digit",
+        //         year: "numeric",
+        //       })
+        //     : "NA"}
+        // </span>
+        // </div>
+        // ),
     },
     {
         key: "asignedJobs",
@@ -241,7 +253,9 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
               <div className='flex justify-start m-auto gap-1'>
                   <div className="flex flex-row">
                       <button
-                          title="Assign jobs"
+                          data-tooltip-id="my-tooltip"
+                          data-tooltip-content="Assign jobs"
+                          data-tooltip-place="top"
                           className="btn-sky flex items-center space-x-2"
                           onClick={() => {
                           setIsAssignJobModelOpen(true)
@@ -259,11 +273,12 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "GSTIN",
         label: "GSTIN No",
         sortable: true,
-        render: (row: AgencyListDetailsDto) => (
-            <div className='flex justify-center m-auto w-[150px]'>
-                <span>{row?.GSTIN ?? "-"}</span>
-            </div>
-        ),
+        render: (row: AgencyListDetailsDto) => row?.GSTIN ?? "-"
+        // (
+        //     <div className='flex justify-center m-auto w-[150px]'>
+        //         <span>{row?.GSTIN ?? "-"}</span>
+        //     </div>
+        // ),
     },
     {
         key: "contractCopy",
@@ -273,6 +288,9 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         row?.contractCopyAwsS3FileName && (
             <div className="flex justify-center m-auto w-[40px]">
               <button
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="View contract copy"
+                data-tooltip-place="top"
                 className="flex flex-row justify-center items-center"
                 onClick={() => {
                   viewCV(row)
@@ -299,6 +317,9 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
           return (
               <div className="flex justify-center  mx-auto p-2 w-fit relative">
               <span
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
+                  data-tooltip-place="top"
                   className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
                   {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
               </span>
@@ -337,7 +358,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-        <DynamicTableTwo
+        <NewDynamicTable
           columns={columns}
           rows={sortedData ?? []}
           selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}

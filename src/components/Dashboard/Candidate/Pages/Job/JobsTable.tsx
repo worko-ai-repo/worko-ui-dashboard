@@ -21,6 +21,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -65,17 +66,17 @@ const JobsTable = memo(
     const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
     const { user } = useDashboardContext();
     const [expandedRows, setExpandedRows] = React.useState<string[]>([]);
-    const [requestedDocumentsList, setRequestedDocumentsList] =
-      useState<JobApplicationDetailsDto>();
+    const [requestedDocumentsList, setRequestedDocumentsList] = useState<JobApplicationDetailsDto>();
     const [showCheckAcceptModal, setShowCheckAcceptModal] = useState(false);
-    const [currentJobForCheckAccept, setCurrentJobForCheckAccept] =
-      useState<JobApplicationDetailsDto | null>(null);
+    const [currentJobForCheckAccept, setCurrentJobForCheckAccept] = useState<JobApplicationDetailsDto | null>(null);
     const [modalMessage, setModalMessage] = React.useState<{
       message: string;
       isError: boolean;
       open: boolean;
     }>({ message: "", isError: false, open: false });
     const [parsingJobId, setParsingJobId] = useState<string>("");
+    const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
+    const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
 
     const [isError, setIsError] = useState(false);
     const { userDetails } = useAppContext();
@@ -574,12 +575,56 @@ const JobsTable = memo(
         sortable: true,
         render: (row: JobApplicationDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <MatchingScoreCircle
+            {/* <MatchingScoreCircle
               score={row.matchingScore ?? 0}
               scoreDetails={row}
               status={row.status}
               jobTitle={row.jobTitle}
-            />
+            /> */}
+              <ProgressCircle
+                onClick={() => {
+                console.log(row)
+                let strengths = [];
+                const applicantRaw = row?.scoreDetailsForApplicant;
+                if(!applicantRaw) return
+                if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
+                  try {
+                    const parsed = JSON.parse(applicantRaw);
+                    if (parsed.CandidateNote) {
+                      strengths = parsed.CandidateNote;
+                    }
+                  } catch (e) {
+                    console.error('Failed to parse scoreDetailsForApplicant:', e);
+                  }
+                }
+
+                if (strengths.length === 0) {
+                  const recruiterRaw = row?.scoreDetails;
+                  if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
+                    try {
+                      const parsed = JSON.parse(recruiterRaw);
+                      if (parsed.RecruiterNote) {
+                        strengths = parsed.RecruiterNote;
+                      }
+                    } catch (e) {
+                      console.error('Failed to parse scoreDetails:', e);
+                    }
+                  }
+                }
+                  setFeedbackModalOpen(true);
+                  setScorePointsModal({
+                    title: `Feedback summary`,
+                    data:strengths,
+                    matchingScore: row.matchingScore ?? 0,
+                    candidateName: row?.jobTitle,
+                    details: true,
+                    showCloseButton: true,
+                    onClose: () => setFeedbackModalOpen(false),
+                    isShowDetails:true
+                  });
+                }}
+                value={row?.matchingScore ?? 0}
+              />
           </div>
         ),
       },
@@ -860,6 +905,12 @@ const JobsTable = memo(
             onClose={closeModal}
           />
         )}
+        <Modal
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            className="py-5">
+            {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
+          </Modal>
       </div>
     );
   }

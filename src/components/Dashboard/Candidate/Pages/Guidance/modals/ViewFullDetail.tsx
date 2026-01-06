@@ -4,12 +4,14 @@ interface ViewFullDetailProps {
   onClose: () => void;
   isOpen: boolean;
   fullDetails:string;
+  displayText?:string;
 }
 
 const ViewFullDetail: FC<ViewFullDetailProps> = ({
   onClose,
   isOpen,
   fullDetails,
+  displayText,
 }) => {
 
   const [visible, setVisible] = useState(false);
@@ -29,7 +31,7 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      className={`fixed inset-0 z-[70] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
@@ -42,7 +44,7 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
           ×
         </button>
 
-        <h2 className="text-xl font-semibold mb-4 text-left">Requirement Detail</h2>
+        <h2 className="text-xl font-semibold mb-4 text-left">{displayText ?? "Requirement Detail"}</h2>
         <p className='text-center bg-gray-300 p-2 rounded-xl text-sm'>{fullDetails}</p>
       </div>
     </div>

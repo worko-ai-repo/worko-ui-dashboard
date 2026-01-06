@@ -1,3 +1,4 @@
+import { UserDetails } from './../../../../../../types/sidebar';
 // src/components/Referrals/ReferralTypes.ts
 
 export interface EmployeeDetails {
@@ -16,7 +17,13 @@ export interface ReferralDetailsDto {
   matchingScore:number;
   refereeName:String;
   jobUrl:string;
-  employeeDetails?:EmployeeDetails
+  employeeDetails?:EmployeeDetails;
+  scoreDetailsForApplicant:any;
+  scoreDetails:any;
+  jobTitle:string;
+  userDetails:{
+    name:string;
+  }
 }
 
 export type ReferralStatus = 

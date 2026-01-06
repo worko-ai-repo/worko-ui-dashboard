@@ -208,7 +208,7 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
         </button>
 
 
-        <button
+        {/* <button
             onClick={handleDownload}
             className="absolute bottom-32 right-28 border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600 mx-2"
           >
@@ -220,17 +220,32 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
           className="absolute bottom-32 right-16 bg-white text-blue px-4 py-2 rounded shadow hover:text-blue-600"
         >
           <Maximize className="w-4 h-4" />
-        </button>
+        </button> */}
+        <div className="relative flex-1 overflow-hidden border rounded-md mb-4 mt-4">
+        <div className="absolute bottom-4 right-4 z-50 flex gap-2">
+          <button
+            onClick={handleDownload}
+            className="border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600"
+          >
+            <Download className="w-4 h-4" />
+          </button>
 
+          <button
+            onClick={() => window.open(pdfUrl, "_blank")}
+            className="bg-white px-3 py-2 rounded shadow hover:text-blue-600"
+          >
+            <Maximize className="w-4 h-4" />
+          </button>
+        </div>
         {/* PDF Preview */}
-        <div className="flex-1 overflow-hidden border rounded-md mb-4 mt-4">
+        {/* <div className="flex-1 overflow-hidden border rounded-md mb-4 mt-4"> */}
           <iframe
             src={pdfUrl}
             title="Job Offer Letter"
             className="w-full h-full"
           />
-        </div>
-
+        {/* </div> */}
+    </div>
         {/* Error */}
         {error && <p className="text-red-600 mb-2">{error}</p>}
 
@@ -244,8 +259,8 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
             disabled={loadingAccept}
             className={`px-6 py-3 rounded-xl border 
               ${action === 'accept'
-                ? 'bg-white text-blue-600 border-blue-600'
-                : 'bg-blue-600 text-white'} 
+                ? 'bg-blue-600 text-white'
+                : 'bg-white text-blue-600 border-blue-600'} 
               disabled:opacity-50`}
           >
             {loadingAccept  ? 'Accepting...' : 'Accept'}

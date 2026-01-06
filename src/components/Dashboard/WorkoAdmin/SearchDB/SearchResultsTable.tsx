@@ -10,6 +10,8 @@ import { Edit, View } from "@AssetsFolder/assets";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import MoveToApplicants from "./modals/MoveToApplicants";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
+import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
+import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -68,6 +70,9 @@ export default function SearchResultsTable(props: any) {
 
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
+  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  const [fullDetails, setFullDetails] = useState<string>("");
+  const [displayText, setDisplayText] = useState<string>("");
 
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
@@ -175,43 +180,47 @@ export default function SearchResultsTable(props: any) {
       key: "candidateName",
       label: "Candidate Name",
       sortable: false,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.candidateName} className="truncate block w-full">
-            {row?.candidateName ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateName ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.candidateName} className="truncate block w-full">
+      //       {row?.candidateName ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "currentCompany",
       label: "Current Company",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span>{row?.currentCompany ?? "NA"}</span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.currentCompany ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>{row?.currentCompany ?? "NA"}</span>
+      //   </div>
+      // ),
     },
     {
       key: "email",
       label: "Email ID",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span>{row?.emailId ?? "NA"}</span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.emailId ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>{row?.emailId ?? "NA"}</span>
+      //   </div>
+      // ),
     },
     {
       key: "contactNumber",
       label: "Contact no",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span>{row?.contactNumber ?? "NA"}</span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => `+${row?.phoneNumberDetails?.countryCode ?? ""} ${row?.phoneNumberDetails?.number ?? "NA"}`
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>{row?.contactNumber ?? "NA"}</span>
+      //   </div>
+      // ),
     },
     {
       key: "coreSkills",
@@ -221,7 +230,14 @@ export default function SearchResultsTable(props: any) {
         const skillsText = (row.coreSkills ?? []).map((skill) => skill?.skillName).join(", ");
 
         return (
-          <div className="w-[150px] truncate" title={skillsText}>
+          <div className="w-[150px] truncate" 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Click to view full details"}
+              onClick={() => {
+                setViewViewDetailsModal(true);
+                setFullDetails(skillsText.length ? skillsText : "NA");
+                setDisplayText("Core skills")
+              }}>
             {skillsText.length ? skillsText : "NA"}
           </div>
         );
@@ -231,13 +247,16 @@ export default function SearchResultsTable(props: any) {
       key: "currentDesignation",
       label: "Current Designation",
       sortable: false,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.currentDesignation} className="truncate block w-full">
-            {row?.currentDesignation ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.currentDesignation ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span 
+      //       title={row?.currentDesignation} 
+      //       className="truncate block w-full">
+      //       {row?.currentDesignation ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "YOE",
@@ -254,13 +273,14 @@ export default function SearchResultsTable(props: any) {
       key: "source",
       label: "Source",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span title={row?.source} className="truncate block w-full">
-            {row?.source ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.source ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.source} className="truncate block w-full">
+      //       {row?.source ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "about",
@@ -268,7 +288,15 @@ export default function SearchResultsTable(props: any) {
       sortable: false,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className="flex justify-center m-auto w-[150px] text-start">
-          <span title={row?.about} className="truncate block w-full">
+          <span 
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={"Click to view full details"}
+          onClick={() => {
+            setViewViewDetailsModal(true);
+            setFullDetails(row?.about ?? "NA");
+            setDisplayText("About")
+          }}
+          className="truncate block w-full">
             {row?.about ?? "NA"}
           </span>
         </div>
@@ -417,7 +445,7 @@ export default function SearchResultsTable(props: any) {
         <span>deselect {ListSelection?.selectedRows?.length ?? 0} rows</span>
       </button>
 
-      <DynamicTableTwo
+      <NewDynamicTable
         columns={columns}
         rows={sortedData ?? []}
         selectedRows={ListSelection?.selectedRows?.map((row: any) => row.id) ?? []}
@@ -448,6 +476,16 @@ export default function SearchResultsTable(props: any) {
         userDetails={userDetails}
         />
         )} */}
+    <ViewFullDetail
+      onClose={() => {
+        setViewViewDetailsModal(false);
+        setFullDetails("");
+        setDisplayText("");
+      }}
+      isOpen={viewViewDetailsModal}
+      fullDetails={fullDetails}
+      displayText={displayText}
+    />
     </>
   );
 }

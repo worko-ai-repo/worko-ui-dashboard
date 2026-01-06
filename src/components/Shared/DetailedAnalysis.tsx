@@ -16,6 +16,7 @@ export interface ScorePointsModalProps {
   details?: boolean;
   showCloseButton?: boolean;
   onClose?: () => void;
+  isShowDetails?:boolean;
 }
 
 const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
@@ -26,6 +27,7 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
   details = true,
   showCloseButton = false,
   onClose,
+  isShowDetails = false
 }) => {
   const [showDetails, setShowDetails] = React.useState(details);
   if (!data) return <NoDataPresent />;
@@ -71,7 +73,9 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
                 </div>
                 <div className="bg-gray-50 rounded-lg border border-gray-200 p-4 min-h-[120px]">
                   <div className="text-gray-800 text-sm font-normal font-['Poppins'] leading-relaxed">
-                    {recruiterNote || "No detailed feedback summary available."}
+                    {isShowDetails && String(data)
+                      ? String(data)
+                      : recruiterNote || "No detailed feedback summary available."}
                   </div>
                 </div>
               </div>
@@ -115,7 +119,7 @@ const ScorePointsModal: React.FC<ScorePointsModalProps> = ({
           </div>
           
               {/* Collapsible Details */}
-              {showDetails && (
+              {showDetails && !isShowDetails &&(
                 <div className="mt-2 space-y-4 text-left">
                   {/* Strengths */}
                   {strengths.length > 0 && (
