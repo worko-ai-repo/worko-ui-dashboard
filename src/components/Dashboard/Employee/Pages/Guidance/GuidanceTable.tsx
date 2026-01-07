@@ -6,6 +6,7 @@ import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import MentorDetails from "./modals/MentorDetails";
 import httpServiceObj from "@Services/ApiHandler.service";
 import GuidanceStepper from "./modals/GuidanceStepper";
+import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
 
 interface GuidanceTableProps {
   mentorID: string;
@@ -56,6 +57,8 @@ const GuidanceTable = memo(
     const mentorDataCache = useRef<Map<string, MentorMergedData>>(new Map());
     const [mentorDataLoading, setMentorDataLoading] = useState<boolean>(false);
     const [expandedRows, setExpandedRows] = useState<string[]>([]);
+    const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+    const [fullDetails, setFullDetails] = useState<string>("");
 
     const APP_API_URI = import.meta.env.APP_API_URI;
 
@@ -213,9 +216,7 @@ const GuidanceTable = memo(
         key: "candidateName",
         label: "Candidate Name",
         sortable: true,
-        render: (row: GuidanceRequest) => (
-          <div className="text-center">{row?.userDetails?.name ?? "-"}</div>
-        ),
+        render: (row: GuidanceRequest) => row?.userDetails?.name ?? "NA"
       },
       {
         key: "aboutCandidate",
@@ -224,9 +225,22 @@ const GuidanceTable = memo(
         render: (row: GuidanceRequest) => {
           const about = row?.userDetails?.about;
           return (
-            <div className="text-center max-w-[200px] truncate mx-auto" title={about || undefined}>
-              {about ?? "-"}
-            </div>
+            // <div className="text-center max-w-[200px] truncate mx-auto" title={about || undefined}>
+            //   {about ?? "-"}
+            // </div>
+          <div className="flex justify-center m-auto w-[150px]">
+            <span
+              className="truncate block w-[150px]"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={`${about ? "Click to view full details" : ""}`}
+              onClick={() => {
+                if (!about) return
+                setViewViewDetailsModal(true);
+                setFullDetails(about || "N/A");
+              }}>
+              {about ? about : "N/A"}
+            </span>
+          </div>
           );
         },
       },
@@ -234,7 +248,7 @@ const GuidanceTable = memo(
         key: "guidanceRequestType",
         label: "Guidance Type",
         sortable: true,
-        render: (row: GuidanceRequest) => <div>{formatGuidanceType(row.guidanceRequestType)}</div>,
+        render: (row: GuidanceRequest) => formatGuidanceType(row.guidanceRequestType)
       },
       // {
       //   key: "companyName",
@@ -284,7 +298,9 @@ const GuidanceTable = memo(
           return (
             <div
               className={`w-32 rounded-full px-1 py-3 text-xs font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
-              title={color.label}>
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={color.label}
+              data-tooltip-place="top">
               <span className="truncate block max-w-full text-center">{color.label}</span>
             </div>
 
@@ -477,6 +493,14 @@ const GuidanceTable = memo(
             </div>
           </div>
         )}
+        <ViewFullDetail
+          onClose={() => {
+            setViewViewDetailsModal(false);
+            setFullDetails("");
+          }}
+          isOpen={viewViewDetailsModal}
+          fullDetails={fullDetails}
+        />
       </div>
     );
   }

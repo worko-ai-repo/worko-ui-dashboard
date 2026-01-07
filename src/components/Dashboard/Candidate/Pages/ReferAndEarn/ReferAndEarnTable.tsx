@@ -149,50 +149,55 @@ const ReferralsTable = ({
       key: "name",
       label: "Name",
       sortable: true,
-      render: (row: any) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span className="truncate block w-full" title={row.name}>
-            {row.name}
-          </span>
-        </div>
-      ),
+      render: (row: any) => row.name
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span className="truncate block w-full" title={row.name}>
+      //       {row.name}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "jobTitle",
       label: "Job Title",
       sortable: true,
-      render: (row: any) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span className="truncate block w-full" title={row.jobTitle}>
-            {row.jobTitle}
-          </span>
-        </div>
-      ),
+      contentWidth: "min-w-[150px]",
+      render: (row: any) => row?.jobTitle
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span className="truncate block w-full" title={row.jobTitle}>
+      //       {row.jobTitle}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "email",
       label: "Email",
       sortable: true,
-      render: (row: any) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span className="truncate block w-full" title={row.email}>
-            {row.email?.toLowerCase()}
-          </span>
-        </div>
-      ),
+      render: (row: any) => row?.email?.toLowerCase() 
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span className="truncate block w-full" title={row.email}>
+      //       {row.email?.toLowerCase()}
+      //     </span>
+      //   </div>
+      // ),
     },
 
     { key: "phone",
       label: "Phone" , 
       sortable:true,
-      render: (row: any) => (
-        <div className="flex justify-center m-auto w-[150px]">
-          <span className="truncate block w-full" 
-            title={row?.phone}>
-            +91 {row?.phone?? ""}
-          </span>
-        </div>
-      ),
+      render: (row: any) => `+91 ${row?.phone.toString()}`
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span className="truncate block w-full" 
+      //       title={row?.phone}>
+      //       +91 {row?.phone?? ""}
+      //     </span>
+      //   </div>
+      // ),
     },
     { key: "dateReferred", label: "Date Referred", sortable: true },
     { key: "dateApplied", label: "Date Applied", sortable: true },
@@ -205,6 +210,9 @@ const ReferralsTable = ({
           return (
             <div className="flex justify-center m-auto w-[150px]">
               <button
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content="Achieved"
+                data-tooltip-place="top"
                 className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
                 onClick={() => {
                   setSelectedReferral(row);
@@ -231,7 +239,11 @@ const ReferralsTable = ({
         if (row.jobApplicationStatus === "REJECTED") {
           return (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
+              <div               
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Rejected"
+              data-tooltip-place="top"
+              className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
                 Rejected
               </div>
             </div>
@@ -240,7 +252,11 @@ const ReferralsTable = ({
         // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
         return (
           <div className="flex justify-center m-auto w-[150px]">
-            <div className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
+            <div 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Not Achieved Yet"
+              data-tooltip-place="top"
+              className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
               Not Achieved Yet
             </div>
           </div>
@@ -261,7 +277,11 @@ const ReferralsTable = ({
       render: (row: any) => {
         const { label, style } = getStatusLabelAndStyle(row.jobApplicationStatus);
         return (
-          <div className={`px-4 py-3 rounded-full border ${style}`}>
+          <div               
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={label}
+              data-tooltip-place="top"
+              className={`px-4 py-3 rounded-full border ${style}`}>
             <span className="text-xs">{label}</span>
           </div>
         );
@@ -272,7 +292,11 @@ const ReferralsTable = ({
       label: "Referral Bonus",
       render: (row: any) => (
         <div className={`flex justify-center items-center ${getBonusColor(row.status)}`}>
-          <span className="font-semibold">Rs. {row.referralBonus || 0}</span>
+          <span               
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row.referralBonus}
+              data-tooltip-place="top"
+              className="font-semibold">Rs. {row.referralBonus || 0}</span>
         </div>
       ),
     },

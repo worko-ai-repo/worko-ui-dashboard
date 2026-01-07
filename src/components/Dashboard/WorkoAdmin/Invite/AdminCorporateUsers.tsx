@@ -56,7 +56,7 @@ const AdminCorporateInvites = () => {
   }, [searchBarText, pageSize]); // Add IsCompanyRequestListing here
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-1">
       <div className="flex flex-col ">
         <div className="flex flex-col my-3 sm:flex-row justify-between items-center gap-1">
           {/* Search Bar */}

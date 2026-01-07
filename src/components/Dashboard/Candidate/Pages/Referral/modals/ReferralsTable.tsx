@@ -105,7 +105,10 @@ const ReferralsTable = memo(
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <span className="truncate block w-full" title={row.companyName}>
+            <span className="truncate block w-full" 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={row?.companyName}
+              data-tooltip-place="top">
               {row.companyName}
             </span>
           </div>
@@ -119,6 +122,7 @@ const ReferralsTable = memo(
           row.jobUrl ? (
             <div className="flex justify-center m-auto w-[150px]">
               <a
+                target="_blank"
                 className="text-blue-500 visited:text-blue-500 truncate block w-full"
                 href={row.jobUrl}>
                 Link
@@ -168,7 +172,7 @@ const ReferralsTable = memo(
                   : row.status === "AWAITING"
                   ? "bg-blue-100 text-blue-500"
                   : row.status === "DONE"
-                  ? "bg-gray-100 text-gray-600"
+                  ? "bg-gray-100 text-gray-600 border border-gray-600"
                   : "bg-red-400 text-white"
               }`}>
               {row.status}
@@ -215,29 +219,32 @@ const ReferralsTable = memo(
       {
         key: "refereeName",
         label: "Referee Name",
-        render: (row: ReferralDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span
-              className="truncate block w-full"
-              title={row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}>
-              {row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
-            </span>
-          </div>
-        ),
+        contentWidth: `max-w-[150px]`,
+        render: (row: ReferralDetailsDto) => row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"
+        //   (
+        //   <div className="flex justify-center m-auto w-[150px]">
+        //     <span
+        //       className="truncate block w-full"
+        //       title={row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}>
+        //       {row.employeeDetails?.name ? row.employeeDetails.name.toString() : "N/A"}
+        //     </span>
+        //   </div>
+        // ),
       },
       {
         key: "refereeDesignation",
         label: "Referee Designation",
-        render: (row: ReferralDetailsDto) => (
-        <div className='flex justify-center m-auto w-[150px]'>
-        <span 
-          className="truncate block w-full"
-          title={""}
-          >
-          {"N/A"}
-          </span>
-        </div>
-      ),
+        render: (row: ReferralDetailsDto) => "N/A"
+      //   (
+      //   <div className='flex justify-center m-auto w-[150px]'>
+      //   <span 
+      //     className="truncate block w-full"
+      //     title={""}
+      //     >
+      //     {"N/A"}
+      //     </span>
+      //   </div>
+      // ),
       },
       {
         key: "update",
@@ -245,7 +252,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => {
           return row.status === "ACCEPTED" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
@@ -271,13 +278,14 @@ const ReferralsTable = memo(
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="flex justify-center m-auto w-[150px]">
-              <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-white text-black">
-                <button className="truncate w-full overflow-hidden whitespace-nowrap"></button>
-              </div>
-            </div>
-          );
+          ) : null 
+          // (
+          //   <div className="flex justify-center m-auto w-[150px]">
+          //     <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-white text-black">
+          //       <button className="truncate w-full overflow-hidden whitespace-nowrap"></button>
+          //     </div>
+          //   </div>
+          // );
         },
       },
     ];
@@ -377,13 +385,21 @@ const ReferralsTable = memo(
       const row = sortedData.find((r) => r.id === id);
       if (!row) return;
 
-      if (["CANCELLED", "REJECTED", "WITHDRAWN"].includes(row.status)) {
+      const isCurrentlyExpanded = expandedRows.includes(id);
+
+      // Allow collapsing any row, but prevent expanding non-expandable rows
+      if (!isCurrentlyExpanded && ["CANCELLED", "REJECTED", "WITHDRAWN"].includes(row.status)) {
         return;
       }
 
       setExpandedRows((prev) =>
         prev.includes(id) ? prev.filter((rowId) => rowId !== id) : [...prev, id]
       );
+    };
+
+    // Function to check if a row is expandable
+    const isRowExpandable = (row: ReferralDetailsDto): boolean => {
+      return !["CANCELLED", "REJECTED", "WITHDRAWN"].includes(row.status);
     };
 
     const handleSelectChange = (
@@ -423,6 +439,7 @@ const ReferralsTable = memo(
             renderExpandedDetails={renderExpandedDetails}
             toggleExpand={toggleExpand}
             expandedRows={expandedRows}
+            isRowExpandable={isRowExpandable}
           />
           {showRaiseIssueModal && (
             <RaiseIssueModal

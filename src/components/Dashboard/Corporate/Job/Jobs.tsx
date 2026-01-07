@@ -357,9 +357,9 @@ const Jobs = () => {
   }
 
   return (
-    <div className="flex flex-col gap-[35px] w-full mt-2 px-0">
+    <div className="flex flex-col gap-[25px] w-full mt-0 px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
-        <div className=" flex-1 flex flex-col gap-4">
+        <div className=" flex-1 flex flex-col gap-0">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails
               key="admin-job-stats"
@@ -375,7 +375,7 @@ const Jobs = () => {
               setSearchBarText={handleSearchChange}
               handleClick={() => refetch()}
             />
-            <div className="flex w-3/12 flex-shrink-0  gap-4 justify-center lg:items-end">
+            <div className="flex w-3/12 flex-shrink-0  gap-4 justify-end lg:items-end">
               <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
                 <BulkOption
                   options={[

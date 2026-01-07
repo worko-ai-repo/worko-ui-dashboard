@@ -51,6 +51,8 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   expandedColumns?: string[];
   // NEW: Function to render extra nodes for each row
   renderExpandedNodes?: (row: T) => ExpandedNode[];
+  // NEW: Function to check if a row is expandable
+  isRowExpandable?: (row: T) => boolean;
 }
 
 export function NewDynamicTable<T extends { id: string }>({
@@ -77,6 +79,7 @@ export function NewDynamicTable<T extends { id: string }>({
   mainColumns = [],
   expandedColumns = [],
   renderExpandedNodes, // 🆕 NEW
+  isRowExpandable, // 🆕 NEW
 }: DynamicTableAgencyProps<T>) {
   const totalCols = columns.length + (enableSelect ? 1 : 1);
 
@@ -152,6 +155,14 @@ export function NewDynamicTable<T extends { id: string }>({
 
   const areAllExpanded = rows.length > 0 && expandedRows.length === rows.length;
 
+  // Calculate expandable rows count
+  const expandableRowsCount = isRowExpandable 
+    ? rows.filter((row) => isRowExpandable(row)).length
+    : rows.length;
+  
+  // Check if all expandable rows are expanded
+  const areAllExpandableRowsExpanded = expandableRowsCount > 0 && expandedRows.length === expandableRowsCount;
+
   const { visibleColumns, extraExpandedColumns } = React.useMemo(() => {
     if (areAllExpanded && (mainColumns.length || expandedColumns.length)) {
       return {
@@ -176,23 +187,25 @@ export function NewDynamicTable<T extends { id: string }>({
                         type="button"
                         onClick={() => {
                           if (!toggleExpand) return;
-                          const allExpanded =
-                            rows.length > 0 && expandedRows.length === rows.length;
-                          if (allExpanded) {
+                          if (areAllExpandableRowsExpanded) {
+                            // Collapse all
                             expandedRows.forEach((id) => toggleExpand(id));
                           } else {
+                            // Expand all expandable rows
                             rows.forEach((r) => {
-                              if (!expandedRows.includes(r.id)) toggleExpand(r.id);
+                              if (!expandedRows.includes(r.id) && (!isRowExpandable || isRowExpandable(r))) {
+                                toggleExpand(r.id);
+                              }
                             });
                           }
                         }}
                         className="w-5 h-5 flex items-center justify-center cursor-pointer text-blue-600 border border-gray-300 rounded-full"
                         aria-label={
-                          rows.length > 0 && expandedRows.length === rows.length
+                          areAllExpandableRowsExpanded
                             ? "Collapse all"
                             : "Expand all"
                         }>
-                        {rows.length > 0 && expandedRows.length === rows.length ? (
+                        {areAllExpandableRowsExpanded ? (
                           <ChevronUpIcon />
                         ) : (
                           <ChevronDownIcon />
@@ -217,7 +230,7 @@ export function NewDynamicTable<T extends { id: string }>({
                   <th
                     key={col.key}
                     className={`w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium ${
-                      isFirstVisibleColumn ? `sticky ${enableSelect ? "left-12" : "left-6"} z-30 bg-blue-50` : ""
+                      isFirstVisibleColumn ? `sticky ${enableSelect ? "left-12" : "left-6"} ${!enableSelect && !isRowExpandable ? "!left-0" : "" } z-30 bg-blue-50` : ""
                     }`}>
                     <span className="flex items-center justify-center gap-0 text-center">
                       {col.label}
@@ -319,7 +332,7 @@ export function NewDynamicTable<T extends { id: string }>({
                           } ${baseBg}
                           ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
-                          ${isFirstVisibleColumn  ? `sticky ${enableSelect ? "left-12" :"left-6"} z-20` : ""}
+                          ${isFirstVisibleColumn  ? `sticky ${enableSelect ? "left-12" :"left-6"} ${!enableSelect && !isRowExpandable ? "!left-0" : "" } z-20` : ""}
                           ${
                             isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
                           }`}>

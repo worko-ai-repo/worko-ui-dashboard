@@ -39,11 +39,11 @@ const ScreeningListView: FunctionComponent = () => {
   const [pageSize, setPageSize] = useState<number>(10);
   const keyFallbacks = {
     jobTitle: ["jobTitle", "jobTitle"],
-    location: ["jobLocation", "jobLocation"],
-    experienceRange: ["experienceRange", "experienceRange"],
-    totalCandidates: ["totalCandidates", "totalCandidates"],
-    screenOnDate: ["createdAt", "createdAt"],
-    doneBy: ["createdByCorporateUserId", "createdByCorporateUserId"],
+    location: ["location"],
+    experienceRange: ["experienceRange"],
+    totalCandidates: ["totalCandidates"],
+    screenOnDate: ["screenOnDate"],
+    doneBy: ["doneBy"],
   };
 
   const params: Omit<CursorPaginationAdminBulkScreenedJobsParams, "lastKey"> = {
@@ -156,7 +156,7 @@ const ScreeningListView: FunctionComponent = () => {
     {
       key: "experienceRange",
       label: "Experience range",
-      sortable: true,
+      sortable: false,
     },
     {
       key: "resumesCount",
@@ -184,7 +184,7 @@ const ScreeningListView: FunctionComponent = () => {
   return isLoading ? (
     <SkeletonLoader showTableHeader={true} showTableRows={true} tableColumns={5} rowCount={5} />
   ) : (
-    <div className="p-6">
+    <div className="p-1">
       <div className="max-w-full mx-auto">
         <NewDynamicTable
           columns={columns}

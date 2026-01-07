@@ -299,7 +299,7 @@ const handleFollowUpRequestUpdate = useCallback(
   }
 
   return (
-    <div className="w-full space-y-[35px] px-0 mt-5">
+    <div className="w-full space-y-[35px] px-0">
       <div className='flex flex-col sm:flex-row gap-4 sm:gap-24 justify-between'>
         <div className="flex-1 flex flex-col gap-4">
           <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
@@ -311,10 +311,10 @@ const handleFollowUpRequestUpdate = useCallback(
               //   <p className="text-sm text-[#64748B]">{stat.label}</p>
               //   <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
               // </div>
-              <div className="flex flex-wrap gap-4 mt-4 mb-6">
+              <div className="flex flex-wrap gap-4 mt-4">
                   <div
                     key={stat.label}
-                    className="bg-white shadow-md rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
+                    className="bg-white shadow-sm rounded-xl px-7 py-4 text-center min-w-[130px]  max-h-[150px]">
                     <p className="text-sm text-[#64748B] text-nowrap">{stat.label}</p>
                     <p className="text-2xl font-extrabold text-gray-900">{stat.value === null ? "-" : stat.value}</p>
                   </div>
@@ -323,7 +323,7 @@ const handleFollowUpRequestUpdate = useCallback(
               </div>
 
           {/* search bar */}
-            <div className="flex flex-col sm:flex-row justify-center gap-2">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
             {/* Search bar with search button */}
             <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
@@ -351,7 +351,7 @@ const handleFollowUpRequestUpdate = useCallback(
             )}
             <button
               onClick={() => handleSearch(searchBarText)}
-              className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none">
+              className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 rounded-[15px] rounded-l-none">
               Search
             </button>
           </div>

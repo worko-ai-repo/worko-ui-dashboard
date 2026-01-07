@@ -124,9 +124,9 @@ const BulkCVCheck: React.FC = () => {
   return (
     <div>
       {/* Tabs */}
-      <div className="flex justify-center mb-4 mt-2 border-gray-200">
+      <div className="flex justify-center mb-4 mt-1 border-gray-200">
         <button
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2  font-medium ${
             isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
           }`}
           onClick={() => handleTabChange(true)}>
@@ -142,7 +142,7 @@ const BulkCVCheck: React.FC = () => {
       </div>
       {/* Conditional Rendering */}
       {isScreeningNew ? (
-        <div className="space-y-6 bg-white rounded-xl p-6">
+        <div className="space-y-6  bg-white rounded-xl p-6">
           <h2 className="text-lg text-start font-semibold text-gray-800">Bulk cv check</h2>
 
           <div className="px-8">
