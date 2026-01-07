@@ -119,14 +119,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       sortable: true,
       render: (row: JobData) => {
         return (
-          <div className="flex flex-row items-center gap-1 min-w-0">
-            {row?.companyDetails && row?.companyDetails.id ? (
-              <CompanyLogoRender {...row?.companyDetails} key={row?.id} />
-            ) : (
-              <Building2 className="w-16 p-2 h-12  text-gray-400 rounded-full  border " />
-            )}
+          <div className="flex flex-row items-center gap-1 min-w-0 ">
             <span
-              className="capitalize text-center truncate w-full cursor-pointer text-sm"
+              className="capitalize text-center truncate w-full cursor-pointer"
               data-tooltip-id="my-tooltip"
               data-tooltip-content={row?.companyName || "No company available"}
               data-tooltip-place="top"

@@ -318,7 +318,7 @@ const AdminCompany = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[15px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[5px]">
         <div className="flex flex-col ">
           <div className="flex flex-col my-3 sm:flex-row justify-between items-center gap-1">
             {/* Search Bar */}

@@ -119,7 +119,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
       sortable: true,
       render: (row: ApplicantDetails) => (
         <div className="flex items-center gap-2">
-          <span className="w-full capitalize">{row?.name}</span>
+          <span className="w-full capitalize font-semibold">{row?.name}</span>
           {updatingUserId === row.userId && (
             <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
           )}

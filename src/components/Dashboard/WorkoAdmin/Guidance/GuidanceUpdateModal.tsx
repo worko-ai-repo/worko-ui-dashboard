@@ -112,8 +112,8 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
       case "MEETING_RESCHEDULE_REQUESTED_BY_CANDIDATE":
       case "MEETING_RESCHEDULE_REQUESTED_BY_MENTOR":
         return [
-          { value: "MEETING_RESCHEDULE_CONFIRMED", label: "Meeting Reschedule Confirmed" },
-          { value: "RESCHEDULE_MEETING", label: "Reschedule Meeting" },
+          { value: "MEETING_RESCHEDULE_CONFIRMED", label: "Confirm Meeting Reschedule Request" },
+          // { value: "RESCHEDULE_MEETING", label: "Reschedule Meeting" },
         ];
       case "MEETING_CONFIRMED":
       case "MEETING_RESCHEDULE_CONFIRMED":
@@ -751,8 +751,8 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
         {/* Meeting Reschedule Confirmation Form */}
         {selectedAction === "MEETING_RESCHEDULE_CONFIRMED" && (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
+            <div className=" md:grid-cols-3 gap-4">
+              <div >
                 <Input
                   name="dateTime"
                   label="*New Date & Time"
@@ -770,7 +770,7 @@ const GuidanceUpdateModal: React.FC<GuidanceUpdateModalProps> = ({
                 )}
               </div>
 
-              <div>
+              <div >
                 <label className="block text-sm font-medium mb-2">
                   Duration<span className="text-red-500"> *</span>
                 </label>
