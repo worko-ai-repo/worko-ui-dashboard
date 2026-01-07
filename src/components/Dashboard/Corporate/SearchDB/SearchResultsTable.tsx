@@ -298,7 +298,7 @@ export default function SearchResultsTable(props: any) {
       if (error) {
         if (error?.message) {
           toast.error(error.message, getToastOptions({}));
-          if (error.message == "The application for this job is already present.") {
+          if (error.message == "The application for this job is already present." || error.message == "Candidate already moved to application process without calculating matching score.") {
             const updatedData = {
               candidateMovedToApplicants: true,
             };
