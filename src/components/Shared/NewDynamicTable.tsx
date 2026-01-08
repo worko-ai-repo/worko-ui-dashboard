@@ -372,7 +372,7 @@ export function NewDynamicTable<T extends { id: string }>({
                         {/* 🆕 Main content area - dynamically calculated colspan */}
                         <td
                           colSpan={mainContentCols}
-                          className="relative bg-white p-0 text-xs h-32 border-r  border-b border-l   text-gray-600">
+                          className="relative bg-white p-0 text-xs h-6 border-r  border-b border-l   text-gray-600">
                           <div className="px-4 py-2 h-full">
                             {extraExpandedColumns.length > 0 && (
                               <div className="grid grid-cols-7 gap-2  mb-4 w-full" >
