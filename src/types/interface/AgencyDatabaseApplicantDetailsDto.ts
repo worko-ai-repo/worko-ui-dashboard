@@ -87,7 +87,7 @@ export interface CandidateParsedCvDetails {
   currentCTC: number;
   currentCompany: string;
   currentDesignation: string;
-  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS";
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD";
   cvAwsS3FileName: string;
   email: string;
   expectedCTC: number;

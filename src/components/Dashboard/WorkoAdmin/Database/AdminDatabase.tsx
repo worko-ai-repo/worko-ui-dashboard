@@ -247,7 +247,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   //       }
   // };
 
+  const handleButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -264,29 +269,52 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
       return;
     }
-    const payload = pdfFiles
-    const uploadResponse:any = await invitingAgency(payload);
-    // console.log(uploadResponse,"uploadResponse")
+    const pdfFilesNameAndType  = pdfFiles.map(file =>{
+      return {
+        fileMimeType:file.type,
+        fileName:file.name
+      }
+    })
+    const payload = {
+      bulkCvs:pdfFilesNameAndType
+    }
+    const uploadResponse:any = await createFileRecords(payload);
     if (!uploadResponse.success) {
       toast.error("File upload failed. Please try again.", getToastOptions({}));
       return; 
     }
-    const payloadForAws = {
-      companyId:userDetails?.companyId,
-      agencyInviteId: uploadResponse.data.id,
-      // fileName: contractFile.name,
-      fileMimeType: "application/pdf",
-    }
-    const responseFromAws = await uploadContractToAws(payloadForAws);
-    if (!responseFromAws.success) {
-      toast.error("Failed to upload contract copy", getToastOptions({}));
-      return;
-    }
-  };
+    const fileMap = new Map(
+      pdfFiles.map(file => [file.name, file])
+    );
+    await Promise.all(
+          uploadResponse.data.bulkCvs.map(async (object: any) => {
+            const file = fileMap.get(object.userFileName);
+            if (!file) {
+              throw new Error(`File mismatch: ${object.userFileName}`);
+            }
+    
+            const payloadForAws = {
+              companyId: userDetails?.companyId,
+              candCvAwsS3FileName: object.cloudFileName,
+            };
+    
+            const responseFromAws = await uploadFileToAws(object?.awsS3SignedUrl, file, object?.fileMimeType);
+    
+            return responseFromAws;
+          })
+        );
+        toast.success("Files uploaded successfully", getToastOptions({}));
+        } catch (error: any) {
+        toast.error(
+          `Upload failed for ${error.message || "one or more files"}`,
+          getToastOptions({})
+        );
+        }
+      };
 
-  const invitingAgency = async (payload: any) => {
+  const createFileRecords = async (payload: any) => {
     try {
-      const { response } = await httpServiceObj.post(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
+      const { response } = await httpServiceObj.post(`${agencyBaseUrl}/central-candidate-profile/resumes`, payload, true, {}, true);
       if (response) {
         return { success: true, data: response };
       }
@@ -297,28 +325,19 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     }
   };
 
-  const uploadContractToAws = async (payload: any) => {
+  const uploadFileToAws = async (url:any,file:any,contentType: any) => {
     try {
-      const { response } = await httpServiceObj.post(`${agencyBaseUrl}/file/gsu2u/AGENCY_INVITE_CONTRACT_COPY`, payload, true, {}, true);
+      const response = await fetch(url, {method: "PUT", body: file,
+        headers: {
+          "Content-Type": contentType,
+        },
+      });
       if (response) {
         return { success: true, data: response };
       }
       return { success: false };
     } catch (error) {
       console.error("Upload failed:", error);
-      return { success: false, error };
-    }
-  };
-
-  const createAgencyProfile = async (payload: any) => {
-    try {
-      const { response } = await httpServiceObj.patch(`${agencyBaseUrl}/agency-invite/`, payload, true, {}, true);
-      if (response) {
-        return { success: true, data: response };
-      }
-      return { success: false };
-    } catch (error) {
-      console.error("Agency creation failed:", error);
       return { success: false, error };
     }
   };
@@ -336,8 +355,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             placeholder="Search candidates by email"
           />
         </div>
-      <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
       {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
+      <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
         <div className="basis-[40%] w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
           <div className="w-full lg:w-auto">
             <input
@@ -348,16 +367,18 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
               style={{ display: "none" }}
               onChange={handleFileChange}
             />
-            <button 
-                type="button"
-                disabled={true}
-                className="w-full lg:w-auto flex-none inline-flex items-center justify-center gap-2 h-9 rounded-xl px-3 text-xs transition shadow-md bg-blue-600 text-white hover:bg-blue-700"
-                >
-                <Upload className="w-4 h-4" />
-                <span>Bulk CV upload</span>
+
+            <button
+              type="button"
+              onClick={handleButtonClick}
+              className="w-full lg:w-auto flex-none inline-flex items-center justify-center gap-2 h-9 rounded-xl px-3 text-xs transition shadow-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Upload className="w-4 h-4 stroke-[3]" />
+              <span>Bulk CV upload</span>
             </button>
           </div>
         </div>
+
       {/* Row 3 (mobile/tablet stacked): Source, Status */}
         <div className="w-full lg:w-auto flex flex-row gap-2 lg:flex-row lg:items-center lg:gap-1 ">
           <div className="w-full lg:w-auto">
