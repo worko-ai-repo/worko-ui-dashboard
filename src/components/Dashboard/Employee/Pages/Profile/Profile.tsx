@@ -450,7 +450,7 @@ const Profile = () => {
 
       {/* Main Content */}
       <div className="w-full flex">
-        <div className="w-full mx-auto max-w-sm sm:max-w-6xl flex flex-col gap-3 text-left font-sans p-4 sm:p-4 lg:pt-0">
+        <div className="w-full flex-1 flex flex-col gap-3 text-left font-sans px-4 sm:p-4 lg:pt-0">
           {/* Profile Header Card */}
           {profileData && detailsData && educationData && (
             <div className="w-full relative rounded-3xl bg-white shadow-md overflow-hidden">

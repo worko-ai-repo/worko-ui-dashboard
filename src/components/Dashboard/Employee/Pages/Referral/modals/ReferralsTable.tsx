@@ -193,19 +193,6 @@ const ReferralsTable = memo(
             <ProgressCircle
                 onClick={() => {
                 let strengths = [];
-                const applicantRaw = row?.scoreDetailsForApplicant;
-                if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
-                  try {
-                    const parsed = JSON.parse(applicantRaw);
-                    if (parsed.CandidateNote) {
-                      strengths = parsed.CandidateNote;
-                    }
-                  } catch (e) {
-                    console.error('Failed to parse scoreDetailsForApplicant:', e);
-                  }
-                }
-
-                if (strengths.length === 0) {
                   const recruiterRaw = row?.scoreDetails;
                   if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
                     try {
@@ -217,11 +204,10 @@ const ReferralsTable = memo(
                       console.error('Failed to parse scoreDetails:', e);
                     }
                   }
-                }
                   setFeedbackModalOpen(true);
                   setScorePointsModal({
                     title: `Feedback summary`,
-                    data:strengths,
+                    data: strengths.length ? strengths : undefined,
                     matchingScore: row.matchingScore ?? 0,
                     candidateName: row?.jobTitle ?? "N/A",
                     details: true,
@@ -477,7 +463,7 @@ const ReferralsTable = memo(
 
     return (
       <div className="w-full font-poppins">
-        <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+        <div className="shadow-md h-full rounded-xl overflow-hidden">
           <NewDynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}

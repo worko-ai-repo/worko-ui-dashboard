@@ -103,14 +103,14 @@ const BulkCVCheck: React.FC = () => {
       {/* Tabs */}
       <div className="flex flex-wrap justify-center mb-4 mt-1 border-gray-200">
         <button
-          className={`px-4 py-2 font-medium ${
+          className={`px-4 py-2 font-medium text-sm ${
             isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
           }`}
           onClick={() => handleTabChange(true)}>
           New screening
         </button>
         <button
-          className={`px-4 py-2 font-medium ml-6 ${
+          className={`px-4 py-2 font-medium ml-6 text-sm ${
             !isScreeningNew ? "text-blue-600 border-b-2 border-blue-600" : "text-gray-700"
           }`}
           onClick={() => handleTabChange(false)}>
@@ -120,7 +120,7 @@ const BulkCVCheck: React.FC = () => {
       {/* Conditional Rendering */}
       {isScreeningNew ? (
         <div className="space-y-6 bg-white rounded-xl p-6">
-          <h2 className="text-lg text-start font-semibold text-gray-800">Bulk cv check</h2>
+          <h2 className="text-start font-semibold text-gray-800 text-sm">Bulk cv check</h2>
 
           <div className="px-8">
             <JobListDropdown

@@ -466,7 +466,7 @@ const ReferralsTable = memo(
 
     return (
       <div className="w-full font-poppins">
-        <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+        <div className="shadow-md h-full rounded-xl overflow-hidden">
           <NewDynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}

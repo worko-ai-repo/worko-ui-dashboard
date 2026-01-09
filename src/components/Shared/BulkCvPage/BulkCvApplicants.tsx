@@ -421,6 +421,7 @@ export default function ApplicantScreeningTable() {
         hasPrevPage={hasPreviousPage}
         handleNextPage={goToNextPage}
         handlePreviousPage={goToPreviousPage}
+        enableExpand={true}
       />
       <Modal
         isOpen={FeedbackModalOpen}

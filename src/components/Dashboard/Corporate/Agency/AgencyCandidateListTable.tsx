@@ -561,14 +561,14 @@ export default function AgencyCandidateListTable(props: any) {
       contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        // <div className='flex justify-center w-[100px]'>
-        //     <span>{row?.totalYOE ?? "NA"}</span>
-        // </div>
-        <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-          <span className={isAllExpanded ? "" : "truncate block w-full"}>
-            {row?.candidateParsedCvDetails?.totalYOE ?? "NA"}
-          </span>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.totalYOE ?? "NA"}</span>
         </div>
+        // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+        //   <span className={isAllExpanded ? "" : "truncate block w-full"}>
+        //     {row?.candidateParsedCvDetails?.totalYOE ?? "NA"}
+        //   </span>
+        // </div>
       ),
     },
     {
@@ -577,14 +577,14 @@ export default function AgencyCandidateListTable(props: any) {
       contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        // <div className='flex justify-center m-auto w-[100px]'>
-        //     <span>{row?.relevantYOE ?? "NA"}</span>
-        // </div>
-        <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-          <span className={isAllExpanded ? "" : "truncate block w-full"}>
-            {row?.candidateParsedCvDetails?.relevantYOE ?? "NA"}
-          </span>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.relevantYOE ?? "NA"}</span>
         </div>
+        // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+        //   <span className={isAllExpanded ? "" : "truncate block w-full"}>
+        //     {row?.candidateParsedCvDetails?.relevantYOE ?? "NA"}
+        //   </span>
+        // </div>
       ),
     },
     {
@@ -593,14 +593,14 @@ export default function AgencyCandidateListTable(props: any) {
       contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-          <span className={isAllExpanded ? "" : "truncate block w-full"}>
-            {row?.candidateParsedCvDetails?.currentCTC ?? "NA"}
-          </span>
-        </div>
-        // <div className='flex w-[100px]'>
-        //     <span>{row?.currentCTC ?? "NA"}</span>
+        // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+        //   <span className={isAllExpanded ? "" : "truncate block w-full"}>
+        //     {row?.candidateParsedCvDetails?.currentCTC ?? "NA"}
+        //   </span>
         // </div>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.currentCTC ?? "NA"}</span>
+        </div>
       ),
     },
     {
@@ -609,14 +609,14 @@ export default function AgencyCandidateListTable(props: any) {
       contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        // <div className='flex justify-center w-[100px]'>
-        //     <span>{row?.expectedCTC ?? "NA"}</span>
-        // </div>
-        <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-          <span className={isAllExpanded ? "" : "truncate block w-full"}>
-            {row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}
-          </span>
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}</span>
         </div>
+        // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+        //   <span className={isAllExpanded ? "" : "truncate block w-full"}>
+        //     {row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}
+        //   </span>
+        // </div>
       ),
     },
     {
@@ -625,7 +625,7 @@ export default function AgencyCandidateListTable(props: any) {
       contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        <div className="flex justify-center m-auto  w-[100px]">
+        <div className="flex justify-center m-auto">
           <span>{row?.candidateParsedCvDetails?.noticePeriod ?? "NA"}</span>
         </div>
       ),

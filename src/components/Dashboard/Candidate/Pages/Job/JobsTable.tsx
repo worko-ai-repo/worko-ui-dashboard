@@ -583,10 +583,9 @@ const JobsTable = memo(
             /> */}
               <ProgressCircle
                 onClick={() => {
-                console.log(row)
                 let strengths = [];
                 const applicantRaw = row?.scoreDetailsForApplicant;
-                if(!applicantRaw) return
+                // if(!applicantRaw) return
                 if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
                   try {
                     const parsed = JSON.parse(applicantRaw);
@@ -598,23 +597,23 @@ const JobsTable = memo(
                   }
                 }
 
-                if (strengths.length === 0) {
-                  const recruiterRaw = row?.scoreDetails;
-                  if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
-                    try {
-                      const parsed = JSON.parse(recruiterRaw);
-                      if (parsed.RecruiterNote) {
-                        strengths = parsed.RecruiterNote;
-                      }
-                    } catch (e) {
-                      console.error('Failed to parse scoreDetails:', e);
-                    }
-                  }
-                }
+                // if (strengths.length === 0) {
+                //   const recruiterRaw = row?.scoreDetails;
+                //   if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
+                //     try {
+                //       const parsed = JSON.parse(recruiterRaw);
+                //       if (parsed.RecruiterNote) {
+                //         strengths = parsed.RecruiterNote;
+                //       }
+                //     } catch (e) {
+                //       console.error('Failed to parse scoreDetails:', e);
+                //     }
+                //   }
+                // }
                   setFeedbackModalOpen(true);
                   setScorePointsModal({
                     title: `Feedback summary`,
-                    data:strengths,
+                    data: strengths.length ? strengths : undefined,
                     matchingScore: row.matchingScore ?? 0,
                     candidateName: row?.jobTitle,
                     details: true,
@@ -807,7 +806,7 @@ const JobsTable = memo(
 
     return (
       <div className="w-full font-poppins">
-        <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+        <div className="shadow-md h-full rounded-xl overflow-hidden">
           <NewDynamicTable
             columns={columns}
             rows={sortedData}

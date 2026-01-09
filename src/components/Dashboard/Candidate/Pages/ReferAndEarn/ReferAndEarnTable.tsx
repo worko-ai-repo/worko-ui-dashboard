@@ -338,7 +338,7 @@ const ReferralsTable = ({
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl shadow">
+        <div className="rounded-2xl shadow-md">
           <NewDynamicTable
             columns={columns}
             rows={sortedData}
