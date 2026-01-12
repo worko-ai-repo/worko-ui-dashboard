@@ -156,7 +156,7 @@ const ScreeningListView: FunctionComponent = () => {
     {
       key: "experienceRange",
       label: "Experience range",
-      sortable: false,
+      sortable: true,
     },
     {
       key: "resumesCount",

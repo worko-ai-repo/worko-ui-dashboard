@@ -36,6 +36,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
   const [selectedInviteId, setSelectedInviteId] = useState<string | null>(null);
   const KeyFallback = {
     name: ["firstName", "lastName"],
+    access:["corporateUserDetails.corporateUserType" , "corporateUserType"]
   };
   const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback, {
     defaultSort: null,
@@ -85,6 +86,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
     {
       key: "access",
       label: "Access",
+      sortable: true,
       render: (row: CorporateUserPageRecDataDto) => {
         const userType = row?.corporateUserDetails?.corporateUserType || row?.corporateUserType;
         const isAdmin = userType === "corporate-admin";
@@ -102,6 +104,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
     {
       key: "inviteStatus",
       label: "Invite status",
+      sortable: true,
       render: (row: (typeof data)[0]) => {
         let color = "";
         switch (row.inviteStatus) {

@@ -522,7 +522,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
             </div> */}
           </div>
 
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-0">
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}

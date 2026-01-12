@@ -69,7 +69,7 @@ const AdminReferrals = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[5px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[0px]">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails key={`referrals`} pageType="referrals" />
           </div>

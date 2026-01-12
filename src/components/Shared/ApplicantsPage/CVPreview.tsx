@@ -60,14 +60,16 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
         return response.objectUrl;
       }
       case "AGENCY_SUBMIT_USER_CV": {
-        const splittedCvAwsS3FilePath = jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")
-        const jobIdFromCvAwsS3FilePath = splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length-2]
+        const splittedCvAwsS3FilePath =
+          jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/");
+        const jobIdFromCvAwsS3FilePath =
+          splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length - 2];
         const payload = {
           companyId: jobApplicationData?.companyId, //Job he applied
-          jobId:jobIdFromCvAwsS3FilePath, //Job he applied
+          jobId: jobIdFromCvAwsS3FilePath, //Job he applied
           agencyUserId: jobApplicationData?.agencyUserId, // Agency user who submitted the CV
           candidateCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
-        }
+        };
 
         const { response, error } = await httpServiceObj.post<any>(
           `${import.meta.env.APP_PROXY_AGENCY_BASE}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,
@@ -80,9 +82,9 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
           toast.error(error.message, getToastOptions({}));
           return;
         }
-        return response.objectUrl; 
+        return response.objectUrl;
       }
-     default:
+      default:
         toast.error("Unsupported document type", getToastOptions({}));
         return;
     }
@@ -164,6 +166,8 @@ const CVPreview = ({
           applicantUserEmail: [applicantData.applicantUserEmail],
           hrName: applicantData.hrName,
           hrCurrentCompanyName: RBAC.can("play_admin") ? "WORKO" : companyDetails?.name || "",
+          cvAwsS3ResourceType: [jobApplicationData.applicantDetails.cvAwsS3ResourceType],
+          candidateParsedCvId: [jobApplicationData?.candidateParsedCvId || ""],
         },
       });
     }
@@ -219,7 +223,9 @@ const CVPreview = ({
       const url = await handleCVUrlGenerator(jobApplicationData);
       if (isMounted) setCvUrl(url);
     })();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [jobApplicationData]);
 
   useEffect(() => {

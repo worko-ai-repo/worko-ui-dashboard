@@ -90,54 +90,51 @@ const fetchCounts = async (
 /**
  * Extract UI stats from different entity types
  */
-const extractStats = (data: GlobalCountResponse): Stat[] => {
+const extractStats = (data: GlobalCountResponse, pageType: DashboardPage): Stat[] => {
+  // Define order mapping for different page types
+  const getOrderedStats = (statsObject: Record<string, number>): Stat[] => {
+    // For referrals, use specific order
+    if (pageType === "referrals" || pageType === "referr&earn") {
+      const referralOrder = ["totalApplicants", "awaiting", "accepted", "done", "rejected"];
+      return referralOrder
+        .filter((key) => key in statsObject)
+        .map((key) => ({
+          label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+          value: statsObject[key],
+        }));
+    }
+
+    // For all other pages: Total -> Applied -> Processing Interview -> Hired -> Rejected
+    const defaultOrder = ["total", "applied", "processingInterview", "hired", "rejected"];
+    return defaultOrder
+      .filter((key) => key in statsObject)
+      .map((key) => ({
+        label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
+        value: statsObject[key],
+      }));
+  };
+
   switch (data.entityType) {
     case "CANDIDATE":
-      return Object.entries((data as CandidateGlobalCount).candidateJobApplicationCounts).map(
-        ([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-          value,
-        })
-      );
+      return getOrderedStats((data as CandidateGlobalCount).candidateJobApplicationCounts);
 
     case "EMPLOYEE":
-      return Object.entries((data as EmployeeGlobalCount).employeeJobApplicationCounts).map(
-        ([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-          value,
-        })
-      );
+      return getOrderedStats((data as EmployeeGlobalCount).employeeJobApplicationCounts);
 
     case "COMPANY_JOB":
-      return Object.entries((data as CompanyJobGlobalCount).companyJobApplicationCounts).map(
-        ([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-          value,
-        })
-      );
+      return getOrderedStats((data as CompanyJobGlobalCount).companyJobApplicationCounts);
 
     case "REFERRAL":
-      return Object.entries((data as ReferralGlobalCount).referralCounts).map(([key, value]) => ({
-        label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-        value,
-      }));
+      return getOrderedStats((data as ReferralGlobalCount).referralCounts);
 
     case "REFER_AND_EARN":
-      return Object.entries((data as ReferAndEarnGlobalCount).referAndEarnJobApplicationCounts).map(
-        ([key, value]) => ({
-          label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-          value,
-        })
-      );
+      return getOrderedStats((data as ReferAndEarnGlobalCount).referAndEarnJobApplicationCounts);
 
     case "JOB_APPLICATION":
       const appData =
         (data as ApplicantGlobalCount).allJobApplicationCounts ||
         (data as JobGlobalCount).allJobApplicationCounts;
-      return Object.entries(appData).map(([key, value]) => ({
-        label: key.replace(/([A-Z])/g, " $1").replace(/^./, (s) => s.toUpperCase()),
-        value,
-      }));
+      return getOrderedStats(appData);
 
     default:
       return [];
@@ -158,13 +155,13 @@ const HeaderDetails: React.FC<HeaderDetailsProps> = ({
   });
 
   const stats: Stat[] = data
-    ? extractStats(data)
+    ? extractStats(data, pageType)
     : [
         { label: "Total", value: 0 },
-        { label: "Rejected", value: 0 },
-        { label: "Processing Interview", value: 0 },
         { label: "Applied", value: 0 },
+        { label: "Processing Interview", value: 0 },
         { label: "Hired", value: 0 },
+        { label: "Rejected", value: 0 },
       ];
 
   return (
