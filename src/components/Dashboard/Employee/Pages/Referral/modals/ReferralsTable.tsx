@@ -379,6 +379,12 @@ const ReferralsTable = memo(
         if (field === "createdAt") {
           aValue = new Date(aValue).getTime();
           bValue = new Date(bValue).getTime();
+        } else if(field === "candidateName"){
+          aValue = a.userDetails?.name ?? "";
+          bValue = b.userDetails?.name ?? "";
+
+          aValue = aValue.toLowerCase();
+          bValue = bValue.toLowerCase();
         } else {
           // to handle empty undefined and null names
           aValue = aValue ?? "";

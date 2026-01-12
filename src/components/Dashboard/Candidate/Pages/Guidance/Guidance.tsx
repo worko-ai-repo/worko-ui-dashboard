@@ -178,7 +178,7 @@ const Guidance = () => {
 
               return {
                 ...item,
-                dateNeeded: formattedDate,
+                // dateNeeded: formattedDate,
                 // statusColor: statusColors[(item.status as keyof typeof statusColors) || "Mentor to be assigned"],
               };
             });

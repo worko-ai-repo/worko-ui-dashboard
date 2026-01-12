@@ -236,10 +236,10 @@ const GuidanceTable = memo(
         render: (row: GuidanceRequest) => row.companyName
       },
       {
-        key: "dateNeeded",
+        key: "guidanceRequestDeadline",
         label: "Date needed by",
         sortable: true,
-        render: (row: GuidanceRequest) => row.dateNeeded,
+        render: (row: GuidanceRequest) => new Date(row.guidanceRequestDeadline).toLocaleDateString("en-GB")
       },
       {
         key: "jobUrl",
@@ -372,7 +372,7 @@ const GuidanceTable = memo(
       return [...rows].sort((a, b) => {
         let aValue = (a as any)[field];
         let bValue = (b as any)[field];
-        if (field === "dateNeeded") {
+        if (field === "guidanceRequestDeadline") {
           aValue = new Date(aValue).getTime();
           bValue = new Date(bValue).getTime();
         }
