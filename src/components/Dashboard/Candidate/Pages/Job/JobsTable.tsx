@@ -782,7 +782,8 @@ const JobsTable = memo(
       const isCurrentlyExpanded = expandedRows.includes(id);
 
       // Allow collapsing any row, but prevent expanding REJECTED rows
-      if (!isCurrentlyExpanded && latestStatus === "REJECTED") {
+      if (!isCurrentlyExpanded && latestStatus === "REJECTED" 
+        || !isCurrentlyExpanded && latestStatus === "ON_HOLD") {
         return; // Don't allow expansion for rejected rows
       }
 
