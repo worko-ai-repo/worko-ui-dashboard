@@ -826,6 +826,7 @@ const JobsTable = memo(
             expandedRows={expandedRows}
             toggleExpand={toggleExpand}
             isRowExpandable={isRowExpandable}
+            enableExpand={true}
           />
         </div>
 

@@ -286,6 +286,7 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       {/* View Guidance Modal */}
       <Modal

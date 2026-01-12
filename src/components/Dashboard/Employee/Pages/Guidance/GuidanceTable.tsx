@@ -453,6 +453,7 @@ const GuidanceTable = memo(
             // keyExtractor={keyExtractor}
             expandedRows={expandedRows}
             toggleExpand={toggleExpand}
+            enableExpand={true}
             renderExpandedDetails={(row) => (
               <GuidanceStepper
                 jobUrl={row.jobUrl}
@@ -500,6 +501,7 @@ const GuidanceTable = memo(
           }}
           isOpen={viewViewDetailsModal}
           fullDetails={fullDetails}
+          displayText={"About candidate"}
         />
       </div>
     );

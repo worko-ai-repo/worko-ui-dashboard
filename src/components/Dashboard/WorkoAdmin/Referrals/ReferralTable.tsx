@@ -277,6 +277,7 @@ const ReferralTable: React.FC<ReferralTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       <Modal
         isOpen={OpenExtraDetailsModal.isOpen}

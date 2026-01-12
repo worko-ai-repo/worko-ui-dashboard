@@ -483,6 +483,7 @@ const ReferralsTable = memo(
             renderExpandedDetails={renderExpandedDetails}
             toggleExpand={toggleExpand}
             expandedRows={expandedRows}
+            enableExpand={true}
           />
           <ViewDetailsModal
             show={showViewDetails}

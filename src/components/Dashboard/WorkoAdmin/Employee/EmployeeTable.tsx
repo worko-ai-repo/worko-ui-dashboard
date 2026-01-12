@@ -299,6 +299,7 @@ const EmployeeTable: React.FC<EmployeeTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       <Modal
         key={verifyModalOpen.key}

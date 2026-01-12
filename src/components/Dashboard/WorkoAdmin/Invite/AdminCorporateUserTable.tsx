@@ -476,6 +476,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
 
       <Modal
