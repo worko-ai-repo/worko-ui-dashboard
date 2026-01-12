@@ -307,6 +307,7 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       <Modal
         isOpen={isViewCVModalOpen}

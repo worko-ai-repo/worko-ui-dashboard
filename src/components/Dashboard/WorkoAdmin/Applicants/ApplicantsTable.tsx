@@ -843,6 +843,7 @@ export default function ApplicationTable({
         allSelected={ListSelection.getAllSelected(sortedData)}
         renderExpandedDetails={renderExpandedDetails}
         enableSelect={activeTab !== "Joined"}
+        enableExpand={true}
         renderExpandedNodes={(row) => {
           const isExpanded = expandedRows.includes(row.id);
 

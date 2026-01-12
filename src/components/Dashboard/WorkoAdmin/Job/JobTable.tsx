@@ -435,6 +435,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         toggleExpand={toggleExpand}
         toggleSelectAll={() => selectAllRows(data)}
         allSelected={getAllSelected(data)}
+        enableExpand={true}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">
             <div className="col-span-2">

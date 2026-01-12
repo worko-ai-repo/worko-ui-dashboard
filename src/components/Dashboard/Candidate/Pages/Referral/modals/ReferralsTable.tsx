@@ -487,6 +487,7 @@ const ReferralsTable = memo(
             toggleExpand={toggleExpand}
             expandedRows={expandedRows}
             isRowExpandable={isRowExpandable}
+            enableExpand={true}
           />
           {showRaiseIssueModal && (
             <RaiseIssueModal

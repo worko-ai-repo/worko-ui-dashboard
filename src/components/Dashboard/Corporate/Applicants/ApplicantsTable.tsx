@@ -712,6 +712,7 @@ export default function ApplicationTable({
         toggleExpand={toggleExpand}
         allSelected={ListSelection.getAllSelected(sortedData)}
         renderExpandedDetails={renderExpandedDetails}
+        enableExpand={true}
         renderExpandedNodes={(row) => {
           const isExpanded = expandedRows.includes(row.id);
 

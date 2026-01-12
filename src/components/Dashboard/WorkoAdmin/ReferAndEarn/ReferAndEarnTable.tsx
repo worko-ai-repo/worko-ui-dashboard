@@ -322,6 +322,7 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       <Modal
         isOpen={modalState.activeModal === "processPayment"}
