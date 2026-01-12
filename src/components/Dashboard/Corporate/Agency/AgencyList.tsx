@@ -282,7 +282,7 @@ const AgencyList = () => {
                 handleClick={() => console.log("as")}
                 />
             </div> */}
-            <div className='flex flex-col mt-4'>         
+            <div className='flex flex-col mt-4 mb-4'>         
               <button 
               onClick={()=>setIsAddAgencyModelOpen(!isAddAgencyModelOpen)}
               className='border rounded-lg px-4 py-3 text-xs flex flex-row justify-center items-center gap-1 text-white bg-gradient-to-t from-blue-500 to-cyan-300 font-semibold'>
@@ -292,7 +292,6 @@ const AgencyList = () => {
             </div>
         </div>
       </div>
-      <br />
       {isLoading ? (
               <SkeletonLoader
                   showTableHeader={true}

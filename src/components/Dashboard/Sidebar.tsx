@@ -166,7 +166,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   return (
     <aside
-      className={`bg-[#316bff] text-white  h-screen  z-40 transition-all duration-300 ease-in-out p-4 rounded-r-3xl
+      className={`bg-[#316bff] text-white  h-screen  z-[80] transition-all duration-300 ease-in-out p-4 rounded-r-3xl
                 ${collapsed ? "w-[72px]" : "w-[212px]"}
                 md:relative md:block
                 max-md:fixed max-md:left-0 max-md:top-0 max-md:w-[320px] 

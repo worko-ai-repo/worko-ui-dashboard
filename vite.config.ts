@@ -20,7 +20,7 @@ export default defineConfig({
       "@Hooks": path.resolve(__dirname, "src/hooks"),
       "@Interfaces": path.resolve(__dirname, "src/types/interface"),
       "@Layouts": path.resolve(__dirname, "src/layouts"),
-      "@Pages": path.resolve(__dirname, "src/pages"),
+      "@Pages": path.resolve(__dirname, "src/Pages"),
       "@Styles": path.resolve(__dirname, "src/styles"),
       "@TypesAndConstants": path.resolve(__dirname, "src/types"),
       "@Services": path.resolve(__dirname, "src/services"),

@@ -178,7 +178,7 @@ const dummyData = [
             />
           </div>
           <br />
-            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">   
+            <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end mb-2">   
                <button 
                     type="button"
                     className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
@@ -196,7 +196,7 @@ const dummyData = [
           </div>
         </div>
       </div>
-      <br />
+      {/* <br /> */}
         {queryIsJobsLoading ? (
         <SkeletonLoader
             showTableHeader={true}

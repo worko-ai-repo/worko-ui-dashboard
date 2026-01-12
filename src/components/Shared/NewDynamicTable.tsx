@@ -53,6 +53,7 @@ interface DynamicTableAgencyProps<T extends { id: string }> {
   renderExpandedNodes?: (row: T) => ExpandedNode[];
   // NEW: Function to check if a row is expandable
   isRowExpandable?: (row: T) => boolean;
+  enableExpand?: boolean;
 }
 
 export function NewDynamicTable<T extends { id: string }>({
@@ -80,6 +81,7 @@ export function NewDynamicTable<T extends { id: string }>({
   expandedColumns = [],
   renderExpandedNodes, // 🆕 NEW
   isRowExpandable, // 🆕 NEW
+  enableExpand = false,
 }: DynamicTableAgencyProps<T>) {
   const totalCols = columns.length + (enableSelect ? 1 : 1);
 
@@ -173,16 +175,19 @@ export function NewDynamicTable<T extends { id: string }>({
     return { visibleColumns: columns, extraExpandedColumns: [] };
   }, [columns, mainColumns, expandedColumns, areAllExpanded]);
 
+  const showExpand = enableExpand && renderExpandedDetails && toggleExpand;
+  const showSelect = enableSelect;
+
   return (
     <div className="bg-white overflow-x-auto flex flex-col justify-between rounded-lg p-2 md:p-2 max-w-[94vw] h-[calc(100vh-80px)] max-h-[calc(100vh-80px)]">
       <div className="overflow-x-auto overflow-y-scroll pb-4 rounded-md h-full max-h-[calc(100vh-80px)]">
         <table className="min-w-full table-auto">
           <thead className="bg-gradient-to-r from-blue-50 to-blue-50 text-slate-700 sticky top-0 z-30 shadow-sm  border-blue-200">
             <tr>
-              {(enableSelect || renderExpandedDetails) && (
+              {(showSelect || showExpand) && (
                 <th className="p-1 text-center rounded-l-xl sticky left-0 z-30 bg-blue-50">
                   <div className="flex items-center justify-center gap-1">
-                    {renderExpandedDetails && toggleExpand && (
+                    {showExpand && (
                       <button
                         type="button"
                         onClick={() => {
@@ -212,7 +217,7 @@ export function NewDynamicTable<T extends { id: string }>({
                         )}
                       </button>
                     )}
-                    {enableSelect && (
+                    {showSelect && (
                       <input
                         type="checkbox"
                         checked={allSelected}
@@ -230,8 +235,7 @@ export function NewDynamicTable<T extends { id: string }>({
                   <th
                     key={col.key}
                     className={`w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium ${
-                      isFirstVisibleColumn ? `sticky ${enableSelect ? "left-12" : "left-6"} ${!enableSelect && !isRowExpandable ? "!left-0" : "" } z-30 bg-blue-50` : ""
-                    }`}>
+                      isFirstVisibleColumn ? `sticky ${ showSelect && showExpand ? "left-12" : showSelect || showExpand ? "left-6" : "left-0"} z-30 bg-blue-50`: "" }`}>
                     <span className="flex items-center justify-center gap-0 text-center">
                       {col.label}
                       {col.sortable && onSortChange && (
@@ -283,7 +287,7 @@ export function NewDynamicTable<T extends { id: string }>({
                   )}
 
                   <tr className="h-[56px] bg-[#F5F7F7]">
-                    {(enableSelect || renderExpandedDetails) && (
+                    {(showSelect || showExpand) && (
                       <td
                         className={`p-1 w-12  text-center ${isExpanded ? "" : "border-b"}  sticky left-0 z-20 ${
                           baseBg || ""
@@ -295,8 +299,8 @@ export function NewDynamicTable<T extends { id: string }>({
                           }
                         `}>
                         <div className="flex items-center justify-center gap-1">
-                          {((renderExpandedDetails && !hideChevronForRejected) ||
-                            (row as any).currentStatus !== "REJECTED") && (
+                        {showExpand &&
+                          (!hideChevronForRejected || (row as any).currentStatus !== "REJECTED") && (
                             <button
                               type="button"
                               onClick={() => toggleExpand?.(row.id)}
@@ -309,7 +313,7 @@ export function NewDynamicTable<T extends { id: string }>({
                               )}
                             </button>
                           )}
-                          {enableSelect && (
+                          {showSelect && (
                             <input
                               type="checkbox"
                               checked={isSelected}
@@ -332,9 +336,8 @@ export function NewDynamicTable<T extends { id: string }>({
                           } ${baseBg}
                           ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
-                          ${isFirstVisibleColumn  ? `sticky ${enableSelect ? "left-12" :"left-6"} ${!enableSelect && !isRowExpandable ? "!left-0" : "" } z-20` : ""}
-                          ${
-                            isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          ${isFirstVisibleColumn? `sticky ${showSelect && showExpand? "left-12": showSelect || showExpand? "left-6": "left-0"} z-20`: ""}
+                          ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
                           }`}>
                           <div
                             className="truncate cursor-pointer h-full w-full p-1" 

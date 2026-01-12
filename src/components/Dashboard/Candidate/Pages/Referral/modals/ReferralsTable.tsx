@@ -19,6 +19,9 @@ import CompletedReferralModal from "@Components/Dashboard/Employee/Pages/Referra
 import ProvideFeedbackModal from "@Components/Dashboard/Employee/Pages/Referral/modals/ProvideFeedbackModal";
 import ChatWindow from "./ChatWindow";
 import { useAppContext } from "@Context/App.context";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
+import Modal from "@Components/Shared/Modal";
 
 interface ReferralsTableProps {
   data: ReferralApiResponse | null;
@@ -58,6 +61,8 @@ const ReferralsTable = memo(
     const [referralData, setReferralData] = useState<any>(null);
     const [showProvideFeedback, setShowProvideFeedback] = useState(false);
     const [showChatWindow, setShowChatWindow] = useState<boolean>(false);
+    const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
+    const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
 
     const APP_API_URI = import.meta.env.APP_API_URI;
     const { user } = useDashboardContext();
@@ -149,11 +154,53 @@ const ReferralsTable = memo(
         sortable: true,
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
-            <MatchingScoreCircle
+            {/* <MatchingScoreCircle
               score={row.matchingScore ?? 0}
               scoreDetails={row}
               status={row.status}
-            />
+            /> */}
+            <ProgressCircle
+                onClick={() => {
+                let strengths = [];
+                const applicantRaw = row?.scoreDetailsForApplicant;
+                if (typeof applicantRaw === 'string' && applicantRaw.trim() !== '') {
+                  try {
+                    const parsed = JSON.parse(applicantRaw);
+                    if (parsed.CandidateNote) {
+                      strengths = parsed.CandidateNote;
+                    }
+                  } catch (e) {
+                    console.error('Failed to parse scoreDetailsForApplicant:', e);
+                  }
+                }
+
+                if (strengths.length === 0) {
+                  const recruiterRaw = row?.scoreDetails;
+                  if (typeof recruiterRaw === 'string' && recruiterRaw.trim() !== '') {
+                    try {
+                      const parsed = JSON.parse(recruiterRaw);
+                      if (parsed.RecruiterNote) {
+                        strengths = parsed.RecruiterNote;
+                      }
+                    } catch (e) {
+                      console.error('Failed to parse scoreDetails:', e);
+                    }
+                  }
+                }
+                  setFeedbackModalOpen(true);
+                  setScorePointsModal({
+                    title: `Feedback summary`,
+                    data:strengths,
+                    matchingScore: row.matchingScore ?? 0,
+                    candidateName: row?.jobTitle ?? "N/A",
+                    details: true,
+                    showCloseButton: true,
+                    onClose: () => setFeedbackModalOpen(false),
+                    isShowDetails:true
+                  });
+                }}
+                value={row?.matchingScore ?? 0}
+              />
           </div>
         ),
       },
@@ -164,7 +211,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => (
           <div className="flex justify-center m-auto w-[150px]">
             <div
-              className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${
+              className={`w-32 text-center rounded-full px-1 py-2 text-sm font-medium ${
                 row.status === "ACCEPTED"
                   ? "bg-green-100 text-green-500"
                   : row.status === "PENDING"
@@ -252,7 +299,7 @@ const ReferralsTable = memo(
         render: (row: ReferralDetailsDto) => {
           return row.status === "ACCEPTED" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-3 text-sm font-medium bg-gray-100 text-gray-600">
+              <div className="w-32 border border-gray-600 text-center rounded-full px-1 py-2 text-sm font-medium bg-gray-100 text-gray-600">
                 <select
                   onChange={(e) => handleSelectChange(e, row)}
                   defaultValue=""
@@ -267,7 +314,7 @@ const ReferralsTable = memo(
             </div>
           ) : row.status === "DONE" ? (
             <div className="flex justify-center m-auto w-[150px]">
-              <div className="truncate block w-full text-center rounded-full px-1 py-3 text-sm font-medium bg-yellow-200 text-black">
+              <div className="truncate block w-full text-center rounded-full px-1 py-2 text-sm font-medium bg-yellow-200 text-black">
                 <button
                   className="truncate w-full overflow-hidden whitespace-nowrap"
                   onClick={() => {
@@ -419,7 +466,7 @@ const ReferralsTable = memo(
 
     return (
       <div className="w-full font-poppins">
-        <div className="bg-white shadow-md h-full rounded-xl overflow-hidden">
+        <div className="shadow-md h-full rounded-xl overflow-hidden">
           <NewDynamicTable<ReferralDetailsDto>
             columns={columns}
             rows={sortedData}
@@ -497,6 +544,12 @@ const ReferralsTable = memo(
             user={"candidate"}
           />
           {/* )} */}
+          <Modal
+            isOpen={feedbackModalOpen}
+            onClose={() => setFeedbackModalOpen(false)}
+            className="py-5">
+            {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
+          </Modal>
         </div>
       </div>
     );

@@ -446,25 +446,25 @@ const handlePageChange = useCallback(
               <div className="border-b mb-2 border-gray-300">
                 <p className="block text-left text-gray-500 text-xs">Your search results</p> 
               </div>
-              <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end">  
+              <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end mb-2">  
                 <button 
                       type="button"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-normal sm:whitespace-nowrap"
                       >
-                      <RefreshCcw className="w-4 h-4" />
+                      <RefreshCcw className="w-7 h-7 sm:w-4 sm:h-4" />
                       <span>Find Matching Score</span>
                   </button>
                   <button 
                       type="button"
-                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-nowrap"
+                      className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-normal sm:whitespace-nowrap"
                       >
-                      <LogOut className="w-4 h-4" />
+                      <LogOut className="w-7 h-7 sm:w-4 sm:h-4" />
                       <span>Move to applicants</span>
                   </button>
             </div>
           </div>
         </div>
-        <br />
+        {/* <br /> */}
           {isLoading ? (
           <SkeletonLoader
               showTableHeader={true}
