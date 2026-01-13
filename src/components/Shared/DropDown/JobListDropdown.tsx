@@ -32,6 +32,7 @@ const fetchJobs = async (
     pageSize: 25,
     sortOrder: "desc",
     dashboard: dashboard,
+    status:"PUBLISHED",
     ...(dashboard !== "ADMIN" && {
       userRole: userType,
       ...(userType === "corporate-recruiter" && { corporateRecruiterUserId: userId }),

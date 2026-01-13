@@ -176,7 +176,7 @@ export default function ApplicantScreeningTable() {
   const columns: Column<(typeof applicantsData)[0]>[] = [
     {
       key: "name",
-      label: "Applicants name",
+      label: "Applicant name",
       sortable: true,
       contentWidth: "max-w-none",
       render: (row: (typeof applicantsData)[0]) => (
@@ -202,6 +202,7 @@ export default function ApplicantScreeningTable() {
     {
       key: "company",
       label: "Company",
+      sortable: true,
       render: (row: (typeof applicantsData)[0]) => (
         <span
           data-tooltip-id="my-tooltip"
@@ -214,6 +215,7 @@ export default function ApplicantScreeningTable() {
     {
       key: "designation",
       label: "Designation",
+      sortable: true,
       render: (row: (typeof applicantsData)[0]) => (
         <span
           data-tooltip-id="my-tooltip"
@@ -226,6 +228,7 @@ export default function ApplicantScreeningTable() {
     {
       key: "yoe",
       label: "YOE",
+      sortable: true,
       render: (row: (typeof applicantsData)[0]) => (
         <span className="font-semibold text-gray-800">{row?.yoe}</span>
       ),
@@ -233,6 +236,7 @@ export default function ApplicantScreeningTable() {
     {
       key: "location",
       label: "Location",
+      sortable: true,
       render: (row: (typeof applicantsData)[0]) => (
         <span
           data-tooltip-id="my-tooltip"

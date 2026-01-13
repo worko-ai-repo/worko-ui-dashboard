@@ -260,13 +260,13 @@ const AdminCandidate = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[25px]">
+      <div className="flex flex-col sm:flex-col gap-4 sm:gap-[15px]">
         <div className="flex flex-col ">
-          <div className="flex flex-wrap  gap-4">
+          <div className="flex flex-wrap  gap-4 mt-1">
             <HeaderDetails key="admin-candidate-stats" pageType="candidates" />
           </div>
 
-          <div className="flex flex-col sm:flex-row  justify-between items-center gap-3">
+          <div className="flex flex-col sm:flex-row  justify-between items-start gap-3">
             {/* Search Bar */}
             <SearchBar
               placeholder="Search by email"

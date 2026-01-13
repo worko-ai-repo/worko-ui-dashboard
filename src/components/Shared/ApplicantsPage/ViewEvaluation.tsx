@@ -264,22 +264,22 @@ const ResponseEvaluation: React.FC<Props> = ({
 
         {/* Availability Schedule Section */}
         {interviews.length > 0 && (
-          <div className="flex justify-start items-start">
-            <span className="text-gray-500 text-sm font-medium" style={{ fontFamily: "Inter" }}>
-              Availability Schedule
+          <div className="flex justify-start gap-2 items-start ">
+            <span className="text-gray-500  font-medium" style={{ fontFamily: "Inter" }}>
+              Availability Schedule:
             </span>
 
             <div className="flex flex-col  w-62   gap-3">
               {/* Table Headers */}
               <div className="flex text-gray-500  font-medium" style={{ fontFamily: "Inter" }}>
-                <div className="w-1/2">Date</div>
-                <div className="w-1/2">Time</div>
+                <div className="w-1/3">Date</div>
+                <div className="w-1/3 ml-6">Time</div>
               </div>
 
               {/* Table Rows */}
               {interviews.map((interview, index) => (
                 <div key={index} className="flex gap-2">
-                  <div className="w-1/2">
+                  <div className="w-1/3 mr-4">
                     <div className="bg-cyan-100 rounded-lg px-4 py-1 inline-block">
                       <span
                         className="text-gray-700 font-semibold  "

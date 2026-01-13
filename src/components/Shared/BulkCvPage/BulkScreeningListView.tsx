@@ -81,7 +81,7 @@ const ScreeningListView: FunctionComponent = () => {
           : "Not mentioned",
         totalCandidates: 0,
         screenOnDate: item.createdAt
-          ? new Date(item.createdAt).toLocaleString("en-US", {
+          ? new Date(item.createdAt).toLocaleString("en-IN", {
               year: "numeric",
               month: "numeric",
               day: "numeric",
@@ -156,7 +156,7 @@ const ScreeningListView: FunctionComponent = () => {
     {
       key: "experienceRange",
       label: "Experience range",
-      sortable: false,
+      sortable: true,
     },
     {
       key: "resumesCount",

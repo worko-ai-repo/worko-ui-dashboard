@@ -71,7 +71,10 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
   });
 
   const keyFallbacks = {
+    companyDetail_name: ["companyDetail.name"],
     companyDetail_industry: ["companyDetail.industry"],
+    linkedin: ["companyDetail.linkedIn"],
+    carrierPage: ["companyDetail.carrierPage"],
   };
 
   let { sortedData, onSortChange } = useSortableData(data, keyFallbacks, {

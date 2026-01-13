@@ -474,7 +474,7 @@ const Applicants = () => {
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[25px]">
-        <div className="flex  flex-col mt-2">
+        <div className="flex  flex-col ">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails
               {...(data &&
@@ -517,7 +517,7 @@ const Applicants = () => {
               </span>
             </div>
           </div>
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-2">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 mt-0">
             <SearchBar
               placeholder="Search by company name, email"
               searchBarText={searchBarText}

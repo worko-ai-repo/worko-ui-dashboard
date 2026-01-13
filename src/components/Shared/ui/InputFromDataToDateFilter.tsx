@@ -44,7 +44,7 @@ const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
 
   return (
     <div className="relative z-[99] ">
-      <div className="flex items-center gap-2 border rounded-lg px-3 py-1 bg-white">
+      <div className="flex items-center gap-2 rounded-lg px-3 py-1 bg-white">
         <div className="flex flex-col">
           <label className="text-xs text-gray-600">From:</label>
           <input

@@ -483,8 +483,8 @@ export default function ResendOfferLetter({ jobData, onClose }: { jobData?: JobA
             ? handleViewDocumentClick(jobData)
             : toast.error("Failed to view document", getToastOptions({}));
         }}
-        className="absolute top-3 right-2 px-3 py-2 btn_t1 bg-gradient-to-t rounded-xl w-36 items-center text-left bg-cyan-400 text-white flex gap-2">
-        <img src={eyeIcon} alt="viewFeedback" className="w-5 h-5" /> View Offer Letter
+        className="absolute top-3 right-2 px-2 py-2 text-xs btn_t1 bg-gradient-to-t rounded-xl w-42 items-center text-left bg-cyan-400 text-white flex gap-2">
+        <img src={eyeIcon} alt="viewFeedback" className="w-5 h-5  " /> View Offer Letter
       </button>
 
       {hasJobFieldsChanged && (

@@ -359,7 +359,7 @@ const Jobs = () => {
   return (
     <div className="flex flex-col gap-[25px] w-full mt-0 px-0">
       <div className="flex flex-col lg:flex-row gap-4 lg:gap-24 justify-between">
-        <div className=" flex-1 flex flex-col gap-0">
+        <div className=" flex-1 mt-1 flex flex-col gap-0">
           <div className="flex flex-wrap  gap-4">
             <HeaderDetails
               key="admin-job-stats"

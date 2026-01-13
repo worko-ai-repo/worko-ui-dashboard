@@ -18,6 +18,7 @@ import { toast } from "react-toastify";
 import Modal from "@Components/Shared/Modal";
 import RevokeForm from "@Components/Shared/CorporateInvite/RevokeForm";
 import CompanyLogoRender from "../Company/CompanyLogoRender";
+import { stat } from "fs";
 
 interface AdminCorporateUserTableProps {
   data: CorporateUserPageRecDataDto[];
@@ -142,7 +143,11 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
   const { sortedData, onSortChange } = useSortableData(
     data,
     {
+      phoneNumberDetails: ["corporateUserDetails.phoneNumberDetails.phoneNumber"],
       companyDetails_name: ["companyDetails.name"],
+      name: ["corporateUserDetails.firstName", "corporateUserDetails.lastName"],
+      status: ["inviteStatus"],
+      createdAt: ["createdAt"],
     },
     {
       tableId: "corporate-users_table",
@@ -253,7 +258,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
             <CompanyLogoRender {...row?.companyDetails} key={row?.id} />
           ) : null}
           <span
-            className="capitalize text-center truncate w-full cursor-pointer text-sm"
+            className="capitalize text-center truncate w-full cursor-pointer text-xs"
             data-tooltip-id="my-tooltip"
             data-tooltip-content={row?.companyDetails?.name || "No company available"}
             data-tooltip-place="top"
@@ -266,12 +271,13 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     {
       key: "name",
       label: "Name",
+      sortable: true,
       render: (row: CorporateUserPageRecDataDto) => {
         const firstName = row?.corporateUserDetails?.firstName || row?.firstName;
         const lastName = row?.corporateUserDetails?.lastName || row?.lastName;
         return (
           <span
-            className="capitalize text-center truncate block max-w-[99.3%] cursor-pointer text-sm"
+            className="capitalize text-center truncate block max-w-[99.3%] cursor-pointer text-xs"
             data-tooltip-id="my-tooltip"
             data-tooltip-content={`${firstName} ${lastName}`}
             data-tooltip-place="top">
@@ -291,6 +297,8 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
             const text = row?.corporateUserDetails?.email || row?.email || "No email available";
             navigator.clipboard.writeText(text);
           }}
+          data-tooltip-id="my-tooltip"  
+          data-tooltip-content={row?.corporateUserDetails?.email || row?.email || "No email available"}
           title="Double click to copy">
           {row?.corporateUserDetails?.email || row?.email || "No email available"}
         </span>
@@ -299,9 +307,10 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     {
       key: "phoneNumberDetails",
       label: "Phone Number",
+      sortable: true,
       render: (row: CorporateUserPageRecDataDto) => {
         const phoneNumber = row?.phoneNumberDetails
-          ? row?.phoneNumberDetails.countryCode + row?.phoneNumberDetails.phoneNumber
+          ? "+"+row?.phoneNumberDetails.countryCode +" "+ row?.phoneNumberDetails.phoneNumber
           : "N/A";
         return (
           <span className="w-36 mx-auto cursor-pointer select-all" title="Double click to copy">
@@ -318,7 +327,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
         const isAdmin = userType === "corporate-admin";
         return (
           <span
-            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium truncate block max-w-[99.3%] cursor-pointer ${
+            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium  block max-w-[99.3%] cursor-pointer ${
               isAdmin ? "bg-red-500 text-white" : "bg-blue-500 text-white"
             }`}
             data-tooltip-place="top">
@@ -330,6 +339,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
     {
       key: "status",
       label: "Status",
+      sortable: true,
       render: (subRow: CorporateUserPageRecDataDto) => {
         const status = subRow?.inviteStatus;
         const getStatusStyle = (status: string) => {

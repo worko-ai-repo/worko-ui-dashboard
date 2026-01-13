@@ -282,7 +282,7 @@ const Employee = () => {
 
   return (
     <div>
-      <div className="flex flex-col sm:flex-col gap-4 mt-2 sm:gap-[25px]">
+      <div className="flex flex-col sm:flex-col gap-4 mt-2 sm:gap-[15px]">
         <div className="flex flex-col ">
          {/*  <div className="flex flex-wrap  gap-4">
             <HeaderDetails key="admin-employee-stats" pageType="employees" />

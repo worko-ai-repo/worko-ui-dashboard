@@ -36,6 +36,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
   const [selectedInviteId, setSelectedInviteId] = useState<string | null>(null);
   const KeyFallback = {
     name: ["firstName", "lastName"],
+    access:["corporateUserDetails.corporateUserType" , "corporateUserType"]
   };
   const { sortedData, sortConfig, onSortChange } = useSortableData(data, KeyFallback, {
     defaultSort: null,
@@ -67,7 +68,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
       label: "Phone Number",
       render: (row: CorporateUserPageRecDataDto) => {
         const phoneNumber = row?.phoneNumberDetails
-          ? row.phoneNumberDetails.countryCode + row.phoneNumberDetails.phoneNumber
+          ? "+"+ row.phoneNumberDetails.countryCode + " " + row.phoneNumberDetails.phoneNumber
           : "N/A";
         return (
           <span className="w-36 mx-auto cursor-pointer select-all" title="Double click to copy">
@@ -85,12 +86,13 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
     {
       key: "access",
       label: "Access",
+      sortable: true,
       render: (row: CorporateUserPageRecDataDto) => {
         const userType = row?.corporateUserDetails?.corporateUserType || row?.corporateUserType;
         const isAdmin = userType === "corporate-admin";
         return (
           <span
-            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium truncate block max-w-[99.3%] cursor-pointer ${
+            className={`capitalize mx-auto px-2  py-1 rounded-full text-xs font-medium block max-w-[99.3%] cursor-pointer ${
               isAdmin ? "bg-red-500 text-white" : "bg-blue-500 text-white"
             }`}
             data-tooltip-place="top">
@@ -102,6 +104,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
     {
       key: "inviteStatus",
       label: "Invite status",
+      sortable: true,
       render: (row: (typeof data)[0]) => {
         let color = "";
         switch (row.inviteStatus) {
@@ -118,7 +121,7 @@ const InviteTable: React.FC<InviteTableProps> = ({ data, fetchInvites, paginatio
             color = "bg-gray-100 text-gray-600";
         }
         return (
-          <span className={`px-3 py-0 rounded-full text-sm font-medium ${color}`}>
+          <span className={`px-3 py-1 rounded-full text-xs font-medium ${color}`}>
             {status[row.inviteStatus]}
           </span>
         );
