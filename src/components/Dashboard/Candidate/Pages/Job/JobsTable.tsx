@@ -795,7 +795,7 @@ const JobsTable = memo(
     // Function to check if a row is expandable
     const isRowExpandable = (row: JobApplicationDetailsDto): boolean => {
       const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
-      return latestStatus !== "REJECTED";
+      return latestStatus !== "REJECTED" && latestStatus !== "ON_HOLD";
     };
 
     /* console.log({

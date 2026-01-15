@@ -40,7 +40,6 @@ const fetchJobs = async (
         secureStorage.getItem<any>(SecureStorageKeyEnum.CORPORATECOMPANYID)?.companyId ||
         secureStorage.getItem<any>(SecureStorageKeyEnum.LOGINDETAILS)?.companyId,
     }),
-    status:"PUBLISHED",
     searchText: search.trim(),
   };
 

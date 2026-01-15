@@ -304,11 +304,23 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           })
         );
         toast.success("Files uploaded successfully", getToastOptions({}));
+        const lastKeyForCurrentPage = paginationKeysRef.current[currentPage] || "";
+
+        fetchDatabaseData(
+          currentPage,
+          pageSize,
+          lastKeyForCurrentPage
+        );
         } catch (error: any) {
         toast.error(
           `Upload failed for ${error.message || "one or more files"}`,
           getToastOptions({})
         );
+        } finally {
+          // resetting after uploading a cv same cv with same name was not uploading because its already there in ref
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
         }
       };
 
