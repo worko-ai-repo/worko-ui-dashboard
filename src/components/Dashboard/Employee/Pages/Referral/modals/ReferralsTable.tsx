@@ -15,7 +15,7 @@ import CompletedReferralModal from "./CompletedReferralModal";
 import ProvideFeedbackModal from "./ProvideFeedbackModal";
 import ViewDetailsModal from "@Components/Dashboard/Candidate/Pages/Job/modals/ViewDetailsModal";
 import ChatWindow from "@Components/Dashboard/Candidate/Pages/Referral/modals/ChatWindow";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 import Modal from "@Components/Shared/Modal";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 
@@ -379,6 +379,12 @@ const ReferralsTable = memo(
         if (field === "createdAt") {
           aValue = new Date(aValue).getTime();
           bValue = new Date(bValue).getTime();
+        } else if(field === "candidateName"){
+          aValue = a.userDetails?.name ?? "";
+          bValue = b.userDetails?.name ?? "";
+
+          aValue = aValue.toLowerCase();
+          bValue = bValue.toLowerCase();
         } else {
           // to handle empty undefined and null names
           aValue = aValue ?? "";
@@ -483,6 +489,7 @@ const ReferralsTable = memo(
             renderExpandedDetails={renderExpandedDetails}
             toggleExpand={toggleExpand}
             expandedRows={expandedRows}
+            enableExpand={true}
           />
           <ViewDetailsModal
             show={showViewDetails}

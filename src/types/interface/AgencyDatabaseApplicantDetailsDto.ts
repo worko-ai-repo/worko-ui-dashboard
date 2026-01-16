@@ -87,7 +87,7 @@ export interface CandidateParsedCvDetails {
   currentCTC: number;
   currentCompany: string;
   currentDesignation: string;
-  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD";
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "ADMIN_CAND_BULK_CV_UPLOAD";
   cvAwsS3FileName: string;
   email: string;
   expectedCTC: number;
@@ -131,7 +131,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   relevantYOE:number;
   currentCTC:number;
   expectedCTC:number;
-  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS";
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD";
   cvAwsS3FileName:string;
   cvAwsS3FilePath:string;
   userDetailId:string;

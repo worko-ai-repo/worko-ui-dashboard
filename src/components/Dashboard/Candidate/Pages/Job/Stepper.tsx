@@ -91,6 +91,7 @@ export function convertStatusTrackerToSteps(statusTracker: any[]): ApplicationSt
     { key: "DOCUMENT_REQUESTED", label: "Document requested" },
     { key: "DOCUMENT_SUBMITTED", label: "Document submitted" },
     { key: "OFFER_SENT", label: "Offer received" },
+    { key: "OFFER_ISSUE_RAISED", label: "Offer issue raised" },
     { key: "HIRED", label: "Hired" },
     { key: "JOINED", label: "Joined" },
   ];
@@ -106,6 +107,7 @@ export function convertStatusTrackerToSteps(statusTracker: any[]): ApplicationSt
       status === "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED" ||
       status === "DOCUMENT_REVISION_REQUEST_SUBMITTED"
     ) return "DOCUMENT_SUBMITTED";
+    // if (status === "OFFER_ISSUE_RAISED") return "OFFER_SENT";
     if (status === "REVISED_OFFER_SENT") return "OFFER_SENT";
     return status;
   };
@@ -123,16 +125,17 @@ export function convertStatusTrackerToSteps(statusTracker: any[]): ApplicationSt
 
   let lastDate = "";
 
-  return allSteps.slice(0, lastIndex + 1).map(step => {
-    const hit = timeline.find(t => t.key === step.key);
-    if (hit) lastDate = hit.date;
-
-    return {
-      step: step.label,
-      date: lastDate,
-      completed: true,
-    };
-  });
+  return allSteps
+    .slice(0, lastIndex + 1)
+    .filter(step => timeline.some(t => t.key === step.key))
+    .map(step => {
+      const hit = timeline.find(t => t.key === step.key);
+      return {
+        step: step.label,
+        date: hit?.date || "",
+        completed: true,
+      };
+    });
 }
 
 

@@ -218,6 +218,19 @@ const keyFallbacks = {
       // ),
     },
     {
+      key: "refereeType",
+      label: "Referee type",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.refereeType ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px] text-center">
+      //     <span title={row?.refereeType} className="truncate block w-full">
+      //       {row?.refereeType ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
       key: "email",
       label: "Email",
       sortable: true,
@@ -475,9 +488,8 @@ const keyFallbacks = {
             } catch (error) {
               console.log(error)
             }      
-      }else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
+      }else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "ADMIN_CAND_BULK_CV_UPLOAD") {
       if (
-        !row?.candidateParsedCvDetails?.companyId ||
         !row?.candidateParsedCvDetails?.cvAwsS3FileName
       ) {
         toast.error("Missing details", getToastOptions({}));
@@ -488,6 +500,31 @@ const keyFallbacks = {
       }
       try {
         const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
+    }else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
+      if (
+        !row?.candidateParsedCvDetails?.companyId ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const payload = { 
+        companyId: row?.candidateParsedCvDetails?.companyId,
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
 
         if (error) {
           toast.error(error.message, getToastOptions({}));

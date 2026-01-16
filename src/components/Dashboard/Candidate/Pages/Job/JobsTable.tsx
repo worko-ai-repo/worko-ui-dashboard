@@ -21,7 +21,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -782,7 +782,8 @@ const JobsTable = memo(
       const isCurrentlyExpanded = expandedRows.includes(id);
 
       // Allow collapsing any row, but prevent expanding REJECTED rows
-      if (!isCurrentlyExpanded && latestStatus === "REJECTED") {
+      if (!isCurrentlyExpanded && latestStatus === "REJECTED" 
+        || !isCurrentlyExpanded && latestStatus === "ON_HOLD") {
         return; // Don't allow expansion for rejected rows
       }
 
@@ -794,7 +795,7 @@ const JobsTable = memo(
     // Function to check if a row is expandable
     const isRowExpandable = (row: JobApplicationDetailsDto): boolean => {
       const latestStatus = row?.statusTracker?.[row.statusTracker.length - 1]?.newStatus;
-      return latestStatus !== "REJECTED";
+      return latestStatus !== "REJECTED" && latestStatus !== "ON_HOLD";
     };
 
     /* console.log({
@@ -826,6 +827,7 @@ const JobsTable = memo(
             expandedRows={expandedRows}
             toggleExpand={toggleExpand}
             isRowExpandable={isRowExpandable}
+            enableExpand={true}
           />
         </div>
 

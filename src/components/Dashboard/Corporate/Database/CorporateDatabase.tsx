@@ -484,6 +484,11 @@ const fetchDatabaseData = useCallback(
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    if (files.length > 50) {
+      toast.error("You can upload a maximum of 50 CVs at a time.", getToastOptions({}));
+      return;
+    }
+
     const pdfFiles = Array.from(files).filter(
       (file) => file.type === "application/pdf"
     );
@@ -540,11 +545,23 @@ const fetchDatabaseData = useCallback(
       })
     );
     toast.success("Files uploaded successfully", getToastOptions({}));
+    const lastKeyForCurrentPage = paginationKeysRef.current[currentPage] || "";
+
+    fetchDatabaseData(
+      currentPage,
+      pageSize,
+      lastKeyForCurrentPage
+    );
     } catch (error: any) {
     toast.error(
       `Upload failed for ${error.message || "one or more files"}`,
       getToastOptions({})
     );
+    } finally {
+      // resetting after uploading a cv same cv with same name was not uploading because its already there in ref
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 

@@ -37,6 +37,7 @@ export interface PaginationInfo {
   timesQueried: number;
   queriedCount: number;
   lastKey: string;
+  hasMore?:boolean;
 }
 
 const initialPaginationState: PaginationInfo = {

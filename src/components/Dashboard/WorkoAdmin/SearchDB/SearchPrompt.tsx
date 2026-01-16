@@ -13,6 +13,8 @@ const SearchPrompt: React.FC = () => {
   const [mode, setMode] = useState<"jobs" | "prompt">("prompt");
   const [jobsList,setJobsList] = useState([]);
   const [isFetchingJobs,setIsFetchingJobs] = useState(false);
+  const [selectedJobId, setSelectedJobId] = useState<string>("");
+
   const { userDetails } = useAppContext();
 
   useEffect(()=>{
@@ -40,18 +42,6 @@ const SearchPrompt: React.FC = () => {
   }
   fetchJobs()
   },[])
-
-  // const jobsList = [
-  //   { label: "Full-Stack", value: "full-stack" },
-  //   { label: "Half-Stack", value: "half-stack" },
-  //   { label: "Frontend", value: "frontend" },
-  //   { label: "Backend", value: "backend" },
-  //   { label: "DevOps", value: "devops" },
-  //   { label: "UI/UX", value: "ui-ux" },
-  //   { label: "Data Engineer", value: "data-engineer" },
-  //   { label: "AI/ML", value: "ai-ml" },
-  //   { label: "QA Tester", value: "qa-tester" },
-  //   ];
 
   const navigate = useNavigate();
     const {
@@ -95,9 +85,17 @@ const SearchPrompt: React.FC = () => {
   ];
 
   const handleSubmit = () => {
-    if (!input.trim()) return;
-    console.log(mode,input)
-    navigate(`/admin/aSearchDB/results?query=${encodeURIComponent(input.trim())}`);
+    if (mode === "jobs") {
+      if (!selectedJobId) return;
+      navigate(
+        `/admin/aSearchDB/results?jobs=${encodeURIComponent(selectedJobId)}`
+      );
+    } else {
+      if (!input.trim()) return;
+      navigate(
+        `/admin/aSearchDB/results?prompt=${encodeURIComponent(input.trim())}`
+      );
+    }
   };
 
   return (
@@ -136,14 +134,15 @@ const SearchPrompt: React.FC = () => {
   <div className="flex items-center gap-2 px-4 py-3 w-full">
     <div className="flex-1">
       <JobDropdown
-        jobsList={[]} // check this part
+        jobsList={jobsList}
         input={input}
         setInput={setInput}
+        setSelectedJobId={setSelectedJobId}
         handleSubmit={handleSubmit}
+        isJobsLoading={isFetchingJobs}
       />
     </div>
     <button
-      disabled={true}
       onClick={handleSubmit}
       className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
     >
@@ -174,7 +173,6 @@ const SearchPrompt: React.FC = () => {
         </button>
       )}
       <button
-        disabled={true}
         onClick={handleSubmit}
         className="p-2 rounded-md bg-blue-600 hover:bg-blue-700"
       >

@@ -256,6 +256,7 @@ const CompanyRequestTable: React.FC<CompanyRequestTableProps> = ({
         renderExpandedDetails={renderExpandedDetails}
         expandedRows={expandedRows}
         toggleExpand={toggleExpand}
+        enableExpand={true}
       />
       <Modal
         isOpen={modalState.activeModal === "updateCompany"}

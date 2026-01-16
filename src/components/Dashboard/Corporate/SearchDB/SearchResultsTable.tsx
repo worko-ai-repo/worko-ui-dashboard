@@ -22,7 +22,7 @@ import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import AssignJobModal from "../Agency/modals/AssignJobModal";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
@@ -736,10 +736,10 @@ export default function SearchResultsTable(props: any) {
       } catch (error) {
         console.log(error)
       }      
-    } else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
+    } else if (row?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
       if (
-        !row?.candidateParsedCvDetails?.companyId ||
-        !row?.candidateParsedCvDetails?.cvAwsS3FileName
+        !row?.companyId ||
+        !row?.cvAwsS3FileName
       ) {
         toast.error("Missing details", getToastOptions({}));
         return;
