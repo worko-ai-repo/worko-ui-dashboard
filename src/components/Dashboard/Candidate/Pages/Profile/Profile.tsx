@@ -1354,7 +1354,7 @@ const Profile = () => {
                               {/* Phone icon, number, and OTP input in one row */}
                               <div className="flex items-center gap-2 flex-wrap">
                                 <span className="text-sm">
-                                  {detailsData[0]?.number || "Phone Number"}
+                                  {detailsData[0]?.number || "N/A"}
                                 </span>
                                 <input
                                   type="text"

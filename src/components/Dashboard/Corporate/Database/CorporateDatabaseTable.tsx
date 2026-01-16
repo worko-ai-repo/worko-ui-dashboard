@@ -98,6 +98,7 @@ export default function CorporateDatabaseTable(props: any) {
     date: ["createdAt"],
     profileName: ["profileName"],
     candidateName: ["candidateParsedCvDetails.name"],
+    candidateEmail: ["candidateEmail"],
     currentCompany: ["candidateParsedCvDetails.currentCompany"],
     currentDesignation: ["candidateParsedCvDetails.currentDesignation"],
     currentCTC: ["candidateParsedCvDetails.currentCTC"],
@@ -284,6 +285,19 @@ export default function CorporateDatabaseTable(props: any) {
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span title={row?.candidateParsedCvDetails?.name} className="truncate block w-full">
       //       {row?.candidateParsedCvDetails?.name ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
+      key: "candidateEmail",
+      label: "Candidate Email",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) =>  row?.candidateEmail ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px] text-center">
+      //     <span title={row?.candidateParsedCvDetails?.email} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.email ?? "NA"}
       //     </span>
       //   </div>
       // ),

@@ -218,6 +218,19 @@ const keyFallbacks = {
       // ),
     },
     {
+      key: "refereeType",
+      label: "Referee type",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.refereeType ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px] text-center">
+      //     <span title={row?.refereeType} className="truncate block w-full">
+      //       {row?.refereeType ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
       key: "email",
       label: "Email",
       sortable: true,

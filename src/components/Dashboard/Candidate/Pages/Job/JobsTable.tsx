@@ -21,7 +21,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 
 interface JobsTableProps {
   data: JobApiResponse | null;

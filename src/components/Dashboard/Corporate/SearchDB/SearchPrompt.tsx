@@ -42,17 +42,6 @@ const SearchPrompt: React.FC = () => {
   }
   fetchJobs()
   },[])
-  // const jobsList = [
-  //   { label: "Full-Stack", value: "full-stack" },
-  //   { label: "Half-Stack", value: "half-stack" },
-  //   { label: "Frontend", value: "frontend" },
-  //   { label: "Backend", value: "backend" },
-  //   { label: "DevOps", value: "devops" },
-  //   { label: "UI/UX", value: "ui-ux" },
-  //   { label: "Data Engineer", value: "data-engineer" },
-  //   { label: "AI/ML", value: "ai-ml" },
-  //   { label: "QA Tester", value: "qa-tester" },
-  //   ];
 
   const navigate = useNavigate();
     const {

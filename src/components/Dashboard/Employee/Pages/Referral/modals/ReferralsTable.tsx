@@ -15,7 +15,7 @@ import CompletedReferralModal from "./CompletedReferralModal";
 import ProvideFeedbackModal from "./ProvideFeedbackModal";
 import ViewDetailsModal from "@Components/Dashboard/Candidate/Pages/Job/modals/ViewDetailsModal";
 import ChatWindow from "@Components/Dashboard/Candidate/Pages/Referral/modals/ChatWindow";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 import Modal from "@Components/Shared/Modal";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 

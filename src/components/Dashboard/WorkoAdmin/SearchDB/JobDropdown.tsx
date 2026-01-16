@@ -2,9 +2,16 @@ import { ChevronDoubleDownIcon } from "@heroicons/react/24/outline";
 import { ChevronDown } from "lucide-react";
 import React, { useState, useEffect, useRef } from "react";
 
-interface JobOption {
-  label: string;
-  value: string;
+export interface JobOption {
+  jobTitle: string;
+  id:string;
+  location:{
+    fullLocation:string[]
+  };
+  salaryRange:{
+    min:number;
+    max:number;
+  }
 }
 
 interface JobDropdownProps {
@@ -12,9 +19,11 @@ interface JobDropdownProps {
   input: string;
   setInput: (value: string) => void;
   handleSubmit: () => void;
+  setSelectedJobId: (id: string) => void;
+  isJobsLoading:boolean
 }
 
-const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput }) => {
+const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput, setSelectedJobId,isJobsLoading }) => {
   const [filtered, setFiltered] = useState<JobOption[]>(jobsList);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,14 +37,15 @@ const JobDropdown: React.FC<JobDropdownProps> = ({ jobsList, input, setInput }) 
     const value = e.target.value;
     setInput(value);
     const match = jobsList.filter((job) =>
-      job.label.toLowerCase().includes(value.toLowerCase())
+      job.jobTitle.toLowerCase().includes(value.toLowerCase())
     );
     setFiltered(match);
     setIsOpen(true);
   };
 
   const handleSelect = (job: JobOption) => {
-    setInput(job.label); 
+    setInput(job.jobTitle);     
+    setSelectedJobId(job.id);   
     setIsOpen(false);
   };
 
@@ -60,7 +70,7 @@ useEffect(() => {
 
   return (
     <div className="relative w-full">
-<div className="relative w-full" ref={dropdownRef}>
+      <div className="relative w-full" ref={dropdownRef}>
         <input
           type="text"
           value={input}
@@ -77,17 +87,26 @@ useEffect(() => {
           <ChevronDown className="h-5 w-auto" />
         </button>
       </div>
-      {isOpen && filtered.length > 0 && (
+      {isOpen && filtered.length > 0 && !isJobsLoading && (
         <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto text-sm">
           {filtered.map((job) => (
             <li
-              key={job.value}
+              key={job.id}
               onClick={() => handleSelect(job)}
               className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start"
             >
-              {job.label}
+              {job?.jobTitle} | {job?.location?.fullLocation} | {job?.salaryRange?.min}-{job?.salaryRange?.max} LPA
             </li>
           ))}
+        </ul>
+      )}
+      {isOpen && isJobsLoading && (
+        <ul className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto text-sm">
+            <li
+              className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-start"
+            >
+              Loading jobs...
+            </li>
         </ul>
       )}
     </div>
