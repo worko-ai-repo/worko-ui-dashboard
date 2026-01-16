@@ -484,6 +484,11 @@ const fetchDatabaseData = useCallback(
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    if (files.length > 50) {
+      toast.error("You can upload a maximum of 50 CVs at a time.", getToastOptions({}));
+      return;
+    }
+
     const pdfFiles = Array.from(files).filter(
       (file) => file.type === "application/pdf"
     );
