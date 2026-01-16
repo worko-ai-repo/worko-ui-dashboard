@@ -185,9 +185,10 @@ const handlePageChange = useCallback(
 
   const handlePageSizeChange = useCallback(
     (size: number) => {
+      const queryValue = mode === "jobs" ? selectedJobId : input;
       setPageSize(size);
       setCurrentPage(1);
-      fetchCandidates(input, mode, 1, size);
+      fetchCandidates(queryValue, mode, 1, size);
     },
     [input, mode]
   );

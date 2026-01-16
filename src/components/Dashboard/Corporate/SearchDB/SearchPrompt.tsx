@@ -2,7 +2,7 @@ import { ArrowRight, Mic, MicOff, RotateCcw, Search, Sparkles } from 'lucide-rea
 import Dropdown from './Dropdown';
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { logo_text } from '@AssetsFolder/assets';
+import { atlas, logo_text } from '@AssetsFolder/assets';
 import { useSpeechRecognition } from '@Hooks/useSpeechSynthesis.hook';
 import JobDropdown from './JobDropdown';
 import { useAppContext } from '@Context/App.context';
@@ -101,7 +101,7 @@ const SearchPrompt: React.FC = () => {
   return (
     <div className="flex flex-col justify-start items-center min-h-screen w-full bg-background">
       <div className="flex flex-col justify-center items-center text-center mb-8">
-        <img src={logo_text} alt="worko_logo" className="h-20 w-auto" />
+        <img src={atlas} alt="worko_logo" className="w-full max-w-xl h-auto" />
         <p className="text-muted-foreground text-sm">
           Find exactly who you're looking for, in seconds.
         </p>

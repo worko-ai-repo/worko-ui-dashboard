@@ -28,6 +28,7 @@ import mag_glass from './backgrounds/mag_glass.webp'
 import check from './backgrounds/check.webp'
 import worko_new from './worko-assets/Worko_new_logo.webp'
 import evaluationRequest from './worko-assets/evaluationRequest.webp';
+import atlas from './worko-assets/atlas.png';
 
 import auth_bg from './backgrounds/auth_bg.webp'
 import auth_bg2 from './backgrounds/auth_bg2.webp'
@@ -169,6 +170,7 @@ export {
     worko_new,
     corporatehero,
     evaluationRequest,
+    atlas,
 
     //svgs
     clipboard,

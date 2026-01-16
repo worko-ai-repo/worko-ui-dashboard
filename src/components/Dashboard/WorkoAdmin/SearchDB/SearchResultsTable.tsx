@@ -737,14 +737,15 @@ useEffect(() => {
       }      
     } else if (row?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
       if (
-        !row?.companyId ||
+        !row?.cvAwsS3FilePath ||
         !row?.cvAwsS3FileName
       ) {
         toast.error("Missing details", getToastOptions({}));
         return;
       }
+      const splittedID = row?.cvAwsS3FilePath.split("/")
       const payload = { 
-        companyId: row?.companyId,
+        companyId: splittedID[1],
         candCvAwsS3FileName: row?.cvAwsS3FileName 
       }
       try {

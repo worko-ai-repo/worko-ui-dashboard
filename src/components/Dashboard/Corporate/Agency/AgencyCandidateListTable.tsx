@@ -955,14 +955,16 @@ export default function AgencyCandidateListTable(props: any) {
         }
       } else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
       if (
-        !row?.candidateParsedCvDetails?.companyId ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
         !row?.candidateParsedCvDetails?.cvAwsS3FileName
       ) {
         toast.error("Missing details", getToastOptions({}));
         return;
       }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+
       const payload = { 
-        companyId: userDetails?.companyId,
+        companyId: splittedID[1],
         candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName 
       }
       try {
