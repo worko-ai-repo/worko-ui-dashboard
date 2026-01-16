@@ -4,7 +4,7 @@ import { getHttpOptions } from '@Utils/HttpOptions.utils';
 /**
  * ApiType
  */
-  export type ApiType = 'JOB' | 'BASE'; 
+  export type ApiType = 'JOB' | 'BASE' | 'AGENCY'; 
 
 /**
  * @description The HttpService object that contains the methods to make HTTP requests
@@ -26,6 +26,7 @@ export class HttpService {
 	  this.API_URI = {
 		  ["BASE"]: import.meta.env.APP_API_URI || 'https://api.worko.ai',
 		  ["JOB"]: import.meta.env.APP_JOBS_API_URI || 'https://jobs.worko.ai',
+		  ["AGENCY"]: import.meta.env.APP_PROXY_AGENCY_BASE || 'https://agency.worko.ai', //@TODO UPDATE THIS
 	  };
 	}
 
