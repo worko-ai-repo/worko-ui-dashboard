@@ -74,7 +74,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     tableId: "admin-jobs-table",
     persistInUrl: true,
     persistInLocalStorage: false,
-    defaultSort: null,
+    defaultSort: { key: "createdAt", order: "desc" }, // Replace "asc" with "desc" if descending order is needed
   });
   const nav = useNavigate();
 

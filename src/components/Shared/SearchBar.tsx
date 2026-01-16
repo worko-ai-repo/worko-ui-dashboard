@@ -20,7 +20,7 @@ const SearchBar: React.FC<SearchBarProps> = ({placeholder, searchBarText, setSea
   }, [setSearchBarText, handleClick]);
 
   return (
-    <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden max-w-7xl">
+    <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden max-w-6xl">
       <div className="w-full relative display flex">
         <i className=" fa-solid fa-magnifying-glass absolute z-10 top-4 left-3 text-gray-300" />
         <input

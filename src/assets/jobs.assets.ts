@@ -1,4 +1,5 @@
 export const locationAssets = [
+    { label: "Remote", value: { city: ["NA"], fullLocation: ["Remote"] } },
     { label: "Delhi, India", value: { city: ["Delhi"], fullLocation: ["Delhi, India"] } },
     { label: "Mumbai, Maharashtra, India", value: { city: ["Mumbai"], fullLocation: ["Mumbai, Maharashtra, India"] } },
     { label: "Bengaluru, Karnataka, India", value: { city: ["Bengaluru"], fullLocation: ["Bengaluru, Karnataka, India"] } },

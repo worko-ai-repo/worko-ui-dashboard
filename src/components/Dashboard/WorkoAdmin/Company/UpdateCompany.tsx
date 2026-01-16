@@ -610,13 +610,20 @@ const UpdateCompany: React.FC<UpdateCompanyProps> = ({
             <label className="block text-sm font-medium text-gray-700 mb-2">
               About Company<span className="text-red-500 ml-1">*</span>
             </label>
-            <Editor
+            <Controller
+            name="aboutCompany"
+            control={control}
+            rules={validationRules.jobDescription}
+            render={({ field }) => (
+              <Editor
               value={watch("aboutCompany")}
               style={{ height: "200px" }}
               onChange={(htmlVal: string, plainVal: string) => {
                 setValue("aboutCompany", plainVal);
+                field.onChange(htmlVal);
                 trigger("aboutCompany");
               }}
+            /> )}
             />
             {errors.aboutCompany && (
               <p className="text-sm text-red-500 mt-1">{errors.aboutCompany.message}</p>

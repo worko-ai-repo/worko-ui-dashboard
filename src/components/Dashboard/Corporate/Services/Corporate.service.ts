@@ -1,6 +1,7 @@
 import { JobFormSchema } from "@Components/Dashboard/types";
 import {
   ApiResponseDto,
+  CompanyDetails,
   CorporateInvite,
   JobApiResponse,
   JobApplicationDetailsDto,
@@ -23,13 +24,40 @@ import {
 import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
 import { AgencyListDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 
-const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 /**
  * Corporate Service File
  *
  * @description - This file contains the Api calls made on the behalf of Corporate Component
  */
 class CorporateService {
+  /**
+   * getCompanyDetails
+   *
+   * @type {GET}
+   *
+   * @description - This api is used to get company details by company id.
+   */
+  async getCompanyDetails(companyId: string): Promise<CompanyDetails | {}> {
+    try {
+      const { response } = await httpServiceObj.get<Array<CompanyDetails> | []>(
+        `/company/${companyId}`,
+        true,
+        {},
+        false,
+        "BASE"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+      return response[0];
+    } catch (error: any) {
+      console.error("[CORPORATE SERVICE]: Failed to get Company Details.", error);
+      return {};
+    }
+  }
+
   /**
    * postJobs
    *
@@ -589,7 +617,7 @@ class CorporateService {
         `${agencyBaseUrl}/agency-invite`,
         true,
         params,
-        true,
+        true
       );
 
       if (!response) {

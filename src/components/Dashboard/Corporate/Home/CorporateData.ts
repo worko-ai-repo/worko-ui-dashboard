@@ -1,4 +1,12 @@
-import { CorporateHomeCandidateDto, CorporateHomeChartDataDto, CorporateHomeEvaluationDto, CorporateHomeInterviewDto, CorporateHomeJobListingDto, CorporateHomePieChartDataDto } from "@Interfaces/CorporateHomeDto";
+import {
+  CorporateHomeCandidateDto,
+  CorporateHomeChartDataDto,
+  CorporateHomeEvaluationDto,
+  CorporateHomeInterviewDto,
+  CorporateHomeJobListingDto,
+  CorporateHomePieChartDataDto,
+} from "@Interfaces/CorporateHomeDto";
+import CorporateServiceObj from "../Services/Corporate.service";
 
 export const mockJobListings: CorporateHomeJobListingDto[] = [
   {
@@ -9,7 +17,8 @@ export const mockJobListings: CorporateHomeJobListingDto[] = [
     location: "Ahmedabad",
     totalApplied: 20,
     maxApplicants: 22,
-    image: "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
+    image:
+      "https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
   },
   {
     id: "2",
@@ -19,7 +28,8 @@ export const mockJobListings: CorporateHomeJobListingDto[] = [
     location: "Bangalore",
     totalApplied: 15,
     maxApplicants: 25,
-    image: "https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
+    image:
+      "https://images.pexels.com/photos/3184360/pexels-photo-3184360.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
   },
   {
     id: "3",
@@ -29,9 +39,76 @@ export const mockJobListings: CorporateHomeJobListingDto[] = [
     location: "Mumbai",
     totalApplied: 8,
     maxApplicants: 15,
-    image: "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
+    image:
+      "https://images.pexels.com/photos/3184339/pexels-photo-3184339.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop",
   },
 ];
+
+export class CorporateHomeData {
+  private companyId: string;
+
+  constructor(companyId: string) {
+    this.companyId = companyId;
+  }
+
+  /**
+   * getJobListings
+   *
+   * @description
+   * Uses the existing `CorporateServiceObj.fetchJobs` API to fetch jobs
+   * for the given company and maps them into `CorporateHomeJobListingDto`
+   * so they can be directly consumed in the Corporate Home UI.
+   */
+  async getJobListings(): Promise<CorporateHomeJobListingDto[]> {
+    try {
+      const params = {
+        pageSize: 5,
+        sortOrder: "desc",
+        dashboard: "CORPORATE",
+        status: "PUBLISHED",
+        companyId: this.companyId,
+      };
+
+      const response = await CorporateServiceObj.fetchJobs(params);
+      const jobs = response?.data ?? [];
+
+      return jobs.map((job) => ({
+        id: job.id,
+        title: job.jobTitle,
+        description: job.jobDescription || job.htmlJobDescription || "",
+        ctc:
+          job.salaryRange && job.salaryRange.min != null && job.salaryRange.max != null
+            ? `${job.salaryRange.min}-${job.salaryRange.max} LPA`
+            : "",
+        location: job.location?.fullLocation?.[0] || job.location?.city?.[0] || "",
+        totalApplied: job.countCompanyJob?.allJobApplicationCounts?.total ?? 0,
+        maxApplicants: job.numOfOpenings ?? 0,
+        image: job.companyDetails?.logoUrl || job.companyDetails?.logo || "",
+      }));
+    } catch (error) {
+      console.error("[CorporateHomeData]: Error fetching job listings:", error);
+      // Fail gracefully with an empty list to avoid breaking the dashboard.
+      return [];
+    }
+  }
+
+  async getCandidates(): Promise<CorporateHomeCandidateDto[]> {
+    return mockCandidates;
+  }
+
+  async getEvaluations(): Promise<CorporateHomeEvaluationDto[]> {
+    return mockEvaluations;
+  }
+  async getInterviews(): Promise<CorporateHomeInterviewDto[]> {
+    return mockInterviews;
+  }
+  async getChartData(): Promise<CorporateHomeChartDataDto[]> {
+    return chartData;
+  }
+  async getPieChartData(): Promise<CorporateHomePieChartDataDto[]> {
+    return pieChartData;
+  }
+}
 
 export const mockCandidates: CorporateHomeCandidateDto[] = [
   {
@@ -74,14 +151,16 @@ export const mockInterviews: CorporateHomeInterviewDto[] = [
     jobTitle: "Graphics Designer",
     candidateName: "Jane Smith",
     dateCreated: "Jun 24, 2025",
-    image: "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop",
+    image:
+      "https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop",
   },
   {
     id: "2",
     jobTitle: "UI/UX Designer",
     candidateName: "John Doe",
     dateCreated: "Jun 25, 2025",
-    image: "https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop",
+    image:
+      "https://images.pexels.com/photos/3184454/pexels-photo-3184454.jpeg?auto=compress&cs=tinysrgb&w=50&h=50&fit=crop",
   },
 ];
 

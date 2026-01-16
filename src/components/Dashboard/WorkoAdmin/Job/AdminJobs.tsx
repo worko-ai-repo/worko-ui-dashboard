@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import JobForm from "@Components/Shared/PostJob/JobForm";
@@ -21,6 +21,7 @@ import Modal from "@Components/Shared/Modal";
 import { CursorPaginationAdminJobDataParams } from "@Interfaces/AdminServices.dto";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUrlState } from "@Hooks/useUrlState.hook";
+import CompanyFilter, { CompanyFilterValues } from "@Components/Shared/PostJob/CompanyFilter";
 
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
 export type SelectedRow = {
@@ -50,7 +51,7 @@ const AdminJobs = () => {
     },
     pageSize: {
       defaultValue: 100,
-      validValues: [ 10, 25, 50, 100 , 150 , 200],
+      validValues: [10, 25, 50, 100, 150, 200],
     },
   });
   const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
@@ -62,6 +63,9 @@ const AdminJobs = () => {
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
+
+  // Add company filter state
+  const [companyFilters, setCompanyFilters] = useState<CompanyFilterValues>({});
 
   const {
     selectedRows,
@@ -79,14 +83,13 @@ const AdminJobs = () => {
     keySelector: (job) => job.jobId,
   });
 
-
   const params: Omit<CursorPaginationAdminJobDataParams, "lastKey"> = {
     pageSize: pageSize,
     sortOrder: "desc",
     dashboard: "ADMIN",
     status: activeTab,
     includeCompanyDetails: true,
-    includeCountCompanyJobEntityJobApplication:true,
+    includeCountCompanyJobEntityJobApplication: true,
     ...(searchBarText && searchBarText.trim() ? { searchText: searchBarText.trim() } : {}),
   };
 
@@ -106,6 +109,21 @@ const AdminJobs = () => {
     queryFn: AdminServiceObj.fetchJobs,
     baseParams: params,
   });
+
+  // Apply company filters to the data locally
+  const filteredData = useMemo(() => {
+    if (!data) return data;
+
+    // If no company filters are active, return all data
+    if (!companyFilters.companyIds || companyFilters.companyIds.length === 0) {
+      return data;
+    }
+
+    // Filter jobs by selected company IDs
+    return data.filter(
+      (job) => job.companyDetails?.id && companyFilters.companyIds!.includes(job.companyDetails.id)
+    );
+  }, [data, companyFilters]);
 
   // Mutation for updating single job status
   const updateJobMutation = useMutation({
@@ -178,7 +196,7 @@ const AdminJobs = () => {
     onSuccess: (data, variables) => {
       const statusText = variables.isDelete ? "closed" : variables.payload.status?.toLowerCase();
       toast.success(`Job ${statusText} successfully`, getToastOptions({}));
-      
+
       // Invalidate counts to refresh stats
       queryClient.invalidateQueries({ queryKey: ["counts", "corporateJobs"] });
     },
@@ -231,7 +249,7 @@ const AdminJobs = () => {
     onSuccess: (data, variables) => {
       const status = variables.bulkJobUpdate[0]?.status.toLowerCase();
       toast.success(`Bulk jobs ${status} successfully.`, getToastOptions({}));
-      
+
       // Invalidate counts to refresh stats
       queryClient.invalidateQueries({ queryKey: ["counts", "corporateJobs"] });
     },
@@ -271,10 +289,9 @@ const AdminJobs = () => {
       queryClient.invalidateQueries({ queryKey });
     }, 2000);
   }
-  
 
   // this useEffect to handle URL changes (back/forward navigation)
-/*   useEffect(() => {
+  /*   useEffect(() => {
     const tabFromUrl = searchParams.get("tab") as JobStatusType;
     if (tabFromUrl && tabs.includes(tabFromUrl as any) && tabFromUrl !== activeTab) {
       setActiveTab(tabFromUrl);
@@ -353,8 +370,13 @@ const AdminJobs = () => {
               setSearchBarText={handleSearchChange}
               handleClick={() => refetch()}
             />
-            <div className=" flex w-3/12 flex-shrink-0  gap-4 justify-end lg:items-end">
+            <div className=" flex w-3/9 flex-shrink-0  gap-4 justify-end lg:items-end">
               <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
+                <CompanyFilter
+                  onFilterChange={setCompanyFilters}
+                  jobs={data ?? []}
+                  className="min-w-fit"
+                />
                 <BulkOption
                   options={[
                     activeTab != "PUBLISHED"
@@ -405,7 +427,7 @@ const AdminJobs = () => {
       ) : (
         <JobTableWrapper
           activeTab={activeTab}
-          data={data ?? []}
+          data={filteredData ?? []}
           selectedRows={selectedRows}
           selectRows={toggleRow}
           selectAllRows={toggleSelectAll}
