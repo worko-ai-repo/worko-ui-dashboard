@@ -140,11 +140,14 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     return d;
                 };
 
-                const invalidSlot = scheduledSlots.find(slot => {
+                const invalidSlot = scheduledSlots
+                .filter(slot => slot.date && slot.timeSlot)
+                .find(slot => {
                     if (!slot.date || typeof slot.startTime !== 'number') return true;
                     const slotDateTime = buildDateTimeFromHour(slot.date, slot.startTime);
                     return slotDateTime <= now;
                 });
+
                 if (invalidSlot) {
                     toast.error('Interview date and time must be in the future.',getToastOptions({}));
                     return;
