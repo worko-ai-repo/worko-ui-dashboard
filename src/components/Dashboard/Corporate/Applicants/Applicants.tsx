@@ -484,7 +484,7 @@ const Applicants = () => {
               key={jobId || "all-applicants"}
               pageType="applicant"
             />
-            <div className="bg-white max-w-[150px] mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mb-4 mt-4 h-min min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Url</span>
               <InteractiveInput
                 data={data && data.length > 0 ? data[0].jobUrl : ""}
@@ -494,7 +494,7 @@ const Applicants = () => {
                 width="w-auto"
               />
             </div>
-            <div className="bg-white max-w-[150px] mt-4 h-[85px] min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
+            <div className="bg-white max-w-[150px] mt-4 h-[85px] mb-4 min-w-20 shadow-md rounded-xl px-2 text-xs gap-2 py-3.5 text-center flex flex-col">
               <span className="text-sm font-semibold text-[#64748B]">Job Profile</span>
               <span
                 onClick={() => {

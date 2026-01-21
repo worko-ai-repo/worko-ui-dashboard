@@ -91,10 +91,7 @@ const MainContent: React.FC<MainContentProps> = ({
   const { userDetails } = useAppContext();
 
   useEffect(() => {
-    if (
-      !EvaluationRequestDetails?.email ||
-      !EvaluationRequestDetails?.applicantUserId
-    ) {
+    if (!EvaluationRequestDetails?.email || !EvaluationRequestDetails?.applicantUserId) {
       setSocialLinks({});
       return;
     }
@@ -210,14 +207,18 @@ const MainContent: React.FC<MainContentProps> = ({
     queryKey: ["interviews", evaluatorDetails?.applicantUserEmail],
     queryFn: fetchInterviews,
     enabled: !!evaluatorDetails?.applicantUserEmail,
-    refetchOnWindowFocus:false,
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {
     if (userInterviews && userInterviews.length > 0 && userDetails?.id) {
       const data = getLatestInterviewData(userInterviews || [], userDetails?.id);
       setInterviewDetails(data?.interviewDetails);
-      setIsAlreadyRequested(data?.isAlreadyRequested || false);
+      const isInterviewRequestedAndNotCompleted =
+      data?.interviewDetails &&
+        !data?.interviewDetails?.score;
+
+      setIsAlreadyRequested(isInterviewRequestedAndNotCompleted || false);
     }
   }, [userInterviews, userDetails?.id]);
 
@@ -367,65 +368,62 @@ const MainContent: React.FC<MainContentProps> = ({
            //text-indigo-600 */}
 
             <div className="mt-4 text-left">
-            {(() => {
-              let data = EvaluationRequestDetails.scoreDetails;
-              if (typeof data === "string") {
-                try {
-                  const parsed = JSON.parse(data);
-                  const converted = [];
+              {(() => {
+                let data = EvaluationRequestDetails.scoreDetails;
+                if (typeof data === "string") {
+                  try {
+                    const parsed = JSON.parse(data);
+                    const converted = [];
 
-                  if (parsed.RecruiterNote) {
-                    converted.push({
-                      heading: "Recruiter Note",
-                      detail: parsed.RecruiterNote,
-                    });
-                  }
+                    if (parsed.RecruiterNote) {
+                      converted.push({
+                        heading: "Recruiter Note",
+                        detail: parsed.RecruiterNote,
+                      });
+                    }
 
-                  if (Array.isArray(parsed.Strengths)) {
-                    converted.push({
-                      heading: "Strengths",
-                      detail: parsed.Strengths.join("\n• "),
-                    });
-                  }
+                    if (Array.isArray(parsed.Strengths)) {
+                      converted.push({
+                        heading: "Strengths",
+                        detail: parsed.Strengths.join("\n• "),
+                      });
+                    }
 
-                  if (Array.isArray(parsed.AreasOfConcern)) {
-                    converted.push({
-                      heading: "Areas Of Concern",
-                      detail: parsed.AreasOfConcern.join("\n• "),
-                    });
-                  }
-                  data = converted; 
-                } catch {
+                    if (Array.isArray(parsed.AreasOfConcern)) {
+                      converted.push({
+                        heading: "Areas Of Concern",
+                        detail: parsed.AreasOfConcern.join("\n• "),
+                      });
+                    }
+                    data = converted;
+                  } catch {}
                 }
-              }
 
-              return Array.isArray(data) ? (
-                <div className="space-y-4">
-                  {data.map((score, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div
-                        className="mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: "#316BFF" }}
-                      ></div>
-                      <div>
-                        <div className="text-base font-semibold text-slate-800">
-                          {score.heading}
-                        </div>
-                        <div className="text-base text-slate-700 whitespace-pre-line">
-                          {score.detail}
+                return Array.isArray(data) ? (
+                  <div className="space-y-4">
+                    {data.map((score, index) => (
+                      <div key={index} className="flex items-start gap-3">
+                        <div
+                          className="mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: "#316BFF" }}></div>
+                        <div>
+                          <div className="text-base font-semibold text-slate-800">
+                            {score.heading}
+                          </div>
+                          <div className="text-base text-slate-700 whitespace-pre-line">
+                            {score.detail}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-base text-slate-700 whitespace-pre-line">
-                  {data || "No feedback provided."}
-                </p>
-              );
-            })()}
-          </div>
-
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-base text-slate-700 whitespace-pre-line">
+                    {data || "No feedback provided."}
+                  </p>
+                );
+              })()}
+            </div>
           </div>
 
           {/* Recruiter Feedback Card */}
@@ -445,25 +443,26 @@ const MainContent: React.FC<MainContentProps> = ({
           <div className="bg-white border rounded-lg p-6 shadow-sm ">
             <div className="flex items-start justify-between mb-4">
               <h3 className="text-lg font-semibold text-slate-500">Video Interview</h3>
-             {checkValidInterview() && !isAlreadyRequested && <button
-                onClick={() => {
-                  setInterviewDetailviewModal({
-                    isOpen: true,
-                    interviewDetails: interviewDetails || ({} as InterviewDto),
-                    userName: evaluatorDetails?.applicantName || "",
-                  });
-                }}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                  interviewDetails && !isAlreadyRequested
-                    ? "bg-green-600 text-white hover:bg-green-700 transform hover:scale-105 cursor-pointer"
-                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                }`}
-              >
-                <Play className="w-4 h-4" />
-                <span className="text-sm font-semibold">
-                  {interviewDetails && !isAlreadyRequested ? "View Interview" : "View"}
-                </span>
-              </button>}
+              {checkValidInterview() && !isAlreadyRequested && (
+                <button
+                  onClick={() => {
+                    setInterviewDetailviewModal({
+                      isOpen: true,
+                      interviewDetails: interviewDetails || ({} as InterviewDto),
+                      userName: evaluatorDetails?.applicantName || "",
+                    });
+                  }}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+                    interviewDetails && !isAlreadyRequested
+                      ? "bg-green-600 text-white hover:bg-green-700 transform hover:scale-105 cursor-pointer"
+                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  }`}>
+                  <Play className="w-4 h-4" />
+                  <span className="text-sm font-semibold">
+                    {interviewDetails && !isAlreadyRequested ? "View Interview" : "View"}
+                  </span>
+                </button>
+              )}
             </div>
 
             {checkValidInterview() && !isAlreadyRequested ? (
