@@ -21,7 +21,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
-import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import ProgressCircle from "@Components/Shared/CircularBar";
 import RequestDocumentModal, { RequestDocModalProps } from "@Components/Shared/ApplicantsPage/RequestDocModal";
 
 interface JobsTableProps {
@@ -214,12 +214,15 @@ const JobsTable = memo(
     const viewDocument = async (job:JobApplicationDetailsDto) =>{
       if(!job?.responseDocumentDetails || !job?.responseDocumentDetails.length){
         toast.error("Document list not found",getToastOptions({}))
+        return
       }
       if(!job?.jobId){
         toast.error("No job id found", getToastOptions({}))
+        return
       }
       if(!userDetails?.id){
         toast.error("No user found please login again", getToastOptions({}))
+        return
       }
       setJobForViewDocuments(job)
       setIsViewDocumentModal((prev) => ({

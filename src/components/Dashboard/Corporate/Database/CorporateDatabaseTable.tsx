@@ -627,37 +627,71 @@ export default function CorporateDatabaseTable(props: any) {
   };
 
   const renderExpandedDetails = (row: any) => {
-    return (
-      <div className="flex justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg">
-        <div className="text-left">
-          <span className="font-semibold text-black">Last Rejection Date</span>
-          <p>
-            {row.lastRejectionDate
-              ? new Date(row.lastRejectionDate).toLocaleDateString("en-GB", {
-                  day: "numeric",
-                  month: "short",
-                  year: "numeric",
-                })
-              : "NA"}
-          </p>
-        </div>
+return (
+  <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
+    {/* Work Experience */}
+    <div className="flex gap-20">
+      <div>
+        <span className="font-semibold text-black">Work Experience</span>
+        {Array.isArray(row?.candidateParsedCvDetails?.multipleCandidateExperience) &&
+        row.candidateParsedCvDetails.multipleCandidateExperience.length > 0 ? (
+          row.candidateParsedCvDetails.multipleCandidateExperience.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
+            const start = exp?.startDate
+              ? new Date(exp.startDate).getFullYear()
+              : "-";
 
-        <div className="text-left">
-          <span className="font-semibold text-black">Rejected By</span>
-          <p>{row.rejectedBy ?? "NA"}</p>
-        </div>
+            const end = exp?.endDate
+              ? new Date(exp.endDate).getFullYear()
+              : exp?.endDate === "" 
+                ? "Present"
+                : "-";
 
-        <div className="text-left">
-          <span className="font-semibold text-black">Cooling Period</span>
-          <p>{row.coolingPeriodCompanies ?? "NA"}</p>
-        </div>
-
-        <div className="max-w-xl text-left">
-          <span className="font-semibold text-black">Rejection Reason</span>
-          <p className="break-words">{row.rejectedReason ?? "NA"}</p>
-        </div>
+            return (
+              <p key={index} className="mt-2">
+                {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
+              </p>
+            );
+          })
+        ) : (
+          <p>No experience found</p>
+        )}
       </div>
-    );
+
+      {/* Education */}
+      <div>
+        <span className="font-semibold text-black">Edcucation</span>
+        {Array.isArray(row?.candidateParsedCvDetails?.education) &&
+        row.candidateParsedCvDetails.education.length > 0 ? (
+          row.candidateParsedCvDetails.education.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
+            const start = exp?.startDate
+              ? new Date(exp.startDate).getFullYear()
+              : "-";
+
+            const end = exp?.endDate
+              ? new Date(exp.endDate).getFullYear()
+              : exp?.endDate === "" 
+                ? "Present"
+                : "-";
+
+            return (
+              <p key={index} className="mt-2">
+                {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
+              </p>
+            );
+          })
+        ) : (
+          <p>No Education found</p>
+        )}
+      </div>
+    </div>
+    {/* About */}
+    <div>
+      <span className="font-semibold text-black">About</span>
+      <p>{row?.candidateParsedCvDetails?.about || "-"}</p>
+    </div>
+  </div>
+);
+
   };
 
   return (
@@ -686,7 +720,8 @@ export default function CorporateDatabaseTable(props: any) {
         }}
         toggleExpand={toggleExpand}
         allSelected={ListSelection.getAllSelected && ListSelection.getAllSelected(sortedData)}
-        // renderExpandedDetails={renderExpandedDetails}
+        renderExpandedDetails={renderExpandedDetails}
+        enableExpand={true}
         enableSelect={true}
         onSortChange={onSortChange}
         pageSize={pageSize}

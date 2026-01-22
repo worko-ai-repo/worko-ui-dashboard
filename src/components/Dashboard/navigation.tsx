@@ -123,7 +123,7 @@ const navigationItems: NavItem[] = [
     child: [
       { 
         id: "allCandidates",
-        label: "All candidates", 
+        label: "Agency candidates", 
         icon: Warehouse,
         dashboardTypes: ["ADMIN", "CORPORATE"],
         expandable:false,

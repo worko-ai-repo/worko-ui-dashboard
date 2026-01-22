@@ -64,6 +64,18 @@ export const DashboardProvider = ({
       if (matchedItem && matchedItem.label !== activeTab) {
         finalActiveTab = matchedItem.label;
       }
+      if (!finalActiveTab) {
+      navItems.forEach((item) => {
+        if (item.child) {
+          const matchedChild = item.child.find(
+            (child) => child.id.toLowerCase() === activeTab.toLowerCase()
+          );
+          if (matchedChild) {
+            finalActiveTab = matchedChild.label;
+          }
+        }
+      });
+    }
     }
     return {
       Dashboard: urlType,

@@ -136,7 +136,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     { label: "All", onClick: () => setApiStatus(undefined) },
     { label: "Blacklisted", onClick: () => setApiStatus("BLACK_LISTED") },
     { label: "Under cooling period", onClick: () => setApiStatus("UNDER_COOLING_PERIOD") },
-    { label: "Active", onClick: () => setApiStatus("ACTIVE") },
+    // { label: "Active", onClick: () => setApiStatus("ACTIVE") },
   ];
 
   const StatusFilterDropdown = [
