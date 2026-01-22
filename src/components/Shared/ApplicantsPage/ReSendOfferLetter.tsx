@@ -15,6 +15,7 @@ import { eyeIcon, viewFeedback } from "@AssetsFolder/assets";
 import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
 import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.service";
+import { useAppContext } from "@Context/App.context";
 
 export type HireFormInputs = {
   offerLetterRemarks: string;
@@ -132,7 +133,9 @@ export const getLatestOfferLetterIssueRaisedDetails = (
  */
 export const handleViewDocumentClick = async (
   applicationData: JobApplicationDetailsDto,
-  mode: "ISSUE" | "LETTER" = "ISSUE"
+  mode: "ISSUE" | "LETTER" = "ISSUE",
+  isCandidateViewingDocuments?:boolean,
+  userDetails?:any,
 ) => {
   if (!applicationData) {
     toast.error("Job application data not found", getToastOptions({}));
@@ -173,7 +176,7 @@ export const handleViewDocumentClick = async (
   try {
     const payload = {
       jobApplicationId: applicationData.id,
-      userId: applicationData.applicantDetails.userId,
+      userId: isCandidateViewingDocuments ? userDetails?.id : applicationData.applicantDetails.userId,
       cloudFileName: cloudFileName,
     };
 

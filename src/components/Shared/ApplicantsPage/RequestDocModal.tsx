@@ -25,6 +25,7 @@ export interface RequestDocModalProps {
   mode: "REQUEST" | "VIEW" | "READ_ONLY";
   onViewDocument?: (documentName: string, cloudFileName: string) => void;
   onRequestMore?: () => void;
+  isCandidateViewingDocuments? : boolean
 }
 
 interface RequestDocumentPayload {
@@ -75,6 +76,7 @@ const RequestDocumentModal: React.FC<
   onViewDocument,
   onRequestMore,
   handleStatusUpdate,
+  isCandidateViewingDocuments=false,
   refetch, // Properly destructure refetch here
 }) => {
   const { userDetails } = useAppContext();
@@ -109,7 +111,7 @@ const RequestDocumentModal: React.FC<
     if (isOpen) {
       reset({ documents: [{ name: "" }] });
       // Calculate current requested document count
-      const requestedDocs = getRequestedDocuments();
+      const requestedDocs = isCandidateViewingDocuments ? getRequestedDocumentsForCandidate() : getRequestedDocuments();
       setCurrentRequestedCount(requestedDocs.length);
 
       // Set mode based on whether this is additional request
@@ -163,12 +165,11 @@ const RequestDocumentModal: React.FC<
       toast.error("Document file not found", getToastOptions({}));
       return;
     }
-
     try {
       setIsLoading(true);
       const payload = {
         jobApplicationId: jobApplication.id,
-        userId: jobApplication.applicantDetails.id,
+        userId: userDetails?.id,
         cloudFileNames: [cloudFileName],
       };
 
@@ -392,7 +393,7 @@ const RequestDocumentModal: React.FC<
 
     const docMap = new Map<string, DocumentInfo>();
 
-    jobApplication.requestedDocumentDetails.forEach((detail) => {
+  jobApplication.requestedDocumentDetails.forEach((detail) => {
       detail.requestedDocumentNames.forEach((name) => {
         docMap.set(name, {
           name,
@@ -406,6 +407,26 @@ const RequestDocumentModal: React.FC<
     });
     return Array.from(docMap.values());
   };
+
+  const getRequestedDocumentsForCandidate = (): DocumentInfo[] => {
+    if (!jobApplication.responseDocumentDetails) return [];
+    const docMap = new Map<string, DocumentInfo>();
+
+    jobApplication.responseDocumentDetails.forEach((detail) => {
+      detail.documentMapping.forEach((mapping) => {
+        docMap.set(mapping.documentName, {
+          name: mapping.documentName,
+          status: detail.documentStatus,
+          requestedOn: new Date(detail.actionDate).toLocaleDateString("en-GB"),
+          submittedOn: new Date(detail.actionDate).toLocaleDateString("en-GB"),
+          cloudFileName: mapping.cloudFileName,
+          isRerequested: false,
+        });
+      });
+    });
+    return Array.from(docMap.values());
+  };
+
 
   const getSubmittedDate = (documentName: string) => {
     if (!jobApplication.responseDocumentDetails) return null;
@@ -441,7 +462,7 @@ const RequestDocumentModal: React.FC<
   if (!isOpen) return null;
 
   if (currentMode === "VIEW" || currentMode === "READ_ONLY") {
-    const documents = getRequestedDocuments();
+    const documents = isCandidateViewingDocuments ? getRequestedDocumentsForCandidate() : getRequestedDocuments();
     if (documents.length === 0 && !offerLetterSent) {
       return <NoDataPresent />;
     }
@@ -539,8 +560,30 @@ const RequestDocumentModal: React.FC<
             );
           })}
 
+          {offerLetterSent && isCandidateViewingDocuments &&(
+            <div className="w-full flex flex-col gap-3.5">
+              <div className="flex justify-start items-center gap-3.5">
+                <div
+                  className={`w-full h-11 bg-gray-50 rounded-xl border border-gray-200 flex items-center px-4 cursor-pointer hover:bg-gray-100`}
+                  onClick={async () => {
+                    await handleViewDocumentClick(jobApplication, "LETTER",isCandidateViewingDocuments,userDetails);
+                  }}
+                  >
+                  <FileText className="w-4 h-4 text-gray-400 mr-2" />
+                  <span className={`text-sm truncate flex-1 capitalize text-left text-gray-700`}>
+                    Offer Letter
+                  </span>
+
+                  {/* Status Dot with Tooltip */}
+                  <div className={`w-3 h-3 rounded-full bg-green-500 cursor-help`} title={"Sent"} />
+                </div>
+              </div>
+              <div className="text-xs text-left text-gray-600">Status: Sent</div>
+            </div>
+          )}
+
           {/* List OfferLetter also if present */}
-          {offerLetterSent && (
+          {offerLetterSent && !isCandidateViewingDocuments &&(
             <div className="w-full flex flex-col gap-3.5">
               <div className="flex justify-start items-center gap-3.5">
                 <div

@@ -9,7 +9,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
-import EditProfileModal from "./modals/EditProfileModal";
+// import EditProfileModal from "./modals/EditProfileModal";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -19,6 +19,7 @@ import Modal from "@Components/Shared/Modal";
 import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
+import EditProfileModal from "@Components/Dashboard/Corporate/Database/modals/EditProfileModal";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -96,6 +97,7 @@ const keyFallbacks = {
   candidateName: ["candidateParsedCvDetails.name"],
   email: ["candidateParsedCvDetails.email"],
   contact: ["phoneNumberDetails.number"],
+  date: ["createdAt"],
   currentDesignation: ["candidateParsedCvDetails.currentDesignation",],
   currentLocation: ["candidateParsedCvDetails.location"],
   noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
@@ -105,11 +107,12 @@ const keyFallbacks = {
   appliedCompany: [ "appliedCompaniesSortValue",],
   addedBy: ["addedBy"],
   addedFor: ["addedFor"],
-  coolingPeriod: ["coolingPeriod"],
+  coolingPeriodCompanies: ["coolingPeriodCompaniesSortValue"],
   lastActive: ["lastActive"],
 };
 
   const sortableData = useMemo(() => {
+    console.log(data)
     return (data ?? []).map((row:any) => ({
         ...row,
         appliedCompaniesSortValue: row.candidateProfileInCompanies
@@ -117,10 +120,15 @@ const keyFallbacks = {
         // .sort()
         .join(", ")
         .toLowerCase() || "",
+        coolingPeriodCompaniesSortValue: row?.coolingPeriodCompanies
+        ?.map((s:any) => s.companyName)
+        // .sort()
+        .join(", ")
+        .toLowerCase() || "",
     }));
   }, [data]);
 
-    //below instead of data we used sortableData cause applied companies need to be looped 
+  //below instead of data we used sortableData cause applied companies need to be looped 
   const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(sortableData, keyFallbacks, {
   tableId: `database`,
   persistInUrl: true,
@@ -263,6 +271,30 @@ const keyFallbacks = {
       // ),
     },
     {
+      key: "date",
+      label: "Date",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.createdAt ? new Date(row.createdAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "NA"
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>
+      //       {row?.createdAt
+      //         ? new Date(row.createdAt).toLocaleDateString("en-GB", {
+      //             day: "2-digit",
+      //             month: "2-digit",
+      //             year: "numeric",
+      //           })
+      //         : "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
       key: "currentDesignation",
       label: "Current Designation",
       sortable: true,
@@ -372,15 +404,20 @@ const keyFallbacks = {
       // ),
     },
     {
-      key: "coolingPeriod",
+      key: "coolingPeriodCompanies",
       label: "Cooling period companies",
       sortable: true,
       contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+      render: (row: AgencyDatabaseApplicantDetailsDto) => {
+        const companiesArray = (row?.coolingPeriodCompanies?? [])
+        .map(company => company.companyName)
+        .join(", ");
+        return (
         <div className="flex justify-center m-auto">
-          <span>{row?.coolingPeriod ?? "NA"}</span>
+          <span>{companiesArray.length? companiesArray: "NA"}</span>
         </div>
-      ),
+        )
+      },
     },
     {
       key: "lastActive",
@@ -433,7 +470,7 @@ const keyFallbacks = {
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Edit details"
               data-tooltip-place="top"
-              disabled={true}
+              // disabled={true}
               onClick={() => {
                 setEditProfileView(true);
                 setEditProfileData(row);
@@ -538,6 +575,33 @@ const keyFallbacks = {
       } catch (error) {
         console.log(error)
       }      
+    }else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
+      if (
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+      
+      const payload = { 
+        companyId: splittedID[1],
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
     }else{
         if(!row?.candidateParsedCvDetails?.companyId 
           || !row?.candidateParsedCvDetails?.jobId 
@@ -599,7 +663,7 @@ const keyFallbacks = {
 
         <div>
           <span className="font-semibold text-black">Cooling Period</span>
-          <p>{row.coolingPeriod ?? "NA"}</p>
+          <p>{row.coolingPeriodCompanies ?? "NA"}</p>
         </div>
 
         <div className="max-w-sm">
@@ -652,7 +716,8 @@ const keyFallbacks = {
           setEditProfileData(undefined);
         }}
         isOpen={editProfileView}
-        fullDetails={editProfileData}
+        candidateFullDetails={editProfileData}
+        localUpdate={localUpdate}
       />
       <Modal
         isOpen={isViewCVModalOpen}

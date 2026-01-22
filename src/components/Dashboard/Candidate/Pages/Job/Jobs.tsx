@@ -104,7 +104,6 @@ const StatusFilterDropdown = [
       );
 
       if (response) {
-        console.log(response)
         setData(response);
         if (response.pagination) {
           setPaginationInfo(response.pagination);

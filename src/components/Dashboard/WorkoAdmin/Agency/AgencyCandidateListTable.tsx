@@ -914,7 +914,35 @@ export default function AgencyCandidateListTable(props: any) {
       } catch (error) {
         console.log(error)
       }      
-    } else {
+    } else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
+      if (
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+
+      const payload = { 
+        companyId: splittedID[1],
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
+    }
+    else {
         if(!row?.candidateParsedCvDetails?.companyId 
           || !row?.candidateParsedCvDetails?.jobId 
           || !row?.candidateParsedCvDetails?.agencyUserId 
@@ -985,7 +1013,7 @@ export default function AgencyCandidateListTable(props: any) {
 
     <div>
         <span className="font-semibold text-black">Cooling Period</span>
-        <p>{row.coolingPeriod ?? "NA"}</p>
+        <p>{row.coolingPeriodCompanies ?? "NA"}</p>
     </div>
 
     <div className="max-w-sm">

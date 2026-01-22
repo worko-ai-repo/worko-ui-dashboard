@@ -2,7 +2,7 @@ import DatabaseDropdown from '@Components/Shared/DropDown/DatabaseDropdown';
 import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
 import { DatabaseStatusType, JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
-import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye } from 'lucide-react';
+import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye, User } from 'lucide-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 import CorporateDatabaseTable from './CorporateDatabaseTable';
 import { toast } from 'react-toastify';
@@ -14,6 +14,9 @@ import httpServiceObj from '@Services/ApiHandler.service';
 import { PaginationInfo } from '@Components/Dashboard/Candidate/Pages/Job/JobTypes';
 import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto';
 import SelectJobForBulkMatch from './modals/SelectJobForBulkMatchModal';
+import AddEmailForReferralModal from './modals/AddEmailForReferralModal';
+import EmailAddedModal from './modals/EmailAddedModal';
+import CandidateBulkBanModal from './modals/CandidateBulkBanModal';
 
 interface CorporateDatabaseProps{
 
@@ -53,6 +56,9 @@ export interface DatabaseListApiResponse {
   matchingScore?: number;
 }
 
+interface ResponseApi {
+  isSuccess:boolean;
+}
 const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
@@ -67,7 +73,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [fetchData, setFetchData] = useState<any[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
-    const [pageSize,setPageSize] = useState<number>(10);
+    const [pageSize,setPageSize] = useState<number>(200);
     const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
     const [filters, setFilters] = useState<DatabaseListFilters>({});
     const paginationKeysRef = useRef<Record<number, string>>({1: "",});
@@ -75,7 +81,15 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [isSelectJobForBulkMatch,setIsSelectJobForBulkMatch] = useState<boolean>(false);
     const [loader, setLoader] = useState(false);
     const [isBulkCVDownloading,setIsBulkCVDownloading] = useState(false)
+    const [isEmailForReferralOpen,setIsEmailForReferralOpen] = useState<boolean>(false);
+    const [isCorporateAdmin, setIsCorporateAdmin] = useState<boolean>(false);
+    const [isEmailAddedSuccessfully,setIsEmailAddedSuccessfully] = useState<boolean>(false);
+    const [forwardingMailId,setForwardingMailId] = useState<string>("");
 
+    const [reason,setReason] = useState<string>("");
+    const [comments,setComments] = useState<string>("");
+    const [isCandidateBulkBanModelOpen,setIsCandidateBulkBanModelOpen] = useState<boolean>(false);
+    const [isBulkBanSubmitting,setIsBulkBanSubmitting] = useState<boolean>(false);
     useEffect(() => {
       function handleClickOutside(event:any) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -86,6 +100,13 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
+    useEffect(()=>{
+      userDetails?.userType.map((userType:string) =>{
+          if(userType === "corporate-admin"){
+              setIsCorporateAdmin(true)
+          }
+      })
+    },[userDetails])
     // useEffect(()=>{
     //     const fetchUserData = async () =>{
     //     if(!userDetails) {
@@ -111,20 +132,20 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     // fetchUserData()
     // },[userDetails])
 
-    const SourceFilterDropdown = [
-        { label: "All", onClick: () => setApiStatus(undefined) },
-        { label: "Blacklisted", onClick: () => setApiStatus("BLACKLISTED") },
-        { label: "Under cooling period", onClick: () => setApiStatus("UNDER_COOLING_PERIOD") },
-        { label: "Under processing", onClick: () => setApiStatus("UNDER_PROCESSING") },
-    ];
+  const SourceFilterDropdown = [
+    { label: "All", onClick: () => setApiStatus(undefined) },
+    { label: "Blacklisted", onClick: () => setApiStatus("BLACK_LISTED") },
+    { label: "Under cooling period", onClick: () => setApiStatus("UNDER_COOLING_PERIOD") },
+    { label: "Active", onClick: () => setApiStatus("ACTIVE") },
+  ];
 
-    const StatusFilterDropdown = [
-        { label: "All", onClick: () => setApiStatus(undefined) },
-        { label: "Referral", onClick: () => setApiStatus("REFERRAL") },
-        { label: "Internal", onClick: () => setApiStatus("INTERNAL") },
-        { label: "Agency", onClick: () => setApiStatus("AGENCY") },
-        { label: "Worko", onClick: () => setApiStatus("WORKO") },
-    ];
+  const StatusFilterDropdown = [
+    { label: "All", onClick: () => setApiStatus(undefined) },
+    { label: "Referral", onClick: () => setApiStatus("REFERRAL") },
+    { label: "Internal", onClick: () => setApiStatus("INTERNAL") },
+    { label: "Agency", onClick: () => setApiStatus("AGENCY") },
+    { label: "Worko", onClick: () => setApiStatus("WORKO") },
+  ];
 
 const fetchDatabaseData = useCallback(
   async (
@@ -154,8 +175,8 @@ const fetchDatabaseData = useCallback(
       if (searchFilters?.userType) params.userType = searchFilters.userType;
 
       // include status (apiStatus state or override if provided)
-      if (typeof statusOverride !== "undefined") params.refereeType = statusOverride;
-      else if (apiStatus) params.refereeType = apiStatus;
+      if (typeof statusOverride !== "undefined") params.hiringEligibilityStatus  = statusOverride;
+      else if (apiStatus) params.hiringEligibilityStatus  = apiStatus;
 
       const { response } = await httpServiceObj.get<DatabaseListApiResponse>(url, true, params, true);
 
@@ -192,39 +213,37 @@ const fetchDatabaseData = useCallback(
           paginationKeysRef.current = { 1: "" };
           fetchDatabaseData(1, pageSize, "");
         }
-      }, [userDetails, fetchDatabaseData, pageSize]);
+    }, [userDetails, fetchDatabaseData, pageSize]);
     
-        const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+    const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+  
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearchBarText(e.target.value);
+    };
       
-        const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-          setSearchBarText(e.target.value);
-        };
+    const handlePageChange = useCallback((page: number) => {
+        const lastKey = paginationKeysRef.current[page] || "";
+        
+        setCurrentPage(page);
+        fetchDatabaseData(page, pageSize, lastKey);
+      },
+      [fetchDatabaseData, pageSize]
+    );
+      
+    const handlePageSizeChange = useCallback(
+      (size: number) => {
+        setPageSize(size);
+        setCurrentPage(1);
+        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+        fetchDatabaseData(1, size, "");
+      },
+      [fetchDatabaseData]
+    );
     
-      
-        const handlePageChange = useCallback((page: number) => {
-            const lastKey = paginationKeysRef.current[page] || "";
-            
-            setCurrentPage(page);
-            fetchDatabaseData(page, pageSize, lastKey);
-          },
-          [fetchDatabaseData, pageSize]
-        );
-      
-      
-        const handlePageSizeChange = useCallback(
-          (size: number) => {
-            setPageSize(size);
-            setCurrentPage(1);
-            setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
-            paginationKeysRef.current = { 1: "" };
-            fetchDatabaseData(1, size, "");
-          },
-          [fetchDatabaseData]
-        );
-    
-      const removeAgencyLocally = (id: string) => {
-        setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
-      };
+    const removeAgencyLocally = (id: string) => {
+      setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));
+    };
 
     const toggleRow = (row: any) => {
     setSelectedRows((prev) =>
@@ -264,22 +283,59 @@ const fetchDatabaseData = useCallback(
       );
       });
     }, []);
-    const handleBulkBan = () =>{
-      setFetchData((prevData:any) =>
-        prevData.filter((candidate:any) =>
-          !selectedRows.some((sel) => sel.id === candidate.id)
-        )
-      );
-      setSelectedRows([])
-    }
 
-    const handleBulkDelete = () =>{
-      setFetchData((prevData:any) =>
-        prevData.filter((candidate:any) =>
-          !selectedRows.some((sel) => sel.id === candidate.id)
-        )
-      );
-      setSelectedRows([])
+    const handleBulkBan = async() =>{
+      if(!reason){
+        toast.error("Please select a reason to continue",getToastOptions({}))
+        return
+      }
+      if(!comments){
+        toast.error("Please add detailed comments to continue",getToastOptions({}))
+        return
+      }
+      const checkingAlreadyBanned = selectedRows.some(row => row?.hiringEligibilityStatus === "BLACK_LISTED");
+      if(checkingAlreadyBanned){
+        toast.error("Some of the selected candidates are already banned",getToastOptions({}))
+        return
+      }
+      try {
+        setIsBulkBanSubmitting(true)
+        const onlyId = selectedRows.map(details =>{
+          return details?.id
+        })
+        const payload = {
+          reasonForBlacklisting:reason,
+          detailedReasonForBlacklisting:comments,
+          corporateCandidateProfileIds: onlyId,
+        }
+        const {response,error} = await httpServiceObj.patch<ResponseApi>(`${agencyBaseUrl}/corporate-candidate-profile/blacklist/bulk`,payload,true,{},true)
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        if(response?.isSuccess){
+          toast.success("Banned successfully",getToastOptions({}))
+          setIsCandidateBulkBanModelOpen(false)
+          setReason("")
+          setComments("")
+
+          //local update
+          setFetchData((prevData) =>
+            prevData.map((candidate) =>
+              selectedRows.some((sel) => sel.id === candidate.id)
+                ? { ...candidate, hiringEligibilityStatus: "BLACK_LISTED" }
+                : candidate
+            )
+          );
+
+          setSelectedRows([])
+          return
+        }
+      } catch (error) {
+        console.log(error)
+      } finally {
+        setIsBulkBanSubmitting(false)
+      }
     }
 
   // useEffect(() => {
@@ -623,7 +679,7 @@ const fetchDatabaseData = useCallback(
           searchBarText={searchBarText}
           setSearchBarText={setSearchBarText}
           handleClick={() => console.log("")}
-          placeholder="Search candidates by email"
+          placeholder="Search candidates by name, email and company name"
         />
       </div>
 
@@ -665,7 +721,6 @@ const fetchDatabaseData = useCallback(
           {/* Status dropdown */}
           <div className="w-full lg:w-auto">
             <DatabaseDropdown
-              disabled={true}
               selectTitle="Status"
               tooltipMessage="Filter by status"
               options={SourceFilterDropdown}
@@ -677,10 +732,20 @@ const fetchDatabaseData = useCallback(
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
       <div className="w-full lg:w-auto">
         <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
+        {isCorporateAdmin &&         
           <button
-            onClick={handleBulkBan}
-            // disabled={selectedRows.length < 1}
-            disabled={true}
+            onClick={()=>setIsEmailForReferralOpen(true)}
+            type="button"
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={"Add email for referral"}
+            className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+          >
+            <User className="w-4 h-4" strokeWidth={4}/>
+          </button>}
+
+          <button
+            onClick={()=>setIsCandidateBulkBanModelOpen(true)}
+            disabled={selectedRows.length < 1}
             type="button"
             data-tooltip-id="my-tooltip"
             data-tooltip-content={"Ban"}
@@ -689,7 +754,7 @@ const fetchDatabaseData = useCallback(
             <Ban className="w-4 h-4" strokeWidth={4}/>
           </button>
 
-          <button
+          {/* <button
             onClick={handleBulkDelete}
             // disabled={selectedRows.length < 1}
             disabled={true}
@@ -699,7 +764,7 @@ const fetchDatabaseData = useCallback(
             className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-red-500 hover:bg-red-500 hover:text-white"
           >
             <Trash2 className="w-4 h-4" strokeWidth={2}/>
-          </button>
+          </button> */}
 
           <div className="relative inline-block" ref={dropdownRef}>
             <button
@@ -710,13 +775,13 @@ const fetchDatabaseData = useCallback(
               // disabled={true}
               type="button"
               data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Action"}
+              data-tooltip-content={"Move to applicants"}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
             >
               <Forward className="w-5 h-6" strokeWidth={3}/>
             </button>
 
-            {showDropdown && (
+            {/* {showDropdown && (
               <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
                 <button
                   onClick={() => {
@@ -740,10 +805,10 @@ const fetchDatabaseData = useCallback(
                   Move for bulk matching
                 </button>
               </div>
-            )}
+            )} */}
           </div>
 
-          <button
+          {/* <button
             // onClick={handleBulkCVDownload}
             // disabled={selectedRows.length < 1 || isBulkCVDownloading}
             disabled={true}
@@ -756,7 +821,7 @@ const fetchDatabaseData = useCallback(
                 : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
           >
             <Download className="w-4 h-4" strokeWidth={3}/>
-          </button>
+          </button> */}
         </div>
       </div>
     </div>
@@ -796,6 +861,42 @@ const fetchDatabaseData = useCallback(
         setLoader={setLoader}
         loader={loader}
       />
+    {isEmailForReferralOpen && 
+      <AddEmailForReferralModal
+        dashboardType={"CORPORATE"}
+        onClose= {() => setIsEmailForReferralOpen(false)}
+        isOpen= {isEmailForReferralOpen}
+        // agencyData={selectedRows}
+        userDetails={userDetails}
+        setIsEmailAddedSuccessfully={setIsEmailAddedSuccessfully}
+        setForwardingMailId={setForwardingMailId}
+      />
+    }
+    {isEmailAddedSuccessfully && forwardingMailId &&
+      <EmailAddedModal
+        dashboardType={"CORPORATE"}
+        onClose= {() => {
+          setIsEmailAddedSuccessfully(false)
+          setForwardingMailId("")
+        }}
+        isOpen= {isEmailAddedSuccessfully}
+        forwardingMailId={forwardingMailId}
+      />
+    }
+  {isCandidateBulkBanModelOpen && 
+    <CandidateBulkBanModal
+      comments={comments}
+      setComments={setComments}
+      reason={reason}
+      setReason={setReason}
+      onSubmit={()=>handleBulkBan()}
+      onClose={()=>{
+        setIsBulkBanSubmitting(false)
+        setIsCandidateBulkBanModelOpen(false)
+      }}
+      isOpen={isCandidateBulkBanModelOpen}
+      isBulkBanSubmitting={isBulkBanSubmitting}
+    />}
     </div>
   )
 }

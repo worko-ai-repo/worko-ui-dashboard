@@ -38,7 +38,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const [fetchData, setFetchData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
-  const [pageSize,setPageSize] = useState<number>(10);
+  const [pageSize,setPageSize] = useState<number>(200);
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
   const [filters, setFilters] = useState<DatabaseListFilters>({});
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
@@ -60,7 +60,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
 
   const SourceFilterDropdown = [
       { label: "All", onClick: () => setApiStatus(undefined) },
-      { label: "Blacklisted", onClick: () => setApiStatus("BLACKLISTED") },
+      { label: "Blacklisted", onClick: () => setApiStatus("BLACK_LISTED") },
       { label: "Under cooling period", onClick: () => setApiStatus("UNDER_COOLING_PERIOD") },
       { label: "Under processing", onClick: () => setApiStatus("UNDER_PROCESSING") },
   ];
@@ -359,6 +359,16 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     }
   };
 
+  const handleLocalUpdate = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData:any) => {
+    if (!prevData || !Array.isArray(prevData)) return prevData;
+
+    return prevData.map(job =>
+      job.id === jobId ? { ...job, ...updatedData } : job
+    );
+    });
+  }, []);
+
   return (
     <div>
       <div className="flex flex-col lg:flex-row lg:items-center gap-1 sm:gap-1 w-full">
@@ -369,12 +379,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={() => console.log("as")}
-            placeholder="Search candidates by email"
+            placeholder="Search candidates by name, email and company name"
           />
         </div>
       {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
       <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
-        <div className="basis-[40%] w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
+        {/* <div className="basis-[40%] w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
           <div className="w-full lg:w-auto">
             <input
               type="file"
@@ -394,10 +404,30 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
               <span>Bulk CV upload</span>
             </button>
           </div>
-        </div>
+        </div> */}
 
       {/* Row 3 (mobile/tablet stacked): Source, Status */}
         <div className="w-full lg:w-auto flex flex-row gap-2 lg:flex-row lg:items-center lg:gap-1 ">
+          <div className="w-full lg:w-auto">
+            <input
+              type="file"
+              accept="application/pdf"
+              multiple
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={handleFileChange}
+            />
+
+            <button
+              type="button"
+              onClick={handleButtonClick}
+              className="w-full lg:w-auto flex-none inline-flex items-center justify-center gap-2 h-9 rounded-xl px-3 text-xs transition shadow-md bg-blue-600 text-white hover:bg-blue-700"
+            >
+              <Upload className="w-4 h-4 stroke-[3]" />
+              <span>Bulk CV upload</span>
+            </button>
+          </div>
+
           <div className="w-full lg:w-auto">
               <DatabaseDropdown
               selectTitle="Source"
@@ -405,20 +435,36 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
               options={StatusFilterDropdown}
               />
           </div>
-          <div className="w-full lg:w-auto">      
+          
+          <div className="relative inline-block" ref={dropdownRef}>
+              <button 
+                onClick={() => {
+                  if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
+                }}                  
+              disabled={selectedRows.length < 1}
+              // disabled={true}
+              type="button"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Move to applicants"}
+              className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+            >
+              <Forward className="w-5 h-6" strokeWidth={3}/>
+            </button>
+            </div>
+          {/* <div className="w-full lg:w-auto">      
               <DatabaseDropdown
               disabled={true}
               selectTitle="Status"
               tooltipMessage="Filter by status"
               options={SourceFilterDropdown}
               />
-          </div>
+          </div> */}
         </div>
         </div>
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
         <div className="w-full lg:w-auto">
           <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
-            <button 
+            {/* <button 
                 onClick={handleBulkBan}
                 // disabled={selectedRows.length<1}
                 disabled={true}
@@ -431,9 +477,9 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
                 >
                 <Ban className="w-4 h-4" strokeWidth={4}/>
-            </button>
+            </button> */}
             
-            <button 
+            {/* <button 
                 onClick={handleBulkDelete}
                 // disabled={selectedRows.length<1}
                 disabled={true}
@@ -446,25 +492,22 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // : "bg-white text-red-500 hover:bg-red-500 hover:text-white"}`}
                 >
                 <Trash2 className="w-4 h-4" strokeWidth={2}/>
-            </button>
+            </button> */}
 
-            <div className="relative inline-block" ref={dropdownRef}>
+            {/* <div className="relative inline-block" ref={dropdownRef}>
               <button 
                 onClick={() => {
                   if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
                 }}                  
-                // disabled={selectedRows.length < 1}
-                // disabled={true}
-                type="button"
-                data-tooltip-id="my-tooltip"
-                data-tooltip-content={"Action"}
-                className={`flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white`}
-                  // ${selectedRows.length < 1 
-                  //   ? "bg-gray-300 text-gray-500 cursor-not-allowed" 
-                  //   : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
-              >
-                <Forward className="w-5 h-6" strokeWidth={3}/>
-              </button>
+              disabled={selectedRows.length < 1}
+              // disabled={true}
+              type="button"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Move to applicants"}
+              className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
+            >
+              <Forward className="w-5 h-6" strokeWidth={3}/>
+            </button>
 
               {showDropdown && (
                 <div className="absolute right-0 mt-2 w-40 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 z-50">
@@ -490,9 +533,9 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                   </button>
                 </div>
               )}
-            </div>
+            </div> */}
 
-            <button 
+            {/* <button 
                 // onClick={handleBulkCVDownload}
                 // disabled={selectedRows.length<1}
                 disabled={true}
@@ -505,7 +548,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
                 // : "bg-white text-blue-700 hover:bg-blue-700 hover:text-white"}`}
                 >
                 <Download className="w-4 h-4" strokeWidth={3}/>
-            </button>
+            </button> */}
           </div>
         </div>    
       </div>
@@ -529,7 +572,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           sendApplicationToRecruiter={handleSendToRecruiter}
           isBulkEvaluation={!!selectedRows.length}
           onBulkUpdate={onBulkUpdate}
-          // localUpdate={handleLocalUpdate}
+          localUpdate={handleLocalUpdate}
           removeAgencyLocally={removeAgencyLocally}
           pagination={paginationInfo}
           currentPage={currentPage}

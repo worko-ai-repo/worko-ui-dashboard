@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -61,6 +61,7 @@ export default function CorporateDatabaseTable(props: any) {
     handleUpdate,
     userType,
     localUpdate,
+    localUpdateForEdit,
     removeAgencyLocally,
     pagination,
     currentPage,
@@ -107,7 +108,16 @@ export default function CorporateDatabaseTable(props: any) {
     noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
     locationComfortable: ["candidateParsedCvDetails.location"],
     remark: ["remark", "remarks"],
+    status:["hiringEligibilityStatus"]
   };
+
+// const sortableData = useMemo(() => {
+//   return (data ?? []).map((row: any) => ({
+//     ...row,
+//     hiringEligibilityStatus:
+//       row?.hiringEligibilityStatus === "BLACK_LISTED" ? "Yes" : "No",
+//   }));
+// }, [data]);
 
   const { sortedData, onSortChange } = useSortableData<AgencyDatabaseApplicantDetailsDto>(
     data,
@@ -395,11 +405,11 @@ export default function CorporateDatabaseTable(props: any) {
       //   </div>
       // ),
     },
-    {
-      key: "remark",
-      label: "Remark",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.remark ?? "NA"
+    // {
+      // key: "remark",
+      // label: "Remark",
+      // sortable: true,
+      // render: (row: AgencyDatabaseApplicantDetailsDto) => row?.remark ?? "NA"
       // (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span title={row?.remark} className="truncate block w-full">
@@ -407,6 +417,17 @@ export default function CorporateDatabaseTable(props: any) {
       //     </span>
       //   </div>
       // ),
+    // },
+    {
+      key: "status",
+      label: "Status",
+      sortable: false,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => 
+        row?.hiringEligibilityStatus === "BLACK_LISTED" 
+        ? "Blacklisted" 
+        : row?.hiringEligibilityStatus === "UNDER_COOLING_PERIOD" 
+          ? "Under cooling period"
+        : "Active"
     },
     {
       key: "viewCV",
@@ -438,12 +459,10 @@ export default function CorporateDatabaseTable(props: any) {
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Edit details"
               data-tooltip-place="top"
-              disabled={true}
               onClick={() => {
-                setEditProfileView(true);
                 setEditProfileData(row);
+                setEditProfileView(true);           
               }}>
-              {/* <Pencil/> */}
               <img src={Edit} className="w-8 h-8 btn-sky shrink-0" />
             </button>
           </div>
@@ -534,6 +553,33 @@ export default function CorporateDatabaseTable(props: any) {
       } catch (error) {
         console.log(error)
       }      
+    } else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
+      if (
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+
+      const payload = { 
+        companyId: splittedID[1],
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
     }
     else{
       if(!row?.candidateParsedCvDetails?.companyId 
@@ -603,7 +649,7 @@ export default function CorporateDatabaseTable(props: any) {
 
         <div className="text-left">
           <span className="font-semibold text-black">Cooling Period</span>
-          <p>{row.coolingPeriod ?? "NA"}</p>
+          <p>{row.coolingPeriodCompanies ?? "NA"}</p>
         </div>
 
         <div className="max-w-xl text-left">
@@ -657,6 +703,7 @@ export default function CorporateDatabaseTable(props: any) {
         }}
         isOpen={editProfileView}
         candidateFullDetails={editProfileData}
+        localUpdate={localUpdate}
       />
       <Modal
         isOpen={isViewCVModalOpen}

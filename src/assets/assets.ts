@@ -60,6 +60,7 @@ import f2 from './backgrounds/f2.webp';
 import f3 from './backgrounds/f3.webp';
 import gb_form from './backgrounds/gb_form.webp';
 import joining_success_img from './backgrounds/joining_success_img.webp';
+import outlook_logo from './outlook/outlook_logo.webp';
 
 // svg
 import coin from './svgs/coin.svg'
@@ -118,6 +119,17 @@ import dotSpiral from './backgrounds/dotSpiral.png'
 import folder_open from './svgs/folder_open.svg'
 import Warehouse from './svgs/Warehouse.svg'
 import AI_agent from './gifs/AI_agent.gif';
+
+//outlook
+import outlook_1 from './outlook/outlook_1.png';
+import outlook_2 from './outlook/outlook_2.png';
+import outlook_3 from './outlook/outlook_3.png';
+import outlook_4 from './outlook/outlook_4.png';
+import outlook_5 from './outlook/outlook_5.png';
+import outlook_6 from './outlook/outlook_6.png';
+import outlook_7 from './outlook/outlook_7.png';
+import outlook_8 from './outlook/outlook_8.png';
+import outlook_9 from './outlook/outlook_9.png';
 export { 
     // Backgrounds
     bg_plexus,
@@ -151,6 +163,7 @@ export {
     c21, c22, c23, c24,
     f1, f2, f3, gb_form,joining_success_img,
     dotSpiral,
+    outlook_logo,
 
     // Worko Assets
     favicon,
@@ -229,5 +242,16 @@ export {
     InterviewBlobTwo,
 
     //Gifs
-    AI_agent
+    AI_agent,
+
+    //outlook
+    outlook_1,
+    outlook_2,
+    outlook_3,
+    outlook_4,
+    outlook_5,
+    outlook_6,
+    outlook_7,
+    outlook_8,
+    outlook_9,
 };

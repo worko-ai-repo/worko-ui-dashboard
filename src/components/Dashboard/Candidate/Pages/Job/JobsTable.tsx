@@ -21,7 +21,8 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
-import ProgressCircle from "@Components/Shared/CircularBar";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
+import RequestDocumentModal, { RequestDocModalProps } from "@Components/Shared/ApplicantsPage/RequestDocModal";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -77,11 +78,18 @@ const JobsTable = memo(
     const [parsingJobId, setParsingJobId] = useState<string>("");
     const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
     const [scorePointsModal, setScorePointsModal] = useState<ScorePointsModalProps>();
-
+    const [jobForViewDocuments, setJobForViewDocuments] = useState<JobApplicationDetailsDto | null>(null);
+    const [isViewDocumentModal, setIsViewDocumentModal] = useState<RequestDocModalProps>({
+      isOpen: false,
+      jobApplication: {} as JobApplicationDetailsDto,
+      mode: "VIEW",
+      onClose: () => setIsViewDocumentModal({ ...isViewDocumentModal, isOpen: false }),
+    });
+      
     const [isError, setIsError] = useState(false);
     const { userDetails } = useAppContext();
     // Map the status to action for the specific cases
-    const getActionFromStatus = (status: string): string | null => {
+    const getActionFromStatus = (status: string): string [] => {
       switch (status) {
         // case 'APPLIED':
         //   return null;
@@ -90,7 +98,7 @@ const JobsTable = memo(
         // case 'UNDER_EVALUATION':
         //   return null;
         case "REJECTED":
-          return "VIEW_FEEDBACK";
+          return ["VIEW_FEEDBACK"];
         // case 'PROCESSING_INTERVIEW':
         //   return null;
         // case 'INTERVIEW_DONE':
@@ -98,32 +106,39 @@ const JobsTable = memo(
         // case 'HIRING_IN_PROCESS':
         //   return null;
         case "DOCUMENT_REQUESTED":
-          return "SUBMIT_DOCUMENT";
+          return ["SUBMIT_DOCUMENT"];
         case "DOCUMENT_ADDITIONAL_REQUESTED":
-          return "SUBMIT_DOCUMENT";
+          return ["SUBMIT_DOCUMENT","DOCUMENT_SUBMITTED"];
         case "DOCUMENT_REVISION_REQUESTED":
-          return "SUBMIT_DOCUMENT";
+          return ["SUBMIT_DOCUMENT","DOCUMENT_SUBMITTED"];
+
+        case "DOCUMENT_SUBMITTED":
+          return ["DOCUMENT_SUBMITTED"];
+        case "DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED":
+          return ["DOCUMENT_SUBMITTED"];
+        case "DOCUMENT_REVISION_REQUEST_SUBMITTED":
+          return ["DOCUMENT_SUBMITTED"];
         // case 'DOCUMENT_VERIFIED':
         //   return null;
         case "OFFER_SENT":
-          return "CHECK_ACCEPT";
-        // case 'OFFER_ISSUE_RAISED':
-        //   return null;
+          return ["CHECK_ACCEPT","DOCUMENT_SUBMITTED"];
+        case 'OFFER_ISSUE_RAISED':
+          return ["DOCUMENT_SUBMITTED"];
         case "REVISED_OFFER_SENT":
-          return "CHECK_ACCEPT";
+          return ["CHECK_ACCEPT","DOCUMENT_SUBMITTED"];
         case "HIRED":
-          return "JOINED";
+          return ["JOINED"];
         // case 'JOINED':
         //   return null;
         default:
-          return null;
+          return [];
       }
     };
 
     // Process data to add actions based on status
     const processedJobs = data?.data?.map((job) => ({
       ...job,
-      action: job.action || getActionFromStatus(job.status),
+      action: job.action ?? getActionFromStatus(job.status),
     })) as unknown as JobApplicationDetailsDto[];
 
     const jobs = processedJobs || [];
@@ -196,6 +211,25 @@ const JobsTable = memo(
       // TODO: handle file upload
     };
 
+    const viewDocument = async (job:JobApplicationDetailsDto) =>{
+      if(!job?.responseDocumentDetails || !job?.responseDocumentDetails.length){
+        toast.error("Document list not found",getToastOptions({}))
+      }
+      if(!job?.jobId){
+        toast.error("No job id found", getToastOptions({}))
+      }
+      if(!userDetails?.id){
+        toast.error("No user found please login again", getToastOptions({}))
+      }
+      setJobForViewDocuments(job)
+      setIsViewDocumentModal((prev) => ({
+        ...prev,
+        isOpen: true,
+        jobApplication: job, 
+        mode: "READ_ONLY",
+      }));
+    }
+
     const handleActionClick = useCallback(
       async (type: string, job: JobApplicationDetailsDto) => {
         if (!user?.email) return;
@@ -219,6 +253,15 @@ const JobsTable = memo(
               // }
               setCurrentJobForCheckAccept(job);
               setShowCheckAcceptModal(true);
+              break;
+
+            case "DOCUMENT_SUBMITTED":
+              // result = await JobService.acceptOffer(job.id, user.email);
+              // console.log(result)
+              // if (result.response) {
+              //   onRefresh();
+              // }
+              viewDocument(job)
               break;
 
             case "JOINED":
@@ -458,47 +501,66 @@ const JobsTable = memo(
         job: JobApplicationDetailsDto;
         fetchCounts: () => void;
       }) => {
-        // console.log(job)
         const isProcessing = processingJobId === job.id;
 
         const actionConfigs: Record<
           string,
-          { color: string; icon: JSX.Element | null; label: string }
+          { color: string; icon: JSX.Element | null; label: string ; tooltip?: string}
         > = {
           HIRED: {
             color: "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]",
             icon: <Check strokeWidth={3.25} className="w-5 h-5 mr-1" />,
             label: "I am hired",
+            tooltip: "Mark as hired"
           },
+
           JOINED: {
             color: "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]",
             icon: <img src={iHaveJoined} alt="I have joined" />,
             label: "I have joined",
+            tooltip: "Mark as joined"
           },
+
           SUBMIT_DOCUMENT: {
             color: "bg-blue-400",
             icon: null,
             label: "Submit document",
+            tooltip: "Submit requested documents",
           },
+
           CHECK_ACCEPT: {
             color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
-            icon: <img src={checkAndAccept} alt="Check & accept" />,
+            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 min-w-[20px]"/>,
             label: "Check & accept",
+            tooltip: "Check & accept offer letter",
           },
+
           VIEW_FEEDBACK: {
             color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
             icon: <img src={viewFeedback} alt="View feedback" />,
             label: "View feedback",
+            tooltip: "View feedback",
           },
+          
+          DOCUMENT_SUBMITTED: {
+            color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
+            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 min-w-[20px]" />,
+            label: "",
+            tooltip: "View submitted documents",
+          },
+
           ADDITIONAL_DOCUMENT_REQUESTED: {
             color: "bg-yellow-400",
             icon: null,
             label: "Submit additional document",
+            tooltip: "Submit additional documents",
           },
+
           REVISION_DOCUMENT_SUBMISSION: {
             color: "bg-orange-400",
             icon: null,
             label: "Submit revision document",
+            tooltip: "Submit revised documents",
           },
         };
 
@@ -507,11 +569,15 @@ const JobsTable = memo(
 
         return (
           <button
-            className={`w-36 rounded-xl ${
-              config.color
-            } h-11 flex items-center justify-center py-2 px-4 gap-0.5 text-white ${
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={config.tooltip}
+            data-tooltip-place="top"
+            className={`${
+              config.label ? "w-36 px-4" : "w-11 px-0"
+            } rounded-xl ${config.color} h-11 flex items-center justify-center gap-0.5 text-white ${
               isProcessing ? "opacity-75 cursor-not-allowed" : ""
             }`}
+
             onClick={() => {
               if (!isProcessing) {
                 handleActionClick(type, job);
@@ -646,11 +712,18 @@ const JobsTable = memo(
         label: "Action",
         sortable: true,
         render: (row: JobApplicationDetailsDto) =>
-          row.action ? (
-            <div className="flex justify-center m-auto w-[150px]">
-              <ActionButton type={row.action} job={row} fetchCounts={fetchCounts} />
+          row.action?.length ? (
+            <div className="flex gap-2 justify-center">
+              {row.action.map((type:any) => (
+                <ActionButton
+                  key={type}
+                  type={type}
+                  job={row}
+                  fetchCounts={fetchCounts}
+                />
+              ))}
             </div>
-          ) : null,
+          ) : null
       },
       {
         key: "followUp",
@@ -911,7 +984,41 @@ const JobsTable = memo(
             onClose={() => setFeedbackModalOpen(false)}
             className="py-5">
             {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
-          </Modal>
+        </Modal>
+
+      <Modal
+        isOpen={isViewDocumentModal.isOpen}
+        onClose={() =>
+          setIsViewDocumentModal({
+            isOpen: false,
+            jobApplication: {} as JobApplicationDetailsDto,
+            mode : "READ_ONLY",
+            onClose: () => setIsViewDocumentModal({ ...isViewDocumentModal, isOpen: false }),
+          })
+        }
+        className="w-[90vw] sm:w-[455px] h-[500px] ">
+        <RequestDocumentModal
+          {...isViewDocumentModal}
+            handleStatusUpdate={()=>{}}
+            refetch={()=>{}}
+            isCandidateViewingDocuments={true}
+        />
+      </Modal>
+
+        {/* {jobForViewDocuments && (
+          <RequestDocumentModal
+            isOpen = {isViewDocumentModal}
+            onClose = {() => {
+              setIsViewDocumentModal(false)
+              setJobForViewDocuments(null)
+            }}
+            jobApplication= {jobForViewDocuments}
+            mode = "READ_ONLY"
+            handleStatusUpdate={()=>{}}
+            refetch={()=>{}}
+            isCandidateViewingDocuments={true}
+          />
+        )} */}
       </div>
     );
   }

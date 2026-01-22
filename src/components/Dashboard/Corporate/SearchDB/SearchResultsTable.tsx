@@ -677,7 +677,7 @@ export default function SearchResultsTable(props: any) {
 
   //       <div>
   //         <span className="font-semibold text-black">Cooling Period</span>
-  //         <p>{row.coolingPeriod ?? "NA"}</p>
+  //         <p>{row.coolingPeriodCompanies ?? "NA"}</p>
   //       </div>
 
   //       <div className="max-w-sm">
@@ -751,6 +751,32 @@ export default function SearchResultsTable(props: any) {
       }
       try {
         const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
+    } else if (row?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
+      if (
+        !row?.cvAwsS3FilePath ||
+        !row?.cvAwsS3FileName
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.cvAwsS3FilePath.split("/")
+      const payload = { 
+        companyId: splittedID[1],
+        candCvAwsS3FileName: row?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
 
         if (error) {
           toast.error(error.message, getToastOptions({}));

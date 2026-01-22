@@ -130,19 +130,35 @@ const navigationItems: NavItem[] = [
       }
     ]
   },
+  // {
+  //   id: "aSearchDB",
+  //   label: "A.T.L.A.S",
+  //   icon: FolderOpenIcon,
+  //   dashboardTypes: ["ADMIN","CORPORATE"],
+  //   expandable: true,
+  //   child: [
+  //     { 
+  //       id: "aDatabase",
+  //       label: "My database", 
+  //       icon: FolderOpenIcon,
+  //       dashboardTypes: ["ADMIN", "CORPORATE"],
+  //       expandable:false,
+  //     }
+  //   ]
+  // },
   {
-    id: "aSearchDB",
-    label: "Search in DB",
+    id: "aDatabase",
+    label: "My database", 
     icon: FolderOpenIcon,
-    dashboardTypes: ["ADMIN","CORPORATE"],
-    expandable: true,
+    dashboardTypes: ["ADMIN", "CORPORATE"],
+    expandable:true,
     child: [
       { 
-        id: "aDatabase",
-        label: "My database", 
+        id: "aSearchDB",
+        label: "A.T.L.A.S",
         icon: FolderOpenIcon,
-        dashboardTypes: ["ADMIN", "CORPORATE"],
-        expandable:false,
+        dashboardTypes: ["ADMIN","CORPORATE"],
+        expandable: false,
       }
     ]
   },

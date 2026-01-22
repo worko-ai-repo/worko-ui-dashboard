@@ -57,7 +57,7 @@ const DatabaseDropdown: React.FC<DatabaseDropdownProps> = ({
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
         } ${disabled ? "cursor-not-allowed" : ""}`}
       >
-        <span>{selectedLabel || selectTitle}</span>
+        <span className="truncate block max-w-[8rem]">{selectedLabel || selectTitle}</span>
         <span className="ml-1">▾</span>
       </div>
 

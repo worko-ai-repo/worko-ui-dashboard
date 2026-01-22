@@ -1,6 +1,10 @@
+import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto';
+import httpServiceObj from '@Services/ApiHandler.service';
+import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
 import React, { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form';
+import { toast } from 'react-toastify';
 
 
 {/* Add validation to the forms */}
@@ -9,16 +13,18 @@ interface EditProfileModalProps{
     onClose: () => void;
     isOpen: boolean;
     candidateFullDetails:any;
+    localUpdate:(jobId:string,updatedData:any) => void;
 }
 const EditProfileModal:React.FC<EditProfileModalProps> = ({  
     onClose,
     isOpen,
     candidateFullDetails,
+    localUpdate
 }) => {
       const { register, handleSubmit, reset, setValue, watch,formState: { errors },} = useForm({ mode: "onChange",
       defaultValues: {
-        candidateName: "",
-        candidateEmail: "",
+        name: "",
+        email: "",
         contactNumber: "",
         currentCompany: "",
         // phoneNumberDetails: {
@@ -26,33 +32,35 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         //   phoneNumber: "",
         // },
         currentDesignation: "",
-        YOE: null,
+        totalYOE: null,
         currentCTC: "",
         expectedCTC: "",
-        locationComfortableWith: "",
+        location: "",
         noticePeriod: "",
-        coolingPeriod: "",
+        // coolingPeriodCompanies: "",
         referredBy:"",
       },
     });
     const [visible, setVisible] = useState(false);
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
     const [isSubmitting,setIsSubmitting]  = useState(false);
-    
+    const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+
     useEffect(() => {
+        console.log(candidateFullDetails?.candidateParsedCvDetails)
     if (isOpen && candidateFullDetails) {
         reset({
-            candidateName: candidateFullDetails?.candidateParsedCvDetails?.name || "",
-            candidateEmail: candidateFullDetails?.candidateParsedCvDetails?.email || "",
+            name: candidateFullDetails?.candidateParsedCvDetails?.name || "",
+            email: candidateFullDetails?.candidateParsedCvDetails?.email || "",
             contactNumber:candidateFullDetails?.candidateParsedCvDetails?.phoneNumberDetails?.number || "",
             currentCompany: candidateFullDetails?.candidateParsedCvDetails?.currentCompany || "",
             currentDesignation:candidateFullDetails?.candidateParsedCvDetails?.currentDesignation || "",
-            YOE: candidateFullDetails?.candidateParsedCvDetails?.totalYOE || 0,
+            totalYOE: candidateFullDetails?.candidateParsedCvDetails?.totalYOE || 0,
             currentCTC: candidateFullDetails?.candidateParsedCvDetails?.currentCTC || 0,
             expectedCTC: candidateFullDetails?.candidateParsedCvDetails?.expectedCTC || 0,
-            locationComfortableWith: candidateFullDetails?.candidateParsedCvDetails?.location || "",
+            location: candidateFullDetails?.candidateParsedCvDetails?.location || "",
             noticePeriod: candidateFullDetails?.candidateParsedCvDetails?.noticePeriod || 0,
-            coolingPeriod: candidateFullDetails.coolingPeriod || "",
+            // coolingPeriodCompanies: candidateFullDetails.coolingPeriodCompanies || "",
             referredBy:candidateFullDetails.referredBy || "",
         })
         setVisible(true);
@@ -65,13 +73,73 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
     }
     }, [isOpen,candidateFullDetails,reset]);
 
-    const formSubmit = (data:any) =>{
-        console.log(data)
+    const formSubmit = async (data:any) => {
+        setIsSubmitting(true)
+        const candidateID = candidateFullDetails?.candidateParsedCvDetails?.id
+        if(!candidateID){
+            toast.error("Candidate Id not found",getToastOptions({}))
+            return
+        }
+        try {
+        for(const key in data){
+            if(data[key] === ""){
+                delete data[key];
+            }
+        }
+        // const hasDifference = Object.keys(candidateFullDetails?.candidateParsedCvDetails).some(
+        //     key => key in data && candidateFullDetails?.candidateParsedCvDetails[key] !== data[key]
+        // );
+        // console.log(candidateFullDetails?.candidateParsedCvDetails)
+        // console.log(data)
+        // if(!hasDifference){
+        //     toast.error("Cannot update same details",getToastOptions({}))
+        //     return
+        // }
+
+        const {response,error} =  await httpServiceObj.patch(`${agencyBaseUrl}/candidate-parsed-cv/${candidateID}`,data,true,{},true)   
+        if(error){
+            toast.error(error.message,getToastOptions({}))
+            return
+        }
+        if(response){
+            toast.success("Details updated successfully",getToastOptions({}))
+            const parentFields = ['refereeName', 'refereeType', "referredBy"];
+            const childFields: any = {};
+
+            // Split data
+            const parentData: any = {};
+            Object.entries(data).forEach(([key, value]) => {
+            if (parentFields.includes(key)) parentData[key] = value;
+            else childFields[key] = value;
+            });
+
+            // Create structured payload
+            const payload = {
+            ...parentData,
+            candidateParsedCvDetails: {...childFields}
+            };
+            console.log(payload)
+            localUpdate(candidateFullDetails?.id, {
+                ...candidateFullDetails,
+                ...parentData,
+                candidateParsedCvDetails: {
+                    ...candidateFullDetails.candidateParsedCvDetails, 
+                    ...childFields
+                }
+            });
+        }
+        reset()
+        onClose()
+        } catch (error) {
+            console.log(error)
+        } finally {
+            setIsSubmitting(false)
+        }
     }
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
@@ -88,60 +156,76 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
 
         <form onSubmit={handleSubmit(formSubmit)}>
             <div className='text-left'>
-                <label htmlFor="">Candidate Name <span className='text-red-500'>*</span></label>
+                <label htmlFor="">Candidate Name 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
                 <input type="text" 
                 className="input_primary auth_input capitalize"
-                {...register("candidateName")}/>
+                {...register("name")}/>
             </div>
 
             <div className='text-left'>
-                <label htmlFor="">Candidate Email <span className='text-red-500'>*</span></label>
-                <input type="text" 
+                <label htmlFor="">Candidate Email 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
+                <input disabled={true} type="text" 
                 className="input_primary auth_input capitalize"
-                {...register("candidateEmail")}/>
+                {...register("email")}/>
             </div>
 
             <div className='text-left'>
-                <label htmlFor="">Candidate contact no <span className='text-red-500'>*</span></label>
-                <input type="text" 
+                <label htmlFor="">Candidate contact no 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
+                <input disabled={true} type="text" 
                 className="input_primary auth_input capitalize"
                 {...register("contactNumber")}/>
             </div>
             
             <div className='text-left'>
-                <label htmlFor="">Current company <span className='text-red-500'>*</span></label>
+                <label htmlFor="">Current company 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
                 <input type="text" 
                 className="input_primary auth_input capitalize"
                 {...register("currentCompany")}/>
             </div>
             <div className='text-left'>
-                <label htmlFor="">Current designation <span className='text-red-500'>*</span></label>
+                <label htmlFor="">Current designation 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
                 <input type="text" 
                 className="input_primary auth_input capitalize"
                 {...register("currentDesignation")}/>
             </div>
             <div className='text-left'>
-                <label htmlFor="">Total YOE <span className='text-red-500'>*</span></label>
+                <label htmlFor="">Total YOE 
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
                 <input 
                     type="number"
                     step="0.1" //allows in decimal
                     className="input_primary auth_input"
-                    {...register("YOE", {
+                    {...register("totalYOE", {
                         valueAsNumber: true,
                     })}
                 />
-                {errors.YOE && <p className="text-red-500 text-sm">Please enter a valid number</p>}
+                {errors.totalYOE && <p className="text-red-500 text-sm">Please enter a valid number</p>}
             </div>
 
             <div className='flex gap-2'>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Current CTC(LPA)<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Current CTC(LPA)
+                        {/* <span className='text-red-500'>*</span> */}
+                    </label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
                     {...register("currentCTC")}/>
                 </div>
                 <div className='text-left flex-1'>
-                    <label htmlFor="">Expected CTC(LPA)<span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Expected CTC(LPA)
+                        {/* <span className='text-red-500'>*</span> */}
+                    </label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
                     {...register("expectedCTC")}/>
@@ -149,10 +233,12 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             </div>
             <div className='flex gap-2'>     
                 <div className='text-left flex-1'>           
-                    <label htmlFor="">Location <span className='text-red-500'>*</span></label>
+                    <label htmlFor="">Location 
+                        {/* <span className='text-red-500'>*</span> */}
+                    </label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
-                    {...register("locationComfortableWith")}/>
+                    {...register("location")}/>
                 </div>
             {/* <div className='text-left flex-1'>
                 <label htmlFor="">Notice Period <span className='text-red-500'>*</span></label>
@@ -169,7 +255,9 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                 </select>
             </div> */}
             <div className='text-left flex-1'>
-                <label htmlFor="">Notice Period(in days)<span className='text-red-500'>*</span></label>
+                <label htmlFor="">Notice Period(in days)
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
                 <input 
                     type="number"
                     className="input_primary auth_input"
@@ -180,15 +268,18 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                 {errors.noticePeriod && <p className="text-red-500 text-sm">Please enter a valid number</p>}
             </div>
             </div>
-            <div className='text-left'>
+            {/* <div className='text-left'>
                 <label htmlFor="">Referred by / Added by <span className='text-red-500'>*</span></label>
                 <input type="text" 
                 className="input_primary auth_input capitalize"
                 {...register("referredBy")}/>
-            </div>
+            </div> */}
             <div className="flex justify-start mt-4">
             <button
-                className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white
+                ${isSubmitting 
+                    ? "bg-blue-300 cursor-not-allowed opacity-70" 
+                    : "bg-blue-500"}`}
             >
                 <SendIcon className='h-4 w-4'/>
                 {isSubmitting ? 'Submitting...' : 'Submit'}

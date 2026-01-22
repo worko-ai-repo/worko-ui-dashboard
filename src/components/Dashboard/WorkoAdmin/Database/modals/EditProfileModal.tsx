@@ -31,7 +31,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         expectedCTC: "",
         locationComfortableWith: "",
         noticePeriod: "",
-        coolingPeriod: "",
+        coolingPeriodCompanies: "",
       },
     });
     const [visible, setVisible] = useState(false);
@@ -55,7 +55,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             expectedCTC: fullDetails.expectedCTC || "",
             locationComfortableWith: fullDetails.locationComfortableWith || "",
             noticePeriod: fullDetails.noticePeriod || "",
-            coolingPeriod: fullDetails.coolingPeriod || "",
+            coolingPeriodCompanies: fullDetails.coolingPeriodCompanies || "",
         })
         setVisible(true);
         const timer = setTimeout(() => setIsAnimatingIn(true), 10);
@@ -160,7 +160,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                 <label className='text-left' htmlFor="">Cooling period companies</label>
                 <input type="text" 
                 className="input_primary auth_input capitalize"
-                {...register("coolingPeriod")}/>
+                {...register("coolingPeriodCompanies")}/>
             </div>
             <div className="flex justify-start mt-4">
             <button

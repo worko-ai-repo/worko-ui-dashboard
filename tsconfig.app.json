@@ -39,7 +39,7 @@
 			"@Hooks/*": ["src/hooks/*"],
 			"@Interfaces/*": ["src/types/interface/*"],
 			"@Layouts/*": ["src/layouts/*"],
-			"@Pages/*": ["src/pages/*"],
+			"@Pages/*": ["src/Pages/*"],
 			"@TypesAndConstants/*": ["src/types/*"],
 			"@Styles/*": ["src/styles/*"],
 			"@Services/*": ["src/services/*"],
