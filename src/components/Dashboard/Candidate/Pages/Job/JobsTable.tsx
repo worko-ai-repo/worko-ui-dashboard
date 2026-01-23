@@ -127,9 +127,9 @@ const JobsTable = memo(
         case "REVISED_OFFER_SENT":
           return ["CHECK_ACCEPT","DOCUMENT_SUBMITTED"];
         case "HIRED":
-          return ["JOINED"];
-        // case 'JOINED':
-        //   return null;
+          return ["JOINED","DOCUMENT_SUBMITTED"];
+        case 'JOINED':
+          return ["DOCUMENT_SUBMITTED"];
         default:
           return [];
       }
@@ -930,7 +930,7 @@ const JobsTable = memo(
           onSuccess={() => {
             setShowDocumentUploadModal(false);
             fetchCounts();
-            // onRefresh();
+            onRefresh();
           }}
           userID={user?.sub ?? ""}
           jobId={parsingJobId ?? ""}
@@ -943,7 +943,7 @@ const JobsTable = memo(
             job={currentJobForCheckAccept}
             onClose={() => setShowCheckAcceptModal(false)}
             onSuccess={() => {
-              // onRefresh();
+              onRefresh();
               setShowCheckAcceptModal(false);
               fetchCounts();
             }}

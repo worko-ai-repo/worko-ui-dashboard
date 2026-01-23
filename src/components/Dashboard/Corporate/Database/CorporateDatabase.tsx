@@ -17,6 +17,7 @@ import SelectJobForBulkMatch from './modals/SelectJobForBulkMatchModal';
 import AddEmailForReferralModal from './modals/AddEmailForReferralModal';
 import EmailAddedModal from './modals/EmailAddedModal';
 import CandidateBulkBanModal from './modals/CandidateBulkBanModal';
+import { HiringEligibilityStatus, RefereeTypeStatus } from '@TypesAndConstants/JobsAndApplication.type';
 
 interface CorporateDatabaseProps{
 
@@ -61,7 +62,8 @@ interface ResponseApi {
 }
 const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [searchBarText, setSearchBarText] = useState<string|null>("")
-    const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
+    const [refereeTypeStatus, setRefereeTypeStatus] = useState<RefereeTypeStatus>();
+    const [hiringEligibiltyStatus, setHiringEligibiltyStatus] = useState<HiringEligibilityStatus>();
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
     const [showDropdown, setShowDropdown] = useState(false);
     const [isActionSelected,setIsActionSelected] = useState<boolean>(false);
@@ -90,6 +92,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [comments,setComments] = useState<string>("");
     const [isCandidateBulkBanModelOpen,setIsCandidateBulkBanModelOpen] = useState<boolean>(false);
     const [isBulkBanSubmitting,setIsBulkBanSubmitting] = useState<boolean>(false);
+    
     useEffect(() => {
       function handleClickOutside(event:any) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -107,44 +110,20 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
           }
       })
     },[userDetails])
-    // useEffect(()=>{
-    //     const fetchUserData = async () =>{
-    //     if(!userDetails) {
-    //       return
-    //     }
-    //     setIsLoading(true)
-    //     const url = `${baseUrl}/agency-invite/${userDetails?.companyId}/`;
-    //     try {
-    //       const { response } = await httpServiceObj.get(url, true, {}, true);
-    //       if(response){
-    //         // const data = response as UserDetails[];
-    //         setFetchData(response as any)
-    //       }else{
-    //         setFetchData(dummyData)
-    //       }
-    //     } catch (error) {
-    //       console.error("Cannot fetch user details:", error);
-    //       setFetchData(dummyData)
-    //     } finally{
-    //       setIsLoading(false)
-    //     }
-    // }
-    // fetchUserData()
-    // },[userDetails])
 
   const SourceFilterDropdown = [
-    { label: "All", onClick: () => setApiStatus(undefined) },
-    { label: "Blacklisted", onClick: () => setApiStatus("BLACK_LISTED") },
-    { label: "Under cooling period", onClick: () => setApiStatus("UNDER_COOLING_PERIOD") },
-    // { label: "Active", onClick: () => setApiStatus("ACTIVE") },
+    { label: "All", onClick: () => setHiringEligibiltyStatus(undefined) },
+    { label: "Blacklisted", onClick: () => setHiringEligibiltyStatus("BLACK_LISTED") },
+    { label: "Under cooling period", onClick: () => setHiringEligibiltyStatus("UNDER_COOLING_PERIOD") },
+    // { label: "Active", onClick: () => setHiringEligibiltyStatus("ACTIVE") },
   ];
 
   const StatusFilterDropdown = [
-    { label: "All", onClick: () => setApiStatus(undefined) },
-    { label: "Referral", onClick: () => setApiStatus("REFERRAL") },
-    { label: "Internal", onClick: () => setApiStatus("INTERNAL") },
-    { label: "Agency", onClick: () => setApiStatus("AGENCY") },
-    { label: "Worko", onClick: () => setApiStatus("WORKO") },
+    { label: "All", onClick: () => setRefereeTypeStatus(undefined) },
+    { label: "Referral", onClick: () => setRefereeTypeStatus("REFERRAL") },
+    { label: "Internal", onClick: () => setRefereeTypeStatus("INTERNAL") },
+    { label: "Agency", onClick: () => setRefereeTypeStatus("AGENCY") },
+    { label: "Worko", onClick: () => setRefereeTypeStatus("WORKO") },
   ];
 
 const fetchDatabaseData = useCallback(
@@ -155,7 +134,7 @@ const fetchDatabaseData = useCallback(
     searchFilters = filters,
     isSearch = false,
     sortOrder = "desc",
-    statusOverride?: DatabaseStatusType
+    // statusOverride?: DatabaseStatusType
   ) => {
     if (!userDetails?.email) return;
 
@@ -174,9 +153,11 @@ const fetchDatabaseData = useCallback(
       if (searchBarText?.trim()) params.candidateEmail = searchBarText;
       if (searchFilters?.userType) params.userType = searchFilters.userType;
 
-      // include status (apiStatus state or override if provided)
-      if (typeof statusOverride !== "undefined") params.hiringEligibilityStatus  = statusOverride;
-      else if (apiStatus) params.hiringEligibilityStatus  = apiStatus;
+      // include status hiringEligibilityStatus if provided
+      if (hiringEligibiltyStatus !== undefined) params.hiringEligibilityStatus  = hiringEligibiltyStatus
+
+      // include status refereeTypeStatus if provided)
+      if (refereeTypeStatus !== undefined) params.refereeType  = refereeTypeStatus
 
       const { response } = await httpServiceObj.get<DatabaseListApiResponse>(url, true, params, true);
 
@@ -203,7 +184,7 @@ const fetchDatabaseData = useCallback(
       setIsLoading(false);
     }
   },
-  [userDetails, pageSize, filters, apiStatus, searchBarText]
+  [userDetails, pageSize, filters, hiringEligibiltyStatus, refereeTypeStatus,searchBarText]
 );
 
     useEffect(() => {
@@ -337,197 +318,6 @@ const fetchDatabaseData = useCallback(
         setIsBulkBanSubmitting(false)
       }
     }
-
-  // useEffect(() => {
-  //   const jszipScript = document.createElement("script");
-  //   jszipScript.src = "https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js";
-  //   jszipScript.async = true;
-  //   document.body.appendChild(jszipScript);
-
-  //   const saverScript = document.createElement("script");
-  //   saverScript.src = "https://cdn.jsdelivr.net/npm/file-saver@2.0.5/dist/FileSaver.min.js";
-  //   saverScript.async = true;
-  //   document.body.appendChild(saverScript);
-
-  //   return () => {
-  //     document.body.removeChild(jszipScript);
-  //     document.body.removeChild(saverScript);
-  //   };
-  // }, []);
-
-  // const handleBulkCVDownload = async () => {
-  //   toast.success("Please wait while we fetch all the cvs",getToastOptions({}))
-  //   setIsBulkCVDownloading(true)
-  //   if (selectedRows.length === 0) {
-  //     toast.error(
-  //       "Please select at least one candidate to download CVs",
-  //       getToastOptions({})
-  //     );
-  //     return;
-  //   }
-
-  //   const JSZipLib = (window as any).JSZip;
-  //   const saveAs = (window as any).saveAs;
-
-  //   if (!JSZipLib || !saveAs) {
-  //     toast.error("Download libraries not loaded yet. Please try again.");
-  //     return;
-  //   }
-
-  //   const zip = new JSZipLib();
-  //   let fileIndex = 1;
-
-  //   for (const row of selectedRows) {
-  //     try {
-  //       let objectUrl: string | null = null;
-
-  //       // Get the objectUrl for this row
-  //       if (row?.refereeType === "WORKO") {
-  //         if (
-  //           !row?.candidateParsedCvDetails?.userDetailId ||
-  //           !row?.candidateParsedCvDetails?.cvAwsS3FileName
-  //         ) {
-  //           console.warn("Skipping row (WORKO) - missing details", row);
-  //           continue;
-  //         }
-
-  //         const { response, error } =
-  //           await httpServiceObj.get<{ objectUrl: string }>(
-  //             `/file/${row?.candidateParsedCvDetails?.userDetailId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/USER_RESUME`,
-  //             true,
-  //             {},
-  //             false,
-  //             "BASE"
-  //           );
-
-  //         if (error || !response?.objectUrl) {
-  //           console.warn("Skipping row (WORKO) - no objectUrl", row);
-  //           continue;
-  //         }
-
-  //         objectUrl = response.objectUrl;
-  //       } else if (row?.refereeType === "INTERNAL") {
-  //         if (
-  //           !row?.candidateParsedCvDetails?.companyId ||
-  //           !row?.candidateParsedCvDetails?.cvAwsS3FileName ||
-  //           !row?.candidateParsedCvDetails?.corporateBulkJdId
-  //         ) {
-  //           console.warn("Skipping row (INTERNAL) - missing details", row);
-  //           continue;
-  //         }
-
-  //         const { response, error } =
-  //           await httpServiceObj.get<{ objectUrl: string }>(
-  //             `/file/${row?.candidateParsedCvDetails?.companyId}/${row?.candidateParsedCvDetails?.cvAwsS3FileName}/BULK_CVS`,
-  //             true,
-  //             {
-  //               corporateBulkJdId:
-  //                 row?.candidateParsedCvDetails?.corporateBulkJdId,
-  //             },
-  //             false,
-  //             "BASE"
-  //           );
-
-  //         if (error || !response?.objectUrl) {
-  //           console.warn("Skipping row (INTERNAL) - no objectUrl", row);
-  //           continue;
-  //         }
-
-  //         objectUrl = response.objectUrl;
-  //       } else {
-  //         if (
-  //           !row?.candidateParsedCvDetails?.companyId ||
-  //           !row?.candidateParsedCvDetails?.jobId ||
-  //           !row?.candidateParsedCvDetails?.agencyUserId ||
-  //           !row?.candidateParsedCvDetails?.cvAwsS3FileName
-  //         ) {
-  //           console.warn("Skipping row (OTHER) - missing details", row);
-  //           continue;
-  //         }
-
-  //         const payload = {
-  //           companyId: row?.companyId,
-  //           jobId: row?.jobId,
-  //           agencyUserId: row?.agencyUserId,
-  //           candidateCvAwsS3FileName:
-  //             row?.candidateParsedCvDetails?.cvAwsS3FileName,
-  //         };
-
-  //         const { response, error } = await httpServiceObj.post<{
-  //           objectUrl: string;
-  //         }>(
-  //           `${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,
-  //           payload,
-  //           true,
-  //           {},
-  //           true
-  //         );
-
-  //         if (error || !response?.objectUrl) {
-  //           console.warn("Skipping row (OTHER) - no objectUrl", row);
-  //           continue;
-  //         }
-
-  //         objectUrl = response.objectUrl;
-  //       }
-
-  //       // If still no URL, skip
-  //       if (!objectUrl) {
-  //         console.warn("No objectUrl after processing row", row);
-  //         continue;
-  //       }
-
-  //       // Fetch the actual PDF blob using the objectUrl
-  //       console.log("Fetching CV from:", objectUrl);
-  //       const res = await fetch(objectUrl);
-  //       if (!res.ok) {
-  //         console.warn("Failed to fetch CV blob:", objectUrl);
-  //         continue;
-  //       }
-
-  //       const blob = await res.blob();
-
-  //       // UNIQUE filename
-  //       const baseName =
-  //         (row?.candidateName &&
-  //           row.candidateName.trim().replace(/\s+/g, "_")) ||
-  //         `candidate_${fileIndex}`;
-
-  //       const filename = `${baseName}_${fileIndex}.pdf`;
-
-  //       // console.log("Adding to ZIP:", filename);
-  //       zip.file(filename, blob);
-  //       fileIndex++;
-  //     } catch (err) {
-  //       console.error("Error processing row for bulk CV download:", err, row);
-  //       continue;
-  //     }
-  //   }
-
-  //   // how many files are in the zip object?
-  //   const zipEntries = Object.keys((zip as any).files || {});
-  //   // console.log("Files inside ZIP:", zipEntries);
-
-  //   if (zipEntries.length === 0) {
-  //     toast.error("No CVs available to download", getToastOptions({}));
-  //     return;
-  //   }
-
-  //   try {
-  //     const zipBlob = await zip.generateAsync({ type: "blob" });
-  //     saveAs(zipBlob, "CVs.zip");
-  //   } catch (err) {
-  //     console.error("Error generating ZIP:", err);
-  //     toast.error(
-  //       "Failed to create CV zip. Please try again.",
-  //       getToastOptions({})
-  //     );
-  //   } finally {
-  //     setIsBulkCVDownloading(false)
-  //     setSelectedRows([])
-  //   }
-  // };
-
 
 // multi upload files
   
@@ -732,7 +522,7 @@ const fetchDatabaseData = useCallback(
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
       <div className="w-full lg:w-auto">
         <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
-        {isCorporateAdmin &&         
+        {/* {isCorporateAdmin &&         
           <button
             onClick={()=>setIsEmailForReferralOpen(true)}
             type="button"
@@ -741,7 +531,7 @@ const fetchDatabaseData = useCallback(
             className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
           >
             <User className="w-4 h-4" strokeWidth={4}/>
-          </button>}
+          </button>} */}
 
           <button
             onClick={()=>setIsCandidateBulkBanModelOpen(true)}

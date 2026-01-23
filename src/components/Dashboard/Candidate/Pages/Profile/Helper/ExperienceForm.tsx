@@ -128,6 +128,7 @@ const ExperienceForm: React.FC<ExperienceFormProps> = ({
             <label className="block text-xs font-semibold mb-1">Start Date</label>
             <input
                 type="date"
+                max={new Date().toISOString().split('T')[0]}
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 className="border border-gray-300 rounded-md p-2 text-sm shadow-sm"

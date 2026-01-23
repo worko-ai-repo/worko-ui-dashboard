@@ -204,7 +204,7 @@ export default function AgencyCandidateListTable(props: any) {
     location: ["candidateParsedCvDetails.location"],
     readyToRelocate: ["candidateParsedCvDetails.readyToRelocate"],
     anyComment: ["agencyComments"],
-    workoScore: ["score", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
+    workoScore: ["score", "matchingScoreDetails.matchingScore"],
     status: ["jobApplicationStatus"],
   };
 
@@ -711,7 +711,7 @@ export default function AgencyCandidateListTable(props: any) {
       key: "workoScore",
       label: "Worko Score",
       contentWidth: `max-w-none`,
-      sortable: false,
+      sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center items-center m-auto">
           {!row?.matchingScoreDetails?.matchingScore && !row.jobApplicationStatus ? (

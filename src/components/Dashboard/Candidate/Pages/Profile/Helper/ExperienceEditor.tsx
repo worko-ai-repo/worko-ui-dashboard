@@ -93,7 +93,11 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
       toast.error("Years of experience must be a non-negative number.", getToastOptions({}));
       return;
     }
-
+    const diffMs = new Date(endDate).getTime() - new Date(startDate).getTime();
+    if(diffMs < 0){
+      toast.error("End date cannot be in past than start date", getToastOptions({}));
+      return;
+    }
     const newItem: Experience = {
       companyName: companyName?.trim(),
       designation: designation?.trim(),
@@ -118,7 +122,6 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setError(null);
-    console.log(editedItems)
     try {
       const success = await onSave(editedItems);
       if (!success) {

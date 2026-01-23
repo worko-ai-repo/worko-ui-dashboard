@@ -5,7 +5,7 @@ import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
 import { outlook_1, outlook_2, outlook_3, outlook_4, outlook_5, outlook_6, outlook_7, outlook_8, outlook_9 } from "@AssetsFolder/assets";
-interface SeeStepsProps {
+interface OutlookStepsProps {
   dashboardType: string;
   onClose: () => void;
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface SeeStepsProps {
   //   loader:boolean;
 }
 
-const SeeSteps: React.FC<SeeStepsProps> = ({ isOpen, onClose }) => {
+const OutlookSteps: React.FC<OutlookStepsProps> = ({ isOpen, onClose }) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState<boolean>(false);
 
@@ -105,7 +105,7 @@ const carouselData = [
             ×
           </button>
 
-          <h2 className="text-xl font-semibold mb-1 text-left">Steps to configure outook</h2>
+          <h2 className="text-xl font-semibold mb-1 text-left">Steps to configure Outlook</h2>
           <h3 className="text-lg text-left">Step {currentIndex + 1}</h3>
           {/* Carousel Starts */}
           <div className="w-full mt-4">
@@ -159,4 +159,4 @@ const carouselData = [
   );
 };
 
-export default SeeSteps;
+export default OutlookSteps;

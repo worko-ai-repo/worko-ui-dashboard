@@ -216,3 +216,17 @@ export enum DatabaseStatusEnum{
   UNDER_PROCESSING = "UNDER_PROCESSING",
   ACTIVE="ACTIVE"
 }
+
+export enum RefereeTypeStatusEnum{
+  REFERRAL = "REFERRAL",
+  INTERNAL = "INTERNAL",
+  AGENCY = "AGENCY",
+  WORKO = "WORKO",
+}
+
+export enum HiringEligibilityStatusEnum{
+  BLACK_LISTED = "BLACK_LISTED",
+  UNDER_COOLING_PERIOD = "UNDER_COOLING_PERIOD",
+  UNDER_PROCESSING = "UNDER_PROCESSING",
+  ACTIVE="ACTIVE"
+}

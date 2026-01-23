@@ -4,8 +4,9 @@ import { ChevronDown, Plus, SendIcon, X } from "lucide-react";
 import React, { Suspense, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useForm } from "react-hook-form";
-import { outlook_logo } from "@AssetsFolder/assets";
-import SeeSteps from "./SeeSteps";
+import { gmail_logo, outlook_logo } from "@AssetsFolder/assets";
+import OutlookSteps from "./OutlookSteps";
+
 
 interface EmailAddedModalProps {
   dashboardType: string;
@@ -75,10 +76,24 @@ const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forw
               className="w-6 h-auto object-contain"
             />
           </button>
+          <button 
+          className="text-blue-500 text-start border-2 border-blue-600 rounded-full p-2 hover:bg-gray-100 transition"
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content="Check steps for outlook"
+          data-tooltip-place="top"
+          onClick={()=>{
+            setIsSeeSteps(true)
+            }}>
+            <img 
+              src={gmail_logo} 
+              alt="See the steps for outlook" 
+              className="w-6 h-auto object-contain"
+            />
+          </button>
           </div>
         </div>
       </div>
-      <SeeSteps
+      <OutlookSteps
       dashboardType="CORPORATE"
       onClose={()=>setIsSeeSteps(false)}
       isOpen={isSeeSteps}

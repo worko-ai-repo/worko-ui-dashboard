@@ -61,7 +61,7 @@ import f3 from './backgrounds/f3.webp';
 import gb_form from './backgrounds/gb_form.webp';
 import joining_success_img from './backgrounds/joining_success_img.webp';
 import outlook_logo from './outlook/outlook_logo.webp';
-
+import gmail_logo from './gmail/gmail_logo.webp';
 // svg
 import coin from './svgs/coin.svg'
 import about_bg  from './svgs/about_bg.svg'
@@ -130,6 +130,21 @@ import outlook_6 from './outlook/outlook_6.png';
 import outlook_7 from './outlook/outlook_7.png';
 import outlook_8 from './outlook/outlook_8.png';
 import outlook_9 from './outlook/outlook_9.png';
+
+//gmail
+import gmail_1 from './gmail/gmail_1.png';
+import gmail_2 from './gmail/gmail_2.png';
+import gmail_3 from './gmail/gmail_3.png';
+import gmail_4 from './gmail/gmail_4.png';
+import gmail_5 from './gmail/gmail_5.png';
+import gmail_6 from './gmail/gmail_6.png';
+import gmail_7 from './gmail/gmail_7.png';
+import gmail_8 from './gmail/gmail_8.png';
+import gmail_9 from './gmail/gmail_9.png';
+import gmail_10 from './gmail/gmail_10.png';
+import gmail_11 from './gmail/gmail_11.png';
+import gmail_12 from './gmail/gmail_12.png';
+import gmail_13 from './gmail/gmail_13.png';
 export { 
     // Backgrounds
     bg_plexus,
@@ -164,6 +179,7 @@ export {
     f1, f2, f3, gb_form,joining_success_img,
     dotSpiral,
     outlook_logo,
+    gmail_logo,
 
     // Worko Assets
     favicon,
@@ -254,4 +270,19 @@ export {
     outlook_7,
     outlook_8,
     outlook_9,
+
+    //gmail
+    gmail_1,
+    gmail_2,
+    gmail_3,
+    gmail_4,
+    gmail_5,
+    gmail_6,
+    gmail_7,
+    gmail_8,
+    gmail_9,
+    gmail_10,
+    gmail_11,
+    gmail_12,
+    gmail_13,
 };

@@ -436,12 +436,12 @@ const AgencyCandidateList = () => {
   return (
     <div>
       <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap lg:items-center gap-2 w-full">
-        <div className="w-full md:basis-full lg:flex-1">
+        <div className="w-full md:basis-full">
           <SearchBarAgency
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={(e) => console.log(searchBarText)}
-            placeholder="Search candidates by email"
+            placeholder="Search candidates by name, email and company name"
           />
         </div>
         

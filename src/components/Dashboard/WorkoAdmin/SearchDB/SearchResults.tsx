@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
-import { DatabaseStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { RefreshCcw, LogOut, Sparkles, ArrowRight, MicOff, Mic, Search } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
@@ -36,7 +35,6 @@ const SearchResults: React.FC = () => {
   const [searchParams] = useSearchParams();
   const query = searchParams.get("jobs") || searchParams.get("prompt");
 const [searchBarText, setSearchBarText] = useState<string|null>("")
-    const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
     const [isLoading,setIsLoading] = useState<boolean>(false)
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
     const [input, setInput] = React.useState("");

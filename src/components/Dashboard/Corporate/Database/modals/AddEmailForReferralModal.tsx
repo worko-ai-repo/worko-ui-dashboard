@@ -4,8 +4,9 @@ import { ChevronDown, Plus, SendIcon, X } from 'lucide-react';
 import React, { Suspense, useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { useForm } from "react-hook-form";
-import SeeSteps from "./SeeSteps";
-import { outlook_logo } from "@AssetsFolder/assets";
+import { gmail_logo, outlook_logo } from "@AssetsFolder/assets";
+import OutlookSteps from "./OutlookSteps";
+import GmailSteps from "./GmailSteps";
 
 interface AddEmailForReferralModalProps {
   dashboardType: string;
@@ -53,7 +54,8 @@ const AddEmailForReferralModal: React.FC<AddEmailForReferralModalProps> = ({ das
   }
 });
 
-  const [isSeeSteps, setIsSeeSteps] = useState<boolean>(false);
+  const [isSeeOutlookSteps, setIsSeeOutlookSteps] = useState<boolean>(false);
+  const [isSeeGmailSteps, setIsSeeGmailSteps] = useState<boolean>(false);
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
@@ -344,7 +346,7 @@ const closeButton = async () =>{
                   data-tooltip-content="Check steps for outlook"
                   data-tooltip-place="top"
                   onClick={()=>{
-                    setIsSeeSteps(true)
+                    setIsSeeOutlookSteps(true)
                     }}>
                     <img 
                       src={outlook_logo} 
@@ -352,6 +354,20 @@ const closeButton = async () =>{
                       className="w-6 h-auto object-contain"
                     />
                   </button>
+                    <button 
+                    className="text-blue-500 text-start border-2 border-blue-600 rounded-full p-2 hover:bg-gray-100 transition"
+                    data-tooltip-id="my-tooltip"
+                    data-tooltip-content="Check steps for outlook"
+                    data-tooltip-place="top"
+                    onClick={()=>{
+                      setIsSeeGmailSteps(true)
+                      }}>
+                      <img 
+                        src={gmail_logo} 
+                        alt="See the steps for outlook" 
+                        className="w-6 h-auto object-contain"
+                      />
+                    </button>
                   </div>
                 </div>
                 }
@@ -359,10 +375,18 @@ const closeButton = async () =>{
       )}
 
         </div>
-        <SeeSteps
+        {isSeeOutlookSteps && 
+        <OutlookSteps
         dashboardType="CORPORATE"
-        onClose={()=>setIsSeeSteps(false)}
-        isOpen={isSeeSteps}/>
+        onClose={()=>setIsSeeOutlookSteps(false)}
+        isOpen={isSeeOutlookSteps}/>
+        }
+        {isSeeGmailSteps && 
+        <GmailSteps
+        dashboardType="CORPORATE"
+        onClose={()=>setIsSeeGmailSteps(false)}
+        isOpen={isSeeGmailSteps}/>
+        }
     </div>
   );
 };

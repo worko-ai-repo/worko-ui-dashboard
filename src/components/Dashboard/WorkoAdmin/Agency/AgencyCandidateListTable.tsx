@@ -173,6 +173,7 @@ export default function AgencyCandidateListTable(props: any) {
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
     jobProfile: ["jobDetails.jobTitle"],
+    companyName:["jobDetails.companyName"],
     agencyName: ["agencyName"],
     dateSubmitted: ["createdAt"],
     applicantName: ["candidateParsedCvDetails.name"],
@@ -188,7 +189,7 @@ export default function AgencyCandidateListTable(props: any) {
     location: ["candidateParsedCvDetails.location"],
     readyToRelocate: ["candidateParsedCvDetails.readyToRelocate"],
     anyComment: ["agencyComments"],
-    workoScore: ["score", "scoreDetails.matchingScore", "scoreDetails.matchingScorePercentage"],
+    workoScore: ["score", "matchingScoreDetails.matchingScore"],
     status: ["jobApplicationStatus"],
   };
 
@@ -398,6 +399,12 @@ export default function AgencyCandidateListTable(props: any) {
       //     </span>
       //   </div>
       // ),
+    },
+    {
+      key: "companyName",
+      label: "Company name",
+      sortable: true,
+      render: (row: AgencyAllCandidatesListDetailsDto) => row?.jobDetails?.companyName ?? "NA"
     },
     {
       key: "agencyName",
@@ -664,7 +671,7 @@ export default function AgencyCandidateListTable(props: any) {
       key: "workoScore",
       label: "Worko Score",
       contentWidth: `max-w-none`,
-      sortable: false,
+      sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center items-center m-auto">
           {/* {(!row?.matchingScoreDetails?.matchingScore && !row.jobApplicationStatus) ? ( */}
