@@ -352,6 +352,7 @@ const EvaluatorView: React.FC = () => {
       />
 
       <MainContent
+        key={selectedRequest?.id || "no-selection"}
         EvaluationRequestDetails={
           details && selectedCandidateDetails && applicationDetails
             ? {

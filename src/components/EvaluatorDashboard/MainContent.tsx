@@ -211,16 +211,17 @@ const MainContent: React.FC<MainContentProps> = ({
   });
 
   useEffect(() => {
-    if (userInterviews && userInterviews.length > 0 && userDetails?.id) {
-      const data = getLatestInterviewData(userInterviews || [], userDetails?.id);
+    if (userInterviews && userInterviews.length > 0 ) {
+      const data = getLatestInterviewData(userInterviews || [], "");
       setInterviewDetails(data?.interviewDetails);
+      
       const isInterviewRequestedAndNotCompleted =
       data?.interviewDetails &&
         !data?.interviewDetails?.score;
 
       setIsAlreadyRequested(isInterviewRequestedAndNotCompleted || false);
     }
-  }, [userInterviews, userDetails?.id]);
+  }, [userInterviews]);
 
   if (isLoadingData) {
     return (
@@ -589,6 +590,7 @@ const MainContent: React.FC<MainContentProps> = ({
   }
 
   function checkValidInterview() {
+    
     if (!interviewDetails) return false;
     if (interviewDetails && !interviewDetails?.interviewHistory) return false;
     if (interviewDetails.interviewHistory && interviewDetails.interviewHistory.length === 0)

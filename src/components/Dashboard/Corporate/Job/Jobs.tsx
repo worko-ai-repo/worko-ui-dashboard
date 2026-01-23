@@ -116,7 +116,7 @@ const Jobs = () => {
     getAllSelected,
     reset: resetSelection,
   } = useListSelection({
-    limit: 30,
+    limit: 10,
     mapFn: (job: JobData) => ({
       jobId: job.id,
       companyId: job?.companyDetails?.id,

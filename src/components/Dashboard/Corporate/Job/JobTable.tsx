@@ -396,7 +396,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     setExpandedRows((prev) => (prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]));
   };
 
-  const allSelected = getAllSelected(data);
+  const allSelected = getAllSelected(sortedData);
 
   return (
     <div>
