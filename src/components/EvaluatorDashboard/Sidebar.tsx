@@ -87,7 +87,10 @@ const Sidebar: React.FC<SidebarProps> = ({
                       className={`text-sm truncate font-semibold w-40 ${
                         isSelected ? 'text-slate-800' : 'text-white'
                       }`}
-                      title={toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content={(candidate.applicantName) || toTitleCase(candidate.email)}
+                      data-tooltip-place="top"
+                      // title={toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     >
                       {toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     </div>
@@ -96,7 +99,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                         isSelected ? 'text-slate-500' : 'text-indigo-200'
                       }`}
                     >
-                      {new Date(candidate.sentTime).toLocaleString(undefined, {
+                      {new Date(candidate.sentTime).toLocaleString('en-GB', {
                         year: 'numeric',
                         month: 'numeric',
                         day: 'numeric',

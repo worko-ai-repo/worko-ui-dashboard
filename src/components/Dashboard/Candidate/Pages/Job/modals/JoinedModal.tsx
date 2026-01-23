@@ -59,6 +59,19 @@ export default function JoinedModal({
 
   if (!isOpen) return null;
 
+  const today = new Date();
+  const isoToday = today.toISOString().split("T")[0];
+
+  // Past 3 months
+  const past3 = new Date();
+  past3.setMonth(past3.getMonth() - 3);
+  const isoPast3 = past3.toISOString().split("T")[0];
+
+  // Future 3 months
+  const future3 = new Date();
+  future3.setMonth(future3.getMonth() + 3);
+  const isoFuture3 = future3.toISOString().split("T")[0];
+
   function showSuccessAndClear() {
     setShowSuccessModal(true);
 
@@ -171,17 +184,19 @@ export default function JoinedModal({
               <label className="block text-gray-700 mb-2">
                 Joining date <span className="text-red-500">*</span>
               </label>
-              <div className="flex items-center bg-gray-100 rounded-lg px-3">
+              {/* <div className="flex items-center bg-gray-100 rounded-lg px-3"> */}
                 <input
+                  onKeyDown={(e) => e.preventDefault()}
                   type={joiningDate ? "date" : "text"}
                   value={joiningDate}
+                  min={isoPast3}
                   max={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setJoiningDate(e.target.value)}
                   onFocus={(e) => (e.target.type = "date")}
                   placeholder="Select date"
-                  className="w-full bg-transparent p-2 focus:outline-none"
+                  className="w-full bg-gray-100 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-              </div>
+              {/* </div> */}
             </div>
 
             {/* HR Name */}
