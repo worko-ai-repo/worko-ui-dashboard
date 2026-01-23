@@ -74,7 +74,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
     tableId: "admin-jobs-table",
     persistInUrl: true,
     persistInLocalStorage: false,
-    defaultSort: { key: "createdAt", order: "desc" }, // Replace "asc" with "desc" if descending order is needed
+    // defaultSort: { key: "createdAt", order: "desc" }, // Replace "asc" with "desc" if descending order is needed
   });
   const nav = useNavigate();
 
@@ -433,8 +433,8 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         onSortChange={onSortChange}
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
-        toggleSelectAll={() => selectAllRows(data)}
-        allSelected={getAllSelected(data)}
+        toggleSelectAll={() => selectAllRows(sortedData)}
+        allSelected={getAllSelected(sortedData)}
         enableExpand={true}
         renderExpandedDetails={(row) => (
           <div className="grid grid-cols-2 md:grid-cols-6 gap-2">

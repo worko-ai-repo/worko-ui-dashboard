@@ -337,7 +337,7 @@ export function NewDynamicTable<T extends { id: string }>({
                           ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
                           ${isFirstVisibleColumn? `sticky ${showSelect && showExpand? "left-12": showSelect || showExpand? "left-6": "left-0"} z-20`: ""}
-                          ${isSelected && isFirstVisibleColumn ? "border-l-4 border-blue-500" : ""
+                          ${isSelected && isFirstVisibleColumn ? "" : ""
                           }`}>
                           <div
                             className="truncate cursor-pointer h-full w-full p-1" 
