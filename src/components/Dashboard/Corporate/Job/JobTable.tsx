@@ -418,7 +418,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         onSortChange={onSortChange}
         toggleRow={(id) => selectRows(data.find((row) => row.id === id)!)}
         toggleExpand={toggleExpand}
-        toggleSelectAll={() => selectAllRows(data)}
+        toggleSelectAll={() => selectAllRows(sortedData)}
         allSelected={allSelected}
         enableExpand={true}
         renderExpandedDetails={(row) => (
