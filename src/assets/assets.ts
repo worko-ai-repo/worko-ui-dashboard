@@ -130,7 +130,19 @@ import outlook_6 from './outlook/outlook_6.png';
 import outlook_7 from './outlook/outlook_7.png';
 import outlook_8 from './outlook/outlook_8.png';
 import outlook_9 from './outlook/outlook_9.png';
-
+import outlook_settings_1 from './outlook/outlook_settings_1.png';
+import outlook_settings_2 from './outlook/outlook_settings_2.png';
+import outlook_settings_3 from './outlook/outlook_settings_3.png';
+import outlook_settings_4 from './outlook/outlook_settings_4.png';
+import outlook_settings_4_1 from './outlook/outlook_settings_4_1.png';
+import outlook_settings_5 from './outlook/outlook_settings_5.png';
+import outlook_settings_6 from './outlook/outlook_settings_6.png';
+import outlook_settings_7 from './outlook/outlook_settings_7.png';
+import outlook_settings_8 from './outlook/outlook_settings_8.png';
+import outlook_settings_9 from './outlook/outlook_settings_9.png';
+import outlook_settings_10 from './outlook/outlook_settings_10.png';
+import outlook_settings_11 from './outlook/outlook_settings_11.png';
+import outlook_settings_12 from './outlook/outlook_settings_12.png';
 //gmail
 import gmail_1 from './gmail/gmail_1.png';
 import gmail_2 from './gmail/gmail_2.png';
@@ -270,7 +282,19 @@ export {
     outlook_7,
     outlook_8,
     outlook_9,
-
+    outlook_settings_1,
+    outlook_settings_2,
+    outlook_settings_3,
+    outlook_settings_4,
+    outlook_settings_4_1,
+    outlook_settings_5,
+    outlook_settings_6,
+    outlook_settings_7,
+    outlook_settings_8,
+    outlook_settings_9,
+    outlook_settings_10,
+    outlook_settings_11,
+    outlook_settings_12,
     //gmail
     gmail_1,
     gmail_2,

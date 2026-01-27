@@ -256,8 +256,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    if (files.length > 50) {
-      toast.error("You can upload a maximum of 50 CVs at a time.", getToastOptions({}));
+    if (files.length > 1000) {
+      toast.error("You can upload a maximum of 1000 CVs at a time.", getToastOptions({}));
       return;
     }
 
@@ -274,7 +274,13 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
       return;
     }
-    const pdfFilesNameAndType  = pdfFiles.map(file =>{
+
+    const chunkSize = 50;
+
+    for (let i = 0; i < pdfFiles.length; i += chunkSize) {
+    const currentChunk = pdfFiles.slice(i, i + chunkSize);
+
+    const pdfFilesNameAndType  = currentChunk.map(file =>{
       return {
         fileMimeType:file.type,
         fileName:file.name
@@ -289,7 +295,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       return; 
     }
     const fileMap = new Map(
-      pdfFiles.map(file => [file.name, file])
+      currentChunk.map(file => [file.name, file])
     );
     await Promise.all(
           uploadResponse.data.bulkCvs.map(async (object: any) => {
@@ -308,6 +314,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
             return responseFromAws;
           })
         );
+      }
         toast.success("Files uploaded successfully", getToastOptions({}));
         const lastKeyForCurrentPage = paginationKeysRef.current[currentPage] || "";
 

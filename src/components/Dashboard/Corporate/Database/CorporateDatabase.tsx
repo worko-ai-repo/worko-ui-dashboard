@@ -330,8 +330,8 @@ const fetchDatabaseData = useCallback(
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    if (files.length > 50) {
-      toast.error("You can upload a maximum of 50 CVs at a time.", getToastOptions({}));
+    if (files.length > 1000) {
+      toast.error("You can upload a maximum of 1000 CVs at a time.", getToastOptions({}));
       return;
     }
 
@@ -343,12 +343,19 @@ const fetchDatabaseData = useCallback(
       toast.error("Only PDF files are allowed.",getToastOptions({}));
       return;
     }
+
     const oversizedFiles = pdfFiles.filter((file) => file.size > 2 * 1024 * 1024);
     if (oversizedFiles.length > 0) {
       toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
       return;
     }
-    const pdfFilesNameAndType  = pdfFiles.map(file =>{
+
+    const chunkSize = 50;
+
+    for (let i = 0; i < pdfFiles.length; i += chunkSize) {
+    const currentChunk = pdfFiles.slice(i, i + chunkSize);
+
+    const pdfFilesNameAndType  = currentChunk.map(file =>{
       return {
         fileMimeType:file.type,
         fileName:file.name
@@ -365,7 +372,7 @@ const fetchDatabaseData = useCallback(
     }
 
     const fileMap = new Map(
-      pdfFiles.map(file => [file.name, file])
+      currentChunk.map(file => [file.name, file])
     );
 
     await Promise.all(
@@ -390,7 +397,9 @@ const fetchDatabaseData = useCallback(
         return responseFromAws;
       })
     );
+    }
     toast.success("Files uploaded successfully", getToastOptions({}));
+
     const lastKeyForCurrentPage = paginationKeysRef.current[currentPage] || "";
 
     fetchDatabaseData(
@@ -522,7 +531,7 @@ const fetchDatabaseData = useCallback(
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
       <div className="w-full lg:w-auto">
         <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
-        {/* {isCorporateAdmin &&         
+        {isCorporateAdmin &&         
           <button
             onClick={()=>setIsEmailForReferralOpen(true)}
             type="button"
@@ -531,7 +540,7 @@ const fetchDatabaseData = useCallback(
             className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
           >
             <User className="w-4 h-4" strokeWidth={4}/>
-          </button>} */}
+          </button>}
 
           <button
             onClick={()=>setIsCandidateBulkBanModelOpen(true)}

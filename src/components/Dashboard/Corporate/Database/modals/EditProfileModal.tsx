@@ -47,7 +47,6 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 
     useEffect(() => {
-        console.log(candidateFullDetails?.candidateParsedCvDetails)
     if (isOpen && candidateFullDetails) {
         reset({
             name: candidateFullDetails?.candidateParsedCvDetails?.name || "",
@@ -118,7 +117,6 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             ...parentData,
             candidateParsedCvDetails: {...childFields}
             };
-            console.log(payload)
             localUpdate(candidateFullDetails?.id, {
                 ...candidateFullDetails,
                 ...parentData,
