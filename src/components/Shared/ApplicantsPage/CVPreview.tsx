@@ -128,6 +128,27 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
           }
           return response.objectUrl;
         }
+        case "CORP_CAND_REFERRAL_CV":
+        {
+          const payload = {
+            companyId: jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")[1], //Job he applied
+            candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
+          };
+
+          const { response, error } = await httpServiceObj.post<any>(
+            `/file/gsu2v/CORP_CAND_REFERRAL_CV`,
+            payload,
+            true,
+            {},
+            false,
+            "AGENCY"
+          );
+          if (error) {
+            toast.error(error.message, getToastOptions({}));
+            return;
+          }
+          return response.objectUrl;
+        }
       default:
         toast.error("Unsupported document type", getToastOptions({}));
         return;
