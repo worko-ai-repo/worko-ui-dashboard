@@ -17,10 +17,11 @@ interface OutlookStepsProps {
 const OutlookSteps: React.FC<OutlookStepsProps> = ({ isOpen, onClose }) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState<boolean>(false);
+  const [isUser, setIsUser] = useState<boolean>(true);
 
   const [currentIndex, setCurrentIndex] = useState(0);
 
-const carouselData = [
+const carouselDataUser = [
   {
     image: outlook_1,
     text: `Go to "File" -> "Settings (gear icon)" -> "Mail"`,
@@ -72,11 +73,14 @@ const carouselData = [
     text: `You should see the same as above image`,
     height: "h-[60vh]",
   },
+];
+
+const carouselDataAdmin = [
   {
     image: outlook_settings_1,
-    text: `1. Now visit "https://www.office.com/" or "https://m365.cloud.microsoft.com/"
+    text: `1. Visit "https://www.office.com/" or "https://m365.cloud.microsoft.com/"
     
-    2. Log in using your admin account. After logging in, the interface shown above will appear. Then click "Admin" on the right side.`,
+    2. Log in using your admin account. After logging in, the interface shown above will appear. Then click "Admin" on the left side.`,
     height: "h-[60vh]",
   },
   {
@@ -140,7 +144,6 @@ const carouselData = [
     height: "h-[60vh]",
   },
 ];
-
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
@@ -153,6 +156,7 @@ const carouselData = [
     }
   }, [isOpen]);
 
+  const carouselData = isUser ? carouselDataUser : carouselDataAdmin
   return (
     <div
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
@@ -172,7 +176,50 @@ const carouselData = [
             ×
           </button>
 
-          <h2 className="text-xl font-semibold mb-1 text-left">Steps to configure Outlook</h2>
+          <div className="flex flex-row gap-3">
+          <h2 className="text-xl font-semibold mb-1 text-left">{isUser 
+          ? "Steps to configure Outlook Email" 
+          : "Steps to configure Outlook from Admin"
+          }
+          </h2>
+          <div className="inline-flex bg-white rounded-2xl p-1 shadow-md border">
+            <button
+              onClick={() => {
+                setIsUser(true);
+                setCurrentIndex(0); 
+              }}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Check outlook email steps"}
+              className={`px-3 py-1 rounded-xl text-sm font-semibold transition-all duration-300
+                ${
+                  isUser === true
+                    ? "bg-blue-500 text-white shadow"
+                    : "text-gray-400 hover:text-blue-500"
+                }
+              `}
+            >
+              User
+            </button>
+
+            <button
+              onClick={() => {
+                setIsUser(false);
+                setCurrentIndex(0); 
+              }}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Check admin steps"}
+              className={`px-3 py-1 rounded-xl text-sm font-semibold transition-all duration-300
+                ${
+                  isUser === false
+                    ? "bg-blue-500 text-white shadow"
+                    : "text-gray-400 hover:text-blue-500"
+                }
+              `}
+            >
+              Admin
+            </button>
+          </div>
+          </div>
           <h3 className="text-lg text-left">Step {currentIndex + 1}</h3>
           {/* Carousel Starts */}
           <div className="w-full mt-4">

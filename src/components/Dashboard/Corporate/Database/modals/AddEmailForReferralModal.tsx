@@ -319,15 +319,15 @@ const closeButton = async () =>{
                     </div>
                 </form>
                 : <div className="pb-4 space-y-4 font-['Inter']">
-                  {/* Mentor Name */}
+                  
                   <div className="flex items-start gap-1 text-xs">
-                    <span className="text-[#94a3b8] font-medium whitespace-nowrap">Submitted Email : </span>
+                    <span className="text-[#94a3b8] font-medium whitespace-nowrap">Submitted Email id : </span>
                     <span className="text-[#0f172a] font-medium font-['Poppins']">{referralSourceData?.referralSourceTypeEmail}</span>
                   </div>
 
-                  {/* Mentor Email */}
+                  
                   <div className="flex items-start gap-1 text-xs">
-                      <span className="text-[#94a3b8] font-medium whitespace-nowrap">Forwarding email : </span>
+                      <span className="text-[#94a3b8] font-medium whitespace-nowrap">Forwarding Email id: </span>
                       <p className="text-[#0f172a] font-medium font-['Poppins']">{referralSourceData?.systemReferralSourceTypeEmail}</p>
                   </div>
 

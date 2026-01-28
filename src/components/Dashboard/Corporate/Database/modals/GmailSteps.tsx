@@ -56,7 +56,7 @@ const carouselData = [
   },
   {
     image: gmail_7,
-    text: `Click Inbox on the left side. You should receive a verification email containing a verification link. Click the link.`,
+    text: `Click "Inbox" on the left side. You should receive a verification email containing a verification link. Click the link.`,
     height: "h-[60vh]",
   },
   {
@@ -89,14 +89,16 @@ const carouselData = [
     image: gmail_12,
     text: `1. Click "Settings" -> Click "See all settings" -> Click on "Filters and Blocked Addresses" -> Click on Create a new filter
     
-    2. Type "CV OR resume OR application OR candidate OR attached resume" in the "Has the words" field and leave the remaining fields empty.
+    2. Type "CV OR resume OR application OR candidate OR attached resume" in the "Has the words" field and leave the remaining fields empty. 
+    (Note: it can be either "Has the words" or "Includes the word".)
     
-    3. Select "Has attachment" and "Don’t include chats" -> Click "Create Filter"`,
+    3. Select both the "Has attachment" and "Don’t include chats" checkboxes -> Click "Create Filter"`,
     height: "h-[60vh]",
   },
   {
     image: gmail_13,
-    text: `On the next page, select "Forward it to", click the dropdown next to it, and choose the forwarding address -> Click on "Create Filter and that's it you are done`,
+    text: `On the next page, select "Forward it to", click the dropdown next to it, and choose the forwarding address -> Click on "Create Filter and that's it you are done
+    (Note: If it asks you to continue, click Continue and complete the verification)`,
     height: "h-[60vh]",
   },
 ];
