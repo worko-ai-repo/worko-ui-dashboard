@@ -16,7 +16,7 @@ import {
   FolderOpenIcon,
   Warehouse
 } from "./icons";
-import { IdCard, List } from "lucide-react";
+import { IdCard, List, Settings, User } from "lucide-react";
 
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
@@ -222,6 +222,22 @@ const navigationItems: NavItem[] = [
     label: "Invites",
     icon: InviteIcon,
     dashboardTypes: ["CORPORATE"],
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: <Settings />,
+    dashboardTypes: ["CORPORATE"],
+    expandable:true,
+    child: [
+      { 
+        id: "referralsSettings",
+        label: "Referral Settings",
+        icon: <User/>,
+        dashboardTypes: ["CORPORATE"],
+        expandable: false,
+      }
+    ]
   },
   /* {
         id: 'invoice-&-payment',

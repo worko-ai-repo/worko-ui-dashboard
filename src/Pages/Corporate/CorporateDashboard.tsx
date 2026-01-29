@@ -24,7 +24,7 @@ const AdminDatabase = lazy(() => import("@Components/Dashboard/Corporate/Databas
 const SearchDB = lazy(() => import ("@Components/Dashboard/Corporate/SearchDB/SearchDB"));
 const AgencyCandidateList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyCandidateList"));
 const AgencyList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyList"));
-
+const ReferralSettings = lazy(() => import("@Components/Dashboard/Corporate/Settings/Referrals"));
 
 // const SearchDB = lazy(() => import("@Components/Dashboard/Corporate/SearchDB/SearchDB"));
 // const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
@@ -153,6 +153,14 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<MainLoader />}>
               <Interview />
+            </Suspense>
+          ),
+        },
+        {
+          path: "referralsSettings",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <ReferralSettings />
             </Suspense>
           ),
         },

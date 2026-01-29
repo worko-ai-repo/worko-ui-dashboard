@@ -29,6 +29,8 @@ export type TabId =
 | 'bulk-cv-check'
 | 'referrals'
 | 'invoice-&-payment'
+| 'settings'
+| 'referralsSettings'
 // Admin Dashboard Tabs
 | 'ajobs'
 | 'aApplicants'
@@ -52,7 +54,7 @@ export type TabId =
 | 'agJobs'
 | 'agApplicants'
 | 'agBulkCVCheck'
-| 'agRecharge';
+| 'agRecharge'
 export interface NavItem {
     id: TabId;
     label: string;

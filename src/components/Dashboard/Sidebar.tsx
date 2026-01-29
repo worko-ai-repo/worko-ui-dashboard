@@ -108,7 +108,6 @@ const Sidebar: React.FC<SidebarProps> = ({
    * - Closes sidebar on mobile after navigation
    */
   const handleTabClick = (NavItem: NavItem) => {
-    console.log(NavItem.label,NavItem.id)
     if (NavItem.id === "switch-dashboard") {
       //Check the current page from the URL
 
@@ -123,7 +122,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         return;
       }
     } else {
-      // console.log("Navigating to tab:", NavItem.label);
+      if(NavItem.label === "Settings") return 
       setActiveTab(NavItem.label);
       onNavigate(dashboardType, NavItem.id);
       setSidebarOpen(false); // Close sidebar on mobile after navigation
