@@ -87,6 +87,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [isCorporateAdmin, setIsCorporateAdmin] = useState<boolean>(false);
     const [isEmailAddedSuccessfully,setIsEmailAddedSuccessfully] = useState<boolean>(false);
     const [forwardingMailId,setForwardingMailId] = useState<string>("");
+    const [submittedMailId,setSubmittedMailId] = useState<string>("");
 
     const [reason,setReason] = useState<string>("");
     const [comments,setComments] = useState<string>("");
@@ -669,17 +670,20 @@ const fetchDatabaseData = useCallback(
         userDetails={userDetails}
         setIsEmailAddedSuccessfully={setIsEmailAddedSuccessfully}
         setForwardingMailId={setForwardingMailId}
+        setSubmittedMailId={setSubmittedMailId}
       />
     }
-    {isEmailAddedSuccessfully && forwardingMailId &&
+    {isEmailAddedSuccessfully && forwardingMailId && submittedMailId &&
       <EmailAddedModal
         dashboardType={"CORPORATE"}
         onClose= {() => {
           setIsEmailAddedSuccessfully(false)
           setForwardingMailId("")
+          setSubmittedMailId("")
         }}
         isOpen= {isEmailAddedSuccessfully}
         forwardingMailId={forwardingMailId}
+        submittedMailId={submittedMailId}
       />
     }
   {isCandidateBulkBanModelOpen && 

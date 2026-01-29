@@ -13,9 +13,10 @@ interface EmailAddedModalProps {
   onClose: () => void;
   isOpen: boolean;
   forwardingMailId:string;
+  submittedMailId:string;
 }
 
-const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forwardingMailId }) => {
+const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forwardingMailId, submittedMailId}) => {
   const [visible, setVisible] = useState<boolean>(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState<boolean>(false);
   const [isSeeSteps, setIsSeeSteps] = useState<boolean>(false);
@@ -50,8 +51,18 @@ const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forw
             ×
           </button>
 
-          <h2 className="text-xl font-semibold mb-4 text-left">Forwarding Mail id</h2>
-          <h3 className="text-lg mb-4 text-left">{forwardingMailId}</h3>
+          <h2 className="text-xl font-semibold mb-4 text-left">Referral Email details</h2>
+          <div className="pb-4 space-y-4 font-['Inter']">
+          <div className="flex items-start gap-1 text-xs">
+            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Submitted Email id : </span>
+            <span className="text-[#0f172a] font-medium font-['Poppins']">{submittedMailId}</span>
+          </div>
+
+          
+          <div className="flex items-start gap-1 text-xs">
+              <span className="text-[#94a3b8] font-medium whitespace-nowrap">Forwarding Email id: </span>
+              <p className="text-[#0f172a] font-medium font-['Poppins']">{forwardingMailId}</p>
+          </div>
 
           <div className="flex items-start gap-1 text-sm">
           <p 
@@ -91,6 +102,8 @@ const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forw
             />
           </button>
           </div>
+          </div>
+
         </div>
       </div>
       <OutlookSteps

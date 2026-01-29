@@ -15,6 +15,7 @@ interface AddEmailForReferralModalProps {
   userDetails:any;
   setIsEmailAddedSuccessfully: (value:boolean) => void;
   setForwardingMailId:(value:string) => void;
+  setSubmittedMailId:(value:string) => void;
 }
 
 interface ReferralData {
@@ -32,7 +33,7 @@ interface VerifyOtpResponse {
   verificationStatus: boolean;   
 }
 
-const AddEmailForReferralModal: React.FC<AddEmailForReferralModalProps> = ({ dashboardType, onClose, isOpen, userDetails, setIsEmailAddedSuccessfully, setForwardingMailId}) => {
+const AddEmailForReferralModal: React.FC<AddEmailForReferralModalProps> = ({ dashboardType, onClose, isOpen, userDetails, setIsEmailAddedSuccessfully, setForwardingMailId, setSubmittedMailId}) => {
 
   const [isDataLoading, setIsDataLoading] = useState(true);
   const [referralSourceData, setReferralSourceData] = useState<ReferralData | null>(null);
@@ -170,6 +171,7 @@ const AddEmailForReferralModal: React.FC<AddEmailForReferralModalProps> = ({ das
         toast.success(`${response?.referralSourceTypeEmail} has been added successfully`,getToastOptions({}))
         setIsEmailAddedSuccessfully(true)
         setForwardingMailId(response?.systemReferralSourceTypeEmail ?? "")
+        setSubmittedMailId(response?.referralSourceTypeEmail ?? "")
         reset()
         onClose()
     } catch (error) {
