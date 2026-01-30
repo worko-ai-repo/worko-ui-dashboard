@@ -34,7 +34,6 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isLoading,setIsLoading] = useState<boolean>(false)
   const { userDetails } = useAppContext();
-  const baseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const [fetchData, setFetchData] = useState<any[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
@@ -122,6 +121,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           }
         }
       } else {
+        toast.error("Cannot fetch user details",getToastOptions({}))
         console.error("Cannot fetch user details");
       }
     } catch (err) {
