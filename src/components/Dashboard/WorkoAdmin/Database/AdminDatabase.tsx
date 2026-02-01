@@ -11,6 +11,9 @@ import { DatabaseListApiResponse, DatabaseListFilters, initialPaginationState } 
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import httpServiceObj from '@Services/ApiHandler.service';
 import SearchBarAgency from '@Components/Shared/SearchBarAgency';
+import MoveToApplicantsBulk from '@Components/Dashboard/Corporate/Database/modals/MoveToApplicantsBulk';
+import EditCTCETCAndNoticePeriodModal from '@Components/Dashboard/Corporate/Database/modals/EditCTCETCAndNoticePeriodModal';
+import FinalReviewModal from '@Components/Dashboard/Corporate/Database/modals/FinalReviewModal';
 interface AdminDatabaseProps{
 
 }
@@ -43,6 +46,17 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
   const [currentPage, setCurrentPage] = useState(1);
   
+  const [isAssignJobModelOpen, setIsAssignJobModelOpen] = useState<boolean>(false);
+  const [editProfileView, setEditProfileView] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [candidateList, setCandidateList] = useState<any[]>([]);
+  const [selectedCompany,setSelectedCompany]  = useState<any | null>(null);
+  const [skippableCandidates, setSkippableCandidates] = useState<any[]>([]);
+  const [repeatedCandidatesList, setRepeatedCandidatesList] = useState<string>("");
+  const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
+  const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
+  const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+
   useEffect(() => {
     function handleClickOutside(event:any) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -376,6 +390,92 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     });
   }, []);
 
+    const handleBulkMoveToApplicants = async (job:any) =>{
+    if(!job){
+      toast.error("No job found please select a job",getToastOptions({}))
+      return
+    }
+
+    const candidateEmails = selectedRows.map(row =>{
+      return row?.candidateEmail
+    })
+
+    try {
+      const payload = {
+        jobId: job?.id,
+        applicantEmails: candidateEmails
+      }
+      const {response, error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/duplicate-job-appl/bulk`,payload,true,{},true)
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+      let finalCandidates = [...selectedRows]
+      if(response.data.length > 0 && response.count > 0){
+        const repeatedEmails = response.data.map((item: any) => {
+          const parts = item.PK.split("USR#EML#");
+          return parts[1];
+        });
+        
+        finalCandidates = selectedRows.filter(candidate =>
+          !repeatedEmails.includes(candidate.candidateEmail)
+        );
+        setSelectedRows(finalCandidates)
+        if(finalCandidates.length === 0){
+          toast.error(`All selected candidates are already moved to applicant`,getToastOptions({}));
+          return;
+        }
+        const namesOfRepeatedEmail = selectedRows
+        .filter(candidate => repeatedEmails.includes(candidate.candidateEmail))
+        .map(c => c.candidateParsedCvDetails.name);
+
+        const repeatedNamesString = namesOfRepeatedEmail.join(", ");
+        setRepeatedCandidatesList(repeatedNamesString)
+      }
+      setSelectedCompany(job)
+      handleUpdateDetails(finalCandidates)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsAssignJobModelOpen(false)
+    }
+  }
+
+  const days90 = 90 * 24 * 60 * 60 * 1000;
+
+  const isSkippable = (row:any) => {
+    if (!row?.candidateParsedCvDetails) return false;
+
+    const details = row.candidateParsedCvDetails;
+
+    const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
+
+    // All 3 fields must be non-zero
+    const allNonZero =
+      currentCTC !== 0 &&
+      expectedCTC !== 0 &&
+      noticePeriod !== 0;
+
+    // updatedAt must be within last 90 days
+    const updatedDate:any = new Date(updatedAt);
+    const today:any = new Date();
+    const isRecent = today - updatedDate <= days90;
+    return allNonZero && isRecent;
+  };
+
+  const handleUpdateDetails = (selectedRows:any) => {
+    if (selectedRows.length === 0) return;
+
+    const unskippableList = selectedRows.filter((row:any) => !isSkippable(row));
+    const skippableList = selectedRows.filter((row:any) => isSkippable(row));
+    setSkippableCandidates(skippableList);
+
+    // if (unskippableList.length === 0) return;
+
+    setCandidateList(unskippableList);
+    setCurrentIndex(0);
+    setEditProfileView(true);
+  };
   return (
     <div>
       <div className="flex flex-col lg:flex-row lg:items-center gap-1 sm:gap-1 w-full">
@@ -445,11 +545,14 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           
           <div className="relative inline-block" ref={dropdownRef}>
               <button 
-                onClick={() => {
-                  if (selectedRows.length >= 1) setShowDropdown((prev) => !prev);
-                }}                  
+              onClick={()=>{
+                if(selectedRows.length > 10){
+                  toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
+                  return
+                }
+                setIsAssignJobModelOpen(true)
+              }}                  
               disabled={selectedRows.length < 1}
-              // disabled={true}
               type="button"
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Move to applicants"}
@@ -585,6 +688,58 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           currentPage={currentPage}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
+        />
+        )}
+      {isAssignJobModelOpen && 
+        <MoveToApplicantsBulk
+          dashboardType={"ADMIN"}
+          pageType={"DATABASE"}
+          textToDisplay={"Move to applicant :"}
+          onClose={() => {
+            setIsAssignJobModelOpen(false);
+          }}
+          isOpen={isAssignJobModelOpen}
+          candidateData={selectedRows[0]}
+          userDetails={userDetails}
+          submitFunction={handleBulkMoveToApplicants}
+        />}
+
+        {editProfileView &&
+          <EditCTCETCAndNoticePeriodModal
+          dashboardType={"ADMIN"}
+          dashboardPage={"MYDATABASE"}
+          onClose={()=>{
+            setEditProfileView(false)
+            setCandidateList([])
+            setSkippableCandidates([])
+            setCurrentIndex(0)
+            setSelectedCompany(null)
+          }}
+          isOpen={editProfileView}    
+          setCandidateList={setCandidateList}
+          candidateList={candidateList}
+          skippableCandidates={skippableCandidates}
+          currentIndex={currentIndex}
+          setCurrentIndex={setCurrentIndex}
+          selectedCompany={selectedCompany}
+          localUpdate={handleLocalUpdate}
+          setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+          setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+          setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+          />}
+
+        {isFinalReviewModalOpen && (
+        <FinalReviewModal
+            isOpen={isFinalReviewModalOpen}
+            onClose={() => {
+                setIsFinalReviewModalOpen(false)
+                setSuccessfullySentCandidateList("")
+                setIncompleteSentCandidateList("")
+                setRepeatedCandidatesList("")
+            }}
+            successfullySentCandidateList={successfullySentCandidateList}
+            incompleteSentCandidateList={incompleteSentCandidateList}
+            repeatedCandidatesList={repeatedCandidatesList}
         />
         )}
     </div>

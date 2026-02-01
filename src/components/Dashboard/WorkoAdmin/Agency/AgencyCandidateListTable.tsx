@@ -774,7 +774,7 @@ export default function AgencyCandidateListTable(props: any) {
                     }}
                     >
                     <X className="w-6 h-6 flex items-center justify-center stroke-[2]" />
-                    </button> */}
+                </button> */}
 
                 {/* <button 
                         type="button"

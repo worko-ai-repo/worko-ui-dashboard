@@ -11,9 +11,7 @@ interface RejectCandidateModalProps {
   onClose: () => void;
   isOpen: boolean;
   data: any;
-  // onRefresh: () => void;
   localUpdate: (id: string, updatedData: Partial<any>) => void;
-  // rejectCandidate?:() => void;
   setFetchData?:(data:any)=>void;
   type:string;
   setSelectedRows: React.Dispatch<React.SetStateAction<any[]>>;
@@ -23,9 +21,7 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   onClose,
   isOpen,
   data,
-  // onRefresh,
   localUpdate,
-  // rejectCandidate,
   setFetchData,
   type,
   setSelectedRows,
@@ -43,7 +39,6 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   const [reason, setReason] = useState("");
   const [comments, setComments] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState("");
   const { user } = useDashboardContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
@@ -63,32 +58,60 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
     }
     setIsLoading(true);
     try {
-      const payload:any = {
-        agencyUserSubmissionId: data?.id,
-        rejectApplicantReason: reason,
-      };
-      if(comments.trim()){
-        payload.rejectApplicantDetailedReason = comments.trim()
+      if(type === "single"){
+        const payload:any = {
+          agencyUserSubmissionId: data?.id,
+          rejectApplicantReason: reason,
+        };
+        if(comments.trim()){
+          payload.rejectApplicantDetailedReason = comments.trim()
+        }
+        const url = `${agencyBaseUrl}/agency-user-submission/reject-applicant`;
+        const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        if (response) {
+          const updatedData = {...data,jobApplicationStatus:"REJECTED"}
+          localUpdate(data.id,updatedData)
+          toast.success("Candidate rejected successfully", getToastOptions({}));
+          setSelectedRows([])
+          onClose();
+        }
+      }else if(type === "bulk"){
+        const agencyUserSubmissionIds = data.map((candidates:any) =>{
+          return candidates.id
+        })
+        const payload:any = {
+          agencyUserSubmissionIds,
+          rejectApplicantReason: reason,
+        };
+        if(comments.trim()){
+          payload.rejectApplicantDetailedReason = comments.trim()
+        }
+
+        const url = `${agencyBaseUrl}/agency-user-submission/reject-applicant/bulk`;
+        const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        if (response) {
+          data.map((candidates:any)=>{
+            localUpdate(candidates.id,{jobApplicationStatus:"REJECTED"})
+          })
+          toast.success("Candidate rejected successfully", getToastOptions({}));
+          setSelectedRows([])
+          onClose();
+        }
       }
-      const url = `${agencyBaseUrl}/agency-user-submission/reject-applicant`;
-      const { response, error } = await httpServiceObj.patch(url, payload, true, {}, true);
-      if (response) {
-        const updatedData = {...data,jobApplicationStatus:"REJECTED"}
-        localUpdate(data.id,updatedData)
-        toast.success("Referral rejected successfully", getToastOptions({}));
-        setIsError("");
-        onClose();
-      }
-      if(error){
-        toast.error(error.message,getToastOptions({}))
-      }
-      } catch (error: any) {
-      const errorMsg = error?.message || "Something went wrong";
-      setIsError(errorMsg);
-      toast.error(errorMsg, getToastOptions({}));
+      
+    } catch (error) {
+      console.error("Error Rejecting candidates", getToastOptions({}));
     } finally {
       setIsLoading(false);
-      // if(type == "multiple"){
+      // if(type == "bulk"){
       //   setFetchData((prevData:any) =>
       //       prevData.filter((candidate:any) =>
       //         !data.some((sel:any) => sel.id === candidate.id)

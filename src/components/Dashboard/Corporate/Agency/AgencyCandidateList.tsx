@@ -59,7 +59,6 @@ const AgencyCandidateList = () => {
   const [fetchData, setFetchData] = useState<any[]>([]);
   const [scoreLoading, setScoreLoading] = useState(false);
   const [acceptingCandidate, setAcceptingCandidate] = useState(false);
-  const [rejectingCandidate, setRejectingCandidate] = useState(false);
   const [dataFromParent, setDataFromParent] = useState<any[]>([]);
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
@@ -365,19 +364,21 @@ const AgencyCandidateList = () => {
 
   const acceptAndMoveToApplicants = async() =>{
     setAcceptingCandidate(true);
+    console.log(selectedRows)
+    const candidateEmail = selectedRows.map(candidate=>{
+      return candidate.candidateEmail
+    })
     const payload = {
-      candidates: selectedRows,
+      jobId: selectedRows[0]?.jobId,
+      applicantEmails: candidateEmail
     };
     try {
-      const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setFetchData((prevData) =>
-        prevData.filter((candidate) =>
-          !selectedRows.some((sel) => sel.id === candidate.id)
-        )
-      );
-      toast.success("Candidate accepted and moved to applicants",getToastOptions({}))
-      // console.log("Matching scores updated successfully!");
+      const {response,error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/duplicate-job-appl/bulk`, payload, true, {}, true);
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+      console.log(response)
     } catch (error) {
       console.error("Error finding matching score:", error);
     } finally {
@@ -437,104 +438,67 @@ const AgencyCandidateList = () => {
   //       setScoreLoading(false);
   //   }
   // }
-      
-  const findMatchingScore = async () => {
-    setScoreLoading(true);
-
-    // Step 1: Copy selectedRows → dataFromParent (snapshot)
-    const candidatesToSend = selectedRows.filter(c => !c.score);
     
-    if (candidatesToSend.length === 0) {
-      // console.log("No candidates need scoring.");
-      setScoreLoading(false);
+
+  const findMatchingScoreBulk = async () => {
+    const candidatesToSend = selectedRows.filter(row => row?.matchingScoreDetails?.matchingScore == null && !row?.jobApplicationStatus && !row?.isFindMatchingScoreInProgress)
+
+    if(candidatesToSend.length === 0){
+      toast.error("Selected candidates scores are already generated or moved to applicants, or score generation is in progress.",getToastOptions({}))
+      return
+    }
+    setScoreLoading(true);
+    
+    const onlyIds = candidatesToSend
+      .filter(details => {
+        if (!details?.candidateParsedCvDetails?.agencyUserSubmissionId) {
+          toast.error(
+            `No id found for ${details?.candidateParsedCvDetails?.name ?? details?.candidateEmail}`,
+            getToastOptions({})
+          );
+          return false;
+        }
+        return true;
+      }).map(details => details.candidateParsedCvDetails.agencyUserSubmissionId);
+
+      if(onlyIds.length === 0){
+        toast.error("No ID was found for any candidate.",getToastOptions({}))
+        setSelectedRows([])
+        return
+      }
+
+    const filteredCandidates = candidatesToSend.filter(details =>{
+      return details?.candidateParsedCvDetails?.agencyUserSubmissionId
+    })
+    setSelectedRows(filteredCandidates)
+    const payload = { agencyUserSubmissionIds: onlyIds };
+
+    try {
+    const { response, error } = await httpServiceObj.post(
+      `${agencyBaseUrl}/agency-user-submission/find-matching-score/bulk`,
+      payload,
+      true,
+      {},
+      true
+    );
+
+    if (error) {
+      toast.error(error.message, getToastOptions({}));
       return;
     }
 
-    const onlyIds = candidatesToSend.map(details=>{
-      return details.candidateParsedCvDetails.agencyUserSubmissionId
-    })
-
-    const payload = { agencyUserSubmissionIds: onlyIds };
-    // console.log(payload)
-    try {
-      // Step 2: Start the scoring process once
-      const {response, error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/agency-user-submission/find-matching-score/bulk`, payload, true, {}, true);
-      if(response){
-        toast.success(response.message,getToastOptions({}))
-      }
-      console.log(response,error);
-
-      const startTime = Date.now();
-      const pollingInterval = 50000;
-      let remainingCandidates = [...candidatesToSend]; // Track locally
-
-      const poll = async () => {
-        try {
-          const { response } = await httpServiceObj.get("/someapi/fetch", true, {}, true);
-
-          if (response && Array.isArray(response)) {
-            // Update fetchedData and track what's left
-            const updatedIds = new Set<string>();
-
-            setFetchData(prev =>
-              prev.map(candidate => {
-                const updated = response.find(
-                  (r: any) => r.id === candidate.id && r.score != null
-                );
-                if (updated) {
-                  updatedIds.add(candidate.id);
-                  return { ...candidate, score: updated.score };
-                }
-                return candidate;
-              })
-            );
-
-            // Remove scored candidates from tracking
-            remainingCandidates = remainingCandidates.filter(
-              item => !updatedIds.has(item.id)
-            );
-
-            // Stop if all scored
-            if (remainingCandidates.length === 0) {
-              clearInterval(intervalId);
-              setDataFromParent([]);
-              setScoreLoading(false);
-              return;
-            }
-          }
-        } catch (pollError) {
-          console.error("Polling error:", pollError);
-        }
-
-        // Check timeout
-        const elapsed = Date.now() - startTime;
-        if (elapsed > 30000) {
-          console.warn("⏰ Polling timed out after 30 seconds. Assigning default score 80.");
-          clearInterval(intervalId);
-
-          // Assign default score 80 to remaining candidates
-          setFetchData(prev =>
-            prev.map(candidate => {
-              const isRemaining = remainingCandidates.some(r => r.id === candidate.id);
-              if (isRemaining && (candidate.score == null || candidate.score === undefined)) {
-                return { ...candidate, score: 80 };
-              }
-              return candidate;
-            })
-          );
-
-          setDataFromParent([]);
-          setScoreLoading(false);
-        }
-      };
-
-      // Start polling
-      const intervalId = setInterval(poll, pollingInterval);
-      poll(); // Run immediately
-
-    } catch (error) {
-      console.error("Error finding matching score:", error);
-      setScoreLoading(false);
+    if (response) {
+      filteredCandidates.forEach(row => {
+        handleLocalUpdate(row.id, { ...row, isFindMatchingScoreInProgress: true });
+      });
+      setSelectedRows([])
+      toast.success("Finding score initiated", getToastOptions({}));
+      setInitialIds(prev => [...prev, ...onlyIds]);
+    }
+    } catch (err) {
+      console.error("Bulk score error:", err);
+    } finally {
+      setScoreLoading(false)
     }
   };
 
@@ -571,6 +535,17 @@ const AgencyCandidateList = () => {
     return true;
   };
 
+  const bulkRejectCandidates = async () =>{
+    const removeAlreadyRejected = selectedRows.filter(candidate=>{
+      return candidate.jobApplicationStatus !== "REJECTED"
+    })
+    if(removeAlreadyRejected.length === 0) {
+      toast.error("All selected candidates are already rejected",getToastOptions({}))
+      return
+    }
+    setSelectedRows(removeAlreadyRejected)
+    setIsRejecting(true)
+  }
   return (
     <div>
       <div className="flex flex-col md:flex-row md:flex-wrap lg:flex-nowrap lg:items-center gap-2 w-full">
@@ -616,16 +591,21 @@ const AgencyCandidateList = () => {
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-green-500 text-white hover:bg-green-700 "
               // disabled={selectedRows.length < 1 || acceptingCandidate}
               disabled={true}
-              onClick={acceptAndMoveToApplicants}
+              onClick={()=>{
+                if(selectedRows.length > 10){
+                  toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
+                  return
+                }
+                acceptAndMoveToApplicants()
+              }}
             >
               <Check className="w-4 h-4 stroke-[3]" />
             </button>
 
             <button
               type="button"
-              onClick={() => setIsRejecting(true)}
-              // disabled={selectedRows.length < 1 || rejectingCandidate}
-              disabled={true}
+              onClick={bulkRejectCandidates}
+              disabled={selectedRows.length === 0}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Reject"}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md border bg-white text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
@@ -635,11 +615,10 @@ const AgencyCandidateList = () => {
 
             <button
               type="button"
-              // disabled={selectedRows.length < 1 || scoreLoading || !isMatchingScore(selectedRows)}
-              disabled={true}
+              disabled={selectedRows.length === 0}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Find matching score"}
-              onClick={findMatchingScore}
+              onClick={findMatchingScoreBulk}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-gradient-to-br from-cyan-300 to-cyan-500 text-white hover:to-cyan-700"
             >
               {/* match icon uses same size + stroke */}
@@ -692,16 +671,17 @@ const AgencyCandidateList = () => {
                 onPageSizeChange={handlePageSizeChange}
               />
       )}
-      {/* localupdate required in rejectedcandidatemodal */}
-        {/* <RejectCandidateModal
+
+    {isRejecting &&      
+      <RejectCandidateModal
         onClose={()=>setIsRejecting(false)}
         isOpen={isRejecting}
         data={selectedRows}
-        // onRefresh={()=>alert("closed")}
-        // rejectCandidate={rejectCandidate}
-        type={"multiple"}
+        type={"bulk"}
         setFetchData={setFetchData}
-        setSelectedRows={setSelectedRows}/> */}
+        setSelectedRows={setSelectedRows}
+        localUpdate={handleLocalUpdate}
+      />}
 
       <Modal
         isOpen={isEvaluatorForm}

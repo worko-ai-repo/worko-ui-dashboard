@@ -12,6 +12,7 @@ import { Company, CompanyAPIResponse, CompanyFormData } from './modals/AssignJob
 import AdminServiceObj from '../Services/Admin.service'
 import { toast } from 'react-toastify'
 import { getToastOptions } from 'lib-worko-ui'
+import RejectCandidateModal from '@Components/Dashboard/Corporate/Agency/modals/RejectCandidateModal'
 
 
 export interface AgencyAllCandidatesListFilters {
@@ -423,6 +424,80 @@ const AgencyCandidateList = () => {
     });
   }, []);
 
+  const bulkRejectCandidates = async () =>{
+    const removeAlreadyRejected = selectedRows.filter(candidate=>{
+      return candidate.jobApplicationStatus !== "REJECTED"
+    })
+    if(removeAlreadyRejected.length === 0) {
+      toast.error("All selected candidates are already rejected",getToastOptions({}))
+      return
+    }
+    setSelectedRows(removeAlreadyRejected)
+    setIsRejecting(true)
+  }
+
+  const findMatchingScoreBulk = async () => {
+    const candidatesToSend = selectedRows.filter(row => row?.matchingScoreDetails?.matchingScore == null && !row?.jobApplicationStatus && !row?.isFindMatchingScoreInProgress)
+
+    if(candidatesToSend.length === 0){
+      toast.error("Selected candidates scores are already generated or moved to applicants, or score generation is in progress.",getToastOptions({}))
+      return
+    }
+    setScoreLoading(true);
+    
+    const onlyIds = candidatesToSend
+      .filter(details => {
+        if (!details?.candidateParsedCvDetails?.agencyUserSubmissionId) {
+          toast.error(
+            `No id found for ${details?.candidateParsedCvDetails?.name ?? details?.candidateEmail}`,
+            getToastOptions({})
+          );
+          return false;
+        }
+        return true;
+      }).map(details => details.candidateParsedCvDetails.agencyUserSubmissionId);
+
+      if(onlyIds.length === 0){
+        toast.error("No ID was found for any candidate.",getToastOptions({}))
+        setSelectedRows([])
+        return
+      }
+
+    const filteredCandidates = candidatesToSend.filter(details =>{
+      return details?.candidateParsedCvDetails?.agencyUserSubmissionId
+    })
+    setSelectedRows(filteredCandidates)
+    const payload = { agencyUserSubmissionIds: onlyIds };
+
+    try {
+    const { response, error } = await httpServiceObj.post(
+      `${agencyBaseUrl}/agency-user-submission/find-matching-score/bulk`,
+      payload,
+      true,
+      {},
+      true
+    );
+
+    if (error) {
+      toast.error(error.message, getToastOptions({}));
+      return;
+    }
+
+    if (response) {
+      filteredCandidates.forEach(row => {
+        handleLocalUpdate(row.id, { ...row, isFindMatchingScoreInProgress: true });
+      });
+      setSelectedRows([])
+      toast.success("Finding score initiated", getToastOptions({}));
+      setInitialIds(prev => [...prev, ...onlyIds]);
+    }
+    } catch (err) {
+      console.error("Bulk score error:", err);
+    } finally {
+      setScoreLoading(false)
+    }
+  };
+
   // const handleLocalUpdateScore = useCallback((jobId: string, updatedData: any) => {
   //   setFetchData((prevData) =>
   //       prevData.map((candidate) =>
@@ -522,6 +597,31 @@ const AgencyCandidateList = () => {
                 />
               </div>
             </div>
+            <div className="w-full md:w-auto lg:w-auto">
+              <div className="flex flex-row gap-2 justify-center items-center overflow-x-auto lg:overflow-visible">   
+                <button
+                  type="button"
+                  onClick={bulkRejectCandidates}
+                  disabled={selectedRows.length === 0}
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={"Reject"}
+                  className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md border bg-white text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+                >
+                  <X className="w-4 h-4 stroke-[3]" />
+                </button>
+
+                <button
+                  type="button"
+                  disabled={selectedRows.length === 0}
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content={"Find matching score"}
+                  onClick={findMatchingScoreBulk}
+                  className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-gradient-to-br from-cyan-300 to-cyan-500 text-white hover:to-cyan-700"
+                >
+                  <RefreshCcw className="w-4 h-4 stroke-[3]" />
+                </button>
+              </div>
+            </div>
         </div>
       </div>
       
@@ -556,6 +656,16 @@ const AgencyCandidateList = () => {
                 onPageSizeChange={handlePageSizeChange}
               />
       )}
+      {isRejecting &&      
+        <RejectCandidateModal
+          onClose={()=>setIsRejecting(false)}
+          isOpen={isRejecting}
+          data={selectedRows}
+          type={"bulk"}
+          setFetchData={setFetchData}
+          setSelectedRows={setSelectedRows}
+          localUpdate={handleLocalUpdate}
+      />}
     </div>
   )
 }

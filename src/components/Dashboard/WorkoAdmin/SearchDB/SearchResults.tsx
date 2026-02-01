@@ -12,6 +12,9 @@ import JobDropdown, { JobOption } from "./JobDropdown";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useSpeechRecognition } from "@Hooks/useSpeechSynthesis.hook";
 import Dropdown from "./Dropdown";
+import FinalReviewModal from "@Components/Dashboard/Corporate/Database/modals/FinalReviewModal";
+import MoveToApplicantsBulk from "@Components/Dashboard/Corporate/Database/modals/MoveToApplicantsBulk";
+import EditCTCETCAndNoticePeriodModalForSearchInDB from "@Components/Dashboard/Corporate/SearchDB/modals/EditCTCETCAndNoticePeriodModalForSearchInDB";
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -51,8 +54,19 @@ const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [currentPage, setCurrentPage] = useState(1);
     const [selectedJobId, setSelectedJobId] = useState<string>("");
     const [isJobsLoading, setIsJobsLoading] = useState<boolean>(false);
-    const navigate = useNavigate();
+    const [isAssignJobModelOpen, setIsAssignJobModelOpen] = useState<boolean>(false);
+    const [repeatedCandidatesList, setRepeatedCandidatesList] = useState<string>("");
+    const [selectedCompany,setSelectedCompany]  = useState<any | null>(null);
+    const [editProfileView, setEditProfileView] = useState<boolean>(false);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [candidateList, setCandidateList] = useState<any[]>([]);
+    const [skippableCandidates, setSkippableCandidates] = useState<any[]>([]);
+    const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
+    const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
+    const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
 
+    const navigate = useNavigate();
+    const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
       useEffect(()=>{
         setIsJobsLoading(true)
         const fetchJobs = async() =>{
@@ -293,6 +307,104 @@ const handleSubmit = () => {
   });
 }, []);
 
+  const selectFirstByIdOrPrompt = async () => {
+    if(mode === "jobs"){
+      const fullJobDetails = jobsList.filter(job=>{
+        return job.id === selectedJobId
+      })
+      setSelectedCompany(fullJobDetails[0])
+      handleBulkMoveToApplicants(fullJobDetails[0])
+    }else{
+      setIsAssignJobModelOpen(true)
+    }
+  }
+  
+  const handleBulkMoveToApplicants = async (job:any) =>{
+    if(!job){
+      toast.error("No job found please select a job",getToastOptions({}))
+      return
+    }
+
+    const candidateEmails = selectedRows.map(row =>{
+      return row?.email
+    })
+
+    try {
+      const payload = {
+        jobId: job?.id,
+        applicantEmails: candidateEmails
+      }
+      const {response, error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/duplicate-job-appl/bulk`,payload,true,{},true)
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+      let finalCandidates = [...selectedRows]
+      if(response.data.length > 0 && response.count > 0){
+        const repeatedEmails = response.data.map((item: any) => {
+          const parts = item.PK.split("USR#EML#");
+          return parts[1];
+        });
+        
+        finalCandidates = selectedRows.filter(candidate =>
+          !repeatedEmails.includes(candidate.email)
+        );
+        setSelectedRows(finalCandidates)
+        if(finalCandidates.length === 0){
+          toast.error(`All selected candidates are already moved to applicant`,getToastOptions({}));
+          return;
+        }
+        const namesOfRepeatedEmail = selectedRows
+        .filter(candidate => repeatedEmails.includes(candidate.email))
+        .map(c => c.name);
+
+        const repeatedNamesString = namesOfRepeatedEmail.join(", ");
+        setRepeatedCandidatesList(repeatedNamesString)     
+      }
+      setSelectedCompany(job)
+      handleUpdateDetails(finalCandidates)
+    } catch (error) {
+      console.log(error)
+    } finally {
+      setIsAssignJobModelOpen(false)
+    }
+  }
+
+  const days90 = 90 * 24 * 60 * 60 * 1000;
+
+  const isSkippable = (row:any) => {
+    if (!row) return false;
+
+    const details = row;
+
+    const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
+
+    // All 3 fields must be non-zero
+    const allNonZero =
+      currentCTC !== 0 &&
+      expectedCTC !== 0 &&
+      noticePeriod !== 0;
+
+    // updatedAt must be within last 90 days
+    const updatedDate:any = new Date(updatedAt);
+    const today:any = new Date();
+    const isRecent = today - updatedDate <= days90;
+    return allNonZero && isRecent;
+  };
+
+  const handleUpdateDetails = (selectedRows:any) => {
+    if (selectedRows.length === 0) return;
+
+    const unskippableList = selectedRows.filter((row:any) => !isSkippable(row));
+    const skippableList = selectedRows.filter((row:any) => isSkippable(row));
+    setSkippableCandidates(skippableList);
+
+    // if (unskippableList.length === 0) return;
+
+    setCandidateList(unskippableList);
+    setCurrentIndex(0);
+    setEditProfileView(true);
+  };
   return (
       <div>
         <div className="flex flex-col sm:flex-col gap-4 sm:gap-[35px]">
@@ -434,8 +546,18 @@ const handleSubmit = () => {
                       <RefreshCcw className="w-7 h-7 sm:w-4 sm:h-4" />
                       <span>Find Matching Score</span>
                   </button>
-                  <button 
+                  <button                       
+                      onClick={()=>{
+                        if(selectedRows.length > 10){
+                          toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
+                          return
+                        }
+                        selectFirstByIdOrPrompt()
+                      }}
+                      disabled={selectedRows.length < 1}
                       type="button"
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content={"Move to applicants"}
                       className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-normal sm:whitespace-nowrap"
                       >
                       <LogOut className="w-7 h-7 sm:w-4 sm:h-4" />
@@ -455,7 +577,7 @@ const handleSubmit = () => {
           ) : (
           <SearchResultsTable
             data={fetchData}
-            userType="CORPORATE"
+            userType="ADMIN"
             refetch={refetch}
             ListSelection={ListSelection}
             handleUpdate={handleJobApplicationStatusUpdate}
@@ -473,6 +595,59 @@ const handleSubmit = () => {
             handleLocalUpdateForMatchingScore={handleLocalUpdateForMatchingScore}
           />
           )}
+
+      {isAssignJobModelOpen && 
+        <MoveToApplicantsBulk
+          dashboardType={"ADMIN"}
+          pageType={"ATLAS"}
+          textToDisplay={"Move to applicant :"}
+          onClose={() => {
+            setIsAssignJobModelOpen(false);
+          }}
+          isOpen={isAssignJobModelOpen}
+          candidateData={selectedRows[0]}
+          userDetails={userDetails}
+          submitFunction={handleBulkMoveToApplicants}
+      />}
+
+      {editProfileView &&
+        <EditCTCETCAndNoticePeriodModalForSearchInDB
+        dashboardType={"ADMIN"}
+        dashboardPage={"ATLAS"}
+        onClose={()=>{
+          setEditProfileView(false)
+          setCandidateList([])
+          setSkippableCandidates([])
+          setCurrentIndex(0)
+          setSelectedCompany(null)
+        }}
+        isOpen={editProfileView}    
+        setCandidateList={setCandidateList}
+        candidateList={candidateList}
+        skippableCandidates={skippableCandidates}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+        selectedCompany={selectedCompany}
+        localUpdate={handleLocalUpdate}
+        setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+        setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+        setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+      />}
+
+      {isFinalReviewModalOpen && (
+        <FinalReviewModal
+            isOpen={isFinalReviewModalOpen}
+            onClose={() => {
+                setIsFinalReviewModalOpen(false)
+                setSuccessfullySentCandidateList("")
+                setIncompleteSentCandidateList("")
+                setRepeatedCandidatesList("")
+            }}
+            successfullySentCandidateList={successfullySentCandidateList}
+            incompleteSentCandidateList={incompleteSentCandidateList}
+            repeatedCandidatesList={repeatedCandidatesList}
+        />
+      )}
       </div>
   );
 };

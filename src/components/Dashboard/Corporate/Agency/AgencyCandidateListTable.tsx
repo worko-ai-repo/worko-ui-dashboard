@@ -718,7 +718,6 @@ export default function AgencyCandidateListTable(props: any) {
             <button
               type="button"
               disabled={row?.isFindMatchingScoreInProgress}
-              // disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Find matching score"
               data-tooltip-place="top"
@@ -1202,7 +1201,6 @@ export default function AgencyCandidateListTable(props: any) {
         onClose={() => setIsRejecting(false)}
         isOpen={isRejecting}
         data={editProfileData}
-        // onRefresh={()=>alert("closed")}
         localUpdate={localUpdate}
         setFetchData={setFetchData}
         type={"single"}
