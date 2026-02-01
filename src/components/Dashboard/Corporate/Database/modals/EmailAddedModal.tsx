@@ -54,13 +54,13 @@ const EmailAddedModal: React.FC<EmailAddedModalProps> = ({ isOpen, onClose, forw
           <h2 className="text-xl font-semibold mb-4 text-left">Referral Email details</h2>
           <div className="pb-4 space-y-4 font-['Inter']">
           <div className="flex items-start gap-1 text-xs">
-            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Submitted Email id : </span>
+            <span className="text-[#94a3b8] font-medium whitespace-nowrap">Submitted Email ID : </span>
             <span className="text-[#0f172a] font-medium font-['Poppins']">{submittedMailId}</span>
           </div>
 
           
           <div className="flex items-start gap-1 text-xs">
-              <span className="text-[#94a3b8] font-medium whitespace-nowrap">Forwarding Email id: </span>
+              <span className="text-[#94a3b8] font-medium whitespace-nowrap">Forwarding Email ID: </span>
               <p className="text-[#0f172a] font-medium font-['Poppins']">{forwardingMailId}</p>
           </div>
 

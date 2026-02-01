@@ -177,6 +177,7 @@ const fetchDatabaseData = useCallback(
           }
         }
       } else {
+        toast.error("Cannot fetch user details",getToastOptions({}))
         console.error("Cannot fetch user details");
       }
     } catch (err) {
@@ -382,11 +383,6 @@ const fetchDatabaseData = useCallback(
         if (!file) {
           throw new Error(`File mismatch: ${object.userFileName}`);
         }
-
-        const payloadForAws = {
-          companyId: userDetails?.companyId,
-          candCvAwsS3FileName: object.cloudFileName,
-        };
 
         const responseFromAws = await uploadFileToAws(object?.awsS3SignedUrl, file, object?.fileMimeType);
 
