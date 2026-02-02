@@ -63,6 +63,7 @@ export const initialPaginationState: PaginationInfo = {
     const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
     const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
     const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+    const [textToDisplay,setTextToDisplay]  = useState<string>("");
     const navigate = useNavigate();
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
     
@@ -327,7 +328,6 @@ const handlePageChange = useCallback(
 }, []);
 
   const selectFirstByIdOrPromptForFindMatchingScore = async () => {
-    console.log("this was ")
     if(mode === "jobs"){
       const fullJobDetails = jobsList.filter(job=>{
         return job.id === selectedJobId
@@ -607,6 +607,7 @@ const handlePageChange = useCallback(
                           toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
                           return
                         }
+                        setTextToDisplay("Find Matching Score :")
                         selectFirstByIdOrPromptForFindMatchingScore()
                       }}
                       // disabled={selectedRows.length < 1}
@@ -625,6 +626,7 @@ const handlePageChange = useCallback(
                           toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
                           return
                         }
+                        setTextToDisplay("Move to applicant :")
                         selectFirstByIdOrPromptForMoveToApplicant()
                       }}
                       disabled={selectedRows.length < 1}
@@ -673,15 +675,15 @@ const handlePageChange = useCallback(
         <MoveToApplicantsBulk
           dashboardType={"CORPORATE"}
           pageType={"ATLAS"}
-          textToDisplay={"Move to applicant :"}
+          textToDisplay={textToDisplay}
           onClose={() => {
             setIsAssignJobModelOpen(false);
+            setTextToDisplay("")
           }}
           isOpen={isAssignJobModelOpen}
           candidateData={selectedRows[0]}
           userDetails={userDetails}
-          submitFunction={handleBulkMoveToApplicants}
-          submitFunctionTwo={handleBulkFindMatchingScore}
+          submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
       />}
 
       {editProfileView &&
@@ -694,6 +696,7 @@ const handlePageChange = useCallback(
           setSkippableCandidates([])
           setCurrentIndex(0)
           setSelectedCompany(null)
+          setTextToDisplay("")
         }}
         isOpen={editProfileView}    
         setCandidateList={setCandidateList}

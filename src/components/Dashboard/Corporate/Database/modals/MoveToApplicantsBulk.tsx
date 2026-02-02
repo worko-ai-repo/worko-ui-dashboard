@@ -15,7 +15,6 @@ interface MoveToApplicantsBulkProps {
   candidateData:AgencyDatabaseApplicantDetailsDto;
   userDetails:any;
   submitFunction:((selectedJobs?:any) => void)
-  submitFunctionTwo?:((selectedJobs?:any) => void)
 }
 
 export interface CompanyFormData {
@@ -48,7 +47,7 @@ export interface CompanyAPIResponse {
   };
 }
 
-const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardType, pageType, textToDisplay, onClose, isOpen, userDetails, submitFunction, submitFunctionTwo }) => {
+const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardType, pageType, textToDisplay, onClose, isOpen, userDetails, submitFunction }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,11 +103,7 @@ const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardTy
 const handleSubmit = async () => {
   setIsSubmitting(true);
     try {
-      if(dashboardType === "CORPORATE" && pageType === "ATLAS" && submitFunctionTwo){
-        submitFunctionTwo(selectedJobs[0]);
-      }else{
-        submitFunction(selectedJobs[0]);
-      }
+      submitFunction(selectedJobs[0]);
     } catch (error) {
       console.log(error)
     } finally {

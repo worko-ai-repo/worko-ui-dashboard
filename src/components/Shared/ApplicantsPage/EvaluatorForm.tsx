@@ -72,6 +72,7 @@ export type EvaluatorFormProps = {
   rowData?:any;
   isAgency?:boolean;
   isBulkInAgency?:boolean,
+  resetSelectedRows?:()=>void;
 };
 
 const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
@@ -83,7 +84,8 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
   localUpdate,
   rowData,
   isAgency,
-  isBulkInAgency=false
+  isBulkInAgency=false,
+  resetSelectedRows,
 }) => {
   const isAdmin = secureStorage
     .getItem<UserRole>(SecureStorageKeyEnum.USERTYPE)
@@ -202,7 +204,6 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
     }
     if(isAgency){
       if(isBulkInAgency){
-        console.log("isbulk")
       const allEvaluators = getValues("evaluators");
       const historyEmails = new Set(
         (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
@@ -283,6 +284,9 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
             // console.log("Evaluator response:", response);
           })
         );
+        if(resetSelectedRows){
+          resetSelectedRows()
+        }       
         toast.success("Evaluation requests sent successfully", getToastOptions({}));
       } catch (error: any) {
         toast.error(
@@ -446,7 +450,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
             })),
           };
           if (isBulk) {
-            // console.log("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
+            // `console.log`("Sending bulk to evaluator:", evaluator.evaluatorDetails.email, payload);
             if (isAdmin) {
               return AdminServiceObj.postBulkEvaluatorFeedbackRequest(payload);
             } else {

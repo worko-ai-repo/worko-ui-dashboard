@@ -741,9 +741,10 @@ const AgencyCandidateList = () => {
       onClose={() => setIsEvaluatorForm(false)}
       formLimit={5}
       localUpdate={handleLocalUpdate}
-      rowData={selectedRows}   // ← Important for updates
+      rowData={selectedRows}
       isAgency={true}
       isBulkInAgency={true}
+      resetSelectedRows={()=>setSelectedRows([])}
     />
   )}
 </Modal>
