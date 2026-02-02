@@ -71,7 +71,7 @@ const AddEmailForReferralModal: React.FC<AddEmailForReferralModalProps> = ({ das
 
   const getDataFunction = async () => {
     try {
-    const {response,error} = await httpServiceObj.get<ReferralData>(`https://api.dev.worko.work/referral-sourcetype-activation/${userDetails.companyId}`,true,{},true)
+    const {response,error} = await httpServiceObj.get<ReferralData>(`/referral-sourcetype-activation/${userDetails.companyId}`,true,{},false)
     if(error){
       toast.error("Cannot find details please try later",getToastOptions({}))
       reset()
