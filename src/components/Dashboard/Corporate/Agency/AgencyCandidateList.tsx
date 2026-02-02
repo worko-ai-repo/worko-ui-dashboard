@@ -15,6 +15,9 @@ import EvaluatorForm from '@Components/Shared/ApplicantsPage/EvaluatorForm'
 import Modal from '@Components/Shared/Modal'
 import { useAppContext } from '@Context/App.context'
 import CorporateServiceObj from '../Services/Corporate.service'
+import { CompanyDetails } from '@Interfaces/CorporateDashboard.dto'
+import secureStorage from '@Utils/SecureStorage.utils'
+import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -82,7 +85,9 @@ const AgencyCandidateList = () => {
   const [initialIds,setInitialIds] = useState<any[]>([])
   const { userDetails } = useAppContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
-
+  const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
+    SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
+  );
   //to debounce just uncomment the below
   //   useEffect(() => {
   //   const timer = setTimeout(() => {
@@ -364,26 +369,36 @@ const AgencyCandidateList = () => {
 
   const acceptAndMoveToApplicants = async() =>{
     setAcceptingCandidate(true);
-    console.log(selectedRows)
-    const candidateEmail = selectedRows.map(candidate=>{
-      return candidate.candidateEmail
-    })
-    const payload = {
-      jobId: selectedRows[0]?.jobId,
-      applicantEmails: candidateEmail
-    };
+    const filterAlreadySentCandidate = selectedRows.filter(candidate =>{
+      return !candidate.jobApplicationStatus
+    });
+    if(!filterAlreadySentCandidate.length){
+      toast.error("All the selected candidates are already moved to applicants",getToastOptions({}))
+      setSelectedRows([])
+      return
+    }
+    const agencyUserSubmissions = filterAlreadySentCandidate.map(candidate=>({
+      agencyUserSubmissionId: candidate?.candidateParsedCvDetails?.agencyUserSubmissionId,
+      companyName: candidate?.jobDetails?.companyName,
+      jobTitle: candidate?.jobDetails?.jobTitle,
+      jobId: candidate?.candidateParsedCvDetails?.jobId,
+    }));
+    const payload = agencyUserSubmissions
     try {
-      const {response,error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/duplicate-job-appl/bulk`, payload, true, {}, true);
+      const {response,error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/move-to-applicant/bulk`, payload, true, {}, true);
       if(error){
         toast.error(error.message,getToastOptions({}))
         return
       }
       console.log(response)
+      filterAlreadySentCandidate.map(candidate=>{
+        return handleLocalUpdate(candidate?.id, { ...candidate, jobApplicationStatus: "ACCEPTED" });
+      })
+      setSelectedRows([])
     } catch (error) {
       console.error("Error finding matching score:", error);
     } finally {
-        setAcceptingCandidate(false);
-        setSelectedRows([])
+      setAcceptingCandidate(false);
     }
   }
   
@@ -537,10 +552,15 @@ const AgencyCandidateList = () => {
 
   const bulkRejectCandidates = async () =>{
     const removeAlreadyRejected = selectedRows.filter(candidate=>{
-      return candidate.jobApplicationStatus !== "REJECTED"
+      return !candidate.jobApplicationStatus
     })
+    const names = selectedRows.map(candidate=>{
+      return candidate?.candidateParsedCvDetails?.name
+    })
+    const joinedNames = names.join(", ")
     if(removeAlreadyRejected.length === 0) {
-      toast.error("All selected candidates are already rejected",getToastOptions({}))
+      toast.error("All selected candidates are already rejected or moved to applicant",getToastOptions({}))
+      setSelectedRows([])
       return
     }
     setSelectedRows(removeAlreadyRejected)
@@ -589,8 +609,8 @@ const AgencyCandidateList = () => {
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Move to applicants"}
               className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-green-500 text-white hover:bg-green-700 "
-              // disabled={selectedRows.length < 1 || acceptingCandidate}
-              disabled={true}
+              disabled={selectedRows.length < 1}
+              // disabled={true}
               onClick={()=>{
                 if(selectedRows.length > 10){
                   toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
@@ -627,8 +647,8 @@ const AgencyCandidateList = () => {
 
             <button
               type="button"
-              // disabled={selectedRows.length < 1}
-              disabled={true}
+              disabled={selectedRows.length < 1}
+              // disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={"Send to evaluator"}
               onClick={() => setIsEvaluatorForm(true)}
@@ -695,6 +715,39 @@ const AgencyCandidateList = () => {
           formLimit={10}/>
         }
       </Modal>
+      <Modal
+  isOpen={isEvaluatorForm}
+  onClose={() => setIsEvaluatorForm(false)}
+  className="w-[90vw] sm:w-[455px] h-auto"
+>
+  {isEvaluatorForm && (
+    <EvaluatorForm
+      Defaultvalues={{
+        jobApplicationId: selectedRows.map(r => r.id ?? ""),
+        jobId: selectedRows[0]?.candidateParsedCvDetails?.jobId ?? "",
+        jobTitle: selectedRows[0]?.jobDetails?.jobTitle ?? "",
+        companyId: selectedRows[0]?.companyId ?? "",
+        candidateParsedCvId: selectedRows.map(r => r.candidateParsedCvId ?? ""),
+        agencyUserSubmissionId: selectedRows[0]?.candidateParsedCvDetails?.agencyUserSubmissionId ?? "",
+
+        applicantUserId: selectedRows.map(r => r.candidateParsedCvDetails?.applicantUserId ?? ""),
+        applicantUserName: selectedRows.map(r => r.candidateParsedCvDetails?.name ?? ""),
+        applicantUserEmail: selectedRows.map(r => r.candidateParsedCvDetails?.email ?? ""),
+
+        hrName: userDetails?.fullName ?? "",
+        hrCurrentCompanyName: companyDetails?.name ?? "",
+      }}
+      isBulk={true}
+      onClose={() => setIsEvaluatorForm(false)}
+      formLimit={5}
+      localUpdate={handleLocalUpdate}
+      rowData={selectedRows}   // ← Important for updates
+      isAgency={true}
+      isBulkInAgency={true}
+    />
+  )}
+</Modal>
+
     </div>
   )
 }

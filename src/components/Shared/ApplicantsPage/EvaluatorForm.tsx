@@ -71,6 +71,7 @@ export type EvaluatorFormProps = {
   localUpdate?: (id: string, updatedData: Partial<any>) => void;
   rowData?:any;
   isAgency?:boolean;
+  isBulkInAgency?:boolean,
 };
 
 const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
@@ -81,7 +82,8 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
   formLimit = 10,
   localUpdate,
   rowData,
-  isAgency
+  isAgency,
+  isBulkInAgency=false
 }) => {
   const isAdmin = secureStorage
     .getItem<UserRole>(SecureStorageKeyEnum.USERTYPE)
@@ -199,7 +201,101 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
       }
     }
     if(isAgency){
-    const allEvaluators = getValues("evaluators");
+      if(isBulkInAgency){
+        console.log("isbulk")
+      const allEvaluators = getValues("evaluators");
+      const historyEmails = new Set(
+        (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
+          (h) => (h.evaluatorDetails?.email || "").trim().toLowerCase()
+        )
+      );
+      const validNewEvaluatorsAll = allEvaluators.filter((e) => {
+        const email = (e?.evaluatorDetails?.email || "").trim().toLowerCase();
+        return email && !historyEmails.has(email);
+      });
+
+      const historyCount = (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).length;
+      const activeFieldIndex = activeTab - historyCount;
+      if (activeFieldIndex < 0) {
+        toast.error("This is a read-only tab.", getToastOptions({}));
+        return;
+      }
+      const applicantIds = Defaultvalues.applicantUserId;
+      const jobApplicationIds = Defaultvalues.jobApplicationId;
+      const emails = Defaultvalues.applicantUserEmail;
+      const applicantName = Defaultvalues.applicantUserName;
+      const candidateParsedCvId = Defaultvalues.candidateParsedCvId;
+      
+      if (applicantIds.length !== jobApplicationIds.length || applicantIds.length !== emails.length) {
+        toast.error("Mismatch in applicant data", getToastOptions({}));
+        return;
+      }
+      const validNewEvaluators = validNewEvaluatorsAll;
+      if (validNewEvaluators.length === 0) {
+        toast.error("Please add at least one new evaluator", getToastOptions({}));
+        return;
+      }
+      // Build submissions list
+      const agencyUserSubmissions = Defaultvalues.jobApplicationId.map((_, idx) => ({
+        agencyUserSubmissionId: Defaultvalues.agencyUserSubmissionId,
+        companyName: Defaultvalues.hrCurrentCompanyName,
+        jobTitle: Defaultvalues.jobTitle,
+        jobId: Defaultvalues.jobId
+      }));
+
+  // Final single-call payload
+      const payload = { agencyUserSubmissions };
+      const {response, error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/send-for-evaluation/bulk`,payload,true,{},true)
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+
+      const applicationPayloads = applicantIds.map((applicantId, index) => ({
+        jobApplicationId: jobApplicationIds[index],
+        jobId: Defaultvalues.jobId,
+        jobTitle: Defaultvalues.jobTitle,
+        companyId: Defaultvalues.companyId,
+        applicantUserEmail: emails[index],
+        candidateParsedCvId:candidateParsedCvId[index],
+        applicantName: applicantName[index],
+        hrName: Defaultvalues.hrName,
+        hrCurrentCompanyName: Defaultvalues.hrCurrentCompanyName,
+      }));
+      try {
+        await Promise.all(
+          validNewEvaluators.map(async (evaluator, idx) => {
+            const payload = {
+              ...applicationPayloads[idx],
+              evaluatorDetails: evaluator.evaluatorDetails,
+              hrDetailedFeedback: evaluator.hrDetailedFeedback,
+              hrHtmlDetailedFeedback: evaluator.hrHtmlDetailedFeedback,
+            };
+            const {response,error} = await httpServiceObj.post(`/request-evaluation/`,payload,true,{},false,"JOB")
+            if (error) {
+              throw new Error(error.message || "Error sending evaluation request");
+            }
+            if(localUpdate){
+              rowData.map((candidate:any)=>{
+                localUpdate(candidate?.id,{...candidate,jobApplicationStatus:"UNDER_EVALUATION"})
+              })
+            }
+            // console.log("Evaluator response:", response);
+          })
+        );
+        toast.success("Evaluation requests sent successfully", getToastOptions({}));
+      } catch (error: any) {
+        toast.error(
+          error instanceof Error ? error.message : "Error sending bulk evaluation requests",
+          getToastOptions({})
+        );
+      } finally {
+        reset();
+        onClose();
+        return
+      }
+      }else{
+        const allEvaluators = getValues("evaluators");
     const historyEmails = new Set(
       (Array.isArray(evaluationData?.data) ? evaluationData!.data! : []).map(
         (h) => (h.evaluatorDetails?.email || "").trim().toLowerCase()
@@ -285,6 +381,7 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
       onClose();
       return
     }
+      }
     }
     const allEvaluators = getValues("evaluators");
     const historyEmails = new Set(

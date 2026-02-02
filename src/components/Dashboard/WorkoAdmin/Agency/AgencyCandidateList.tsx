@@ -426,10 +426,15 @@ const AgencyCandidateList = () => {
 
   const bulkRejectCandidates = async () =>{
     const removeAlreadyRejected = selectedRows.filter(candidate=>{
-      return candidate.jobApplicationStatus !== "REJECTED"
+      return !candidate.jobApplicationStatus
     })
+    const names = selectedRows.map(candidate=>{
+      return candidate?.candidateParsedCvDetails?.name
+    })
+    const joinedNames = names.join(", ")
     if(removeAlreadyRejected.length === 0) {
-      toast.error("All selected candidates are already rejected",getToastOptions({}))
+      toast.error("All selected candidates are already rejected or moved to applicant",getToastOptions({}))
+      setSelectedRows([])
       return
     }
     setSelectedRows(removeAlreadyRejected)
@@ -597,7 +602,8 @@ const AgencyCandidateList = () => {
                 />
               </div>
             </div>
-            <div className="w-full md:w-auto lg:w-auto">
+            {/* BULK REJECT AND BULK FIND MATCHING SCORE IS IMPLEMENTED AND WORKING JUST UNCOMMENT IT*/}
+            {/* <div className="w-full md:w-auto lg:w-auto">
               <div className="flex flex-row gap-2 justify-center items-center overflow-x-auto lg:overflow-visible">   
                 <button
                   type="button"
@@ -621,7 +627,7 @@ const AgencyCandidateList = () => {
                   <RefreshCcw className="w-4 h-4 stroke-[3]" />
                 </button>
               </div>
-            </div>
+            </div> */}
         </div>
       </div>
       
