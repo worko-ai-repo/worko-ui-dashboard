@@ -87,7 +87,6 @@ const Referrals: React.FC<ReferralsProps> = () => {
   }
   
   useEffect(() => {
-    console.log(userDetails?.userType)
     getDataFunction()
   }, [userDetails?.companyId])
 
