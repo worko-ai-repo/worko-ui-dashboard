@@ -14,8 +14,6 @@ import httpServiceObj from '@Services/ApiHandler.service';
 import { PaginationInfo } from '@Components/Dashboard/Candidate/Pages/Job/JobTypes';
 import { AgencyDatabaseApplicantDetailsDto, AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto';
 import SelectJobForBulkMatch from './modals/SelectJobForBulkMatchModal';
-import AddEmailForReferralModal from './modals/AddEmailForReferralModal';
-import EmailAddedModal from './modals/EmailAddedModal';
 import CandidateBulkBanModal from './modals/CandidateBulkBanModal';
 import { HiringEligibilityStatus, RefereeTypeStatus } from '@TypesAndConstants/JobsAndApplication.type';
 import EditCTCETCAndNoticePeriodModal from './modals/EditCTCETCAndNoticePeriodModal';
@@ -85,12 +83,6 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isSelectJobForBulkMatch,setIsSelectJobForBulkMatch] = useState<boolean>(false);
     const [loader, setLoader] = useState(false);
-    const [isBulkCVDownloading,setIsBulkCVDownloading] = useState(false)
-    const [isEmailForReferralOpen,setIsEmailForReferralOpen] = useState<boolean>(false);
-    const [isCorporateAdmin, setIsCorporateAdmin] = useState<boolean>(false);
-    const [isEmailAddedSuccessfully,setIsEmailAddedSuccessfully] = useState<boolean>(false);
-    const [forwardingMailId,setForwardingMailId] = useState<string>("");
-    const [submittedMailId,setSubmittedMailId] = useState<string>("");
 
     const [reason,setReason] = useState<string>("");
     const [comments,setComments] = useState<string>("");
@@ -116,14 +108,6 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       document.addEventListener("mousedown", handleClickOutside);
       return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-
-    useEffect(()=>{
-      userDetails?.userType.map((userType:string) =>{
-          if(userType === "corporate-admin"){
-              setIsCorporateAdmin(true)
-          }
-      })
-    },[userDetails])
 
   const SourceFilterDropdown = [
     { label: "All", onClick: () => setHiringEligibiltyStatus(undefined) },
@@ -647,16 +631,15 @@ const fetchDatabaseData = useCallback(
       {/* Actions (Row 4 on mobile/tablet; right part on lg+) */}
       <div className="w-full lg:w-auto">
         <div className="flex flex-row gap-1 items-center justify-center overflow-x-auto lg:overflow-visible">
-        {isCorporateAdmin &&         
+        {/* {isCorporateAdmin &&         
           <button
-            onClick={()=>setIsEmailForReferralOpen(true)}
             type="button"
             data-tooltip-id="my-tooltip"
             data-tooltip-content={"Add email for referral"}
             className="flex-none inline-flex items-center justify-center gap-2 h-9 rounded-lg px-3 text-xs transition shadow-md bg-white text-blue-700 hover:bg-blue-700 hover:text-white"
           >
             <User className="w-4 h-4" strokeWidth={4}/>
-          </button>}
+          </button>} */}
 
           <button
             onClick={()=>setIsCandidateBulkBanModelOpen(true)}
@@ -779,31 +762,6 @@ const fetchDatabaseData = useCallback(
         setLoader={setLoader}
         loader={loader}
       />
-    {isEmailForReferralOpen && 
-      <AddEmailForReferralModal
-        dashboardType={"CORPORATE"}
-        onClose= {() => setIsEmailForReferralOpen(false)}
-        isOpen= {isEmailForReferralOpen}
-        // agencyData={selectedRows}
-        userDetails={userDetails}
-        setIsEmailAddedSuccessfully={setIsEmailAddedSuccessfully}
-        setForwardingMailId={setForwardingMailId}
-        setSubmittedMailId={setSubmittedMailId}
-      />
-    }
-    {isEmailAddedSuccessfully && forwardingMailId && submittedMailId &&
-      <EmailAddedModal
-        dashboardType={"CORPORATE"}
-        onClose= {() => {
-          setIsEmailAddedSuccessfully(false)
-          setForwardingMailId("")
-          setSubmittedMailId("")
-        }}
-        isOpen= {isEmailAddedSuccessfully}
-        forwardingMailId={forwardingMailId}
-        submittedMailId={submittedMailId}
-      />
-    }
   {isCandidateBulkBanModelOpen && 
     <CandidateBulkBanModal
       comments={comments}

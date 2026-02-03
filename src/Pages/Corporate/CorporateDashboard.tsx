@@ -8,7 +8,8 @@ import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
 import CorporateReferrals from "@Components/Dashboard/Corporate/Referral/Referral";
-
+import { useAppContext } from "@Context/App.context";
+import AccessDenied from "../errors/AccessDenied/AccessDenied";
 
 
 // Lazy load components
@@ -24,7 +25,7 @@ const AdminDatabase = lazy(() => import("@Components/Dashboard/Corporate/Databas
 const SearchDB = lazy(() => import ("@Components/Dashboard/Corporate/SearchDB/SearchDB"));
 const AgencyCandidateList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyCandidateList"));
 const AgencyList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyList"));
-
+const ReferralSettings = lazy(() => import("@Components/Dashboard/Corporate/Settings/Referrals"));
 
 // const SearchDB = lazy(() => import("@Components/Dashboard/Corporate/SearchDB/SearchDB"));
 // const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
@@ -32,6 +33,8 @@ const AgencyList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/Ag
 // const AgencyCandidateList = lazy(() => import("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
 
 const CorporateDashboard = () => {
+  const { userDetails } = useAppContext();
+  const isCorporateAdmin = userDetails?.userType.includes("corporate-admin")
   const routes = useRoutes([
     {
       path: "/",
@@ -153,6 +156,14 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<MainLoader />}>
               <Interview />
+            </Suspense>
+          ),
+        },
+        {
+          path: "referralsSettings",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              {isCorporateAdmin ? <ReferralSettings /> : <AccessDenied />}
             </Suspense>
           ),
         },
