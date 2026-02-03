@@ -60,8 +60,10 @@ const Referrals: React.FC<ReferralsProps> = () => {
   const {userDetails} = useAppContext()
 
   const getDataFunction = async () => {
+    if(!userDetails) return
+    setIsDataLoading(true)
     try {
-    const {response,error} = await httpServiceObj.get<ReferralData>(`https://api.dev.worko.work/referral-sourcetype-activation/${userDetails?.companyId}`,true,{},true)
+    const {response,error} = await httpServiceObj.get<ReferralData>(`/referral-sourcetype-activation/${userDetails?.companyId}`,true,{},false)
     if(error){
       toast.error("Cannot find details please try later",getToastOptions({}))
       reset()
@@ -85,8 +87,9 @@ const Referrals: React.FC<ReferralsProps> = () => {
   }
   
   useEffect(() => {
+    console.log(userDetails?.userType)
     getDataFunction()
-  }, [])
+  }, [userDetails?.companyId])
 
   useEffect(() => {
   if (!showInput) return;
@@ -158,6 +161,7 @@ const Referrals: React.FC<ReferralsProps> = () => {
           toast.error(error.message,getToastOptions({}))
           return
         }
+        setReferralSourceData(response)
         toast.success(`${response?.referralSourceTypeEmail} has been added successfully`,getToastOptions({}))
         // setIsEmailAddedSuccessfully(true)
         // setForwardingMailId(response?.systemReferralSourceTypeEmail ?? "")
@@ -234,7 +238,11 @@ const closeButton = async () =>{
               ? "Add Referral Email"
               : "Submitted Referral Email Details"}
           </h3>
-
+          { isDataLoading 
+          ?(<div className="flex items-center justify-center max-h-screen">
+            <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-600"></div>
+          </div>)
+          : (<>
           {/* FORM MODE */}
           {!isReferralData && !referralSourceData ? (
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
@@ -368,8 +376,12 @@ const closeButton = async () =>{
               </div>
             </div>
           )}
+          </>)
+          }
+          
 
           {/* Email Provider Options */}
+          {!isDataLoading &&
           <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 place-items-center">
 
             {/* Gmail */}
@@ -435,12 +447,13 @@ const closeButton = async () =>{
             </div>
 
           </div>
+          }
 
         </div>
       </div>
 
       {/* Outlook Steps */}
-      {isSeeOutlookSteps && (
+      {isSeeOutlookSteps && selectedEmail === "outlook" && (
         <OutlookSteps
           dashboardType="CORPORATE"
           onClose={() => {
@@ -452,7 +465,7 @@ const closeButton = async () =>{
       )}
 
       {/* Gmail Steps */}
-      {isSeeGmailSteps && (
+      {isSeeGmailSteps && selectedEmail === "gmail" &&(
         <GmailSteps
           dashboardType="CORPORATE"
           onClose={() => {

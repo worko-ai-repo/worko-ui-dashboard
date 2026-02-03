@@ -8,7 +8,8 @@ import JobSelectorModal from "@Components/Shared/FindJobByDropdown";
 import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
 import CorporateReferrals from "@Components/Dashboard/Corporate/Referral/Referral";
-
+import { useAppContext } from "@Context/App.context";
+import AccessDenied from "../errors/AccessDenied/AccessDenied";
 
 
 // Lazy load components
@@ -32,6 +33,8 @@ const ReferralSettings = lazy(() => import("@Components/Dashboard/Corporate/Sett
 // const AgencyCandidateList = lazy(() => import("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
 
 const CorporateDashboard = () => {
+  const { userDetails } = useAppContext();
+  const isCorporateAdmin = userDetails?.userType.includes("corporate-admin")
   const routes = useRoutes([
     {
       path: "/",
@@ -160,7 +163,7 @@ const CorporateDashboard = () => {
           path: "referralsSettings",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <ReferralSettings />
+              {isCorporateAdmin ? <ReferralSettings /> : <AccessDenied />}
             </Suspense>
           ),
         },

@@ -75,7 +75,19 @@ const Sidebar: React.FC<SidebarProps> = ({
    * Filter navigation items based on current dashboard type
    * Only shows items that are either global or match current dashboard type
    */
-  const navItems = navigationItems.filter((item) => {
+const removeSettingsForRecruiter = navigationItems.filter(item => {
+  if (
+    item.id === "settings" &&
+    !userDetails?.userType?.includes("corporate-admin")
+  ) {
+    return false;
+  }
+
+  return true;
+});
+
+
+  const navItems = removeSettingsForRecruiter.filter((item) => {
     if (item.id === "switch-dashboard") {
       if (!RBAC?.can("play_admin")) {
         //dont show that item
