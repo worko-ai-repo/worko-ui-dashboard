@@ -390,19 +390,19 @@ const keyFallbacks = {
       //   </div>
       // ),
     },
-    {
-      key: "addedFor",
-      label: "Added for",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedFor ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto w-[150px]">
-      //     <span title={row?.addedFor} className="truncate block w-full">
-      //       {row?.addedFor ?? "NA"}
-      //     </span>
-      //   </div>
-      // ),
-    },
+    // {
+    //   key: "addedFor",
+    //   label: "Added for",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedFor ?? "NA"
+    //   (
+    //     <div className="flex justify-center m-auto w-[150px]">
+    //       <span title={row?.addedFor} className="truncate block w-full">
+    //         {row?.addedFor ?? "NA"}
+    //       </span>
+    //     </div>
+    //   ),
+    // },
     {
       key: "coolingPeriodCompanies",
       label: "Cooling period companies",
