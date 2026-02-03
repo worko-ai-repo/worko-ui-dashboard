@@ -18,6 +18,7 @@ import CorporateServiceObj from '../Services/Corporate.service'
 import { CompanyDetails } from '@Interfaces/CorporateDashboard.dto'
 import secureStorage from '@Utils/SecureStorage.utils'
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum'
+import FinalReviewModal from '../Database/modals/FinalReviewModal'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -83,6 +84,9 @@ const AgencyCandidateList = () => {
   const [selectedAgencyName, setSelectedAgencyName] = useState<string>("");
   const [fetchAgencyData, setFetchAgencyData] = useState<any[]>([]);
   const [initialIds,setInitialIds] = useState<any[]>([])
+  const [repeatedCandidatesList, setRepeatedCandidatesList] = useState<string>("");
+  const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
+  const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
   const { userDetails } = useAppContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
@@ -383,14 +387,27 @@ const AgencyCandidateList = () => {
       jobTitle: candidate?.jobDetails?.jobTitle,
       jobId: candidate?.candidateParsedCvDetails?.jobId,
     }));
-    const payload = agencyUserSubmissions
+    const payload = {agencyUserSubmissions}
+
+    const namesArrayOfAlreadySent = 
+    selectedRows.filter(candidate =>candidate.jobApplicationStatus)
+    .map(candidate => candidate?.candidateParsedCvDetails?.name)
+
+    setRepeatedCandidatesList(namesArrayOfAlreadySent.join(", "))
+
+    const namesArrayOfNotSent = filterAlreadySentCandidate
+    .filter(candidate =>!candidate.jobApplicationStatus)
+    .map(candidate => candidate?.candidateParsedCvDetails?.name)
+
+    setSuccessfullySentCandidateList(namesArrayOfNotSent.join(", "))
     try {
-      const {response,error} = await httpServiceObj.post(`${agencyBaseUrl}/agency-user-submission/move-to-applicant/bulk`, payload, true, {}, true);
+      const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/agency-user-submission/move-to-applicant/bulk`, payload, true, {}, true);
       if(error){
         toast.error(error.message,getToastOptions({}))
         return
       }
-      console.log(response)
+      setIsFinalReviewModalOpen(true)
+      toast.success("Bulk Move to applicant process initiated successfully.",getToastOptions({}))
       filterAlreadySentCandidate.map(candidate=>{
         return handleLocalUpdate(candidate?.id, { ...candidate, jobApplicationStatus: "ACCEPTED" });
       })
@@ -401,59 +418,7 @@ const AgencyCandidateList = () => {
       setAcceptingCandidate(false);
     }
   }
-  
-  // const rejectCandidate = async() =>{
-  //   setRejectingCandidate(true);
-  //   const payload = {
-  //     candidates: selectedRows,
-  //   };
-  //   try {
-  //     const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  //     setFetchData((prevData) =>
-  //       prevData.filter((candidate) =>
-  //         !selectedRows.some((sel) => sel.id === candidate.id)
-  //       )
-  //     );
-  //     toast.success("Candidate rejected successfully",getToastOptions({}))
-  //     // console.log("Matching scores updated successfully!");
-  //   } catch (error) {
-  //     console.error("Error finding matching score:", error);
-  //   } finally {
-  //       setRejectingCandidate(false);
-  //       setSelectedRows([])
-  //   }
-  // }
-  
-  //old findmatchingscore
-  // const findMatchingScore = async () =>{
-  //   setScoreLoading(true);
-
-  //   const candidatesToSend = selectedRows.filter(candidate => !candidate.score);
-  //   console.log("Candidates to send:", candidatesToSend);
-  //   const payload = {
-  //     candidates: candidatesToSend,
-  //   };
-
-  //   try {
-  //     const {response} = await httpServiceObj.post("/someapi/fetch", payload, true, {}, true);
-  //     await new Promise((resolve) => setTimeout(resolve, 2000));
-  //     setFetchData((prevData) =>
-  //       prevData.map((candidate) =>
-  //         selectedRows.some((sel) => sel.id === candidate.id)
-  //           ? { ...candidate, score: 80 }
-  //           : candidate
-  //       )
-  //     );
-
-  //     console.log("Matching scores updated successfully!");
-  //   } catch (error) {
-  //     console.error("Error finding matching score:", error);
-  //   } finally {
-  //       setScoreLoading(false);
-  //   }
-  // }
-    
+   
 
   const findMatchingScoreBulk = async () => {
     const candidatesToSend = selectedRows.filter(row => row?.matchingScoreDetails?.matchingScore == null && !row?.jobApplicationStatus && !row?.isFindMatchingScoreInProgress)
@@ -749,6 +714,19 @@ const AgencyCandidateList = () => {
   )}
 </Modal>
 
+    {isFinalReviewModalOpen && (
+    <FinalReviewModal
+        isOpen={isFinalReviewModalOpen}
+        onClose={() => {
+            setIsFinalReviewModalOpen(false)
+            setSuccessfullySentCandidateList("")
+            setRepeatedCandidatesList("")
+        }}
+        successfullySentCandidateList={successfullySentCandidateList}
+        incompleteSentCandidateList={""}
+        repeatedCandidatesList={repeatedCandidatesList}
+    />
+    )}
     </div>
   )
 }
