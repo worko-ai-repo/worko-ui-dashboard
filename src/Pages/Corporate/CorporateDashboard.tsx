@@ -9,7 +9,8 @@ import CorporateHome from "@Components/Dashboard/Corporate/Home/CorporateHome";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
 import CorporateReferrals from "@Components/Dashboard/Corporate/Referral/Referral";
 import { useAppContext } from "@Context/App.context";
-import AccessDenied from "../errors/AccessDenied/AccessDenied";
+import AccessDenied from "@Pages/errors/AccessDenied/AccessDenied";
+
 
 
 // Lazy load components
