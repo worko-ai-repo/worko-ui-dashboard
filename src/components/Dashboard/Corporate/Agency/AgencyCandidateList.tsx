@@ -539,7 +539,7 @@ const AgencyCandidateList = () => {
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
             handleClick={(e) => console.log(searchBarText)}
-            placeholder="Search candidates by name, email and company name"
+            placeholder="Search candidates by name or email"
           />
         </div>
 

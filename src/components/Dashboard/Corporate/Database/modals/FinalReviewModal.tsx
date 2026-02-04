@@ -1,4 +1,5 @@
 import { FC, useEffect, useState } from "react";
+import { FailedCandidateDetails } from "../../SearchDB/SearchResults";
 
 interface FinalReviewModalProps {
   onClose: () => void;
@@ -6,6 +7,7 @@ interface FinalReviewModalProps {
   successfullySentCandidateList:string;
   incompleteSentCandidateList:string;
   repeatedCandidatesList:string;
+  failedCandidateDetails?:FailedCandidateDetails[]
 }
 
 const FinalReviewModal: FC<FinalReviewModalProps> = ({
@@ -14,6 +16,7 @@ const FinalReviewModal: FC<FinalReviewModalProps> = ({
   successfullySentCandidateList,
   incompleteSentCandidateList,
   repeatedCandidatesList,
+  failedCandidateDetails,
 }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -61,6 +64,22 @@ const FinalReviewModal: FC<FinalReviewModalProps> = ({
 			<span className="text-sm font-normal text-black"> {repeatedCandidatesList}</span>
 		</h2>
 		}
+		{failedCandidateDetails && failedCandidateDetails?.length > 0 && (
+		<div>
+			<h2 className="text-md font-semibold mb-4 text-left text-red-500">
+			Not sent for bulk matching:
+			</h2>
+
+			{failedCandidateDetails.map((candidate, i) => (
+			<div key={i} className="flex flex-row mb-2">
+				<span className="text-blue-500 text-sm font-normal text-start">
+				{candidate.name} : <span className="text-sm font-normal text-black">{candidate.error}</span>
+				</span>
+			</div>
+			))}
+		</div>
+		)}
+
 	  </div>
 	</div>
   );

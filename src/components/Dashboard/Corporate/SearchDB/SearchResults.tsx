@@ -26,6 +26,10 @@ export const initialPaginationState: PaginationInfo = {
   hasMore: false,
 };
 
+export type FailedCandidateDetails = {
+  name: string;
+  error: string;
+};
   const suggestions = [
     "Show candidates with 3+ years of experience available to join in less than 30 days",
     "Find frontend developers skilled in React and TypeScript with immediate availability",
@@ -65,6 +69,8 @@ export const initialPaginationState: PaginationInfo = {
     const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
     const [textToDisplay,setTextToDisplay]  = useState<string>("");
     const [initialIds, setInitialIds] = useState<any[]>([]);
+    const [failedCandidateDetails, setFailedCandidateDetails] = useState<FailedCandidateDetails[]>([]);
+
     const navigate = useNavigate();
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
     
@@ -341,11 +347,19 @@ const handlePageChange = useCallback(
   }
 
   const handleBulkFindMatchingScore = async (job:any) =>{
-    const filterAlreadyHavingScore = selectedRows.filter(candidate=>{
-      return !candidate.matchingScore || !candidate.isFindMatchingScoreInProgress
+    const filterAlreadyInProgress = selectedRows.filter(candidate=>{
+      return !candidate.isFindMatchingScoreInProgress || candidate.isFindMatchingScoreInProgress === null || candidate.isFindMatchingScoreInProgress === undefined 
+    })
+    if(!filterAlreadyInProgress.length){
+      toast.error("All the selected candidates are already fetching score",getToastOptions({}))
+      setSelectedRows([])
+      return
+    }
+    const filterAlreadyHavingScore = filterAlreadyInProgress.filter(candidate=>{
+      return !candidate.matchingScore || candidate.matchingScore === null || candidate.matchingScore === undefined
     })
     if(!filterAlreadyHavingScore.length){
-      toast.error("All selected candidates already have matching score or already matching in progress",getToastOptions({}))
+      toast.error("All the selected candidates are already having score",getToastOptions({}))
       setSelectedRows([])
       return
     }
@@ -356,7 +370,7 @@ const handlePageChange = useCallback(
       jobId: job?.id,
       candidateParsedCvIds: onlyId,
     };
-    console.log(payload)
+
     try {
       const { response, error } = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/find-matching-score/bulk`, payload, true, {}, true);
 
@@ -364,40 +378,61 @@ const handlePageChange = useCallback(
         toast.error(error.message, getToastOptions({}));
         return
       }
-      // const response = {
-      //   existingMatchingScores: [
-      //     {
-      //       candidateParsedCvId: "01KF35G9ECPD7FC6FGKWDVPAT1",
-      //       matchingScore: 10,
-      //       scoreDetails:"asd"
-      //     }
-      //   ],
-      //   initiatedCandidateJobMatchingIds: ["01KF35G9ECPD7FC6FGKWDVPAT3","01KF35G9ECPD7FC6FGKWDVPAT4"],
-      // }
       
-      if(response && response.existingMatchingScores){
-        for(let i=0;i<response.existingMatchingScores.length;i++){
-          for(let j=0;j<filterAlreadyHavingScore.length;j++){
-            if(response.existingMatchingScores[i].candidateParsedCvId === filterAlreadyHavingScore[j].id){
-              const updatedDetails = {
-                ...filterAlreadyHavingScore[j],
-                matchingScore : response.existingMatchingScores[i].matchingScore,
-                scoreDetails : response.existingMatchingScores[i].scoreDetails
-              }
-              handleLocalUpdate(filterAlreadyHavingScore[j].id,updatedDetails)
+    if(response && response.existingCandidateJobMatchingScores.length > 0){
+      for(let i=0;i<response.existingCandidateJobMatchingScores.length;i++){
+        for(let j=0;j<filterAlreadyHavingScore.length;j++){
+          if(response.existingCandidateJobMatchingScores[i].candidateParsedCvId === filterAlreadyHavingScore[j].id){
+            const updatedDetails = {
+              ...filterAlreadyHavingScore[j],
+              matchingScore : response.existingCandidateJobMatchingScores[i].matchingScore,
+              scoreDetails : response.existingCandidateJobMatchingScores[i].scoreDetails
             }
+            handleLocalUpdate(filterAlreadyHavingScore[j].id,updatedDetails)
+          }
         }
       }
     }
-    setInitialIds((prev) => [...prev, ...response?.initiatedCandidateJobMatchingIds]);
 
-    response.initiatedCandidateJobMatchingIds.map((CandidateJobMatchingId:string) =>{
-      handleLocalUpdateForMatchingScore(CandidateJobMatchingId, {
-          isFindMatchingScoreInProgress: true,
-          candidateJobMatchingId: CandidateJobMatchingId,
-        })
-    })
+    let length = false
+    if(response && response.failedCandidateJobMatchingScores.length > 0){
+      length = true
+      for(let i=0;i<response.failedCandidateJobMatchingScores.length;i++){
+        for(let j=0;j<filterAlreadyHavingScore.length;j++){
+          if(response.failedCandidateJobMatchingScores[i].candidateParsedCvId === filterAlreadyHavingScore[j].id){
+            setFailedCandidateDetails(prev => [
+              ...prev,
+              {
+              name:filterAlreadyHavingScore[j].name,
+              error:response.failedCandidateJobMatchingScores[i].error
+              }
+          ])
+          break
+          }
+        }
+      }
+    }
+    
+    if(response && response.initiatedCandidateJobMatchingScores.length > 0){
+      const onlyInitiadtedIds = response?.initiatedCandidateJobMatchingScores.map((ids: { candidateJobMatchingId: string; candidateParsedCvId: string })=>{
+      return ids.candidateJobMatchingId
+      })
+
+      setInitialIds((prev) => [...prev, ...onlyInitiadtedIds]);
+
+      response.initiatedCandidateJobMatchingScores.map((responseDetails:any) =>{
+        handleLocalUpdate(responseDetails.candidateParsedCvId, {
+            isFindMatchingScoreInProgress: true,
+            candidateJobMatchingId: responseDetails.candidateJobMatchingId,
+          })
+      })
+    }
     toast.success("Find Score initiated please wait", getToastOptions({}));
+    setSelectedRows([])
+    console.log(failedCandidateDetails)
+    if(length){
+      setIsFinalReviewModalOpen(true)
+    }
     } catch (err) {
       console.error("Assignment error:", err);
       toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
@@ -647,8 +682,8 @@ const handlePageChange = useCallback(
                         setTextToDisplay("Find Matching Score :")
                         selectFirstByIdOrPromptForFindMatchingScore()
                       }}
-                      // disabled={selectedRows.length < 1}
-                      disabled={true}
+                      disabled={selectedRows.length < 1}
+                      // disabled={true}
                       type="button"
                       data-tooltip-id="my-tooltip"
                       data-tooltip-content={"Find Matching Score"}
@@ -758,10 +793,12 @@ const handlePageChange = useCallback(
                 setSuccessfullySentCandidateList("")
                 setIncompleteSentCandidateList("")
                 setRepeatedCandidatesList("")
+                setFailedCandidateDetails([])
             }}
             successfullySentCandidateList={successfullySentCandidateList}
             incompleteSentCandidateList={incompleteSentCandidateList}
             repeatedCandidatesList={repeatedCandidatesList}
+            failedCandidateDetails={failedCandidateDetails}
         />
       )}
       </div>

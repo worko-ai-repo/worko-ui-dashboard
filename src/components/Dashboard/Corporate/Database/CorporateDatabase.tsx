@@ -578,7 +578,7 @@ const fetchDatabaseData = useCallback(
           searchBarText={searchBarText}
           setSearchBarText={setSearchBarText}
           handleClick={() => console.log("")}
-          placeholder="Search candidates by name, email and company name"
+          placeholder="Search candidates by name or email"
         />
       </div>
 

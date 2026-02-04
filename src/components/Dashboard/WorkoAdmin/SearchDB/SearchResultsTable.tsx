@@ -72,6 +72,8 @@ export default function SearchResultsTable(props: any) {
     onPageSizeChange,
     localUpdate,
     handleLocalUpdateForMatchingScore,
+    initialIds,
+    setInitialIds,
   } = props as any;
 
   // State required for table interactions
@@ -95,7 +97,6 @@ export default function SearchResultsTable(props: any) {
   const [searchParams] = useSearchParams();
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [mode, setMode] = React.useState<"jobs" | "prompt">("prompt");
-  const [initialIds, setInitialIds] = useState<any[]>([]);
   const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
   const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
@@ -328,7 +329,7 @@ useEffect(() => {
             isFindMatchingScoreInProgress: true,
             candidateJobMatchingId: response?.candidateJobMatchingId || response?.id,
           };
-          setInitialIds((prev) => [...prev, response?.candidateJobMatchingId || response?.id]);
+          setInitialIds((prev:string) => [...prev, response?.candidateJobMatchingId || response?.id]);
           localUpdate(row?.id, updatedData);
           toast.success("Find Score initiated please wait", getToastOptions({}));
           return;

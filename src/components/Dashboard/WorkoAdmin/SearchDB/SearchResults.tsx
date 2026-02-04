@@ -15,6 +15,7 @@ import Dropdown from "./Dropdown";
 import FinalReviewModal from "@Components/Dashboard/Corporate/Database/modals/FinalReviewModal";
 import MoveToApplicantsBulk from "@Components/Dashboard/Corporate/Database/modals/MoveToApplicantsBulk";
 import EditCTCETCAndNoticePeriodModalForSearchInDB from "@Components/Dashboard/Corporate/SearchDB/modals/EditCTCETCAndNoticePeriodModalForSearchInDB";
+import { FailedCandidateDetails } from "@Components/Dashboard/Corporate/SearchDB/SearchResults";
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -64,6 +65,9 @@ const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
     const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
     const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+    const [textToDisplay,setTextToDisplay]  = useState<string>("");
+    const [initialIds, setInitialIds] = useState<any[]>([]);
+    const [failedCandidateDetails, setFailedCandidateDetails] = useState<FailedCandidateDetails[]>([]);
 
     const navigate = useNavigate();
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
@@ -307,7 +311,114 @@ const handleSubmit = () => {
   });
 }, []);
 
-  const selectFirstByIdOrPrompt = async () => {
+  const selectFirstByIdOrPromptForFindMatchingScore = async () => {
+    if(mode === "jobs"){
+      const fullJobDetails = jobsList.filter(job=>{
+        return job.id === selectedJobId
+      })
+      setSelectedCompany(fullJobDetails[0])
+      handleBulkFindMatchingScore(fullJobDetails[0])
+    }else{
+      setIsAssignJobModelOpen(true)
+    }
+  }
+
+  const handleBulkFindMatchingScore = async (job:any) =>{
+    const filterAlreadyInProgress = selectedRows.filter(candidate=>{
+      return !candidate.isFindMatchingScoreInProgress || candidate.isFindMatchingScoreInProgress === null || candidate.isFindMatchingScoreInProgress === undefined 
+    })
+    if(!filterAlreadyInProgress.length){
+      toast.error("All the selected candidates are already fetching score",getToastOptions({}))
+      setSelectedRows([])
+      return
+    }
+    const filterAlreadyHavingScore = filterAlreadyInProgress.filter(candidate=>{
+      return !candidate.matchingScore || candidate.matchingScore === null || candidate.matchingScore === undefined
+    })
+    if(!filterAlreadyHavingScore.length){
+      toast.error("All the selected candidates are already having score",getToastOptions({}))
+      setSelectedRows([])
+      return
+    }
+    const onlyId = filterAlreadyHavingScore.map((candidates:any) =>{
+      return candidates.id
+    })
+    let payload: any = {
+      jobId: job?.id,
+      candidateParsedCvIds: onlyId,
+    };
+
+    try {
+      const { response, error } = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/find-matching-score/bulk`, payload, true, {}, true);
+
+      if (error) {
+        toast.error(error.message, getToastOptions({}));
+        return
+      }
+      
+    if(response && response.existingCandidateJobMatchingScores.length > 0){
+      for(let i=0;i<response.existingCandidateJobMatchingScores.length;i++){
+        for(let j=0;j<filterAlreadyHavingScore.length;j++){
+          if(response.existingCandidateJobMatchingScores[i].candidateParsedCvId === filterAlreadyHavingScore[j].id){
+            const updatedDetails = {
+              ...filterAlreadyHavingScore[j],
+              matchingScore : response.existingCandidateJobMatchingScores[i].matchingScore,
+              scoreDetails : response.existingCandidateJobMatchingScores[i].scoreDetails
+            }
+            handleLocalUpdate(filterAlreadyHavingScore[j].id,updatedDetails)
+          }
+        }
+      }
+    }
+
+    let length = false
+    if(response && response.failedCandidateJobMatchingScores.length > 0){
+      length = true
+      for(let i=0;i<response.failedCandidateJobMatchingScores.length;i++){
+        for(let j=0;j<filterAlreadyHavingScore.length;j++){
+          if(response.failedCandidateJobMatchingScores[i].candidateParsedCvId === filterAlreadyHavingScore[j].id){
+            setFailedCandidateDetails(prev => [
+              ...prev,
+              {
+              name:filterAlreadyHavingScore[j].name,
+              error:response.failedCandidateJobMatchingScores[i].error
+              }
+          ])
+          break
+          }
+        }
+      }
+    }
+    
+    if(response && response.initiatedCandidateJobMatchingScores.length > 0){
+      const onlyInitiadtedIds = response?.initiatedCandidateJobMatchingScores.map((ids: { candidateJobMatchingId: string; candidateParsedCvId: string })=>{
+      return ids.candidateJobMatchingId
+      })
+
+      setInitialIds((prev) => [...prev, ...onlyInitiadtedIds]);
+
+      response.initiatedCandidateJobMatchingScores.map((responseDetails:any) =>{
+        handleLocalUpdate(responseDetails.candidateParsedCvId, {
+            isFindMatchingScoreInProgress: true,
+            candidateJobMatchingId: responseDetails.candidateJobMatchingId,
+          })
+      })
+    }
+    toast.success("Find Score initiated please wait", getToastOptions({}));
+    setSelectedRows([])
+    console.log(failedCandidateDetails)
+    if(length){
+      setIsFinalReviewModalOpen(true)
+    }
+    } catch (err) {
+      console.error("Assignment error:", err);
+      toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
+    } finally {
+      setIsAssignJobModelOpen(false)
+    }
+  }
+
+  const selectFirstByIdOrPromptForMoveToApplicant = async () => {
     if(mode === "jobs"){
       const fullJobDetails = jobsList.filter(job=>{
         return job.id === selectedJobId
@@ -540,19 +651,31 @@ const handleSubmit = () => {
               </div>
               <div className="flex gap-3 font-semibold w-full sm:w-auto justify-end mb-2">  
                 <button 
+                      onClick={()=>{
+                        if(selectedRows.length > 10){
+                          toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
+                          return
+                        }
+                        setTextToDisplay("Find Matching Score :")
+                        selectFirstByIdOrPromptForFindMatchingScore()
+                      }}
+                      disabled={selectedRows.length < 1}
                       type="button"
+                      data-tooltip-id="my-tooltip"
+                      data-tooltip-content={"Find Matching Score"}
                       className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-4 py-2 text-sm hover:bg-blue-700 transition whitespace-normal sm:whitespace-nowrap"
                       >
                       <RefreshCcw className="w-7 h-7 sm:w-4 sm:h-4" />
                       <span>Find Matching Score</span>
                   </button>
                   <button                       
-                      onClick={()=>{
+                       onClick={()=>{
                         if(selectedRows.length > 10){
                           toast.error("Maximum 10 applicants are at allowed for this action",getToastOptions({}))
                           return
                         }
-                        selectFirstByIdOrPrompt()
+                        setTextToDisplay("Move to applicant :")
+                        selectFirstByIdOrPromptForMoveToApplicant()
                       }}
                       disabled={selectedRows.length < 1}
                       type="button"
@@ -593,6 +716,8 @@ const handleSubmit = () => {
             selectedJobId={selectedJobId}
             localUpdate={handleLocalUpdate}
             handleLocalUpdateForMatchingScore={handleLocalUpdateForMatchingScore}
+            initialIds={initialIds}
+            setInitialIds={setInitialIds}
           />
           )}
 
@@ -600,14 +725,15 @@ const handleSubmit = () => {
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"ATLAS"}
-          textToDisplay={"Move to applicant :"}
+          textToDisplay={textToDisplay}
           onClose={() => {
             setIsAssignJobModelOpen(false);
+            setTextToDisplay("")
           }}
           isOpen={isAssignJobModelOpen}
           candidateData={selectedRows[0]}
           userDetails={userDetails}
-          submitFunction={handleBulkMoveToApplicants}
+          submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
       />}
 
       {editProfileView &&
@@ -620,6 +746,7 @@ const handleSubmit = () => {
           setSkippableCandidates([])
           setCurrentIndex(0)
           setSelectedCompany(null)
+          setTextToDisplay("")
         }}
         isOpen={editProfileView}    
         setCandidateList={setCandidateList}
@@ -642,10 +769,12 @@ const handleSubmit = () => {
                 setSuccessfullySentCandidateList("")
                 setIncompleteSentCandidateList("")
                 setRepeatedCandidatesList("")
+                setFailedCandidateDetails([])
             }}
             successfullySentCandidateList={successfullySentCandidateList}
             incompleteSentCandidateList={incompleteSentCandidateList}
             repeatedCandidatesList={repeatedCandidatesList}
+            failedCandidateDetails={failedCandidateDetails}
         />
       )}
       </div>
