@@ -6,25 +6,23 @@ import { SendIcon } from "lucide-react";
 import { FC, useEffect, useState } from "react";
 import { toast } from "react-toastify";
 
-interface PauseAgencyModalProps {
+interface PauseOrResumeAgencyModalProps {
   dashboardType:string;
   onClose: () => void;
   isOpen: boolean;
-  // referralData: any;
-  // onRefresh: () => void;
   isCandidate?: boolean;
   data:any;
   localUpdate: (id: string, updatedData: Partial<any>) => void;
+  currentAction:string;
 }
 
-const PauseAgencyModal: FC<PauseAgencyModalProps> = ({
+const PauseOrResumeAgencyModal: FC<PauseOrResumeAgencyModalProps> = ({
   onClose,
   isOpen,
-  // referralData,
-  // onRefresh,
   isCandidate,
   data,
-  localUpdate
+  localUpdate,
+  currentAction,
 }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -44,67 +42,66 @@ const PauseAgencyModal: FC<PauseAgencyModalProps> = ({
     }
   }, [isOpen]);
 
-  // const handleSubmit = async () => {
-  //   setIsLoading(true);
-  //   if (!referralData) {
-  //     toast.error("No company id found", getToastOptions({}));
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   if (!user) {
-  //     toast.error("No user found", getToastOptions({}));
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   if (!isCandidate) {
-  //     try {
-  //       const payload = {
-  //         action: "DONE",
-  //         emailId: user.email,
-  //         userId: user.sub,
-  //       };
-  //       const url = `/emp/referral/${referralData.id}/action`;
-  //       const { response } = await httpServiceObj.put(url, payload, true);
-  //       if (response) {
-  //         toast.success("Referral request marked as done", getToastOptions({}));
-  //         setIsError("");
-  //         onRefresh();
-  //         onClose();
-  //       }
-  //     } catch (error: any) {
-  //       const errorMsg = error?.message || "Something went wrong";
-  //       setIsError(errorMsg);
-  //       toast.error(errorMsg, getToastOptions({}));
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   } else {
-  //     try {
-  //       const url = `/user/${user.email}/referral/${referralData.id}/DONE`;
-  //       const { response } = await httpServiceObj.put(url, {}, true);
-  //       if (response) {
-  //         toast.success("Referral request marked as done", getToastOptions({}));
-  //         setIsError("");
-  //         onRefresh();
-  //         onClose();
-  //       }
-  //     } catch (error: any) {
-  //       const errorMsg = error?.message || "Something went wrong";
-  //       setIsError(errorMsg);
-  //       toast.error(errorMsg, getToastOptions({}));
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  // };
-  const pauseOrResume = () =>{
+  const pause = async () =>{
     if (!data) return;
-    const updatedData = {
-      ...data,
-      isPaused: !data.isPaused,
-    };
-    localUpdate(data.id, updatedData);
-    onClose();
+    if(data.inviteAction === "PAUSE"){
+      toast.error("Agency's action are already paused",getToastOptions({}))
+      return
+    }
+    setIsLoading(true)
+    try {
+      const payload =    {
+      inviteAction:"PAUSE",
+      agencyInviteId: data?.id,
+   }
+    const {response, error} = await httpServiceObj.patch(`/agency-invite/action-type`,payload,true,{},false,"AGENCY")
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+      toast.success("Agency action's paused successfully",getToastOptions({}))
+      const updatedData = {
+        ...data,
+        inviteAction: "PAUSE",
+      };
+      localUpdate(data.id, updatedData);
+      onClose();
+    } catch (error) {
+      console.log("Pause action failed",error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resume = async () =>{
+    if (!data) return;
+    if(data.inviteAction === "RESUME"){
+      toast.error("Agency's action are already resumed",getToastOptions({}))
+      return
+    }
+    setIsLoading(true)
+    try {
+      const payload =    {
+      inviteAction:"RESUME",
+      agencyInviteId: data?.id,
+   }
+      const {response, error} = await httpServiceObj.patch(`/agency-invite/action-type`,payload,true,{},false,"AGENCY")
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        toast.success("Agency action's resumed successfully",getToastOptions({}))
+        const updatedData = {
+          ...data,
+          inviteAction: "RESUME",
+        };
+        localUpdate(data.id, updatedData);
+        onClose();
+    } catch (error) {
+      console.log("Resume action failed",error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -122,7 +119,7 @@ const PauseAgencyModal: FC<PauseAgencyModalProps> = ({
           ×
         </button>
 
-        {data?.isPaused 
+        {data?.inviteAction === "PAUSE" 
         ? <p className="text-lg font-semibold mb-4">
           Are you sure you want to resume all activity for this agency?
         </p>
@@ -138,7 +135,7 @@ const PauseAgencyModal: FC<PauseAgencyModalProps> = ({
             className={`w-30 flex items-center gap-2 text-white text-sm font-medium px-4 py-3 rounded-xl transition-colors duration-200 ${
               isLoading ? "bg-blue-300 cursor-not-allowed" : "bg-blue-500 hover:bg-blue-300"
             }`}
-            onClick={pauseOrResume}
+            onClick={currentAction === "PAUSE" ? pause : resume}
             >
             <SendIcon className="w-4 h-4" />
             {isLoading ? "Accepting..." : "Accept"}
@@ -154,4 +151,4 @@ const PauseAgencyModal: FC<PauseAgencyModalProps> = ({
   );
 };
 
-export default PauseAgencyModal;
+export default PauseOrResumeAgencyModal;

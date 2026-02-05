@@ -485,7 +485,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           <SearchBarAgency
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText}
-            handleClick={() => console.log("as")}
+            handleClick={() => {}}
             placeholder="Search candidates by name, email and company name"
           />
         </div>

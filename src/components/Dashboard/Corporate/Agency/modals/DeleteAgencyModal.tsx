@@ -10,8 +10,6 @@ interface DeleteAgencyModalProps {
   onClose: () => void;
   isOpen: boolean;
   data:any;
-  // referralData: any;
-  // onRefresh: () => void;
   isCandidate?: boolean;
   localUpdate: (id: string, updatedData: Partial<any>) => void;
   removeAgencyLocally: (id: string) => void;
@@ -23,9 +21,6 @@ const DeleteAgencyModal: FC<DeleteAgencyModalProps> = ({
   data,
   localUpdate,
   removeAgencyLocally,
-  // referralData,
-  // onRefresh,
-  isCandidate,
 }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -46,68 +41,36 @@ const DeleteAgencyModal: FC<DeleteAgencyModalProps> = ({
   }, [isOpen]);
 
   const handleSubmit = async()=>{
-    const updatedData ={
-      ...data,
-      isDelete:true,
+    if (!data) return;
+    if(data.inviteAction === "DELETE"){
+      toast.error("Selected agency has already been deleted",getToastOptions({}))
+      return
     }
-    // localUpdate(data.id,updatedData)
-    removeAgencyLocally(data.id)
-    onClose()
+    setIsLoading(true)
+    try {
+      const payload =    {
+      inviteAction:"DELETE",
+      agencyInviteId: data?.id,
+   }
+      const {response, error} = await httpServiceObj.patch(`/agency-invite/action-type`,payload,true,{},false,"AGENCY")
+        if(error){
+          toast.error(error.message,getToastOptions({}))
+          return
+        }
+        toast.success("Agency Deleted successfully",getToastOptions({}))
+        const updatedData = {
+          ...data,
+          inviteAction: "DELETE",
+        };
+        localUpdate(data.id, updatedData);
+        onClose();
+    } catch (error) {
+      console.log("Resume action failed",error)
+    } finally {
+      setIsLoading(false)
+    }
   }
-  // const handleSubmit = async () => {
-  //   setIsLoading(true);
-  //   if (!referralData) {
-  //     toast.error("No company id found", getToastOptions({}));
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   if (!user) {
-  //     toast.error("No user found", getToastOptions({}));
-  //     setIsLoading(false);
-  //     return;
-  //   }
-  //   if (!isCandidate) {
-  //     try {
-  //       const payload = {
-  //         action: "DONE",
-  //         emailId: user.email,
-  //         userId: user.sub,
-  //       };
-  //       const url = `/emp/referral/${referralData.id}/action`;
-  //       const { response } = await httpServiceObj.put(url, payload, true);
-  //       if (response) {
-  //         toast.success("Referral request marked as done", getToastOptions({}));
-  //         setIsError("");
-  //         onRefresh();
-  //         onClose();
-  //       }
-  //     } catch (error: any) {
-  //       const errorMsg = error?.message || "Something went wrong";
-  //       setIsError(errorMsg);
-  //       toast.error(errorMsg, getToastOptions({}));
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   } else {
-  //     try {
-  //       const url = `/user/${user.email}/referral/${referralData.id}/DONE`;
-  //       const { response } = await httpServiceObj.put(url, {}, true);
-  //       if (response) {
-  //         toast.success("Referral request marked as done", getToastOptions({}));
-  //         setIsError("");
-  //         onRefresh();
-  //         onClose();
-  //       }
-  //     } catch (error: any) {
-  //       const errorMsg = error?.message || "Something went wrong";
-  //       setIsError(errorMsg);
-  //       toast.error(errorMsg, getToastOptions({}));
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
-  //   }
-  // };
-  
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${

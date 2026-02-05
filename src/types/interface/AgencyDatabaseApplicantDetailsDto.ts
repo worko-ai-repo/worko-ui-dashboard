@@ -208,7 +208,7 @@ export interface AgencyListDetailsDto {
   totalCandidatesSubmitted: number;
   totalCandidateRejected: number;
   totalCandidateHired: number;
-  isPaused: boolean;
+  inviteAction: "PAUSE" | "RESUME" | "DELETE";
   isDelete: boolean;
 
   //fake data

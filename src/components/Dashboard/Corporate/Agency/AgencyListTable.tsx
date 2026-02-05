@@ -27,7 +27,7 @@ import { Edit, View } from "@AssetsFolder/assets";
 import AssignJobModal from "./modals/AssignJobModal";
 import RemoveJobModal from "./modals/RemoveJobModal";
 import EditAgencyModal, { FormValues } from "./modals/EditAgencyModal";
-import PauseAgencyModal from "./modals/PauseAgencyModal";
+import PauseOrResumeAgencyModal from "./modals/PauseOrResumeAgencyModal";
 import DeleteAgencyModal from "./modals/DeleteAgencyModal";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
@@ -36,7 +36,7 @@ import {
   newDisplayStatus,
   statusColors,
 } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
-import { JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
+import { AgencyCurrentStatus, JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -44,6 +44,16 @@ import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
+
+export const statusColorsForAgencyStatus: Record<AgencyCurrentStatus, string> = {
+  DELETE:"bg-[#FFD0D0] text-[#D40000]",
+  PAUSE:"bg-[#FFF3CD] text-[#856404]",
+};
+
+export const newDisplayStatusForAgencyStatus: Record<AgencyCurrentStatus, string> = {
+  DELETE:"Deleted",
+  PAUSE:"Paused",
+};
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -119,7 +129,7 @@ export default function AgencyListTable(props: any) {
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
-
+  const [currentAction, setCurrentAction] = useState<string>("");
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
     agencyName: ["agencyName"],
@@ -290,9 +300,11 @@ export default function AgencyListTable(props: any) {
       sortable: false,
       contentWidth: `max-w-none`,
       render: (row: AgencyListDetailsDto) => {
-        if (row.inviteStatus === "AWAITING" || row.inviteStatus === "REJECTED") return null;
+        if (row.inviteStatus === "AWAITING" || row.inviteStatus === "REJECTED" || row.inviteAction === "DELETE") return null;
         return (
           <div className="flex justify-start m-auto gap-1">
+        {row.inviteAction !== "PAUSE" &&            
+          <>
             <div className="flex flex-row">
               <button
                 data-tooltip-id="my-tooltip"
@@ -323,6 +335,8 @@ export default function AgencyListTable(props: any) {
                 <span className="text-xs">Remove jobs</span>
               </button>
             </div>
+          </>
+          }
 
             <button
               className="border rounded-lg p-2"
@@ -340,14 +354,14 @@ export default function AgencyListTable(props: any) {
             <button
               className="border rounded-lg p-2"
               data-tooltip-id="my-tooltip"
-              data-tooltip-content={row?.isPaused ? "Resume actions" : "Pause actions"}
+              data-tooltip-content={row?.inviteAction === "PAUSE" ? "Resume actions" : "Pause actions"}
               data-tooltip-place="top"
-              disabled={true}
               onClick={() => {
                 setIsPauseAgencyModelOpen(true);
                 setEditProfileData(row);
+                setCurrentAction(row?.inviteAction === "PAUSE" ? "RESUME" : "PAUSE")
               }}>
-              {row?.isPaused ? (
+              {row?.inviteAction === "PAUSE" ? (
                 <CirclePlay className="w-5 h-5 shrink-0" />
               ) : (
                 <CirclePause className="w-5 h-5 shrink-0" />
@@ -355,8 +369,6 @@ export default function AgencyListTable(props: any) {
             </button>
 
             <button
-              // disabled={row.isDelete}
-              disabled={true}
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Delete agency"
               data-tooltip-place="top"
@@ -410,11 +422,11 @@ export default function AgencyListTable(props: any) {
       label: "Current status",
       sortable: true,
       render: (row: AgencyListDetailsDto) => {
-        const colorClass =
-          statusColors[row.inviteStatus as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
-
-        return (
-          <div className="flex justify-center  mx-auto p-2 w-fit relative">
+        const colorClass = statusColors[row.inviteStatus as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
+        const colorClassForAgencyStatus = statusColorsForAgencyStatus[row.inviteAction as AgencyCurrentStatus] ?? "bg-gray-100 text-gray-500";
+        return (   
+          <div className="flex justify-center items-center mx-auto p-2 w-fit relative">
+            {row.inviteAction !== "PAUSE" && row.inviteAction !== "DELETE" ?
             <span
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
@@ -422,6 +434,14 @@ export default function AgencyListTable(props: any) {
               className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
               {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
             </span>
+            : <span
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
+              data-tooltip-place="top"
+              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
+              {newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
+            </span>
+            }
           </div>
         );
       },
@@ -518,15 +538,17 @@ export default function AgencyListTable(props: any) {
           localUpdate={localUpdate}
         />
       )}
-        <PauseAgencyModal
+        <PauseOrResumeAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
             setIsPauseAgencyModelOpen(false);
             setEditProfileData(null)
+            setCurrentAction("")
           }}
           isOpen= {isPauseAgencyModelOpen}
           data={editProfileData}
           localUpdate={localUpdate}
+          currentAction={currentAction}
         />
 
         <DeleteAgencyModal

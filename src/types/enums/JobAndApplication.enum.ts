@@ -33,7 +33,7 @@ export enum JobApplicationStatusEnum {
 
   REVISED_LETTER = "REVISED_LETTER",
   OFFER_ACCEPTED = "OFFER_ACCEPTED",
-  AWAITING = "AWAITING"
+  AWAITING = "AWAITING",
 }
 
 /**
@@ -229,4 +229,9 @@ export enum HiringEligibilityStatusEnum{
   UNDER_COOLING_PERIOD = "UNDER_COOLING_PERIOD",
   UNDER_PROCESSING = "UNDER_PROCESSING",
   ACTIVE="ACTIVE"
+}
+
+export enum AgencyStatusEnum {
+  DELETE="DELETE",
+  PAUSE="PAUSE",
 }

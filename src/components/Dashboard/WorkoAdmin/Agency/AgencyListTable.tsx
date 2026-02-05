@@ -13,7 +13,7 @@ import AssignJobModal from "./modals/AssignJobModal";
 import { DynamicTableTwo } from "@Components/Shared/DynamicTableTwo";
 import Modal from "@Components/Shared/Modal";
 import { newDisplayStatus, statusColors } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
-import { JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
+import { AgencyCurrentStatus, JobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
 import NoDataPresent from "@Components/Shared/NoDataPresent";
 import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -21,6 +21,7 @@ import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { AwsS3FileUploadResponse } from "@Interfaces/Auth.dto";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
+import { newDisplayStatusForAgencyStatus, statusColorsForAgencyStatus } from "@Components/Dashboard/Corporate/Agency/AgencyListTable";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -312,19 +313,28 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
       label: "Current status",
       sortable: true,
       render: (row: AgencyListDetailsDto) => {
-          const colorClass = statusColors[row.inviteStatus as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
-
-          return (
-              <div className="flex justify-center  mx-auto p-2 w-fit relative">
-              <span
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
-                  data-tooltip-place="top"
-                  className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
-                  {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
-              </span>
-              </div>
-          );
+      const colorClass = statusColors[row.inviteStatus as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
+      const colorClassForAgencyStatus = statusColorsForAgencyStatus[row.inviteAction as AgencyCurrentStatus] ?? "bg-gray-100 text-gray-500"
+        return (   
+          <div className="flex justify-center items-center mx-auto p-2 w-fit relative">
+            {row.inviteAction !== "PAUSE" && row.inviteAction !== "DELETE" ?
+            <span
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
+              data-tooltip-place="top"
+              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
+              {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
+            </span>
+            : <span
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
+              data-tooltip-place="top"
+              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
+              {newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
+            </span>
+            }
+          </div>
+        );
       },
     },
 ];
