@@ -153,6 +153,42 @@ class CorporateService {
   }
 
   /**
+   * bulkCloseJobs
+   *
+   * @type {PATCH}
+   *
+   * @description - This api is used to bulk close jobs with soft delete reasons.
+   *
+   * @return {any} - Bulk close metrics containing success and failure counts/ids.
+   */
+  async bulkCloseJobs(payload: {
+    jobs: {
+      jobId: string;
+      companyId?: string;
+      jobTitle: string;
+    }[];
+    shortSoftDeleteReason: string;
+    detailedSoftDeleteReason?: string;
+  }): Promise<any> {
+    try {
+      const { response } = await httpServiceObj.patch<any>(
+        "/job/bulk-close",
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+
+      if (response) return response;
+      throw new Error("Empty response");
+    } catch (error: any) {
+      console.error("[CORPORATE SERVICE]: Failed to bulk close Jobs.", error);
+      return null;
+    }
+  }
+
+  /**
    * updateJob
    *
    * @type {PUT}
