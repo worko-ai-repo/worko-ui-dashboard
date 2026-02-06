@@ -44,12 +44,13 @@ const navigationItems: NavItem[] = [
     icon: JobIcon,
     dashboardTypes: ["CORPORATE", "CANDIDATE"],
   },
-  {
-    id: "referral",
-    label: "Referral",
-    icon: ReferralIcon,
-    dashboardTypes: ["EMPLOYEE", "CANDIDATE"/* ,"CORPORATE" */],
-  },
+  // referral is being removed from everywhere
+  // {
+  //   id: "referral",
+  //   label: "Referral",
+  //   icon: ReferralIcon,
+  //   dashboardTypes: ["EMPLOYEE", "CANDIDATE"],
+  // },
   {
     id: "guidance",
     label: "Guidance",
@@ -108,12 +109,13 @@ const navigationItems: NavItem[] = [
     ),
     dashboardTypes: ["ADMIN"],
   },
-  {
-    id: "aReferrals",
-    label: "Referrals",
-    icon: ReferralIcon,
-    dashboardTypes: ["ADMIN"],
-  },
+  // referral is being removed from everywhere
+  // {
+  //   id: "aReferrals",
+  //   label: "Referrals",
+  //   icon: ReferralIcon,
+  //   dashboardTypes: ["ADMIN"],
+  // },
   {
     id: "agencyList",
     label: "Agency List",

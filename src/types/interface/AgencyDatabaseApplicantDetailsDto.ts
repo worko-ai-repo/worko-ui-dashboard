@@ -131,6 +131,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   relevantYOE:number;
   currentCTC:number;
   expectedCTC:number;
+  noticePeriod:number;
   cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "CORP_CAND_REFERRAL_CV";
   cvAwsS3FileName:string;
   cvAwsS3FilePath:string;

@@ -38,10 +38,10 @@ const CandidateDashboard = () => {
             </Suspense>
           ),
         },
-        {
-          path: "referral",
-          element: <Referrals />,
-        },
+        // {
+        //   path: "referral",
+        //   element: <Referrals />,
+        // },
         {
           path: "guidance",
           element: <Guidance />,
@@ -58,10 +58,10 @@ const CandidateDashboard = () => {
           path: "support",
           element: <Support />,
         },
-        {
-          path: "*",
-          element: <PageNotFound />,
-        },
+        // {
+        //   path: "*",
+        //   element: <PageNotFound />,
+        // },
       ],
     },
     {

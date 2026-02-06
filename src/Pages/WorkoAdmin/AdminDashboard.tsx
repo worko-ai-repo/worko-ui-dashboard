@@ -129,14 +129,14 @@ const AdminDashboard = () => {
             </Suspense>
           ),
         },
-        {
-          path: "aReferrals",
-          element: (
-            <Suspense fallback={<MainLoader />}>
-              <AdminReferrals />
-            </Suspense>
-          ),
-        },
+        // {
+        //   path: "aReferrals",
+        //   element: (
+        //     <Suspense fallback={<MainLoader />}>
+        //       <AdminReferrals />
+        //     </Suspense>
+        //   ),
+        // },
         {
           path: "allCandidates",
           element: (

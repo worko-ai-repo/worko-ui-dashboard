@@ -188,6 +188,7 @@ export default function SearchResultsTable(props: any) {
     about: ["about"],
     currentCTC: ["currentCTC"],
     expectedCTC: ["expectedCTC"],
+    noticePeriod:["noticePeriod"],
   };
 
   const sortableData = useMemo(() => {
@@ -523,6 +524,13 @@ useEffect(() => {
           <span>{row?.expectedCTC ?? "NA"}</span>
         </div>
       ),
+    },
+    {
+      key: "noticePeriod",
+      label: "Notice period",
+      sortable: true,
+      contentWidth: `max-w-none`,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.noticePeriod ?? "NA"
     },
     {
       key: "viewCV",
