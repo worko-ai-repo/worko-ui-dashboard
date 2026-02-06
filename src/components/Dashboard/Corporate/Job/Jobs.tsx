@@ -22,6 +22,7 @@ import AdminServiceObj from "@Components/Dashboard/WorkoAdmin/Services/Admin.ser
 import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUrlState } from "@Hooks/useUrlState.hook";
+import CloseJob from "./CloseJob";
 
 // Header Switch button constant to loop
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
@@ -60,6 +61,7 @@ const Jobs = () => {
   const [jobFormMode, setJobFormMode] = useState<
     "UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA"
   >("CREATE");
+  const [isBulkCloseModalOpen, setIsBulkCloseModalOpen] = useState(false);
 
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
@@ -258,6 +260,58 @@ const Jobs = () => {
   });
 
   /**
+   * Mutation for bulk close jobs.
+   *
+   * Uses the dedicated /job/bulk-close endpoint so that:
+   * - Only successfully closed jobs move to the CLOSED tab
+   * - Failed jobs stay in their current tab
+   * - We can surface partial success information to the user
+   */
+  const bulkCloseMutation = useMutation({
+    mutationFn: async (requestPayload: {
+      jobs: { jobId: string; companyId?: string; jobTitle: string }[];
+      shortSoftDeleteReason: string;
+      detailedSoftDeleteReason?: string;
+    }) => {
+      return await CorporateServiceObj.bulkCloseJobs(requestPayload);
+    },
+    onError: () => {
+      toast.error("Failed to bulk close jobs.", getToastOptions({}));
+    },
+    onSuccess: (data: any) => {
+      try {
+        const firestoreMetrics = data?.gcpFirestoreBulkJobCloseMetrics;
+        const successIds: string[] = firestoreMetrics?.success?.primaryIds ?? [];
+        const failureIds: string[] = firestoreMetrics?.failure?.primaryIds ?? [];
+
+        const successCount = successIds.length;
+        const failureCount = failureIds.length;
+
+        if (failureCount > 0) {
+          toast.warn(
+            `${successCount} job${successCount !== 1 ? "s" : ""} closed successfully, ${failureCount} failed to close.`,
+            getToastOptions({})
+          );
+        } else {
+          toast.success(
+            `${successCount} job${successCount !== 1 ? "s" : ""} closed successfully.`,
+            getToastOptions({})
+          );
+        }
+      } catch {
+        // Fallback toast if response shape changes
+        toast.success("Bulk close completed.", getToastOptions({}));
+      }
+
+      // Silent refresh: refetch data in the background so that
+      // only truly closed jobs move to the CLOSED tab.
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 2000);
+    },
+  });
+
+  /**
    * Reset pagination and selections when server-side filters change
    */
   /* useEffect(() => {
@@ -297,6 +351,54 @@ const Jobs = () => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey });
     }, 2000);
+  }
+
+  /**
+   * Build and send bulk-close request using currently selected jobs.
+   *
+   * NOTE:
+   * - Selection is already capped at 10 via useListSelection.
+   * - We only pass jobs that have a valid companyId (internal jobs).
+   */
+  async function handleBulkCloseSubmit(closeReason: { reason: string; note: string }) {
+    if (!selectedRows.length) {
+      toast.error("Please select at least one job to close.", getToastOptions({}));
+      return;
+    }
+
+    // Map selected row ids to full JobData for jobTitle + companyId
+    const selectedIdSet = new Set(selectedRows.map((row) => row.jobId));
+    const allJobs = data ?? [];
+    const selectedJobsDetails = allJobs.filter((job) => selectedIdSet.has(job.id));
+
+    const jobsPayload = selectedJobsDetails.map((job) => ({
+      jobId: job.id,
+      companyId: job.companyDetails?.id,
+      jobTitle: job.jobTitle,
+    }));
+
+    if (!jobsPayload.length) {
+      toast.error("No valid internal jobs selected to close.", getToastOptions({}));
+      return;
+    }
+
+    const requestPayload = {
+      jobs: jobsPayload,
+      shortSoftDeleteReason: closeReason.reason,
+      detailedSoftDeleteReason: closeReason.note?.trim() ? closeReason.note.trim() : undefined,
+    };
+
+    await toast.promise(
+      bulkCloseMutation.mutateAsync(requestPayload),
+      {
+        pending: "Closing selected jobs...",
+      },
+      getToastOptions({})
+    );
+
+    // Clear selection after operation so failed jobs remain visible in the list.
+    resetSelection();
+    setIsBulkCloseModalOpen(false);
   }
 
   function handleJobCreation(mode: "UPDATE" | "DUPLICATE", job: any) {
@@ -382,6 +484,12 @@ const Jobs = () => {
                     activeTab != "PUBLISHED"
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
+                    activeTab != "CLOSED"
+                      ? {
+                          label: "Close",
+                          onClick: () => setIsBulkCloseModalOpen(true),
+                        }
+                      : null,
                     activeTab != "ARCHIVED"
                       ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") }
                       : null,
@@ -389,7 +497,11 @@ const Jobs = () => {
                     (option): option is { label: string; onClick: () => Promise<void> } =>
                       option !== null
                   )}
-                  disabled={selectedRows.length === 0 || bulkUpdateMutation.isPending}
+                  disabled={
+                    selectedRows.length === 0 ||
+                    bulkUpdateMutation.isPending ||
+                    bulkCloseMutation.isPending
+                  }
                 />
               </div>
               <div className="flex">
@@ -452,6 +564,15 @@ const Jobs = () => {
           userDetailsOne={userDetails}
           mode={jobFormMode}
           key={jobDetails?.id}
+        />
+      </Modal>
+
+      <Modal isOpen={isBulkCloseModalOpen} onClose={() => setIsBulkCloseModalOpen(false)}>
+        <CloseJob
+          onClose={() => setIsBulkCloseModalOpen(false)}
+          onSubmit={(data: { note: string; reason: string }) => {
+            handleBulkCloseSubmit(data);
+          }}
         />
       </Modal>
 

@@ -22,6 +22,7 @@ import { CursorPaginationAdminJobDataParams } from "@Interfaces/AdminServices.dt
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import CompanyFilter, { CompanyFilterValues } from "@Components/Shared/PostJob/CompanyFilter";
+import CloseJob from "./CloseJob";
 
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
 export type SelectedRow = {
@@ -60,6 +61,7 @@ const AdminJobs = () => {
   const [jobFormMode, setJobFormMode] = useState<
     "UPDATE" | "CREATE" | "DUPLICATE" | "CREATE_WITH_DATA"
   >("CREATE");
+  const [isBulkCloseModalOpen, setIsBulkCloseModalOpen] = useState(false);
   const userCognitoDetails = secureStorage.getItem<CognitoMetaDataDto>(
     SecureStorageKeyEnum.COGNITOUSERDETAILS
   );
@@ -255,6 +257,55 @@ const AdminJobs = () => {
     },
   });
 
+  /**
+   * Mutation for bulk close jobs (admin).
+   *
+   * Uses the /job/bulk-close endpoint and relies on a silent refresh
+   * so that only successfully closed jobs move to the CLOSED tab;
+   * failed ones stay where they are.
+   */
+  const bulkCloseMutation = useMutation({
+    mutationFn: async (requestPayload: {
+      jobs: { jobId: string; companyId?: string; jobTitle: string }[];
+      shortSoftDeleteReason: string;
+      detailedSoftDeleteReason?: string;
+    }) => {
+      return await AdminServiceObj.bulkCloseJobs(requestPayload);
+    },
+    onError: () => {
+      toast.error("Failed to bulk close jobs.", getToastOptions({}));
+    },
+    onSuccess: (data: any) => {
+      try {
+        const firestoreMetrics = data?.gcpFirestoreBulkJobCloseMetrics;
+        const successIds: string[] = firestoreMetrics?.success?.primaryIds ?? [];
+        const failureIds: string[] = firestoreMetrics?.failure?.primaryIds ?? [];
+
+        const successCount = successIds.length;
+        const failureCount = failureIds.length;
+
+        if (failureCount > 0) {
+          toast.warn(
+            `${successCount} job${successCount !== 1 ? "s" : ""} closed successfully, ${failureCount} failed to close.`,
+            getToastOptions({})
+          );
+        } else {
+          toast.success(
+            `${successCount} job${successCount !== 1 ? "s" : ""} closed successfully.`,
+            getToastOptions({})
+          );
+        }
+      } catch {
+        toast.success("Bulk close completed.", getToastOptions({}));
+      }
+
+      // Silent refresh to sync with backend state
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey });
+      }, 2000);
+    },
+  });
+
   useEffect(() => {
     reset();
     resetSelection();
@@ -288,6 +339,48 @@ const AdminJobs = () => {
     setTimeout(() => {
       queryClient.invalidateQueries({ queryKey });
     }, 2000);
+  }
+
+  /**
+   * Build and send bulk-close request using currently selected jobs (admin).
+   */
+  async function handleBulkCloseSubmit(closeReason: { reason: string; note: string }) {
+    if (!selectedRows.length) {
+      toast.error("Please select at least one job to close.", getToastOptions({}));
+      return;
+    }
+
+    const selectedIdSet = new Set(selectedRows.map((row) => row.jobId));
+    const allJobs = filteredData ?? [];
+    const selectedJobsDetails = allJobs.filter((job) => selectedIdSet.has(job.id));
+
+    const jobsPayload = selectedJobsDetails.map((job) => ({
+      jobId: job.id,
+      companyId: job.companyDetails?.id,
+      jobTitle: job.jobTitle,
+    }));
+
+    if (!jobsPayload.length) {
+      toast.error("No valid internal jobs selected to close.", getToastOptions({}));
+      return;
+    }
+
+    const requestPayload = {
+      jobs: jobsPayload,
+      shortSoftDeleteReason: closeReason.reason,
+      detailedSoftDeleteReason: closeReason.note?.trim() ? closeReason.note.trim() : undefined,
+    };
+
+    await toast.promise(
+      bulkCloseMutation.mutateAsync(requestPayload),
+      {
+        pending: "Closing selected jobs...",
+      },
+      getToastOptions({})
+    );
+
+    resetSelection();
+    setIsBulkCloseModalOpen(false);
   }
 
   // this useEffect to handle URL changes (back/forward navigation)
@@ -383,7 +476,10 @@ const AdminJobs = () => {
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
                     activeTab != "CLOSED"
-                      ? { label: "Close", onClick: () => callBulkUpdate("CLOSED") }
+                      ? {
+                          label: "Close",
+                          onClick: () => setIsBulkCloseModalOpen(true),
+                        }
                       : null,
                     activeTab != "ARCHIVED"
                       ? { label: "Archive", onClick: () => callBulkUpdate("ARCHIVED") }
@@ -392,7 +488,11 @@ const AdminJobs = () => {
                     (option): option is { label: string; onClick: () => Promise<void> } =>
                       option !== null
                   )}
-                  disabled={selectedRows.length === 0 || bulkUpdateMutation.isPending}
+                  disabled={
+                    selectedRows.length === 0 ||
+                    bulkUpdateMutation.isPending ||
+                    bulkCloseMutation.isPending
+                  }
                 />
               </div>
               <div className="flex">
@@ -454,6 +554,15 @@ const AdminJobs = () => {
           userDetailsOne={userDetails}
           mode={jobFormMode}
           key={jobDetails?.id}
+        />
+      </Modal>
+
+      <Modal isOpen={isBulkCloseModalOpen} onClose={() => setIsBulkCloseModalOpen(false)}>
+        <CloseJob
+          onClose={() => setIsBulkCloseModalOpen(false)}
+          onSubmit={(data: { note: string; reason: string }) => {
+            handleBulkCloseSubmit(data);
+          }}
         />
       </Modal>
 
