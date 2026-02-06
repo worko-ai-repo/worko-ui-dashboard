@@ -101,7 +101,7 @@ const SearchPrompt: React.FC = () => {
   return (
     <div className="flex flex-col justify-start items-center min-h-screen w-full bg-background">
       <div className="flex flex-col justify-center items-center text-center mb-8">
-        <img src={atlas} alt="worko_logo" className="w-full max-w-xl h-auto" />
+        <img src={atlas} alt="worko_logo" className="w-full max-w-xl h-24" />
         <p className="text-muted-foreground text-sm">
           Find exactly who you're looking for, in seconds.
         </p>

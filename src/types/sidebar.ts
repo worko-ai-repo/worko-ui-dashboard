@@ -31,6 +31,7 @@ export type TabId =
 | 'invoice-&-payment'
 | 'settings'
 | 'referralsSettings'
+| 'profileSettings'
 // Admin Dashboard Tabs
 | 'ajobs'
 | 'aApplicants'

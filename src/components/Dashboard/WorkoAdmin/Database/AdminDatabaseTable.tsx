@@ -674,23 +674,29 @@ return (
 
       {/* Education */}
       <div>
-        <span className="font-semibold text-black">Edcucation</span>
+        <span className="font-semibold text-black">Education</span>
         {Array.isArray(row?.candidateParsedCvDetails?.education) &&
         row.candidateParsedCvDetails.education.length > 0 ? (
-          row.candidateParsedCvDetails.education.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
-            const start = exp?.startDate
-              ? new Date(exp.startDate).getFullYear()
-              : "-";
+          row.candidateParsedCvDetails.education.map((edu:{degree:String, 
+              collage:String, 
+              YOE:number,
+              passingYear:number,
+              // startDate:string,
+              // endDate:string
+            }, index:number) => {
+            // const start = edu?.startDate
+            //   ? new Date(edu.startDate).getFullYear()
+            //   : "-";
 
-            const end = exp?.endDate
-              ? new Date(exp.endDate).getFullYear()
-              : exp?.endDate === "" 
-                ? "Present"
-                : "-";
+            // const end = edu?.endDate
+            //   ? new Date(edu.endDate).getFullYear()
+            //   : edu?.endDate === "" 
+            //     ? "Present"
+            //     : "-";
 
             return (
               <p key={index} className="mt-2">
-                {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
+                {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
               </p>
             );
           })

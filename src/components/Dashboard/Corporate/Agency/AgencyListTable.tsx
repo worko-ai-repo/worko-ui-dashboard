@@ -302,7 +302,7 @@ export default function AgencyListTable(props: any) {
       render: (row: AgencyListDetailsDto) => {
         if (row.inviteStatus === "AWAITING" || row.inviteStatus === "REJECTED" || row.inviteAction === "DELETE") return null;
         return (
-          <div className="flex justify-start m-auto gap-1">
+          <div className="flex justify-center m-auto gap-1">
         {row.inviteAction !== "PAUSE" &&            
           <>
             <div className="flex flex-row">

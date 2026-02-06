@@ -218,25 +218,32 @@ const navigationItems: NavItem[] = [
     dashboardTypes: ["CORPORATE"],
   },
   {
-    id: "invites",
-    label: "Invites",
-    icon: InviteIcon,
-    dashboardTypes: ["CORPORATE"],
-  },
-  {
     id: "settings",
     label: "Settings",
     icon: <Settings />,
     dashboardTypes: ["CORPORATE"],
     expandable:true,
     child: [
+      {
+        id: "invites",
+        label: "Invites",
+        icon: InviteIcon,
+        dashboardTypes: ["CORPORATE"],
+      },
       { 
         id: "referralsSettings",
         label: "Referral Settings",
         icon: <User/>,
         dashboardTypes: ["CORPORATE"],
         expandable: false,
-      }
+      },
+      // { 
+      //   id: "profileSettings",
+      //   label: "Profile Settings",
+      //   icon: <User/>,
+      //   dashboardTypes: ["CORPORATE"],
+      //   expandable: false,
+      // },
     ]
   },
   /* {

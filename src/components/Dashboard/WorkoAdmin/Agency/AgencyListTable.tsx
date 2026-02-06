@@ -251,7 +251,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         render: (row: AgencyListDetailsDto) => {
           if (row.inviteStatus === "AWAITING" || row.inviteStatus === "REJECTED") return null;
           return (
-              <div className='flex justify-start m-auto gap-1'>
+              <div className='flex justify-center m-auto gap-1'>
                   <div className="flex flex-row">
                       <button
                           data-tooltip-id="my-tooltip"

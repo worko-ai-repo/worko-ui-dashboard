@@ -148,7 +148,7 @@ const CorporateDashboard = () => {
           path: "invites",
           element: (
             <Suspense fallback={<MainLoader />}>
-              <Invites />
+              {isCorporateAdmin ? <Invites /> : <AccessDenied />}
             </Suspense>
           ),
         },
@@ -162,6 +162,14 @@ const CorporateDashboard = () => {
         },
         {
           path: "referralsSettings",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              {isCorporateAdmin ? <ReferralSettings /> : <AccessDenied />}
+            </Suspense>
+          ),
+        },
+        {
+          path: "profileSettings",
           element: (
             <Suspense fallback={<MainLoader />}>
               {isCorporateAdmin ? <ReferralSettings /> : <AccessDenied />}
