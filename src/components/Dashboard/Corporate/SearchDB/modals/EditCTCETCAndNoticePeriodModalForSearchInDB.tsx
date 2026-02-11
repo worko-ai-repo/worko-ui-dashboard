@@ -101,7 +101,11 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
 
     // Checking for those candidates for which details is not entered
     const incomplete = updated.filter(c => {
-        return !c.currentCTC || !c.expectedCTC || !c.noticePeriod;
+        return (
+            c.currentCTC === null || c.currentCTC === undefined ||
+            c.expectedCTC === null || c.expectedCTC === undefined ||
+            c.noticePeriod === null || c.noticePeriod === undefined
+        );
     });
 
     if (incomplete.length > 0) {
@@ -119,11 +123,19 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
 
   const continueSubmit = async (updated: any) => {    
     const filtered = updated.filter((c:any) => {
-        return c.currentCTC && c.expectedCTC && c.noticePeriod;
+        return (
+            c.currentCTC !== null && c.currentCTC !== undefined &&
+            c.expectedCTC !== null && c.expectedCTC !== undefined &&
+            c.noticePeriod !== null && c.noticePeriod !== undefined
+        );
     });
     // filtering out candidates with missing details
     const inCompleteCandidates = updated.filter((c:any) => {
-        return !c.currentCTC || !c.expectedCTC || !c.noticePeriod;
+        return (
+            c.currentCTC === null || c.currentCTC === undefined ||
+            c.expectedCTC === null || c.expectedCTC === undefined ||
+            c.noticePeriod === null || c.noticePeriod === undefined
+        );
     });
     const nameOfIncompleteCandidates = inCompleteCandidates.map((row:any)=>{
         return row.name
@@ -257,43 +269,59 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
 
         {/* Red warning text */}
         <h2 className="text-sm text-red-500 mb-4 text-left">
-        {`${currentCandidate?.name ?? "Candidate"} profile does not contain CTC, ETC and Notice Period or details are older than 90 days — these fields are mandatory to update`}
+        {`${currentCandidate?.name ?? "Candidate"} profile does not contain CTC, ETC and Notice Period or details are older than 90 days - these fields are mandatory to update`}
         </h2>
 
         <form onSubmit={handleSubmit(formSubmit)}>
             <div className='text-left'>
                 <label htmlFor="">Current CTC(LPA)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
-                <input type="number" 
+                <input 
+                step={0.1}
+                min={0}
+                type="number"
                 className="input_primary auth_input capitalize"
-                {...register("currentCTC")}/>
+                {...register("currentCTC",{ valueAsNumber: true})}/>
             </div>
             <div className='text-left'>
                 <label htmlFor="">Expected CTC(LPA)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
-                <input type="number" 
+                <input 
+                step={0.1}
+                min={0}
+                type="number" 
                 className="input_primary auth_input capitalize"
-                {...register("expectedCTC")}/>
+                {...register("expectedCTC",{ valueAsNumber: true,            
+                    validate: (value) => {
+                    const current = watch("currentCTC");
+                    return value >= current || "Expected CTC cannot be less than Current CTC";
+                }})}/>
+                {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
+                )}
             </div>    
-            {/* <div className='text-left'>
-                <label htmlFor="">Notice Period <span className='text-red-500'>*</span></label>
-                <select 
-                    className="input_primary auth_input capitalize"
-                    {...register("noticePeriod")}
-                >
-                    <option value="">Select notice period</option>
-                    <option value="15">15</option>
-                    <option value="30">30</option>
-                    <option value="45">45</option>
-                    <option value="60">60</option>
-                    <option value="90">90</option>
-                </select>
-            </div> */}
             <div className='text-left'>
+                <label htmlFor="">Notice period (in days)<span className='text-red-500'>*</span></label>
+                <select
+                    className="input_primary auth_input"
+                    {...register("noticePeriod", {
+                        valueAsNumber: true,
+                    })}
+                >
+                    <option value={0}>Immediate</option>
+                    <option value={15}>15 Days</option>
+                    <option value={30}>30 Days</option>
+                    <option value={45}>45 Days</option>
+                    <option value={60}>60 Days</option>
+                    <option value={90}>90 Days</option>
+                    <option value={120}>120 Days</option>
+                </select>
+                {errors.noticePeriod && <p className="text-red-500 text-sm">Please select from the options</p>}
+            </div>
+            {/* <div className='text-left'>
                 <label htmlFor="">Notice Period(in days)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
                 <input 
                     type="number"
@@ -303,7 +331,7 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
                     })}
                 />
                 {errors.noticePeriod && <p className="text-red-500 text-sm">Please enter a valid number</p>}
-            </div>
+            </div> */}
             <div className="flex justify-start mt-4 gap-3">
             <button
                 className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white

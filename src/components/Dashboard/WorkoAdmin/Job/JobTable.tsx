@@ -10,7 +10,7 @@ import { JobData } from "@Interfaces/CorporateDashboard.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
-import { Building2, Filter, Link, Loader2, X } from "lucide-react";
+import { Building2, Filter, Link, Link2, Loader2, X } from "lucide-react";
 import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
@@ -307,6 +307,18 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   `${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`,
                   "_blank"
                 ),
+              disabled: isRowUpdating,
+            },
+            {
+              icon: <Link2 className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Copy External Link",
+              onClick: () => {
+                const baseUrl = window.location.origin; 
+                const finalUrl = `${baseUrl}/v0/apply-job?jobId=${row?.id}`;
+                navigator.clipboard.writeText(finalUrl);
+                toast.success("Link copied!",getToastOptions({}));
+              },
               disabled: isRowUpdating,
             },
             {

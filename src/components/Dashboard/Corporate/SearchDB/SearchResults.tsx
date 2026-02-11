@@ -513,11 +513,11 @@ const handlePageChange = useCallback(
 
     const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
 
-    // All 3 fields must be non-zero
+    // All 3 fields must be undefined or null
     const allNonZero =
-      currentCTC !== 0 &&
-      expectedCTC !== 0 &&
-      noticePeriod !== 0;
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
 
     // updatedAt must be within last 90 days
     const updatedDate:any = new Date(updatedAt);

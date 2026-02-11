@@ -131,15 +131,27 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             <div className='flex gap-2'>
                 <div className='text-left flex-1'>
                     <label htmlFor="">Current CTC</label>
-                    <input type="text" 
+                    <input 
+                    type="number"
+                    step={0.1}
+                    min={0}  
                     className="input_primary auth_input capitalize"
-                    {...register("currentCTC")}/>
+                    {...register("currentCTC",{ valueAsNumber: true })}/>
                 </div>
                 <div className='text-left flex-1'>
                     <label htmlFor="">Expected CTC</label>
-                    <input type="text" 
+                    <input
+                    type="number"
+                    step={0.1}
+                    min={0}
                     className="input_primary auth_input capitalize"
-                    {...register("expectedCTC")}/>
+                    {...register("expectedCTC",{ valueAsNumber: true,                         
+                        validate: (value) => {
+                        const current = watch("currentCTC");
+                        return value >= current || "Expected CTC cannot be less than Current CTC";
+                    }})}/>
+                    {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
+                    )}
                 </div>
             </div>
             <div className='flex gap-2'>     
@@ -149,12 +161,32 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     className="input_primary auth_input capitalize"
                     {...register("locationComfortableWith")}/>
                 </div>
-                <div className='text-left flex-1'>
+                {/* <div className='text-left flex-1'>
                     <label htmlFor="">Notice Period</label>
                     <input type="text" 
                     className="input_primary auth_input capitalize"
                     {...register("noticePeriod")}/>
-                </div>
+                </div> */}
+            <div className='text-left flex-1'>
+                <label htmlFor="">Notice period (in days)
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
+                <select
+                    className="input_primary auth_input"
+                    {...register("noticePeriod", {
+                        valueAsNumber: true,
+                    })}
+                >
+                    <option value={0}>Immediate</option>
+                    <option value={15}>15 Days</option>
+                    <option value={30}>30 Days</option>
+                    <option value={45}>45 Days</option>
+                    <option value={60}>60 Days</option>
+                    <option value={90}>90 Days</option>
+                    <option value={120}>120 Days</option>
+                </select>
+                {errors.noticePeriod && <p className="text-red-500 text-sm">Please select from the options</p>}
+            </div>
             </div>
             <div className='text-left'>
                 <label className='text-left' htmlFor="">Cooling period companies</label>

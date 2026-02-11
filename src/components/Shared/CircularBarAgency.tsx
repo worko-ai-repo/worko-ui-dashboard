@@ -22,7 +22,7 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
 
   return (
     <div 
-      className="flex flex-col items-center justify-center w-[35px]"
+      className="flex flex-col gap-1 items-center justify-center w-[35px]"
     >
       <CircularProgressbar
         value={safeValue}
@@ -38,7 +38,7 @@ const ProgressCircle: React.FC<ProgressCircleProps> = ({
       />
       <button
         onClick={onClick}
-        className="text-[7px] text-center text-gray-500"
+        className="leading-none text-[0.438rem] text-center text-gray-500"
       >
         View details
       </button>

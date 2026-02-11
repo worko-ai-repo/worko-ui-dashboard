@@ -135,7 +135,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           }
         }
       } else {
-        toast.error("Cannot fetch user details",getToastOptions({}))
+        // toast.error("Cannot fetch user details",getToastOptions({}))
         console.error("Cannot fetch user details");
       }
     } catch (err) {
@@ -154,7 +154,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         paginationKeysRef.current = { 1: "" };
         fetchDatabaseData(1, pageSize, "");
       }
-  }, [userDetails, fetchDatabaseData, pageSize]);
+    }, [userDetails, fetchDatabaseData]);
+    // }, [userDetails, fetchDatabaseData, pageSize]);
     
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -450,12 +451,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
 
     const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
 
-    // All 3 fields must be non-zero
+    // All 3 fields must be undefined or null
     const allNonZero =
-      currentCTC !== 0 &&
-      expectedCTC !== 0 &&
-      noticePeriod !== 0;
-
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
+      
     // updatedAt must be within last 90 days
     const updatedDate:any = new Date(updatedAt);
     const today:any = new Date();

@@ -20,6 +20,7 @@ import { getToastOptions } from "lib-worko-ui";
 import { toast } from "react-toastify";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import EditProfileModal from "@Components/Dashboard/Corporate/Database/modals/EditProfileModal";
+import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -88,6 +89,9 @@ export default function AdminDatabaseTable(props: any) {
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
+  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  const [fullDetails, setFullDetails] = useState<string>("");
+  const [displayText, setDisplayText] = useState<string>("");
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
@@ -98,6 +102,7 @@ const keyFallbacks = {
   email: ["candidateParsedCvDetails.email"],
   contact: ["phoneNumberDetails.number"],
   date: ["createdAt"],
+  currentCompany: ["candidateParsedCvDetails.currentCompany",],
   currentDesignation: ["candidateParsedCvDetails.currentDesignation",],
   currentLocation: ["candidateParsedCvDetails.location"],
   noticePeriod: ["candidateParsedCvDetails.noticePeriod"],
@@ -112,7 +117,6 @@ const keyFallbacks = {
 };
 
   const sortableData = useMemo(() => {
-    console.log(data)
     return (data ?? []).map((row:any) => ({
         ...row,
         appliedCompaniesSortValue: row.candidateProfileInCompanies
@@ -225,11 +229,11 @@ const keyFallbacks = {
       //   </div>
       // ),
     },
-    {
-      key: "refereeType",
-      label: "Referee type",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.refereeType ?? "NA"
+    // {
+    //   key: "refereeType",
+    //   label: "Referee type",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.refereeType ?? "NA"
       // (
       //   <div className="flex justify-center m-auto w-[150px] text-center">
       //     <span title={row?.refereeType} className="truncate block w-full">
@@ -237,10 +241,10 @@ const keyFallbacks = {
       //     </span>
       //   </div>
       // ),
-    },
+    // },
     {
       key: "email",
-      label: "Email",
+      label: "Candidate Email",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => 
         row?.candidateParsedCvDetails?.email ?? "NA"
@@ -257,7 +261,7 @@ const keyFallbacks = {
       label: "Contact Number",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => 
-        `+${row?.phoneNumberDetails?.countryCode} ${row?.phoneNumberDetails?.number}`
+        `+${row?.phoneNumberDetails?.countryCode} ${row?.phoneNumberDetails?.number ?? "NA"}`
       //   (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     {row?.phoneNumberDetails?.countryCode && row?.phoneNumberDetails?.number ? (
@@ -271,8 +275,164 @@ const keyFallbacks = {
       // ),
     },
     {
+      key: "currentCompany",
+      label: "Current company",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.currentCompany ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span
+      //       title={row?.candidateParsedCvDetails?.currentCompany}
+      //       className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.currentCompany ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
+      key: "currentDesignation",
+      label: "Current Designation",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.currentDesignation ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span
+      //       title={row?.candidateParsedCvDetails?.currentDesignation}
+      //       className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    // {
+    //   key: "appliedCompany",
+    //   label: "Applied Companies",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => {
+    //     const companyList = (row?.candidateProfileInCompanies?? [])
+    //     .map(company => company.companyName)
+    //     .join(", ");
+    //     return (
+    //       <div>
+    //           <span 
+    //             data-tooltip-id="my-tooltip"
+    //             data-tooltip-content={companyList}
+    //             data-tooltip-place="top"
+    //             className="truncate block w-full">
+    //             {companyList.length ? companyList: "NA"}
+    //           </span>
+    //       </div>)
+    //       }
+    // },
+    {
+      key: "YOE",
+      label: "YOE",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.totalYOE ?? "NA"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "currentCTC",
+      label: "CTC",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.currentCTC ?? "NA"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "expectedCTC",
+      label: "ECTC",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+          <span>{row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}</span>
+        </div>
+      ),
+    },
+    {
+      key: "noticePeriod",
+      label: "Notice period",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => (
+        <div className="flex justify-center m-auto">
+            {row?.candidateParsedCvDetails?.noticePeriod ?? "NA"}
+        </div>
+      ),
+    },
+    {
+      key: "currentLocation",
+      label: "Current location",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.location ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto">
+      //     <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.location ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    // {
+    //   key: "addedBy",
+    //   label: "Added by",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedBy ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.addedBy} className="truncate block w-full">
+      //       {row?.addedBy ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    // },
+    // {
+    //   key: "addedFor",
+    //   label: "Added for",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedFor ?? "NA"
+    //   (
+    //     <div className="flex justify-center m-auto w-[150px]">
+    //       <span title={row?.addedFor} className="truncate block w-full">
+    //         {row?.addedFor ?? "NA"}
+    //       </span>
+    //     </div>
+    //   ),
+    // },
+    // {
+    //   key: "coolingPeriodCompanies",
+    //   label: "Cooling period companies",
+    //   sortable: true,
+    //   contentWidth: `max-w-none`,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => {
+    //     const companiesArray = (row?.coolingPeriodCompanies?? [])
+    //     .map(company => company.companyName)
+    //     .join(", ");
+    //     return (
+    //     <div className="flex justify-center m-auto">
+    //       <span>{companiesArray.length? companiesArray: "NA"}</span>
+    //     </div>
+    //     )
+    //   },
+    // },
+    // {
+    //   key: "lastActive",
+    //   label: "Last active",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.lastActive ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>{row?.lastActive ?? "NA"}</span>
+      //   </div>
+      // ),
+    // },
+    {
       key: "date",
-      label: "Date",
+      label: "Added Date",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => row?.createdAt ? new Date(row.createdAt).toLocaleDateString("en-GB", {
                   day: "2-digit",
@@ -295,158 +455,11 @@ const keyFallbacks = {
       // ),
     },
     {
-      key: "currentDesignation",
-      label: "Current Designation",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.currentDesignation ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto w-[150px]">
-      //     <span
-      //       title={row?.candidateParsedCvDetails?.currentDesignation}
-      //       className="truncate block w-full">
-      //       {row?.candidateParsedCvDetails?.currentDesignation ?? "NA"}
-      //     </span>
-      //   </div>
-      // ),
-    },
-    {
-      key: "appliedCompany",
-      label: "Applied Companies",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => {
-        const companyList = (row?.candidateProfileInCompanies?? [])
-        .map(company => company.companyName)
-        .join(", ");
-        return (
-          <div>
-              <span 
-                data-tooltip-id="my-tooltip"
-                data-tooltip-content={companyList}
-                data-tooltip-place="top"
-                className="truncate block w-full">
-                {companyList.length ? companyList: "NA"}
-              </span>
-          </div>)
-          }
-    },
-    {
-      key: "currentCTC",
-      label: "CTC",
-      sortable: true,
-      contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto">
-          <span>{row?.candidateParsedCvDetails?.currentCTC ?? "NA"}</span>
-        </div>
-      ),
-    },
-    {
-      key: "expectedCTC",
-      label: "ECTC",
-      sortable: true,
-      contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto">
-          <span>{row?.candidateParsedCvDetails?.expectedCTC ?? "NA"}</span>
-        </div>
-      ),
-    },
-    {
-      key: "noticePeriod",
-      label: "Notice period",
-      sortable: true,
-      contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto">
-          <span className="truncate block w-full">
-            {row?.candidateParsedCvDetails?.noticePeriod ?? "NA"}
-          </span>
-        </div>
-      ),
-    },
-    {
-      key: "currentLocation",
-      label: "Current location",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.candidateParsedCvDetails?.location ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto">
-      //     <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
-      //       {row?.candidateParsedCvDetails?.location ?? "NA"}
-      //     </span>
-      //   </div>
-      // ),
-    },
-    {
-      key: "addedBy",
-      label: "Added by",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedBy ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto w-[150px]">
-      //     <span title={row?.addedBy} className="truncate block w-full">
-      //       {row?.addedBy ?? "NA"}
-      //     </span>
-      //   </div>
-      // ),
-    },
-    // {
-    //   key: "addedFor",
-    //   label: "Added for",
-    //   sortable: true,
-    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.addedFor ?? "NA"
-    //   (
-    //     <div className="flex justify-center m-auto w-[150px]">
-    //       <span title={row?.addedFor} className="truncate block w-full">
-    //         {row?.addedFor ?? "NA"}
-    //       </span>
-    //     </div>
-    //   ),
-    // },
-    {
-      key: "coolingPeriodCompanies",
-      label: "Cooling period companies",
-      sortable: true,
-      contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => {
-        const companiesArray = (row?.coolingPeriodCompanies?? [])
-        .map(company => company.companyName)
-        .join(", ");
-        return (
-        <div className="flex justify-center m-auto">
-          <span>{companiesArray.length? companiesArray: "NA"}</span>
-        </div>
-        )
-      },
-    },
-    {
-      key: "lastActive",
-      label: "Last active",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.lastActive ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto w-[150px]">
-      //     <span>{row?.lastActive ?? "NA"}</span>
-      //   </div>
-      // ),
-    },
-    {
-      key: "YOE",
-      label: "YOE",
-      sortable: true,
-      contentWidth: `max-w-none`,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto">
-          <span>{row?.candidateParsedCvDetails?.totalYOE ?? "NA"}</span>
-        </div>
-      ),
-    },
-    {
       key: "viewCV",
       label: "CV",
       sortable: false,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[40px]">
+        <div className="flex justify-center m-auto">
           <button
             data-tooltip-id="my-tooltip"
             data-tooltip-content="View CV"
@@ -466,12 +479,12 @@ const keyFallbacks = {
       sortable: false,
       render: (row: AgencyDatabaseApplicantDetailsDto) => {
         return (
-          <div className="flex justify-center m-auto w-[40px]">
+          <div className="flex justify-center m-auto">
             <button
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Edit details"
               data-tooltip-place="top"
-              // disabled={true}
+              className="flex flex-row justify-center items-center"
               onClick={() => {
                 setEditProfileView(true);
                 setEditProfileData(row);
@@ -603,6 +616,35 @@ const keyFallbacks = {
       } catch (error) {
         console.log(error)
       }      
+    }else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CAND_SUBMIT_CV_JOB") {
+      if (
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName ||
+        !row?.candidateParsedCvDetails?.jobId
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+
+      const payload = { 
+        companyId: splittedID[2],
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
+        jobId:row?.candidateParsedCvDetails?.jobId
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
     }else{
         if(!row?.candidateParsedCvDetails?.companyId 
           || !row?.candidateParsedCvDetails?.jobId 
@@ -642,76 +684,157 @@ const keyFallbacks = {
   };
 
   const renderExpandedDetails = (row: any) => {
-return (
-  <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
-    {/* Work Experience */}
-    <div className="flex gap-20">
-      <div>
-        <span className="font-semibold text-black">Work Experience</span>
-        {Array.isArray(row?.candidateParsedCvDetails?.multipleCandidateExperience) &&
-        row.candidateParsedCvDetails.multipleCandidateExperience.length > 0 ? (
-          row.candidateParsedCvDetails.multipleCandidateExperience.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
-            const start = exp?.startDate
-              ? new Date(exp.startDate).getFullYear()
-              : "-";
-
-            const end = exp?.endDate
-              ? new Date(exp.endDate).getFullYear()
-              : exp?.endDate === "" 
-                ? "Present"
+  const skillsText = (row?.candidateParsedCvDetails?.coreSkills ?? []).map((skill:any) => skill?.skillName).join(", ");
+  const companiesArrayInCooling = (row?.coolingPeriodCompanies?? []).map((company:any) => company.companyName).join(", ");
+  const companyList = (row?.candidateProfileInCompanies?? []).map((company:any) => company.companyName).join(", ");
+  return (
+    <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
+      {/* Work Experience */}
+      <div className="flex gap-20">
+        <div>
+          <span className="font-semibold text-black">Work Experience</span>
+          {Array.isArray(row?.candidateParsedCvDetails?.multipleCandidateExperience) &&
+          row.candidateParsedCvDetails.multipleCandidateExperience.length > 0 ? (
+            row.candidateParsedCvDetails.multipleCandidateExperience.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
+              const start = exp?.startDate
+                ? new Date(exp.startDate).getFullYear()
                 : "-";
 
-            return (
-              <p key={index} className="mt-2">
-                {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
-              </p>
-            );
-          })
-        ) : (
-          <p>No experience found</p>
-        )}
-      </div>
+              const end = exp?.endDate
+                ? new Date(exp.endDate).getFullYear()
+                : exp?.endDate === "" 
+                  ? "Present"
+                  : "-";
 
-      {/* Education */}
-      <div>
-        <span className="font-semibold text-black">Education</span>
-        {Array.isArray(row?.candidateParsedCvDetails?.education) &&
-        row.candidateParsedCvDetails.education.length > 0 ? (
-          row.candidateParsedCvDetails.education.map((edu:{degree:String, 
-              collage:String, 
-              YOE:number,
-              passingYear:number,
-              // startDate:string,
-              // endDate:string
-            }, index:number) => {
-            // const start = edu?.startDate
-            //   ? new Date(edu.startDate).getFullYear()
-            //   : "-";
+              return (
+                <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
+                  {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
+                </p>
+              );
+            })
+          ) : (
+            <p>No experience found</p>
+          )}
+        </div>
 
-            // const end = edu?.endDate
-            //   ? new Date(edu.endDate).getFullYear()
-            //   : edu?.endDate === "" 
-            //     ? "Present"
-            //     : "-";
+        {/* Education */}
+        <div>
+          <span className="font-semibold text-black">Education</span>
+          {Array.isArray(row?.candidateParsedCvDetails?.education) &&
+          row.candidateParsedCvDetails.education.length > 0 ? (
+            row.candidateParsedCvDetails.education.map((edu:{degree:String, 
+                collage:String, 
+                YOE:number,
+                passingYear:number,
+                // startDate:string,
+                // endDate:string
+              }, index:number) => {
+              // const start = edu?.startDate
+              //   ? new Date(edu.startDate).getFullYear()
+              //   : "-";
 
-            return (
-              <p key={index} className="mt-2">
-                {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
-              </p>
-            );
-          })
-        ) : (
-          <p>No Education found</p>
-        )}
+              // const end = edu?.endDate
+              //   ? new Date(edu.endDate).getFullYear()
+              //   : edu?.endDate === "" 
+              //     ? "Present"
+              //     : "-";
+
+              return (
+                <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
+                  {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
+                </p>
+              );
+            })
+          ) : (
+            <p>No Education found</p>
+          )}
+        </div>
+
+        {/* About */}
+          <div>
+            <span className="font-semibold text-black">About</span>
+            {/* <p className="w-[200px] truncate cursor-pointer">{row?.about || "-"}</p> */}
+            <div className="w-[200px] truncate cursor-pointer">
+              <span 
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={"Click to view full details"}
+                onClick={() => {
+                  setViewViewDetailsModal(true);
+                  setFullDetails(row?.candidateParsedCvDetails?.about ?? "-");
+                  setDisplayText("About")
+                }}
+                className="truncate block w-full">
+                {row?.candidateParsedCvDetails?.about ?? "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* Core skills */}
+          <div>
+            <span className="font-semibold text-black">Core skills</span>
+            <div className="w-[200px] truncate cursor-pointer" 
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={"Click to view full details"}
+                onClick={() => {
+                  setViewViewDetailsModal(true);
+                  setFullDetails(skillsText.length ? skillsText : "-");
+                  setDisplayText("Core skills")
+                }}>
+              {skillsText.length ? skillsText : "-"}
+            </div>
+          </div>
+
+          {/* Source type worko, internal, external, agency etc*/}
+          <div>
+            <span className="font-semibold text-black">Source type</span>
+            <p>{row?.source || "-"}</p>
+          </div>
+          
+          {/* Source type agency name, referral email*/}
+          <div>
+            <span className="font-semibold text-black">Source name</span>
+            <p>{row?.source || "-"}</p>
+          </div>
+
+          {/* Under cooling period */}
+          <div>
+            <span className="font-semibold text-black">Under cooling period companies</span>
+            <div 
+              className="w-[200px] truncate cursor-pointer"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Click to view full details"}
+              onClick={() => {
+                setViewViewDetailsModal(true);
+                setFullDetails(companiesArrayInCooling.length? companiesArrayInCooling: "-");
+                setDisplayText("Under cooling period companies")}}
+              >
+              <span>{companiesArrayInCooling.length? companiesArrayInCooling: "-"}</span>
+            </div>
+          </div>
+
+          {/* Under process */}
+          <div>
+            <span className="font-semibold text-black">Under Process</span>         
+            <div className="w-[200px] truncate cursor-pointer" 
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={"Click to view full details"}
+            onClick={() => {
+              setViewViewDetailsModal(true);
+              setFullDetails(companyList.length ? companyList: "-");
+              setDisplayText("Under process companies")
+            }}>
+              <span 
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={companyList}
+                data-tooltip-place="top"
+                className="truncate block w-full">
+                {companyList.length ? companyList: "-"}
+              </span>
+          </div>
+          </div>
       </div>
     </div>
-    {/* About */}
-    <div>
-      <span className="font-semibold text-black">About</span>
-      <p>{row?.candidateParsedCvDetails?.about || "-"}</p>
-    </div>
-  </div>
-);
+  );
 
   };
 
@@ -781,6 +904,16 @@ return (
           />
         )}
       </Modal>
+      <ViewFullDetail
+      onClose={() => {
+        setViewViewDetailsModal(false);
+        setFullDetails("");
+        setDisplayText("");
+      }}
+      isOpen={viewViewDetailsModal}
+      fullDetails={fullDetails}
+      displayText={displayText}
+    />
     </>
   );
 }

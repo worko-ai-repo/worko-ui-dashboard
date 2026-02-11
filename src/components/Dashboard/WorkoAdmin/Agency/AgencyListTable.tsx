@@ -203,7 +203,6 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "asignedJobs",
         label: "Assigned Jobs",
         sortable: true,
-        contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalAssignedJobs ?? "-"}</span>
@@ -214,7 +213,6 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         key: "totalSubmitted",
         label: "Total submitted",
         sortable: true,
-        contentWidth: `max-w-none`,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
                 <span>{row?.totalCandidatesSubmitted ?? "-"}</span>
@@ -224,7 +222,6 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
     {
         key: "totalRejected",
         label: "Total rejected",
-        contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -235,7 +232,6 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
     {
         key: "totalHired",
         label: "Total hired",
-        contentWidth: `max-w-none`,
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
@@ -263,8 +259,8 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
                           setEditProfileData(row);
                           }}
                       >
-                          <ClipboardCheck className="w-5 h-5 shrink-0" />
-                          <span className="text-xs">Assign jobs</span>
+                          <ClipboardCheck className="w-4 h-4 shrink-0" />
+                          <span className="text-[0.625rem]">Assign jobs</span>
                       </button>
                   </div>
               </div>
@@ -287,7 +283,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         sortable: false,
         render: (row: AgencyListDetailsDto) => (
         row?.contractCopyAwsS3FileName && (
-            <div className="flex justify-center m-auto w-[40px]">
+            <div className="flex justify-center m-auto">
               <button
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content="View contract copy"
@@ -322,14 +318,14 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
               {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
             </span>
             : <span
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
               {newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
             </span>
             }

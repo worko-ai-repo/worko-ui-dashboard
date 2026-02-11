@@ -254,7 +254,6 @@ export default function AgencyListTable(props: any) {
       key: "asignedJobs",
       label: "Assigned Jobs",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
           <span>{row?.totalAssignedJobs ?? "-"}</span>
@@ -265,7 +264,6 @@ export default function AgencyListTable(props: any) {
       key: "totalSubmitted",
       label: "Total submitted",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
           <span>{row?.totalCandidatesSubmitted ?? "-"}</span>
@@ -275,7 +273,6 @@ export default function AgencyListTable(props: any) {
     {
       key: "totalRejected",
       label: "Total rejected",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -286,7 +283,6 @@ export default function AgencyListTable(props: any) {
     {
       key: "totalHired",
       label: "Total hired",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -315,8 +311,8 @@ export default function AgencyListTable(props: any) {
                   setIsAssignJobModelOpen(true);
                   setEditProfileData(row);
                 }}>
-                <ClipboardCheck className="w-5 h-5 shrink-0" />
-                <span className="text-xs">Assign jobs</span>
+                <ClipboardCheck className="w-4 h-4 shrink-0" />
+                <span className="text-[0.625rem]">Assign jobs</span>
               </button>
             </div>
 
@@ -331,8 +327,8 @@ export default function AgencyListTable(props: any) {
                   setIsRemoveJobModelOpen(true);
                   setEditProfileData(row);
                 }}>
-                <CircleMinus className="w-5 h-5 shrink-0" />
-                <span className="text-xs">Remove jobs</span>
+                <CircleMinus className="w-4 h-4 shrink-0" />
+                <span className="text-[0.625rem]">Remove jobs</span>
               </button>
             </div>
           </>
@@ -348,7 +344,7 @@ export default function AgencyListTable(props: any) {
                 setIsEditAgencyModelOpen(true);
                 setEditProfileData(row);
               }}>
-              <Pencil className="w-5 h-5 shrink-0 rounded-sm" />
+              <Pencil className="w-4 h-4 shrink-0 rounded-sm" />
             </button>
 
             <button
@@ -362,13 +358,13 @@ export default function AgencyListTable(props: any) {
                 setCurrentAction(row?.inviteAction === "PAUSE" ? "RESUME" : "PAUSE")
               }}>
               {row?.inviteAction === "PAUSE" ? (
-                <CirclePlay className="w-5 h-5 shrink-0" />
+                <CirclePlay className="w-4 h-4 shrink-0" />
               ) : (
-                <CirclePause className="w-5 h-5 shrink-0" />
+                <CirclePause className="w-4 h-4 shrink-0" />
               )}
             </button>
-
-            <button
+            {/* this delete agency button is removed temporarily just uncomment it wil work */}
+            {/* <button
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Delete agency"
               data-tooltip-place="top"
@@ -379,8 +375,8 @@ export default function AgencyListTable(props: any) {
                 setIsDeleteAgencyModelOpen(true);
                 setEditProfileData(row);
               }}>
-              <Trash2 className="w-5 h-5 shrink-0" />
-            </button>
+              <Trash2 className="w-4 h-4 shrink-0" />
+            </button> */}
           </div>
         );
       },
@@ -402,7 +398,7 @@ export default function AgencyListTable(props: any) {
       sortable: false,
       render: (row: AgencyListDetailsDto) =>
         row?.contractCopyAwsS3FileName && (
-          <div className="flex justify-center m-auto w-[40px]">
+          <div className="flex justify-center m-auto">
             <button
               data-tooltip-id="my-tooltip"
               data-tooltip-content="View contract copy"
@@ -431,14 +427,14 @@ export default function AgencyListTable(props: any) {
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
               {newDisplayStatus[row.inviteStatus as JobApplicationStatusType]}
             </span>
             : <span
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClassForAgencyStatus}`}>
               {newDisplayStatusForAgencyStatus[row.inviteAction as AgencyCurrentStatus]}
             </span>
             }

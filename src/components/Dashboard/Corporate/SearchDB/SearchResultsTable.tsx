@@ -22,11 +22,13 @@ import CVPreviewRaw from "@Components/Shared/CvPreviewRaw";
 import AssignJobModal from "../Agency/modals/AssignJobModal";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import ProgressCircle from "@Components/Shared/CircularBar";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/DetailedAnalysis";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
+import EditCTCETCAndNoticePeriodModalForSearchInDBSingle from "./modals/EditCTCETCAndNoticePeriodModalForSearchInDBSingle"
+import FinalReviewModal from "../Database/modals/FinalReviewModal";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -106,6 +108,13 @@ export default function SearchResultsTable(props: any) {
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
 
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [candidateList, setCandidateList] = useState<any[]>([]);
+  const [skippableCandidates, setSkippableCandidates] = useState<any[]>([]);
+  const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
+  const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+  const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
+  const [selectedCompany,setSelectedCompany]  = useState<any | null>(null);
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
@@ -258,11 +267,148 @@ export default function SearchResultsTable(props: any) {
     }
   }, [searchParams]);
 
-  const findScoreOrApplicantsWithID = async (
-    row: any,
-    currentText: string,
-    jobIdFromChild: string
-  ) => {
+  // const findScoreOrApplicantsWithID = async (
+  //   row: any,
+  //   currentText: string,
+  //   jobIdFromChild: string
+  // ) => {
+  //   if (!userDetails || !row) {
+  //     toast.error("No user details found please login again", getToastOptions({}));
+  //     return;
+  //   }
+  //   const jobIdToUse = mode === "jobs" && selectedJobId ? selectedJobId : jobIdFromChild;
+
+  //   let payload: any = {
+  //     jobId: jobIdToUse,
+  //     candidateParsedCvId: row.id,
+  //   };
+
+  //   if (currentText === "Move to applicants") {
+  //     let companyName;
+  //     let jobTitle;
+  //     jobsList?.map((job: any) => {
+  //       if (job.id === jobIdToUse) {
+  //         companyName = job.companyName;
+  //         jobTitle = job.jobTitle;
+  //       }
+  //     });
+  //     payload = {
+  //       ...payload,
+  //       companyName: companyName,
+  //       jobTitle: jobTitle,
+  //     };
+  //   }
+  //   try {
+  //     let url =
+  //       currentText === "Find matching score"
+  //         ? `${agencyBaseUrl}/candidate-parsed-cv/find-matching-score`
+  //         : `${agencyBaseUrl}/candidate-parsed-cv/move-to-applicant`;
+
+  //     const { response, error } = await httpServiceObj.post<any>(url, payload, true, {}, true);
+
+  //     if (error) {
+  //       if (error?.message) {
+  //         toast.error(error.message, getToastOptions({}));
+  //         if (error.message == "The application for this job is already present." || error.message == "Candidate already moved to application process without calculating matching score.") {
+  //           const updatedData = {
+  //             candidateMovedToApplicants: true,
+  //           };
+  //           localUpdate(row?.id, updatedData);
+  //         }
+  //         return;
+  //       } else {
+  //         if (currentText === "Find matching score")
+  //           toast.error("Find matching score failed. Please try again.", getToastOptions({}));
+  //         if (currentText === "Move to applicants")
+  //           toast.error(
+  //             "Candidate moving to applicant failed. Please try again.",
+  //             getToastOptions({})
+  //           );
+  //         return;
+  //       }
+  //     }
+  //     if (response) {
+  //       if (currentText === "Find matching score") {
+  //         const updatedData = {
+  //           isFindMatchingScoreInProgress: true,
+  //           candidateJobMatchingId: response?.candidateJobMatchingId || response?.id,
+  //         };
+  //         setInitialIds((prev:string) => [...prev, response?.candidateJobMatchingId || response?.id]);
+  //         localUpdate(row?.id, updatedData);
+  //         toast.success("Find Score initiated please wait", getToastOptions({}));
+  //         return;
+  //       }
+  //       if (currentText === "Move to applicants") {
+  //         const updatedData = {
+  //           candidateMovedToApplicants: true,
+  //         };
+  //         localUpdate(row?.id, updatedData);
+  //         toast.success("Candidate moved to applicant successfully", getToastOptions({}));
+  //         return;
+  //       }
+  //     }
+  //   } catch (err) {
+  //     console.error("Assignment error:", err);
+  //     toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
+  //   }
+  // };
+
+  const moveToApplicantSingle = async (row: any, currentText: string, jobIdFromChild: string) =>{
+    if (!userDetails || !row) {
+      toast.error("No user details found please login again", getToastOptions({}));
+      return;
+    }
+    const jobIdToUse = mode === "jobs" && selectedJobId ? selectedJobId : jobIdFromChild;
+    let companyName;
+    let jobTitle;
+    jobsList?.map((job: any) => {
+      if (job.id === jobIdToUse) {
+        companyName = job.companyName;
+        jobTitle = job.jobTitle;
+      }
+    });
+    const payload = {
+      jobId: jobIdToUse,
+      candidateParsedCvId: row.id,
+      companyName: companyName,
+      jobTitle: jobTitle,
+    };
+
+    try {
+      handleUpdateDetails([row])
+      setSelectedCompany(payload)
+      // const { response, error } = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/move-to-applicant`, payload, true, {}, true);
+
+      // if (error) {
+      //   if (error?.message) {
+      //     toast.error(error.message, getToastOptions({}));
+      //     if (error.message == "The application for this job is already present." || error.message == "Candidate already moved to application process without calculating matching score.") {
+      //       const updatedData = {
+      //         candidateMovedToApplicants: true,
+      //       };
+      //       localUpdate(row?.id, updatedData);
+      //     }
+      //     return;
+      //   } else {
+      //       toast.error("Candidate moving to applicant failed. Please try again.",getToastOptions({}));
+      //     return;
+      //   }
+      // }
+      // if (response) {
+      //     const updatedData = {
+      //       candidateMovedToApplicants: true,
+      //     };
+      //     localUpdate(row?.id, updatedData);
+      //     toast.success("Candidate moved to applicant successfully", getToastOptions({}));
+      //     return;
+      // }
+    } catch (err) {
+      console.error("Assignment error:", err);
+      toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
+    }
+  }
+
+  const findMatchingScoreSingle = async (row: any, currentText: string, jobIdFromChild: string) => {
     if (!userDetails || !row) {
       toast.error("No user details found please login again", getToastOptions({}));
       return;
@@ -273,75 +419,66 @@ export default function SearchResultsTable(props: any) {
       jobId: jobIdToUse,
       candidateParsedCvId: row.id,
     };
-
-    if (currentText === "Move to applicants") {
-      let companyName;
-      let jobTitle;
-      jobsList?.map((job: any) => {
-        if (job.id === jobIdToUse) {
-          companyName = job.companyName;
-          jobTitle = job.jobTitle;
-        }
-      });
-      payload = {
-        ...payload,
-        companyName: companyName,
-        jobTitle: jobTitle,
-      };
-    }
     try {
-      let url =
-        currentText === "Find matching score"
-          ? `${agencyBaseUrl}/candidate-parsed-cv/find-matching-score`
-          : `${agencyBaseUrl}/candidate-parsed-cv/move-to-applicant`;
-
-      const { response, error } = await httpServiceObj.post<any>(url, payload, true, {}, true);
+      const { response, error } = await httpServiceObj.post<any>(`${agencyBaseUrl}/candidate-parsed-cv/find-matching-score`, payload, true, {}, true);
 
       if (error) {
         if (error?.message) {
           toast.error(error.message, getToastOptions({}));
-          if (error.message == "The application for this job is already present." || error.message == "Candidate already moved to application process without calculating matching score.") {
-            const updatedData = {
-              candidateMovedToApplicants: true,
-            };
-            localUpdate(row?.id, updatedData);
-          }
           return;
         } else {
-          if (currentText === "Find matching score")
             toast.error("Find matching score failed. Please try again.", getToastOptions({}));
-          if (currentText === "Move to applicants")
-            toast.error(
-              "Candidate moving to applicant failed. Please try again.",
-              getToastOptions({})
-            );
           return;
         }
       }
       if (response) {
-        if (currentText === "Find matching score") {
-          const updatedData = {
-            isFindMatchingScoreInProgress: true,
-            candidateJobMatchingId: response?.candidateJobMatchingId || response?.id,
-          };
-          setInitialIds((prev:string) => [...prev, response?.candidateJobMatchingId || response?.id]);
-          localUpdate(row?.id, updatedData);
-          toast.success("Find Score initiated please wait", getToastOptions({}));
-          return;
-        }
-        if (currentText === "Move to applicants") {
-          const updatedData = {
-            candidateMovedToApplicants: true,
-          };
-          localUpdate(row?.id, updatedData);
-          toast.success("Candidate moved to applicant successfully", getToastOptions({}));
-          return;
-        }
+        const updatedData = {
+          isFindMatchingScoreInProgress: true,
+          candidateJobMatchingId: response?.candidateJobMatchingId || response?.id,
+        };
+        setInitialIds((prev:string) => [...prev, response?.candidateJobMatchingId || response?.id]);
+        localUpdate(row?.id, updatedData);
+        toast.success("Find Score initiated please wait", getToastOptions({}));
+        return;
       }
     } catch (err) {
       console.error("Assignment error:", err);
       toast.error("candidate moving to applicant failed. Please try again.", getToastOptions({}));
     }
+  };
+
+  const days90 = 90 * 24 * 60 * 60 * 1000;
+
+  const isSkippable = (row:any) => {
+    if (!row) return false;
+
+    const details = row;
+
+    const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
+
+    // All 3 fields must be undefined or null
+    const allNonZero =
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
+
+    // updatedAt must be within last 90 days
+    const updatedDate:any = new Date(updatedAt);
+    const today:any = new Date();
+    const isRecent = today - updatedDate <= days90;
+    return allNonZero && isRecent;
+  };
+
+  const handleUpdateDetails = (selectedRows:any) => {
+    if (selectedRows.length === 0) return;
+
+    const unskippableList = selectedRows.filter((row:any) => !isSkippable(row));
+    const skippableList = selectedRows.filter((row:any) => isSkippable(row));
+    setSkippableCandidates(skippableList);
+
+    setCandidateList(unskippableList);
+    setCurrentIndex(0);
+    setEditProfileView(true);
   };
 
   //   const transformStatus = (status: string) => {
@@ -385,21 +522,8 @@ export default function SearchResultsTable(props: any) {
       // ),
     },
     {
-      key: "currentCompany",
-      label: "Current Company",
-      sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.currentCompany ?? "NA"
-      // (
-      //   <div className="flex justify-center m-auto w-[150px]">
-      //     <span title={row?.currentCompany} className="truncate block w-full">
-      //       {row?.currentCompany ?? "NA"}
-      //     </span>
-      //   </div>
-      // ),
-    },
-    {
       key: "email",
-      label: "Email ID",
+      label: "Candidate Email",
       sortable: true,
       render: (row: AgencyDatabaseApplicantDetailsDto) => row?.email ?? "NA"
       // (
@@ -426,26 +550,39 @@ export default function SearchResultsTable(props: any) {
       // ),
     },
     {
-      key: "coreSkills",
-      label: "Core skills",
+      key: "currentCompany",
+      label: "Current Company",
       sortable: true,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => {
-        const skillsText = (row.coreSkills ?? []).map((skill) => skill?.skillName).join(", ");
-
-        return (
-          <div className="w-[150px] truncate" 
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(skillsText.length ? skillsText : "NA");
-                setDisplayText("Core skills")
-              }}>
-            {skillsText.length ? skillsText : "NA"}
-          </div>
-        );
-      },
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.currentCompany ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span title={row?.currentCompany} className="truncate block w-full">
+      //       {row?.currentCompany ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
+    // {
+    //   key: "coreSkills",
+    //   label: "Core skills",
+    //   sortable: true,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => {
+    //     const skillsText = (row.coreSkills ?? []).map((skill) => skill?.skillName).join(", ");
+
+    //     return (
+    //       <div className="w-[150px] truncate" 
+    //           data-tooltip-id="my-tooltip"
+    //           data-tooltip-content={"Click to view full details"}
+    //           onClick={() => {
+    //             setViewViewDetailsModal(true);
+    //             setFullDetails(skillsText.length ? skillsText : "NA");
+    //             setDisplayText("Core skills")
+    //           }}>
+    //         {skillsText.length ? skillsText : "NA"}
+    //       </div>
+    //     );
+    //   },
+    // },
     {
       key: "currentDesignation",
       label: "Current Designation",
@@ -463,18 +600,17 @@ export default function SearchResultsTable(props: any) {
       key: "relevantYOE",
       label: "YOE",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className="flex justify-center m-auto">
           <span>{row?.relevantYOE ?? "NA"}</span>
         </div>
       ),
     },
-    {
-      key: "source",
-      label: "Source",
-      sortable: false,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.source ?? "NA"
+    // {
+    //   key: "source",
+    //   label: "Source",
+    //   sortable: false,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => row?.source ?? "NA"
       // (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span title={row?.source} className="truncate block w-full">
@@ -482,32 +618,31 @@ export default function SearchResultsTable(props: any) {
       //     </span>
       //   </div>
       // ),
-    },
-    {
-      key: "about",
-      label: "About",
-      sortable: false,
-      render: (row: AgencyDatabaseApplicantDetailsDto) => (
-        <div className="flex justify-center m-auto w-[150px] text-center">
-          <span 
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(row?.about ?? "NA");
-                setDisplayText("About")
-              }}
-              className="truncate block w-full">
-            {row?.about ?? "NA"}
-          </span>
-        </div>
-      ),
-    },
+    // },
+    // {
+    //   key: "about",
+    //   label: "About",
+    //   sortable: false,
+    //   render: (row: AgencyDatabaseApplicantDetailsDto) => (
+    //     <div className="flex justify-center m-auto w-[150px] text-center">
+    //       <span 
+    //           data-tooltip-id="my-tooltip"
+    //           data-tooltip-content={"Click to view full details"}
+    //           onClick={() => {
+    //             setViewViewDetailsModal(true);
+    //             setFullDetails(row?.about ?? "NA");
+    //             setDisplayText("About")
+    //           }}
+    //           className="truncate block w-full">
+    //         {row?.about ?? "NA"}
+    //       </span>
+    //     </div>
+    //   ),
+    // },
     {
       key: "currentCTC",
       label: "CTC",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className="flex justify-center m-auto">
           <span>{row?.currentCTC ?? "NA"}</span>
@@ -518,7 +653,6 @@ export default function SearchResultsTable(props: any) {
       key: "expectedCTC",
       label: "ECTC",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => (
         <div className="flex justify-center m-auto">
           <span>{row?.expectedCTC ?? "NA"}</span>
@@ -529,8 +663,44 @@ export default function SearchResultsTable(props: any) {
       key: "noticePeriod",
       label: "Notice period",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => row?.noticePeriod ?? "NA"
+    },
+    {
+      key: "currentLocation",
+      label: "Current location",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.location ?? "NA"
+      // (
+      //   <div className="flex justify-center m-auto">
+      //     <span title={row?.candidateParsedCvDetails?.location} className="truncate block w-full">
+      //       {row?.candidateParsedCvDetails?.location ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
+    },
+    {
+      key: "date",
+      label: "Added Date",
+      sortable: true,
+      render: (row: AgencyDatabaseApplicantDetailsDto) => row?.createdAt ? new Date(row.createdAt).toLocaleDateString("en-GB", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  year: "numeric",
+                })
+              : "NA"
+      //   (
+      //   <div className="flex justify-center m-auto w-[150px]">
+      //     <span>
+      //       {row?.createdAt
+      //         ? new Date(row.createdAt).toLocaleDateString("en-GB", {
+      //             day: "2-digit",
+      //             month: "2-digit",
+      //             year: "numeric",
+      //           })
+      //         : "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "viewCV",
@@ -564,20 +734,20 @@ export default function SearchResultsTable(props: any) {
                 <div className="flex justify-center items-center m-auto">
                   <button
                     type="button"
-                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-3 py-2 text-xs hover:bg-blue-700 transition"
+                    className="flex items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-3 py-2 text-[0.625rem] hover:bg-blue-700 transition"
                     onClick={() => {
                       setEditProfileData(row);
                       setTextToDisplay("Find matching score");
                       if (mode === "jobs" && selectedJobId) {
-                        findScoreOrApplicantsWithID(row, "Find matching score", selectedJobId);
+                        findMatchingScoreSingle(row, "Find matching score", selectedJobId);
                         return;
                       }
                       setIsAssignJobModelOpen(true);
                     }}>
                     {!row?.matchingScore && row?.isFindMatchingScoreInProgress ? (
-                      <span className="text-left leading-tight text-xs">Fetching score...</span>
+                      <span className="text-left leading-tight text-[0.625rem]">Fetching score...</span>
                     ) : (
-                      <span className="text-left leading-tight text-xs flex items-start gap-1">
+                      <span className="text-left leading-tight text-[0.625rem] flex items-start gap-1">
                         <RefreshCcw className="w-4 h-4 mt-1" />
                         <span
                           data-tooltip-id="my-tooltip"
@@ -619,7 +789,7 @@ export default function SearchResultsTable(props: any) {
                 </div>
               ) : (
                 /* If score is not ready but process started → show temporary text */
-                <div className="text-left leading-tight rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-3 py-2 text-xs">
+                <div className="text-left leading-tight rounded-xl bg-gradient-to-br from-cyan-300 to-cyan-500 text-white px-3 py-2 text-[0.625rem]">
                   Fetching score...
                 </div>
               )}
@@ -628,17 +798,17 @@ export default function SearchResultsTable(props: any) {
               {row?.candidateMovedToApplicants ? null : (
                 <button
                   type="button"
-                  className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 text-xs hover:bg-blue-700 transition"
+                  className="flex items-center justify-center gap-2 rounded-xl bg-blue-600 text-white px-3 py-2 text-[0.625rem] hover:bg-blue-700 transition"
                   onClick={() => {
                     setEditProfileData(row);
                     setTextToDisplay("Move to applicants");
                     if (mode === "jobs" && selectedJobId) {
-                      findScoreOrApplicantsWithID(row, "Move to applicants", selectedJobId);
+                      moveToApplicantSingle(row, "Move to applicants", selectedJobId);
                       return;
                     }
                     setIsAssignJobModelOpen(true);
                   }}>
-                  <span className="text-left leading-tight text-xs flex items-start gap-1">
+                  <span className="text-left leading-tight text-[0.625rem] flex items-start gap-1">
                     <LogOut className="w-4 h-4 mt-1" />
                     <span
                       data-tooltip-id="my-tooltip"
@@ -763,6 +933,35 @@ export default function SearchResultsTable(props: any) {
       } catch (error) {
         console.log(error)
       }      
+    } else if (row?.cvAwsS3ResourceType === "CAND_SUBMIT_CV_JOB") {
+      if (
+        !row?.cvAwsS3FilePath ||
+        !row?.cvAwsS3FileName ||
+        !row?.jobId
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.cvAwsS3FilePath.split("/")
+      
+      const payload = { 
+        companyId: splittedID[2],
+        candCvAwsS3FileName: row?.cvAwsS3FileName,
+        jobId:row?.jobId
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
     } else{
       if(!row?.companyId 
         || !row?.jobId 
@@ -828,6 +1027,7 @@ export default function SearchResultsTable(props: any) {
   }, [userDetails]);
 
   const renderExpandedDetails = (row: any) => {
+    const skillsText = (row.coreSkills ?? []).map((skill:any) => skill?.skillName).join(", ");
     return (
       <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
         {/* Work Experience */}
@@ -848,7 +1048,7 @@ export default function SearchResultsTable(props: any) {
                     : "-";
 
                 return (
-                  <p key={index} className="mt-2">
+                  <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
                     {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
                   </p>
                 );
@@ -881,7 +1081,7 @@ export default function SearchResultsTable(props: any) {
             //     : "-";
 
             return (
-              <p key={index} className="mt-2">
+              <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
                 {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
               </p>
             );
@@ -890,11 +1090,64 @@ export default function SearchResultsTable(props: any) {
           <p>No Education found</p>
         )}
           </div>
-        </div>
-        {/* About */}
-        <div>
-          <span className="font-semibold text-black">About</span>
-          <p>{row?.about || "-"}</p>
+
+          {/* About */}
+          <div>
+            <span className="font-semibold text-black">About</span>
+            {/* <p className="w-[200px] truncate cursor-pointer">{row?.about || "-"}</p> */}
+            <div className="w-[200px] truncate cursor-pointer">
+              <span 
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={"Click to view full details"}
+                onClick={() => {
+                  setViewViewDetailsModal(true);
+                  setFullDetails(row?.about ?? "-");
+                  setDisplayText("About")
+                }}
+                className="truncate block w-full">
+                {row?.about ?? "-"}
+              </span>
+            </div>
+          </div>
+
+          {/* Core skills */}
+          <div>
+            <span className="font-semibold text-black">Core skills</span>
+            <div className="w-[200px] truncate cursor-pointer" 
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={"Click to view full details"}
+                onClick={() => {
+                  setViewViewDetailsModal(true);
+                  setFullDetails(skillsText.length ? skillsText : "-");
+                  setDisplayText("Core skills")
+                }}>
+              {skillsText.length ? skillsText : "-"}
+            </div>
+          </div>
+
+          {/* Source type worko, internal, external, agency etc*/}
+          <div>
+            <span className="font-semibold text-black">Source type</span>
+            <p>{row?.source || "-"}</p>
+          </div>
+          
+          {/* Source type agency name, referral email*/}
+          <div>
+            <span className="font-semibold text-black">Source name</span>
+            <p>{row?.source || "-"}</p>
+          </div>
+
+          {/* Under cooling period */}
+          <div>
+            <span className="font-semibold text-black">Under cooling period</span>
+            <p>{row?.hiringEligibilityStatus === "UNDER_COOLING_PERIOD" ? "Yes" : "No"}</p>
+          </div>
+
+          {/* Under process */}
+          <div>
+            <span className="font-semibold text-black">Under Process</span>
+            <p>{"-"}</p>
+          </div>
         </div>
       </div>
     );
@@ -950,23 +1203,48 @@ export default function SearchResultsTable(props: any) {
           jobsList={jobsList}
           candidateData={editProfileData}
           userDetails={userDetails}
-          submitFunction={findScoreOrApplicantsWithID}
+          submitFunction={textToDisplay === "Find matching score" ? findMatchingScoreSingle : moveToApplicantSingle}
           selectedJobId={selectedJobId}
         />
       )}
-      {/* {isAssignJobModelOpen && (      
-        <AssignJobModal
-        dashboardType={"SEARCH_RESULTS"}
-        onClose= {() => {
-            setIsAssignJobModelOpen(false)
-            setEditProfileData(null)
+      {editProfileView &&
+        <EditCTCETCAndNoticePeriodModalForSearchInDBSingle
+        dashboardType={"CORPORATE"}
+        dashboardPage={"ATLAS"}
+        onClose={()=>{
+          setEditProfileView(false)
+          setCandidateList([])
+          setSkippableCandidates([])
+          setCurrentIndex(0)
+          setSelectedCompany(null)
+          setTextToDisplay("")
         }}
-        isOpen= {isAssignJobModelOpen}
-        jobsList={jobsList}
-        agencyData={editProfileData}
-        userDetails={userDetails}
+        isOpen={editProfileView}    
+        setCandidateList={setCandidateList}
+        candidateList={candidateList}
+        skippableCandidates={skippableCandidates}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+        selectedCompany={selectedCompany}
+        localUpdate={localUpdate}
+        setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+        setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+        setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+      />}
+      {isFinalReviewModalOpen && (
+        <FinalReviewModal
+            isOpen={isFinalReviewModalOpen}
+            onClose={() => {
+                setIsFinalReviewModalOpen(false)
+                setSuccessfullySentCandidateList("")
+                setIncompleteSentCandidateList("")
+            }}
+            successfullySentCandidateList={successfullySentCandidateList}
+            incompleteSentCandidateList={incompleteSentCandidateList}
+            repeatedCandidatesList={""}
+            failedCandidateDetails={[]}
         />
-        )} */}
+      )}
       <Modal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}

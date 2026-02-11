@@ -304,8 +304,9 @@ const AgencyCandidateList = () => {
       fetchAllCandidatesData(1, pageSize, "", filters, false, "desc", selectedJobId, selectedAgencyName, searchBarText || "");
       fetchAllAgency();
     }
-  }, [userDetails, fetchAllCandidatesData, pageSize, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
-  
+  }, [userDetails, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
+    // }, [userDetails, fetchAllCandidatesData, pageSize, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
+
   useEffect(()=>{
     if (userDetails?.email && userDetails.companyId) {
         fetchAllJobs()
