@@ -23,6 +23,7 @@ import { UserRole } from "@Interfaces/RoleBasedAccessControl";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import CloseJob from "./CloseJob";
+import { RBAC } from "@Utils/RoleBaseAccessControll.utils";
 
 // Header Switch button constant to loop
 const tabs = ["PUBLISHED", "ARCHIVED", "CLOSED"] as const;
@@ -484,7 +485,7 @@ const Jobs = () => {
                     activeTab != "PUBLISHED"
                       ? { label: "Open", onClick: () => callBulkUpdate("PUBLISHED") }
                       : null,
-                    activeTab != "CLOSED"
+                    activeTab != "CLOSED" && RBAC.canAny(["play_admin","play_corporate_admin"])
                       ? {
                           label: "Close",
                           onClick: () => setIsBulkCloseModalOpen(true),
