@@ -6,7 +6,7 @@ import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
 import RejectionForm from "@Components/Shared/ApplicantsPage/RejectForm";
 import EvaluatorForm, { EvaluatorFormProps } from "@Components/Shared/ApplicantsPage/EvaluatorForm";
 import HireNowForm from "@Components/Shared/ApplicantsPage/HireNowForm";
-import ProgressCircle from "../../../Shared/CircularBar";
+import ProgressCircle from "../../../Shared/CircularBarAgency";
 import RequestDocumentModal, {
   RequestDocModalProps,
 } from "@Components/Shared/ApplicantsPage/RequestDocModal";
@@ -434,6 +434,7 @@ export default function ApplicationTable({
     interviewScoreDetails: {
       key: "interviewScoreDetails",
       label: "Video Score",
+      contentWidth:`max-w-none`,
       render: (row: JobApplicationDetailsDto) => {
         const hasInterviewDetails = row.applicantDetails?.interviewDetails?.length;
 
@@ -442,7 +443,7 @@ export default function ApplicationTable({
           return (
             <div className="flex justify-center">
               <button
-                className="text-blue-600 hover:text-blue-800 text-sm flex items-center gap-1"
+                className="text-blue-600 hover:text-blue-800 text-[0.625rem] flex items-center gap-1"
                 onClick={async () => {
                   try {
                     const payload = jobApplicationServiceObj.generateInterviewRequestPayload({
@@ -556,7 +557,7 @@ export default function ApplicationTable({
                   setRejectionFeedbackModal({ isOpen: true, application: row });
                 }
               }}
-              className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${colorClass}`}>
+              className={`px-3 py-1 rounded-full text-[0.625rem] font-medium capitalize ${colorClass}`}>
               {newDisplayStatus[row.status as JobApplicationStatusType]}
             </span>
           </div>
@@ -569,11 +570,11 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           {!row?.jobCreatedByCorporateUserId && row?.jobCreatedByUserId ? (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+            <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-red-100 text-red-600">
               Worko
             </span>
           ) : (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600">
+            <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-blue-100 text-blue-600">
               External
             </span>
           )}
@@ -587,11 +588,11 @@ export default function ApplicationTable({
         return (
           <div className="flex items-center justify-center gap-2">
             {jobApplicationServiceObj?.isVisibleToCorporate(row) ? (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600">
+              <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-green-100 text-green-600">
                 Visible
               </span>
             ) : (
-              <span className="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+              <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-gray-100 text-gray-600">
                 Not Visible
               </span>
             )}
@@ -633,17 +634,17 @@ export default function ApplicationTable({
         );
       },
     },
-    response: {
-      key: "response",
-      label: "Not Responding",
-      render: () => (
-        <div className="flex items-center justify-center">
-          <button data-tooltip-id="my-tooltip" data-tooltip-content="Mark as Not Responding">
-            <img src={`${Not_Responding}`} alt="Not Responding" className="w-8 h-8" />
-          </button>
-        </div>
-      ),
-    },
+    // response: {
+    //   key: "response",
+    //   label: "Not Responding",
+    //   render: () => (
+    //     <div className="flex items-center justify-center">
+    //       <button data-tooltip-id="my-tooltip" data-tooltip-content="Mark as Not Responding">
+    //         <img src={`${Not_Responding}`} alt="Not Responding" className="w-8 h-8" />
+    //       </button>
+    //     </div>
+    //   ),
+    // },
   };
 
   /**
@@ -670,7 +671,7 @@ export default function ApplicationTable({
           // commonColumns.applicationDate, // New column
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
-          commonColumns.response,
+          // commonColumns.response,
         ];
       case "Hired":
         return [
@@ -688,7 +689,7 @@ export default function ApplicationTable({
           // commonColumns.applicationDate,
           // commonColumns.cvViewedDate,
           commonColumns.actions,
-          commonColumns.response,
+          // commonColumns.response,
         ];
       case "Joined":
         return [
@@ -896,7 +897,8 @@ export default function ApplicationTable({
           setIsViewCVModalOpen(false);
           setIsRejectModalOpen(null);
         }}
-        className="w-[90vw] sm:max-w-4xl h-full">
+        className="w-[90vw] sm:max-w-4xl h-full"
+        classNameHeight="max-h-[100vh]">
         <CVPreview
           onClose={() => {
             setIsViewCVModalOpen(false);

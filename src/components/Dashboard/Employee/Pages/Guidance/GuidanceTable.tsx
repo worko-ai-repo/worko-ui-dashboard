@@ -228,9 +228,9 @@ const GuidanceTable = memo(
             // <div className="text-center max-w-[200px] truncate mx-auto" title={about || undefined}>
             //   {about ?? "-"}
             // </div>
-          <div className="flex justify-center m-auto w-[150px]">
+          <div className="flex justify-center m-auto">
             <span
-              className="truncate block w-[150px]"
+              className="truncate block"
               data-tooltip-id="my-tooltip"
               data-tooltip-content={`${about ? "Click to view full details" : ""}`}
               onClick={() => {
@@ -248,7 +248,7 @@ const GuidanceTable = memo(
         key: "guidanceRequestType",
         label: "Guidance Type",
         sortable: true,
-        render: (row: GuidanceRequest) => formatGuidanceType(row.guidanceRequestType)
+        render: (row: GuidanceRequest) => formatGuidanceType(row.guidanceRequestType) ?? "NA"
       },
       // {
       //   key: "companyName",
@@ -260,7 +260,7 @@ const GuidanceTable = memo(
         key: "guidanceRequestDeadline",
         label: "Date needed by",
         sortable: true,
-        render: (row: GuidanceRequest) => new Date(row.guidanceRequestDeadline).toLocaleDateString("en-GB")
+        render: (row: GuidanceRequest) => new Date(row.guidanceRequestDeadline).toLocaleDateString("en-GB") ?? "NA"
       },
       // {
       //   key: "jobUrl",
@@ -293,11 +293,12 @@ const GuidanceTable = memo(
         key: "status",
         label: "Status",
         sortable: true,
+        contentWidth:`max-w-none`,
         render: (row: GuidanceRequest) => {
           const color = getStatusColor(row.status);
           return (
             <div
-              className={`w-32 rounded-full px-1 py-3 text-xs font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
+              className={`w-32 rounded-full px-1 py-3 text-[0.625rem] font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={color.label}
               data-tooltip-place="top">
@@ -356,6 +357,7 @@ const GuidanceTable = memo(
       {
         key: "mentorDetails",
         label: "Action",
+        contentWidth:`max-w-none`,
         render: (row: GuidanceRequest) => {
           if (row.status === "PENDING") return null;
 
@@ -363,14 +365,14 @@ const GuidanceTable = memo(
 
           return (
             <div
-              className={`m-auto w-[150px] rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${
+              className={`m-auto rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-4 flex items-center justify-center gap-0 cursor-pointer text-white ${
                 isProcessing ? "opacity-75" : ""
               }`}
               onClick={() => !isProcessing && handleViewDetails(row)}>
               {isProcessing ? (
                 <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
               ) : (
-                <img src={eyeIcon} className="h-6 w-6" alt="View feedback" />
+                <img src={eyeIcon} className="h-5 w-5" alt="View feedback" />
               )}
               <div className="ml-2 tracking-wide leading-6 font-semibold">
                 {isProcessing ? "Loading..." : "See details"}

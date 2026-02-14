@@ -106,6 +106,7 @@ export interface CandidateParsedCvDetails {
   userDetailId: String;
   corporateBulkJdId: string;
   cvAwsS3FilePath:string;
+  isCandidateCvRefreshInProgress:boolean;
   //for admin db listing
   companyId: string;
   jobId: string;
@@ -118,6 +119,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   candidateEmail: string;
   candidateParsedCvDetails: CandidateParsedCvDetails;
   candidateParsedCvId: string;
+  latestCandidateParsedCvId:string;
   companyId: string;
   createdAt: string;
   id: string;

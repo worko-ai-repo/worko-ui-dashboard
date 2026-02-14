@@ -15,11 +15,11 @@ const CompanyLogoRender = ( row : CompanyDto) => {
       src={finalLogoUrl}
       alt={row.name}
       loading="lazy"
-      className="h-12 w-12 cursor-pointer border object-contain rounded-full"
+      className="h-10 w-10 cursor-pointer border object-contain rounded-full"
       onError={() => setImgError(true)} // This only affects the current component
     />
   ) : (
-    <Building2 className="h-12 w-12 cursor-pointer border p-2 rounded-full text-gray-400" />
+    <Building2 className="h-10 w-10 cursor-pointer border p-2 rounded-full text-gray-400" />
   );
 };
 

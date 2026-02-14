@@ -721,7 +721,7 @@ const handleSubmit = () => {
           />
           )}
 
-      {isAssignJobModelOpen && 
+      {/* {isAssignJobModelOpen &&  */}
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"ATLAS"}
@@ -734,9 +734,10 @@ const handleSubmit = () => {
           candidateData={selectedRows[0]}
           userDetails={userDetails}
           submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
-      />}
+      />
+      {/* } */}
 
-      {editProfileView &&
+      {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDB
         dashboardType={"ADMIN"}
         dashboardPage={"ATLAS"}
@@ -759,7 +760,8 @@ const handleSubmit = () => {
         setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
         setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-      />}
+      />
+      {/* } */}
 
       {isFinalReviewModalOpen && (
         <FinalReviewModal

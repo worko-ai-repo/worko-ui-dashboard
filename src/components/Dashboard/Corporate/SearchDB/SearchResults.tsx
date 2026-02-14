@@ -745,7 +745,7 @@ const handlePageChange = useCallback(
           />
           )}
 
-      {isAssignJobModelOpen && 
+      {/* {isAssignJobModelOpen &&  */}
         <MoveToApplicantsBulk
           dashboardType={"CORPORATE"}
           pageType={"ATLAS"}
@@ -758,9 +758,10 @@ const handlePageChange = useCallback(
           candidateData={selectedRows[0]}
           userDetails={userDetails}
           submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
-      />}
+      />
+      {/* } */}
 
-      {editProfileView &&
+      {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDB
         dashboardType={"CORPORATE"}
         dashboardPage={"ATLAS"}
@@ -783,7 +784,8 @@ const handlePageChange = useCallback(
         setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
         setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-      />}
+      />
+      {/* } */}
 
       {isFinalReviewModalOpen && (
         <FinalReviewModal

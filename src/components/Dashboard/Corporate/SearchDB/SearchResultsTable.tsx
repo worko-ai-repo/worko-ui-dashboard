@@ -1190,7 +1190,7 @@ export default function SearchResultsTable(props: any) {
         handlePreviousPage={() => onPageChange(currentPage - 1)}
         handleNextPage={() => onPageChange(currentPage + 1)}
       />
-      {editProfileData && (
+      {/* {editProfileData && ( */}
         <MoveToApplicants
           dashboardType={"CORPORATE"}
           textToDisplay={textToDisplay}
@@ -1206,8 +1206,9 @@ export default function SearchResultsTable(props: any) {
           submitFunction={textToDisplay === "Find matching score" ? findMatchingScoreSingle : moveToApplicantSingle}
           selectedJobId={selectedJobId}
         />
-      )}
-      {editProfileView &&
+      {/* )} */}
+
+      {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDBSingle
         dashboardType={"CORPORATE"}
         dashboardPage={"ATLAS"}
@@ -1230,7 +1231,8 @@ export default function SearchResultsTable(props: any) {
         setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
         setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-      />}
+      />
+      {/* } */}
       {isFinalReviewModalOpen && (
         <FinalReviewModal
             isOpen={isFinalReviewModalOpen}

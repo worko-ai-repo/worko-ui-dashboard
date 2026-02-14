@@ -276,61 +276,61 @@ export const expandedExtraApplicationRow = (expandedActions: React.ReactNode, ro
     ),
     colSpan: 1,
   },
-  {
-    content: (
-      <div className="w-full flex flex-col relative top-0  py-2 px-1  ">
-        {/* Dates & Status */}
-        <div>
-          <div className="text-xs">
-            <h3 className="font-semibold text-gray-400 mb-1">Application Date</h3>
-            <p>
-              {new Date(row.createdAt).toLocaleDateString("en-GB", {
-                day: "numeric",
-                month: "short",
-                year: "numeric",
-                hour: "numeric",
-                minute: "2-digit",
-                hour12: true,
-              })}
-            </p>
-          </div>
+  // {
+  //   content: (
+  //     <div className="w-full flex flex-col relative top-0  py-2 px-1  ">
+  //       {/* Dates & Status */}
+  //       <div>
+  //         <div className="text-xs">
+  //           <h3 className="font-semibold text-gray-400 mb-1">Application Date</h3>
+  //           <p>
+  //             {new Date(row.createdAt).toLocaleDateString("en-GB", {
+  //               day: "numeric",
+  //               month: "short",
+  //               year: "numeric",
+  //               hour: "numeric",
+  //               minute: "2-digit",
+  //               hour12: true,
+  //             })}
+  //           </p>
+  //         </div>
 
-          {getCvViewDate(row.statusTracker) !== "-" && (
-            <div className="text-xs mt-3">
-              <div>
-                <span className="font-medium text-gray-600">CV Viewed By</span>
-                <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
-              </div>
+  //         {getCvViewDate(row.statusTracker) !== "-" && (
+  //           <div className="text-xs mt-3">
+  //             <div>
+  //               <span className="font-medium text-gray-600">CV Viewed By</span>
+  //               <CreatedByDisplay row={getCvDownloadedById(row)} mode="updated" />
+  //             </div>
 
-              <h3 className="font-semibold text-gray-400 mb-1">CV Viewed Date</h3>
-              <p className="mb-2">{getCvViewDate(row.statusTracker)}</p>
-            </div>
-          )}
+  //             <h3 className="font-semibold text-gray-400 mb-1">CV Viewed Date</h3>
+  //             <p className="mb-2">{getCvViewDate(row.statusTracker)}</p>
+  //           </div>
+  //         )}
 
-          {row.status === "REJECTED" && (
-            <div className="text-xs mt-3">
-              <h3 className="font-semibold text-gray-400 mb-1">Rejected Date</h3>
-              <p className="mb-2">
-                {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString(
-                  "en-GB",
-                  {
-                    day: "numeric",
-                    month: "short",
-                    year: "numeric",
-                    hour: "numeric",
-                    minute: "2-digit",
-                    hour12: true,
-                  }
-                )}
-              </p>
-              <div className="mb-2">
-                <span className="font-semibold text-gray-400 mb-1">Rejected By </span>
-                <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    ),
-  },
+  //         {row.status === "REJECTED" && (
+  //           <div className="text-xs mt-3">
+  //             <h3 className="font-semibold text-gray-400 mb-1">Rejected Date</h3>
+  //             <p className="mb-2">
+  //               {new Date(row?.rejectedByUserId?.actionDate || row?.updatedAt).toLocaleDateString(
+  //                 "en-GB",
+  //                 {
+  //                   day: "numeric",
+  //                   month: "short",
+  //                   year: "numeric",
+  //                   hour: "numeric",
+  //                   minute: "2-digit",
+  //                   hour12: true,
+  //                 }
+  //               )}
+  //             </p>
+  //             <div className="mb-2">
+  //               <span className="font-semibold text-gray-400 mb-1">Rejected By </span>
+  //               <CreatedByDisplay row={getRejectedById(row)} mode="updated" key={row.id} />
+  //             </div>
+  //           </div>
+  //         )}
+  //       </div>
+  //     </div>
+  //   ),
+  // },
 ];

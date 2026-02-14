@@ -658,7 +658,7 @@ const AgencyCandidateList = () => {
               />
       )}
 
-    {isRejecting &&      
+    {/* {isRejecting &&       */}
       <RejectCandidateModal
         onClose={()=>setIsRejecting(false)}
         isOpen={isRejecting}
@@ -667,7 +667,8 @@ const AgencyCandidateList = () => {
         setFetchData={setFetchData}
         setSelectedRows={setSelectedRows}
         localUpdate={handleLocalUpdate}
-      />}
+      />
+      {/* } */}
 
       <Modal
         isOpen={isEvaluatorForm}
@@ -681,11 +682,12 @@ const AgencyCandidateList = () => {
           formLimit={10}/>
         }
       </Modal>
+      
       <Modal
-  isOpen={isEvaluatorForm}
-  onClose={() => setIsEvaluatorForm(false)}
-  className="w-[90vw] sm:w-[455px] h-auto"
->
+        isOpen={isEvaluatorForm}
+        onClose={() => setIsEvaluatorForm(false)}
+        className="w-[90vw] sm:w-[455px] h-auto"
+      >
   {isEvaluatorForm && (
     <EvaluatorForm
       Defaultvalues={{
@@ -713,7 +715,7 @@ const AgencyCandidateList = () => {
       resetSelectedRows={()=>setSelectedRows([])}
     />
   )}
-</Modal>
+      </Modal>
 
     {isFinalReviewModalOpen && (
     <FinalReviewModal

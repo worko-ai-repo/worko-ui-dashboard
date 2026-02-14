@@ -7,7 +7,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react'
 import AdminDatabaseTable from './AdminDatabaseTable';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
-import { DatabaseListApiResponse, DatabaseListFilters, initialPaginationState } from '@Components/Dashboard/Corporate/Database/CorporateDatabase';
+import { DatabaseListApiResponse, DatabaseListFilters, initialPaginationState, SendResumeCountApiResponse } from '@Components/Dashboard/Corporate/Database/CorporateDatabase';
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import httpServiceObj from '@Services/ApiHandler.service';
 import SearchBarAgency from '@Components/Shared/SearchBarAgency';
@@ -56,6 +56,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
   const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
   const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+  const [initialIds,setInitialIds] = useState<string[]>([]);
 
   useEffect(() => {
     function handleClickOutside(event:any) {
@@ -122,6 +123,11 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
 
       if (response) {
         setFetchData(response.data);
+        const fetchingScoreid = response.data
+          .filter(d => d?.candidateParsedCvDetails?.isCandidateCvRefreshInProgress === true)
+          .map(d => d?.latestCandidateParsedCvId);
+
+        setInitialIds(fetchingScoreid);
         if (response.pagination) {
           setPaginationInfo(response.pagination);
 
@@ -154,7 +160,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         paginationKeysRef.current = { 1: "" };
         fetchDatabaseData(1, pageSize, "");
       }
-    }, [userDetails, fetchDatabaseData]);
+    }, [userDetails?.email, searchBarText]);
     // }, [userDetails, fetchDatabaseData, pageSize]);
     
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
@@ -290,8 +296,14 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       return;
     }
 
-    const chunkSize = 50;
+    const resumeCountResponse = await sendResumeCount({totalResumesUploaded:files.length})
+    if (!resumeCountResponse.success) {
+      toast.error((resumeCountResponse?.error as { message?: string })?.message, getToastOptions({}));
+      return; 
+    }
+    const resumeCountResponseId = resumeCountResponse?.data?.id
 
+    const chunkSize = 50;
     for (let i = 0; i < pdfFiles.length; i += chunkSize) {
     const currentChunk = pdfFiles.slice(i, i + chunkSize);
 
@@ -302,7 +314,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       }
     })
     const payload = {
-      bulkCvs:pdfFilesNameAndType
+      bulkCvs:pdfFilesNameAndType,
+      bulkSourceTypeResumeId:resumeCountResponseId
     }
     const uploadResponse:any = await createFileRecords(payload);
     if (!uploadResponse.success) {
@@ -350,6 +363,19 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           }
         }
       };
+
+  const sendResumeCount = async (payload: any) => {
+    try {
+      const { response } = await httpServiceObj.post<SendResumeCountApiResponse>(`${agencyBaseUrl}/bulk-source-type-resume/`, payload, true, {}, true);
+      if (response) {
+        return { success: true, data: response };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Error in sending files count", error);
+      return { success: false, error };
+    }
+  };
 
   const createFileRecords = async (payload: any) => {
     try {
@@ -689,9 +715,11 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           currentPage={currentPage}
           onPageChange={handlePageChange}
           onPageSizeChange={handlePageSizeChange}
+          initialIds={initialIds}
+          setInitialIds={setInitialIds}
         />
         )}
-      {isAssignJobModelOpen && 
+      {/* {isAssignJobModelOpen &&  */}
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"DATABASE"}
@@ -703,9 +731,10 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           candidateData={selectedRows[0]}
           userDetails={userDetails}
           submitFunction={handleBulkMoveToApplicants}
-        />}
+        />
+    {/* } */}
 
-        {editProfileView &&
+        {/* {editProfileView && */}
           <EditCTCETCAndNoticePeriodModal
           dashboardType={"ADMIN"}
           dashboardPage={"MYDATABASE"}
@@ -727,7 +756,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
           setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
           setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-          />}
+          />
+          {/* } */}
 
         {isFinalReviewModalOpen && (
         <FinalReviewModal

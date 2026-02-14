@@ -58,6 +58,8 @@ const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardTy
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [companyJobs, setCompanyJobs] = useState<JobData[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
   // Modal open/close animation
   useEffect(() => {
     if (isOpen) {
@@ -68,6 +70,15 @@ const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardTy
       setIsAnimatingIn(false);
       const timer = setTimeout(() => setVisible(false), 300);
       return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedJobs([]);
+      setInput("");
+      setIsDropDownOpen(false);
+      setIsSubmitting(false)
     }
   }, [isOpen]);
 
@@ -170,13 +181,20 @@ const handleSubmit = async () => {
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
       } ${visible ? 'visible' : 'invisible'}`}
     >
     <div
+      ref={modalRef}
       className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
-        isAnimatingIn ? 'translate-x-0' : 'translate-x-full'
+        !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
       }`}
     >
     <div className="p-6 min-h-[100vh] overflow-y-auto">
@@ -301,10 +319,10 @@ const handleSubmit = async () => {
         <div className="absolute bottom-6 left-6">
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 text-xs"
             disabled={isSubmitting || selectedJobs.length === 0}
           >
-            <SendIcon className="h-4 w-4" />
+            <SendIcon className="h-3 w-3" />
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>

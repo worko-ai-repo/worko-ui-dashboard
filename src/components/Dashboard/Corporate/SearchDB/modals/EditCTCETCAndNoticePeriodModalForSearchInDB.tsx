@@ -2,7 +2,7 @@ import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApp
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import ConfirmMessageModal from '../../Database/modals/ConfirmMessageModal';
@@ -52,6 +52,8 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting,setIsSubmitting]  = useState(false);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+  const modalRef = useRef<HTMLDivElement>(null);
+
   const [confirmModal, setConfirmModal] = useState({
         open: false,
         onContinue: () => {},
@@ -217,12 +219,19 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-lg relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}
@@ -334,17 +343,17 @@ const EditCTCETCAndNoticePeriodModalForSearchInDB:React.FC<EditCTCETCAndNoticePe
             </div> */}
             <div className="flex justify-start mt-4 gap-3">
             <button
-                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white text-xs
                 ${isSubmitting 
                     ? "bg-blue-300 cursor-not-allowed opacity-70" 
                     : "bg-blue-500"}`}
             >
-                <SendIcon className='h-4 w-4'/>
+                <SendIcon className='h-3 w-3'/>
                 {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
             <button
                 type="button"
-                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white bg-blue-500`}
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white bg-blue-500 text-xs`}
                 onClick={onClose}
             >
                 Close

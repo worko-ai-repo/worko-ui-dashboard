@@ -2,7 +2,7 @@ import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApp
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -45,6 +45,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
     const [isSubmitting,setIsSubmitting]  = useState(false);
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+    const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
     if (isOpen && candidateFullDetails) {
@@ -137,12 +138,19 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}

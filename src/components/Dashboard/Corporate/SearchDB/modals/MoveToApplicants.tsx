@@ -380,10 +380,10 @@ const handleSubmit = async () => {
         <div className="absolute bottom-6 left-6">
           <button
             onClick={handleSubmit}
-            className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+            className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 text-xs"
             disabled={isSubmitting || selectedJobs.length === 0}
           >
-            <SendIcon className="h-4 w-4" />
+            <SendIcon className="h-3 w-3" />
             {isSubmitting ? 'Submitting...' : 'Submit'}
           </button>
         </div>

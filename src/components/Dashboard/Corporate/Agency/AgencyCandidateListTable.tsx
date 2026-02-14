@@ -658,20 +658,20 @@ export default function AgencyCandidateListTable(props: any) {
       key: "anyComment",
       label: "Any comment",
       sortable: true,
-      render: (row: AgencyAllCandidatesListDetailsDto) => row?.agencyComments ?? "NA"
-        // (
-        //   <div className="flex justify-center m-auto w-[150px]">
-        //     <span
-        //       className="truncate block w-[150px]"
-        //       data-tooltip-id="my-tooltip"
-        //       data-tooltip-content={"Click to view full details"}
-        //       onClick={() => {
-        //         setViewViewDetailsModal(true);
-        //         setFullDetails(row?.agencyComments || "N/A");
-        //       }}>
-        //       {row?.agencyComments ?? "N/A"}
-        //     </span>
-        //   </div>
+      render: (row: AgencyAllCandidatesListDetailsDto) => 
+        (
+          <div className="flex justify-center m-auto">
+            <span
+              className="truncate"
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Click to view full details"}
+              onClick={() => {
+                setViewViewDetailsModal(true);
+                setFullDetails(row?.agencyComments || "N/A");
+              }}>
+              {row?.agencyComments ?? "N/A"}
+            </span>
+          </div>
 
         // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
         //   <span
@@ -680,7 +680,7 @@ export default function AgencyCandidateListTable(props: any) {
         //     {row?.agencyComments ?? "NA"}
         //   </span>
         // </div>
-      // ),
+      ),
     },
     {
       key: "viewCV",
@@ -1289,58 +1289,6 @@ export default function AgencyCandidateListTable(props: any) {
         {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
       </Modal>
 
-      {/* <Modal
-        isOpen={isViewEvaluator.isOpen}
-        onClose={() => {
-          setViewEvaluation({
-            isOpen: false,
-            jobApplicationData: {} as any,
-          });
-        }}
-        className="!p-0 m-0  ">
-        {isViewEvaluator.jobApplicationData.status === "PROCESSING_INTERVIEW" && (
-          <div className="processing_interview no-scrl no-scrl-web bg-blue-300 absolute bottom-0 text-xs  p-1 text-blue-600 mx-0 left-0 right-0 ">
-            Under interview process
-          </div>
-        )}
-        <ResponseEvaluation
-          jobApplicationData={isViewEvaluator.jobApplicationData}
-          handleUpdate={handleUpdateApplicationStatus}
-          setIsRejectModalOpen={setIsRejectModalOpen}
-          onClose={() => {
-            setViewEvaluation({
-              isOpen: false,
-              jobApplicationData: {} as any,
-            });
-          }}
-          setOpenAddEvaluatorModal={(count, JobApplicationId: string) => {
-            setEvaluatorFormCount(count);
-            const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
-              SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
-            );
-            // const applicantData = sortedData.find((row) => row.id === JobApplicationId);
-            // if (applicantData && companyDetails) {
-            //   setEvaluatorFormProps({
-            //     Defaultvalues: {
-            //       jobApplicationId: [applicantData.id],
-            //       jobId: applicantData.jobId,
-            //       jobTitle: applicantData.jobTitle,
-            //       applicantUserName: [applicantData.applicantDetails.name],
-            //       companyId: applicantData.companyId,
-            //       applicantUserId: [applicantData.applicantDetails.userId],
-            //       applicantUserEmail: [applicantData.applicantDetails.email],
-            //       hrName: userDetails?.fullName || "",
-            //       hrCurrentCompanyName: companyDetails?.name || "",
-            //     },
-            //     isBulk: false,
-            //     onClose: () => setIsAddEvaluatorModalOpen(false),
-            //     formLimit: count,
-            //   });
-            //   setIsAddEvaluatorModalOpen(true);
-            // }
-          }}
-        />
-      </Modal> */}
       <ViewFullDetail
           onClose={() => {
             setViewViewDetailsModal(false);

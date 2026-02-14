@@ -1199,7 +1199,7 @@ useEffect(() => {
         handlePreviousPage={() => onPageChange(currentPage - 1)}
         handleNextPage={() => onPageChange(currentPage + 1)}
       />
-      {editProfileData && (
+      {/* {editProfileData && ( */}
         <MoveToApplicants
           dashboardType={"ADMIN"}
           textToDisplay={textToDisplay}
@@ -1215,8 +1215,8 @@ useEffect(() => {
           submitFunction={textToDisplay === "Find matching score" ? findMatchingScoreSingle : moveToApplicantSingle}
           selectedJobId={selectedJobId}
         />
-      )}
-      {editProfileView &&
+        {/* )} */}
+      {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDBSingle
         dashboardType={"CORPORATE"}
         dashboardPage={"ATLAS"}
@@ -1239,7 +1239,8 @@ useEffect(() => {
         setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
         setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-      />}
+      />
+    {/* } */}
       {isFinalReviewModalOpen && (
         <FinalReviewModal
             isOpen={isFinalReviewModalOpen}

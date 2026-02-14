@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import secureStorage from "@Utils/SecureStorage.utils";
 import { SecureStorageKeyEnum } from "@Enums/SecureStorage.enum";
@@ -6,7 +6,7 @@ import { useAppContext } from "@Context/App.context";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
-import { AgencyDatabaseApplicantDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
+import { AgencyAllCandidatesListDetailsDto, AgencyDatabaseApplicantDetailsDto, CandidateParsedCvDetails } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
 import EditProfileModal from "./modals/EditProfileModal";
 import { DynamicTableAgency } from "@Components/Shared/DynamicTableAgency";
@@ -19,6 +19,8 @@ import { toast } from "react-toastify";
 import { getToastOptions } from "lib-worko-ui";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
+import { RefreshCcw } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -69,6 +71,8 @@ export default function CorporateDatabaseTable(props: any) {
     onPageChange,
     onPageSizeChange,
     jobsList,
+    initialIds,
+    setInitialIds,
   } = props as any;
 
   // State required for table interactions
@@ -94,7 +98,61 @@ export default function CorporateDatabaseTable(props: any) {
   const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
+  const currentId = initialIds[0] ?? null;
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+
+    const {
+      data: apidata,
+      isLoading,
+      error,
+      isFetched,
+    } = useQuery({
+      queryKey: ["refetch-details", currentId],
+      queryFn: () => refetchingCVUpdate(currentId!),
+      enabled: !!currentId,
+      refetchInterval: 20000,
+      refetchOnWindowFocus: false,
+    });
+  
+    useEffect(() => {
+      if (!currentId) return;
+      if (apidata?.isCandidateCvRefreshInProgress === false) {
+        toast.success(`Details Re-fetch completed for ${apidata?.email}`, getToastOptions({}));
+        console.log(apidata)
+        const updatedData = {
+          candidateParsedCvDetails:{
+            ...apidata,
+            isCandidateCvRefreshInProgress:false
+          }
+        }
+        localUpdate(apidata?.id, updatedData);
+        setInitialIds((prev: any) => prev.slice(1));
+        return;
+      }
+    }, [apidata, setInitialIds]);
+
+    const refetchingCVUpdate = async (passedJobId: string) => {
+    if (!userDetails?.email) return;
+
+    try {
+      const url = `${agencyBaseUrl}/candidate-parsed-cv/${passedJobId}`;
+      const { response } = await httpServiceObj.get<CandidateParsedCvDetails>(
+        url,
+        true,
+        {},
+        true
+      );
+
+      if (response) {
+        return response;
+      } else {
+        console.error("Cannot fetch user details");
+      }
+    } catch (err) {
+      console.error("Exception in Agency all candidates list", err);
+    }
+    };
+
   // Sorting hook (keeps same fallback keys as before)
   const keyFallbacks = {
     referredBy: ["referredBy"],
@@ -208,6 +266,77 @@ export default function CorporateDatabaseTable(props: any) {
       });
     }
   };
+
+  const reparseCV = async(row:any) =>{
+    if(!row?.candidateParsedCvId){
+      toast.error("No candidate id found please re-upload CV",getToastOptions({}))
+      return
+    }
+    try {
+      const payload = {
+        candidateParsedCvId: row?.candidateParsedCvId,
+      }
+      const {response, error} = await httpServiceObj.post(`${agencyBaseUrl}/candidate-parsed-cv/refresh`,payload,true,{},true)
+      if(error){
+        toast.error(error.message,getToastOptions({}))
+        return
+      }
+      const updatedData = {
+        ...row,
+        candidateParsedCvDetails:{
+          ...row.candidateParsedCvDetails,
+          isCandidateCvRefreshInProgress:true
+        }
+      }
+      localUpdate(row?.id,updatedData)
+      setInitialIds((prev: string[]) => [...prev, row?.candidateParsedCvId]);
+      toast.success("Refetching details from cv initiated",getToastOptions({}))
+    } catch (error) {
+      console.error("error in reparsing cv",error)
+    }
+  }
+  
+  const shouldShowRefreshButton = (row: any): boolean => {
+    const details = row?.candidateParsedCvDetails;
+    if (!details) return false;
+
+    // Check 7-day rule
+    const refreshedAt = details.candidateParsedCvRefreshedAt;
+
+    if (refreshedAt) {
+      const refreshedDate = new Date(refreshedAt);
+      const now = new Date();
+
+      const diffInMs = now.getTime() - refreshedDate.getTime();
+      const diffInDays = diffInMs / (1000 * 60 * 60 * 24);
+
+      if (diffInDays <= 7) {
+        return false;
+      }
+    }
+
+    // Validate required fields
+    const isEmptyString = (val: any) =>
+      !val || (typeof val === "string" && val.trim().length === 0);
+
+    const isEmptyArray = (arr: any) =>
+      !Array.isArray(arr) || arr.length === 0;
+
+    const isMissing =
+      isEmptyString(details.name) ||
+      isEmptyString(row?.candidateEmail) ||
+      isEmptyString(row?.phoneNumberDetails?.number) ||
+      isEmptyString(details.currentCompany) ||
+      isEmptyString(details.currentDesignation) || details.totalYOE == null ||
+      isEmptyString(details.location) ||
+      isEmptyArray(details.multipleCandidateExperience) ||
+      isEmptyArray(details.education) ||
+      isEmptyString(details.about) ||
+      isEmptyArray(details.coreSkills);
+
+    return isMissing;
+  };
+
 
   // Column definitions (kept same as previous "All" view)
   const columns = [
@@ -480,9 +609,10 @@ export default function CorporateDatabaseTable(props: any) {
       key: "action",
       label: "Action",
       sortable: false,
+      contentWidth:`max-w-none`,
       render: (row: AgencyDatabaseApplicantDetailsDto) => {
         return (
-          <div className="flex justify-center m-auto">
+          <div className="flex gap-1 justify-center items-center">
             <button
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Edit details"
@@ -494,6 +624,25 @@ export default function CorporateDatabaseTable(props: any) {
               }}>
               <img src={Edit} alt="Edit" className="w-8 h-8 btn-sky shrink-0" />
             </button>
+            {row?.candidateParsedCvDetails?.isCandidateCvRefreshInProgress 
+              ? <span 
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content="Generating details"
+                  data-tooltip-place="top"
+                  className="cursor-default flex items-center justify-center gap-2 rounded-xl bg-blue-500 p-2 text-white">
+              <RefreshCcw size={14} className="shrink-0 w-4 h-4 animate-[spin_1.5s_linear_infinite_reverse]" />
+              </span>
+              : shouldShowRefreshButton(row) ? (
+                <button
+                  data-tooltip-id="my-tooltip"
+                  data-tooltip-content="Refetch cv details"
+                  data-tooltip-place="top"
+                  className="flex flex-row justify-center items-center"
+                  onClick={() => reparseCV(row)}
+                >
+                  <RefreshCcw size={14} className="btn-sky shrink-0 w-8 h-8" />
+                </button>
+              ) : null}
           </div>
         );
       },

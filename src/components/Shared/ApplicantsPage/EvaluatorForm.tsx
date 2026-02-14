@@ -745,8 +745,8 @@ const EvaluatorForm: React.FC<EvaluatorFormProps> = ({
 
                 <button
                   type="submit"
-                  className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-sm hover:bg-blue-700 transition">
-                  <Send size={16} />
+                  className="w-fit flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-xl text-xs hover:bg-blue-700 transition">
+                  <Send size={14} />
                   <span>Submit</span>
                 </button>
               </form>

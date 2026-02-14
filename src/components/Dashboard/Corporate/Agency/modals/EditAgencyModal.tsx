@@ -1,8 +1,9 @@
+import SubmitButton from '@Components/ui/SubmitButton';
 import { useAppContext } from '@Context/App.context';
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from '@Utils/Toast.utils';
 import { SendIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -33,11 +34,12 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
           // GSTIN: data?.GSTIN,
         },
       });
-      const [visible, setVisible] = useState(false);
-      const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-      const [isSubmitting,setIsSubmitting]  = useState(false);
-      const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
-      const { userDetails } = useAppContext();
+  const [visible, setVisible] = useState(false);
+  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  const [isSubmitting,setIsSubmitting]  = useState(false);
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+  const { userDetails } = useAppContext();
+  const modalRef = useRef<HTMLDivElement>(null);
 
       useEffect(() => {
       if (isOpen && data) {
@@ -110,12 +112,19 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
 
     return (
       <div
-        className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+        onMouseDown={(e) => {
+          if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+            // reset();
+            onClose();
+          }
+        }}
+        className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
           isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
         } ${visible ? "visible" : "invisible"}`}>
         <div
+          ref={modalRef}
           className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-            isAnimatingIn ? "translate-x-0" : "translate-x-full"
+            !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
           }`}>
           <button
             onClick={()=>{
@@ -232,12 +241,13 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
             </div> */}
 
             <div className="flex justify-start mt-4">
-              <button
+              {/* <button
                   className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
               >
                   <SendIcon className='h-4 w-4'/>
                   {isSubmitting ? 'Submitting...' : 'Submit'}
-              </button>
+              </button> */}
+              <SubmitButton isSubmitting={isSubmitting}/>
               </div>
           </form>
         </div>

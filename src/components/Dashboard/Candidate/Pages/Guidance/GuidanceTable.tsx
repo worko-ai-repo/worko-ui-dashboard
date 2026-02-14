@@ -232,7 +232,7 @@ const GuidanceTable = memo(
         key: "companyName",
         label: "Company",
         sortable: true,
-        contentWidth: `min-w-[150px]`,
+        contentWidth: `min-w-none`,
         render: (row: GuidanceRequest) => row.companyName
       },
       {
@@ -259,29 +259,31 @@ const GuidanceTable = memo(
         key: "guidanceRequestDescription",
         label: "Requirement detail",
         sortable: true,
-        render: (row: GuidanceRequest) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span
-              className="truncate block w-[150px]"
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(row.guidanceRequestDescription?.toString() || "N/A");
-              }}>
-              {row.guidanceRequestDescription ? row.guidanceRequestDescription.toString() : "N/A"}
-            </span>
-          </div>
-        ),
+        render: (row: GuidanceRequest) => row.guidanceRequestDescription ? row.guidanceRequestDescription.toString() : "N/A"
+        // (
+        //   <div className="flex justify-center m-auto w-[150px]">
+        //     <span
+        //       className="truncate block w-[150px]"
+        //       data-tooltip-id="my-tooltip"
+        //       data-tooltip-content={"Click to view full details"}
+        //       onClick={() => {
+        //         setViewViewDetailsModal(true);
+        //         setFullDetails(row.guidanceRequestDescription?.toString() || "N/A");
+        //       }}>
+        //       {row.guidanceRequestDescription ? row.guidanceRequestDescription.toString() : "N/A"}
+        //     </span>
+        //   </div>
+        // ),
       },
       {
         key: "status",
         label: "Status",
+        contentWidth:`max-w-none`,
         render: (row: GuidanceRequest) => {
           const color = getStatusColor(row.status);
           return (
             <div
-              className={`w-32 rounded-full px-1 py-3 text-xs font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
+              className={`w-32 rounded-full px-1 py-3 text-[0.625rem] font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
               data-tooltip-id="my-tooltip"
               data-tooltip-content={color.label}
               data-tooltip-place="top">
@@ -310,6 +312,7 @@ const GuidanceTable = memo(
       {
         key: "mentorDetails",
         label: "Mentor Details",
+        contentWidth:"max-w-none",
         render: (row: GuidanceRequest) => {
           if (row.status === "PENDING" || row.status === "CANCELLED") return null;
 
@@ -317,14 +320,14 @@ const GuidanceTable = memo(
 
           return (
             <div
-              className={`m-auto w-[150px] rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-6 flex items-center justify-center gap-1 cursor-pointer text-white ${
+              className={`m-auto rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-4 flex items-center justify-center gap-0 cursor-pointer text-white ${
                 isProcessing ? "opacity-75" : ""
               }`}
               onClick={() => !isProcessing && handleViewDetails(row)}>
               {isProcessing ? (
                 <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mr-1"></div>
               ) : (
-                <img src={eyeIcon} className="h-6 w-6" alt="View feedback" />
+                <img src={eyeIcon} className="h-5 w-5" alt="View feedback" />
               )}
               <div className="ml-2 tracking-wide leading-6 font-semibold">
                 {isProcessing ? "Loading..." : "See details"}
@@ -342,13 +345,13 @@ const GuidanceTable = memo(
           const isProcessing = processingRequestId === row.id;
 
           return (
-            <div className="flex justify-center">
+            <div className="flex justify-center m-auto">
               <button
-                className={`rounded-lg w-14 h-11 ${
+                className={`rounded-lg ${
                   isProcessing
                     ? "bg-blue-300"
                     : "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]"
-                } flex items-center justify-center text-white ${
+                } flex flex-row items-center justify-center text-white ${
                   isProcessing ? "opacity-75 cursor-not-allowed" : "cursor-pointer"
                 }`}
                 onClick={() => !isProcessing && handleAcceptAndPay(row)}
@@ -356,7 +359,7 @@ const GuidanceTable = memo(
                 {isProcessing ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <img src={checkbubble} alt="Ask question" />
+                  <img src={checkbubble} className="p-2 w-10 h-10 shrink-0" alt="Ask question" />
                 )}
               </button>
             </div>

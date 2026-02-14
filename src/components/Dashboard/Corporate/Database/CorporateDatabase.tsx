@@ -50,14 +50,25 @@ export interface DatabaseListFilters {
 }
 
 export interface DatabaseListApiResponse {
-  data: AgencyListDetailsDto[];
+  data: AgencyDatabaseApplicantDetailsDto[];
   pagination: PaginationInfo;
   totalReferrals?: number;
   currentPage?: number;
   totalPages?: number;
   matchingScore?: number;
 }
-
+export type SendResumeCountApiResponse = {
+  createdAt : string;
+  createdByCorporateUserId: string;
+  id: string;
+  processingStatus: string;
+  totalResumesDuplicate: number;
+  totalResumesFailed : number;
+  totalResumesProcessed : number;
+  totalResumesSucceeded : number;
+  totalResumesUploaded : number;
+  updatedAt : string;
+}
 interface ResponseApi {
   isSuccess:boolean;
 }
@@ -99,6 +110,8 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
     const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
     const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+    const [initialIds,setInitialIds] = useState<string[]>([])
+
     useEffect(() => {
       function handleClickOutside(event:any) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -124,67 +137,72 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     { label: "Worko", onClick: () => setRefereeTypeStatus("WORKO") },
   ];
 
-const fetchDatabaseData = useCallback(
-  async (
-    page: number = 1,
-    size: number = pageSize,
-    lastKey: string = "",
-    searchFilters = filters,
-    isSearch = false,
-    sortOrder = "desc",
-    // statusOverride?: DatabaseStatusType
-  ) => {
-    if (!userDetails?.email) return;
+  const fetchDatabaseData = useCallback(
+    async (
+      page: number = 1,
+      size: number = pageSize,
+      lastKey: string = "",
+      searchFilters = filters,
+      isSearch = false,
+      sortOrder = "desc",
+      // statusOverride?: DatabaseStatusType
+    ) => {
+      if (!userDetails?.email) return;
 
-    setIsLoading(true);
-    try {
-      const url = `${agencyBaseUrl}/corporate-candidate-profile/`;
-      const params: Record<string, any> = {
-        companyId: userDetails?.companyId,
-        includeCandidateParsedCvDetails: true,
-        pageSize: size,
-        lastKey,
-        sortOrder,
-      };
+      setIsLoading(true);
+      try {
+        const url = `${agencyBaseUrl}/corporate-candidate-profile/`;
+        const params: Record<string, any> = {
+          companyId: userDetails?.companyId,
+          includeCandidateParsedCvDetails: true,
+          pageSize: size,
+          lastKey,
+          sortOrder,
+        };
 
-      // include filters if present
-      if (searchBarText?.trim()) params.candidateEmail = searchBarText;
-      if (searchFilters?.userType) params.userType = searchFilters.userType;
+        // include filters if present
+        if (searchBarText?.trim()) params.candidateEmail = searchBarText;
+        if (searchFilters?.userType) params.userType = searchFilters.userType;
 
-      // include status hiringEligibilityStatus if provided
-      if (hiringEligibiltyStatus !== undefined) params.hiringEligibilityStatus  = hiringEligibiltyStatus
+        // include status hiringEligibilityStatus if provided
+        if (hiringEligibiltyStatus !== undefined) params.hiringEligibilityStatus  = hiringEligibiltyStatus
 
-      // include status refereeTypeStatus if provided)
-      if (refereeTypeStatus !== undefined) params.refereeType  = refereeTypeStatus
+        // include status refereeTypeStatus if provided)
+        if (refereeTypeStatus !== undefined) params.refereeType  = refereeTypeStatus
 
-      const { response } = await httpServiceObj.get<DatabaseListApiResponse>(url, true, params, true);
+        const { response } = await httpServiceObj.get<DatabaseListApiResponse>(url, true, params, true);
 
-      if (response) {
-        setFetchData(response.data);
-        if (response.pagination) {
-          setPaginationInfo(response.pagination);
+        if (response) {
+          setFetchData(response.data);
+          const fetchingScoreid = response.data
+            .filter(d => d?.candidateParsedCvDetails?.isCandidateCvRefreshInProgress === true)
+            .map(d => d.candidateParsedCvId);
 
-          if (isSearch || page === 1) {
-            paginationKeysRef.current = { 1: "" };
-            if (response.pagination.lastKey) {
-              paginationKeysRef.current[2] = response.pagination.lastKey;
+          setInitialIds(fetchingScoreid);
+          if (response.pagination) {
+            setPaginationInfo(response.pagination);
+
+            if (isSearch || page === 1) {
+              paginationKeysRef.current = { 1: "" };
+              if (response.pagination.lastKey) {
+                paginationKeysRef.current[2] = response.pagination.lastKey;
+              }
+            } else if (response.pagination.lastKey) {
+              paginationKeysRef.current[page + 1] = response.pagination.lastKey;
             }
-          } else if (response.pagination.lastKey) {
-            paginationKeysRef.current[page + 1] = response.pagination.lastKey;
           }
+        } else {
+          // toast.error("Cannot fetch user details",getToastOptions({}))
+          console.error("Cannot fetch user details");
         }
-      } else {
-        // toast.error("Cannot fetch user details",getToastOptions({}))
-        console.error("Cannot fetch user details");
+      } catch (err) {
+        console.error("Exception in fetchDatabaseData:", err);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (err) {
-      console.error("Exception in fetchDatabaseData:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  },
-  [userDetails, pageSize, filters, hiringEligibiltyStatus, refereeTypeStatus,searchBarText]
-);
+    },
+    [userDetails, pageSize, filters, hiringEligibiltyStatus, refereeTypeStatus,searchBarText]
+  );
 
     useEffect(() => {
         if (userDetails?.email) {
@@ -193,7 +211,7 @@ const fetchDatabaseData = useCallback(
           paginationKeysRef.current = { 1: "" };
           fetchDatabaseData(1, pageSize, "");
         }
-    }, [userDetails, fetchDatabaseData]);
+    }, [userDetails?.email, searchBarText]);
     // }, [userDetails, fetchDatabaseData, pageSize]);
     
     const searchInputRef = useRef<NodeJS.Timeout | null>(null);
@@ -350,8 +368,14 @@ const fetchDatabaseData = useCallback(
       return;
     }
 
-    const chunkSize = 50;
+    const resumeCountResponse = await sendResumeCount({totalResumesUploaded:files.length})
+    if (!resumeCountResponse.success) {
+      toast.error((resumeCountResponse?.error as { message?: string })?.message, getToastOptions({}));
+      return; 
+    }
+    const resumeCountResponseId = resumeCountResponse?.data?.id
 
+    const chunkSize = 50;
     for (let i = 0; i < pdfFiles.length; i += chunkSize) {
     const currentChunk = pdfFiles.slice(i, i + chunkSize);
 
@@ -363,7 +387,8 @@ const fetchDatabaseData = useCallback(
     })
     const payload = {
       companyId: userDetails?.companyId,
-      bulkCvs:pdfFilesNameAndType
+      bulkCvs:pdfFilesNameAndType,
+      bulkSourceTypeResumeId:resumeCountResponseId
     }
     const uploadResponse:any = await createFileRecords(payload);
     if (!uploadResponse.success) {
@@ -412,6 +437,19 @@ const fetchDatabaseData = useCallback(
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const sendResumeCount = async (payload: any) => {
+    try {
+      const { response } = await httpServiceObj.post<SendResumeCountApiResponse>(`${agencyBaseUrl}/bulk-source-type-resume/`, payload, true, {}, true);
+      if (response) {
+        return { success: true, data: response };
+      }
+      return { success: false };
+    } catch (error) {
+      console.error("Error in sending files count", error);
+      return { success: false, error };
     }
   };
 
@@ -753,6 +791,8 @@ const fetchDatabaseData = useCallback(
         currentPage={currentPage}
         onPageChange={handlePageChange}
         onPageSizeChange={handlePageSizeChange}
+        initialIds={initialIds}
+        setInitialIds={setInitialIds}
       />
       )}
       <SelectJobForBulkMatch
@@ -764,7 +804,7 @@ const fetchDatabaseData = useCallback(
         setLoader={setLoader}
         loader={loader}
       />
-  {isCandidateBulkBanModelOpen && 
+  {/* {isCandidateBulkBanModelOpen &&  */}
     <CandidateBulkBanModal
       comments={comments}
       setComments={setComments}
@@ -774,12 +814,15 @@ const fetchDatabaseData = useCallback(
       onClose={()=>{
         setIsBulkBanSubmitting(false)
         setIsCandidateBulkBanModelOpen(false)
+        setReason("")
+        setComments("")
       }}
       isOpen={isCandidateBulkBanModelOpen}
       isBulkBanSubmitting={isBulkBanSubmitting}
-    />}
+    />
+    {/* } */}
 
-  {isAssignJobModelOpen && 
+  {/* {isAssignJobModelOpen &&  */}
     <MoveToApplicantsBulk
       dashboardType={"CORPORATE"}
       pageType={"DATABASE"}
@@ -791,9 +834,10 @@ const fetchDatabaseData = useCallback(
       candidateData={selectedRows[0]}
       userDetails={userDetails}
       submitFunction={handleBulkMoveToApplicants}
-    />}
+    />
+    {/* } */}
 
-  {editProfileView &&
+  {/* {editProfileView && */}
     <EditCTCETCAndNoticePeriodModal
     dashboardType={"CORPORATE"}
     dashboardPage={"MYDATABASE"}
@@ -815,7 +859,8 @@ const fetchDatabaseData = useCallback(
     setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
     setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
     setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-    />}
+    />
+    {/* } */}
 
     {isFinalReviewModalOpen && (
     <FinalReviewModal

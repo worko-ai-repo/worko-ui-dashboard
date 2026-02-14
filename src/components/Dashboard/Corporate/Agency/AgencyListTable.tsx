@@ -493,7 +493,7 @@ export default function AgencyListTable(props: any) {
         hasNextPage={!!pagination?.lastKey}      
         />
 
-      {isAssignJobModelOpen && (
+      {/* {isAssignJobModelOpen && ( */}
         <AssignJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -506,9 +506,9 @@ export default function AgencyListTable(props: any) {
           userDetails={userDetails}
           localUpdate={localUpdate}
         />
-      )}
+      {/*  )} */}
 
-      {isRemoveJobModelOpen && (
+      {/* {isRemoveJobModelOpen && ( */}
         <RemoveJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -521,8 +521,9 @@ export default function AgencyListTable(props: any) {
           userDetails={userDetails}
           localUpdate={localUpdate}
         />
-      )}
-      {isEditAgencyModelOpen && (
+      {/*  )} */}
+
+      {/* {isEditAgencyModelOpen && ( */}
         <EditAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -533,7 +534,9 @@ export default function AgencyListTable(props: any) {
           data={editProfileData}
           localUpdate={localUpdate}
         />
-      )}
+      {/*  )} */}
+
+      {/* {isPauseAgencyModelOpen && ( */}
         <PauseOrResumeAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -546,7 +549,9 @@ export default function AgencyListTable(props: any) {
           localUpdate={localUpdate}
           currentAction={currentAction}
         />
+      {/*  )} */}
 
+      {/* {isDeleteAgencyModelOpen && ( */}
         <DeleteAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -558,6 +563,8 @@ export default function AgencyListTable(props: any) {
           data={editProfileData}
           removeAgencyLocally={removeAgencyLocally}
         />
+      {/* )} */}
+
         {/* <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {

@@ -4,7 +4,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import { NormalizedUser } from "@Utils/NormalizeUser";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { SendIcon } from "lucide-react";
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 //@TODO this whole component is copy-pasted so needs full refactor
 interface RejectCandidateModalProps {
@@ -42,7 +42,8 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
   const { user } = useDashboardContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
-  
+  const modalRef = useRef<HTMLDivElement>(null);
+
   const handleSubmit = async () => {
     if (!reason) {
       toast.error("Please select a reason", getToastOptions({}));
@@ -142,12 +143,19 @@ const RejectCandidateModal: FC<RejectCandidateModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}

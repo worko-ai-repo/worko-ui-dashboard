@@ -171,10 +171,14 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       render: (row: ReferAndEarnDto) => {
         return (
           <div
-            className={`px-8 py-2 rounded-full border truncate border-gray-300 ${
+            className={`px-4 py-2 rounded-full border truncate border-gray-300 ${
               ReferAndEarnJobStatusOptionsArray[row.jobApplicationStatus].style
             }`}>
-            <span className="text-xs">
+            <span 
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={ReferAndEarnJobStatusOptionsArray[row.jobApplicationStatus].label}
+              data-tooltip-place="top"
+              className="text-[0.625rem]">
               {ReferAndEarnJobStatusOptionsArray[row.jobApplicationStatus].label}
             </span>
           </div>
@@ -198,10 +202,14 @@ const AdminReferAndEarnTable: React.FC<ReferAndEarnTableProps> = ({
       render: (row: ReferAndEarnDto) => {
         return (
           <div
-            className={`px-8 py-2 rounded-full border truncate border-gray-300 ${
+            className={`px-4 py-2 rounded-full border truncate border-gray-300 ${
               ReferAndEarnStatusOptionsLabel[row.status].style
             }`}>
-            <span className="text-xs">{ReferAndEarnStatusOptionsLabel[row.status].label}</span>
+            <span               
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={ReferAndEarnStatusOptionsLabel[row.status].label}
+              data-tooltip-place="top"
+              className="text-[0.625rem]">{ReferAndEarnStatusOptionsLabel[row.status].label}</span>
           </div>
         );
       },

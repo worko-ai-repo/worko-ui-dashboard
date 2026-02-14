@@ -304,8 +304,46 @@ const CVPreview = ({
   }, [jobApplicationData, activeTab]);
   return (
     <div className="flex flex-col gap-4 p-4">
-      <div className="flex gap-4 justify-between">
+      <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">CV</h2>
+        <div className="flex gap-2">
+        <button
+          onClick={() => {
+            if(!cvUrl || cvUrl === "") {
+              toast.error("No download url found",getToastOptions({}))
+              return
+            }
+            fetch(cvUrl)
+              .then((response) => response.blob())
+              .then((blob) => {
+                const link = document.createElement("a");
+                const url = URL.createObjectURL(blob);
+                link.href = url;
+                const candidateName = jobApplicationData.applicantDetails.name.replace(
+                  /\s+/g,
+                  "_"
+                );
+                const companyName = (companyDetails?.name || "Company").replace(/\s+/g, "_");
+                const date = new Date().toISOString().split("T")[0];
+                link.download = `Worko_${candidateName}_${jobApplicationData?.applicantDetails?.YOE}_${companyName}_${date}.pdf`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+              })
+              .catch((error) => console.error("Error downloading the file:", error));
+          }}
+          className="border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600">
+          <Download className="w-4 h-4" />
+        </button>
+        <button
+          onClick={() => window.open(cvUrl, "_blank")}
+          className="px-3 py-2 bg-blue-200 rounded-md shadow text-blue-600">
+          <Maximize className="w-4 h-4" />
+        </button>
+        </div>
+      </div>
+      <div className="flex gap-4 justify-between">
         <div className="flex flex-col gap-4 w-full">
           <div className="relative flex-1 border-2 border-gray-400 w-full min-h-[82vh] object-fit rounded-xl overflow-hidden">
             {cvUrl ? (
@@ -315,7 +353,7 @@ const CVPreview = ({
                 <Loader2 className="animate-spin w-8 h-8 text-blue-500" />
               </div>
             )}
-            <button
+            {/* <button
               onClick={() => {
                 fetch(pdfuri)
                   .then((response) => response.blob())
@@ -342,9 +380,9 @@ const CVPreview = ({
             </button>
             <button
               onClick={() => window.open(cvUrl, "_blank")}
-              className="absolute bottom-4 right-3  px-3 py-2 bg-blue-200 rounded-md shadow text-blue-600">
+              className="absolute bottom-4 right-3 px-3 py-2 bg-blue-200 rounded-md shadow text-blue-600">
               <Maximize className="w-4 h-4" />
-            </button>
+            </button> */}
           </div>
 
           <div className="flex flex-wrap gap-4">
@@ -355,7 +393,7 @@ const CVPreview = ({
                   onClose();
                   setIsRejectModalOpen?.(misData);
                 }}
-                className="flex items-center gap-2 border border-red-600 text-red-600 font-medium px-4 py-2 rounded-lg transition">
+                className="flex items-center gap-1 border border-red-600 text-red-600 font-medium px-4 py-2 rounded-lg transition text-xs">
                 <X className="w-4 h-4" />
                 Reject
               </button>
@@ -365,7 +403,7 @@ const CVPreview = ({
             {shouldShowAction("HIRE", jobApplicationData, activeTab) && (
               <button
                 onClick={handleHire}
-                className="flex items-center gap-2 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition">
+                className="flex items-center gap-1 border border-green-600 text-green-600 font-medium px-4 py-2 rounded-lg transition text-xs">
                 <Check className="w-4 h-4" />
                 Hire
               </button>
@@ -388,8 +426,8 @@ const CVPreview = ({
             {shouldShowAction("SEND_TO_EVALUATOR", jobApplicationData, activeTab) && (
               <button
                 onClick={handleSendToEvaluator}
-                className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
-                <Send className="w-4 h-4" />
+                className="flex items-center gap-1 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition text-xs">
+                <Send className="w-3 h-3" />
                 Send for evaluation
               </button>
             )}
@@ -398,7 +436,7 @@ const CVPreview = ({
             {shouldShowAction("PROCESS_INTERVIEW", jobApplicationData, activeTab) && (
               <button
                 onClick={handleProcessInterview}
-                className="flex items-center gap-2 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition">
+                className="flex items-center gap-1 bg-blue-600 text-white font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition text-xs">
                 <ClipboardCheck className="w-4 h-4" />
                 Process interview
               </button>
@@ -407,7 +445,7 @@ const CVPreview = ({
             {/* On Hold Button */}
             {shouldShowAction("ONHOLD", jobApplicationData, activeTab) && (
               <button
-                className="text-blue-700 font-medium transition border p-2 rounded-lg"
+                className="text-blue-700 font-medium transition border p-2 rounded-lg text-xs"
                 onClick={handleOnHold}>
                 On Hold
               </button>
