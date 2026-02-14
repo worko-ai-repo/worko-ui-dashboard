@@ -84,7 +84,7 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
         }
         return response.objectUrl;
       }
-      case "CORP_CAND_BULK_CV_UPLOAD":{
+      case "CORP_CAND_BULK_CV_UPLOAD": {
         const splittedCvAwsS3FilePath =
           jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/");
         const jobIdFromCvAwsS3FilePath =
@@ -108,47 +108,72 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
         }
         return response.objectUrl;
       }
-      case "ADMIN_CAND_BULK_CV_UPLOAD":
-        {
-          const payload = {
-            candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
-          };
+      case "ADMIN_CAND_BULK_CV_UPLOAD": {
+        const payload = {
+          candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
+        };
 
-          const { response, error } = await httpServiceObj.post<any>(
-            `/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`,
-            payload,
-            true,
-            {},
-            false,
-            "AGENCY"
-          );
-          if (error) {
-            toast.error(error.message, getToastOptions({}));
-            return;
-          }
-          return response.objectUrl;
+        const { response, error } = await httpServiceObj.post<any>(
+          `/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`,
+          payload,
+          true,
+          {},
+          false,
+          "AGENCY"
+        );
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
         }
-        case "CORP_CAND_REFERRAL_CV":
-        {
-          const payload = {
-            companyId: jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")[1], //Job he applied
-            candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
-          };
+        return response.objectUrl;
+      }
+      case "CORP_CAND_REFERRAL_CV": {
+        const payload = {
+          companyId: jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")[1], //Job he applied
+          candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV, // CV file name
+        };
 
-          const { response, error } = await httpServiceObj.post<any>(
-            `/file/gsu2v/CORP_CAND_REFERRAL_CV`,
-            payload,
-            true,
-            {},
-            false,
-            "AGENCY"
-          );
-          if (error) {
-            toast.error(error.message, getToastOptions({}));
-            return;
-          }
-          return response.objectUrl;
+        const { response, error } = await httpServiceObj.post<any>(
+          `/file/gsu2v/CORP_CAND_REFERRAL_CV`,
+          payload,
+          true,
+          {},
+          false,
+          "AGENCY"
+        );
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
         }
+        return response.objectUrl;
+      }
+      case "CAND_SUBMIT_CV_JOB": {
+        const splittedCvAwsS3FilePath =
+          jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/");
+        const companyIdFromCvAwsS3FilePath = splittedCvAwsS3FilePath[2];
+        const jobIdFromCvAwsS3FilePath =
+          splittedCvAwsS3FilePath[splittedCvAwsS3FilePath.length - 2];
+
+        const payload = {
+          companyId: companyIdFromCvAwsS3FilePath,
+          jobId: jobIdFromCvAwsS3FilePath,
+          candCvAwsS3FileName: jobApplicationData?.applicantDetails?.CV,
+        };
+
+        const { response, error } = await httpServiceObj.post<any>(
+          `/file/gsu2v/CAND_SUBMIT_CV_JOB`,
+          payload,
+          true,
+          {},
+          false,
+          "AGENCY"
+        );
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+        return response.objectUrl;
+      }
       default:
         toast.error("Unsupported document type", getToastOptions({}));
         return;
