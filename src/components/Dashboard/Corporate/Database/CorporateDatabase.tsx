@@ -211,8 +211,8 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
           paginationKeysRef.current = { 1: "" };
           fetchDatabaseData(1, pageSize, "");
         }
-    }, [userDetails?.email, searchBarText]);
-    // }, [userDetails, fetchDatabaseData, pageSize]);
+    // }, [userDetails?.email, searchBarText]);
+    }, [userDetails, fetchDatabaseData, pageSize]);
     
     const searchInputRef = useRef<NodeJS.Timeout | null>(null);
   

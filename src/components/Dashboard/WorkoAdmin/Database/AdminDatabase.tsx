@@ -160,8 +160,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         paginationKeysRef.current = { 1: "" };
         fetchDatabaseData(1, pageSize, "");
       }
-    }, [userDetails?.email, searchBarText]);
-    // }, [userDetails, fetchDatabaseData, pageSize]);
+    // }, [userDetails?.email, searchBarText]);
+    }, [userDetails, fetchDatabaseData, pageSize]);
     
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
 
