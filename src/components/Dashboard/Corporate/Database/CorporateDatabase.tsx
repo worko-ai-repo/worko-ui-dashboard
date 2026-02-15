@@ -283,6 +283,24 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       });
     }, []);
 
+    const handleLocalUpdateForQuery = useCallback((jobId: string, updatedData: any) => {
+      setFetchData((prevData: any) => {
+        if (!prevData || !Array.isArray(prevData)) return prevData;
+  
+        return prevData.map(job =>
+          job.candidateParsedCvId === jobId
+            ? {
+                ...job,
+                candidateParsedCvDetails: {
+                  ...job.candidateParsedCvDetails,
+                  ...updatedData
+                }
+              }
+            : job
+        );
+      });
+    }, []);
+
     const handleBulkBan = async() =>{
       if(!reason){
         toast.error("Please select a reason to continue",getToastOptions({}))
@@ -793,6 +811,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         onPageSizeChange={handlePageSizeChange}
         initialIds={initialIds}
         setInitialIds={setInitialIds}
+        handleLocalUpdateForQuery={handleLocalUpdateForQuery}
       />
       )}
       <SelectJobForBulkMatch

@@ -1128,7 +1128,7 @@ export default function SearchResultsTable(props: any) {
           {/* Source type worko, internal, external, agency etc*/}
           <div>
             <span className="font-semibold text-black">Source type</span>
-            <p>{row?.source || "-"}</p>
+            <p>{row?.refereeType || "-"}</p>
           </div>
           
           {/* Source type agency name, referral email*/}

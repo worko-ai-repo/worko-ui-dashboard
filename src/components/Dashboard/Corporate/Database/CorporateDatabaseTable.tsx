@@ -73,6 +73,7 @@ export default function CorporateDatabaseTable(props: any) {
     jobsList,
     initialIds,
     setInitialIds,
+    handleLocalUpdateForQuery,
   } = props as any;
 
   // State required for table interactions
@@ -110,22 +111,20 @@ export default function CorporateDatabaseTable(props: any) {
       queryKey: ["refetch-details", currentId],
       queryFn: () => refetchingCVUpdate(currentId!),
       enabled: !!currentId,
-      refetchInterval: 20000,
+      refetchInterval: 30000,
       refetchOnWindowFocus: false,
     });
   
     useEffect(() => {
       if (!currentId) return;
       if (apidata?.isCandidateCvRefreshInProgress === false) {
-        toast.success(`Details Re-fetch completed for ${apidata?.email}`, getToastOptions({}));
-        console.log(apidata)
+        toast.success(`Re-fetching details completed for ${apidata?.email}`, getToastOptions({}));
         const updatedData = {
-          candidateParsedCvDetails:{
-            ...apidata,
-            isCandidateCvRefreshInProgress:false
-          }
+          ...apidata,
+          isCandidateCvRefreshInProgress:false,
+          candidateParsedCvRefreshedAt:apidata?.updatedAt,
         }
-        localUpdate(apidata?.id, updatedData);
+        handleLocalUpdateForQuery(apidata?.id, updatedData);
         setInitialIds((prev: any) => prev.slice(1));
         return;
       }
@@ -936,7 +935,7 @@ export default function CorporateDatabaseTable(props: any) {
           {/* Source type worko, internal, external, agency etc*/}
           <div>
             <span className="font-semibold text-black">Source type</span>
-            <p>{row?.source || "-"}</p>
+            <p>{row?.refereeType || "-"}</p>
           </div>
           
           {/* Source type agency name, referral email*/}

@@ -58,10 +58,10 @@ const ApplicantExpandedRowDetails: React.FC<ExpandedRowDetailsProps> = ({
     );
   }
 
-  const workExperiences = row.applicantDetails.cvExtractParsed?.multipleCandidateExperience || [];
-  const educations = row.applicantDetails.cvExtractParsed?.education || [];
+  const workExperiences = row.applicantDetails.cvExtractParsed?.multipleCandidateExperience || row.applicantDetails.multipleCandidateExperience || [];
+  const educations = row.applicantDetails.cvExtractParsed?.education || row.applicantDetails?.education || [];
   const showContactInfo = row.status !== "APPLIED";
-  const about = row.applicantDetails?.about || null;
+  const about = row.applicantDetails?.about || row?.applicantDetails?.cvExtractParsed?.about || null;
 
   return (
     // KEY: Grid container with 2 columns

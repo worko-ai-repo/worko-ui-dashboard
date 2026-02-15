@@ -350,6 +350,7 @@ export interface ApplicantDetails {
     designation: string;
   };
     cvAwsS3FilePath:string;
+    education: Education[];
 }
 
 

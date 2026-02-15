@@ -417,7 +417,25 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     });
   }, []);
 
-    const handleBulkMoveToApplicants = async (job:any) =>{
+  const handleLocalUpdateForQuery = useCallback((jobId: string, updatedData: any) => {
+    setFetchData((prevData: any) => {
+      if (!prevData || !Array.isArray(prevData)) return prevData;
+
+      return prevData.map(job =>
+        job.latestCandidateParsedCvId === jobId
+          ? {
+              ...job,
+              candidateParsedCvDetails: {
+                ...job.candidateParsedCvDetails,
+                ...updatedData
+              }
+            }
+          : job
+      );
+    });
+  }, []);
+
+  const handleBulkMoveToApplicants = async (job:any) =>{
     if(!job){
       toast.error("No job found please select a job",getToastOptions({}))
       return
@@ -717,6 +735,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           onPageSizeChange={handlePageSizeChange}
           initialIds={initialIds}
           setInitialIds={setInitialIds}
+          handleLocalUpdateForQuery={handleLocalUpdateForQuery}
         />
         )}
       {/* {isAssignJobModelOpen &&  */}
