@@ -4,53 +4,32 @@ import { Navigate, useRoutes } from "react-router-dom";
 import PageNotFound from "../errors/404/PageNotFound";
 import ApplicantScreeningTable from "@Components/Shared/BulkCvPage/BulkCvApplicants";
 import AdminCorporateInvites from "@Components/Dashboard/WorkoAdmin/Invite/AdminCorporateUsers";
-import AdminAnalyticsHome from "@Components/Dashboard/WorkoAdmin/Home/AdminAnalyticsHome";
+
+
 
 const DashboardLayout = lazy(() => import("@Layouts/Dashboard.layout"));
 const SkeletonLoader = lazy(() => import("@Components/Shared/SkeletonLoader"));
 const JobSelectorModal = lazy(() => import("@Components/Shared/FindJobByDropdown"));
-const AdminGuidance = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance")
-);
-const AdminCompany = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Company/AdminCompany")
-);
+const AdminGuidance = lazy(() => import("@Components/Dashboard/WorkoAdmin/Guidance/AdminGuidance"));
+const AdminCompany = lazy(() => import("@Components/Dashboard/WorkoAdmin/Company/AdminCompany"));
 const AdminReferAndEarn = lazy(
   () => import("@Components/Dashboard/WorkoAdmin/ReferAndEarn/ReferAndEarn")
 );
-const BulkCVCheck = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck")
-);
-const ScreeningListView = lazy(
-  () => import("@Components/Shared/BulkCvPage/BulkScreeningListView")
-);
+const BulkCVCheck = lazy(() => import("@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck"));
+const ScreeningListView = lazy(() => import("@Components/Shared/BulkCvPage/BulkScreeningListView"));
 
 // Lazy load components
-const Employee = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee")
-);
+const Employee = lazy(() => import("@Components/Dashboard/WorkoAdmin/Employee/AdminEmployee"));
 const AdminReferrals = lazy(
   () => import("@Components/Dashboard/WorkoAdmin/Referrals/AdminReferrals")
 );
 const AdminJobs = lazy(() => import("@Components/Dashboard/WorkoAdmin/Job/AdminJobs"));
-const Applicants = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants")
-);
-const AdminCandidate = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Candidate/AdminCandidate")
-);
-const AdminDatabase = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase")
-);
-const SearchDB = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/SearchDB/SearchDB")
-);
-const AgencyCandidateList = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList")
-);
-const AgencyList = lazy(
-  () => import("@Components/Dashboard/WorkoAdmin/Agency/AgencyList")
-);
+const Applicants = lazy(() => import("@Components/Dashboard/WorkoAdmin/Applicants/Applicants"));
+const AdminCandidate = lazy(() => import("@Components/Dashboard/WorkoAdmin/Candidate/AdminCandidate"));
+const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
+const SearchDB = lazy(() => import ("@Components/Dashboard/WorkoAdmin/SearchDB/SearchDB"));
+const AgencyCandidateList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyCandidateList"));
+const AgencyList = lazy(() => import ("@Components/Dashboard/WorkoAdmin/Agency/AgencyList"));
 
 const AdminDashboard = () => {
   const routes = useRoutes([
@@ -62,29 +41,6 @@ const AdminDashboard = () => {
         </Suspense>
       ),
       children: [
-        {
-          index: true,
-          path: "home",
-          element: (
-            <Suspense
-              fallback={
-                <SkeletonLoader
-                  showHeaderCards={true}
-                  showSearchBar={true}
-                  showButtons={true}
-                  buttonCount={1}
-                  showTabs={true}
-                  showTableHeader={true}
-                  showTableRows={true}
-                  tableColumns={5}
-                  rowCount={5}
-                />
-              }
-            >
-              <AdminAnalyticsHome />
-            </Suspense>
-          ),
-        },
         {
           path: "ajobs",
           element: (
@@ -101,8 +57,7 @@ const AdminDashboard = () => {
                   tableColumns={5}
                   rowCount={5}
                 />
-              }
-            >
+              }>
               <AdminJobs />
             </Suspense>
           ),

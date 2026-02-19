@@ -46,6 +46,6 @@ export default defineConfig({
     },
     open: true, // Manually open the browser window upon starting the server
     host: "0.0.0.0", //Manally specify the host so the app binds to all network interfaces and you can run the app on a different device
-    port: 8080, // Manually specify the port for the server
+    port: 3002, // Manually specify the port for the server
   },
 });

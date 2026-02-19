@@ -27,9 +27,7 @@ export const BarChart: React.FC<LineChartProps> = ({
     const svg = d3.select(svgRef.current);
     svg.selectAll('*').remove();
 
-    // Use positive margins so the chart fits within the given
-    // width/height and all stages (x-axis labels) remain visible.
-    const margin = { top: 20, right: 20, bottom: 40, left: 40 };
+    const margin = { top: 20, right: -100, bottom: -30, left: 40 };
     const innerWidth = width - margin.left - margin.right;
     const innerHeight = height - margin.top - margin.bottom;
 
