@@ -32,12 +32,12 @@ const navigationItems: NavItem[] = [
     icon: UserIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
-/*   {
+  {
     id: "home",
     label: "Home",
     icon: HomeIcon,
-    dashboardTypes: ["CORPORATE"],
-  }, */
+    dashboardTypes: ["CORPORATE","ADMIN"],
+  },
   {
     id: "jobs",
     label: "Jobs",

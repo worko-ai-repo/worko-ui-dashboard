@@ -686,7 +686,7 @@ const MainContent: React.FC<MainContentProps> = ({
           </div>
         </div>
         <Modal
-          isOpen={true}
+          isOpen={interviewDetailviewModal.isOpen}
           onClose={() =>
             setInterviewDetailviewModal({
               isOpen: false,
@@ -694,7 +694,7 @@ const MainContent: React.FC<MainContentProps> = ({
               userName: "",
             })
           }
-          className="w-[300px] h-[400px] bc">
+          className="w-[300px] h-[400px]">
           <InterviewDetailedViewModal
             userName={interviewDetailviewModal.userName}
             interviewDetails={interviewDetailviewModal.interviewDetails}
