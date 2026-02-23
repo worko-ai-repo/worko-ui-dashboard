@@ -352,7 +352,7 @@ export interface CursorPaginationApplicationDataParams {
   sortOrder: "ascending" | "descending";
   status?: JobApplicationStatusType;
   searchText?: string;
-  jobId: string | undefined;
+  jobId?: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
   includeInterviewDetails?: boolean;
