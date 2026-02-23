@@ -8,6 +8,7 @@ interface ModalProps {
   title?: string;
   showCloseButton?: boolean;
   className?: string;
+  classNameHeight?:string;
 }
 
 const Modal = ({
@@ -17,6 +18,7 @@ const Modal = ({
   title,
   showCloseButton = true,
   className = "",
+  classNameHeight,
 }: ModalProps) => {
   const modalRef = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(isOpen);
@@ -53,9 +55,9 @@ const Modal = ({
       />
       <div
         ref={modalRef}
-        className={`fixed top-0 right-0 z-[9999] max-h-[95vh] p-6 pt-0 bg-white rounded-xl shadow-lg ${
-          isAnimatingOut ? "animate-slide-out" : "animate-slide-in"
-        }`}
+        className={`fixed top-0 right-0 z-[9999] p-6 pt-0 bg-white rounded-xl shadow-lg 
+          ${isAnimatingOut ? "animate-slide-out" : "animate-slide-in"} 
+          ${classNameHeight ?? "max-h-[95vh]"}`}
         style={{ overflowY: "auto" }}>
         {showCloseButton && (
           <div className="absolute top-0 right-0 w-fit bg-white z-10 pt-0 pr-2 flex justify-end">

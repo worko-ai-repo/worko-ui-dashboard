@@ -75,8 +75,24 @@ const CVPreviewRaw: React.FC<CVPreviewRawProps> = ({
     <div className="flex flex-col gap-4 p-4 relative">
       <div className="flex justify-between items-center">
         <h2 className="text-lg font-semibold">{heading ?? "CV Preview"}</h2>
+        <div>
+          {shouldShowDownload && (
+            <button
+              onClick={handleDownload}
+              className="border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600 mx-2"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+          )}
+          
+          <button
+            onClick={() => window.open(pdfUrl, "_blank")}
+            className="border bg-blue-200 text-blue-600 px-3 py-2 rounded shadow-lg"
+          >
+            <Maximize className="w-4 h-4" />
+          </button>
+        </div>
       </div>
-
       <div className="flex-1 border-2 border-gray-400 w-full min-h-[80vh] rounded-xl overflow-hidden relative gap-2">
         <iframe
           src={pdfUrl}
@@ -84,7 +100,7 @@ const CVPreviewRaw: React.FC<CVPreviewRawProps> = ({
           className="w-full min-h-[80vh] h-full"
         />
         
-        {shouldShowDownload && (
+        {/* {shouldShowDownload && (
           <button
             onClick={handleDownload}
             className="absolute bottom-4 right-16 border bg-blue-200 px-3 py-2 rounded-md shadow text-blue-600 mx-2"
@@ -98,7 +114,7 @@ const CVPreviewRaw: React.FC<CVPreviewRawProps> = ({
           className="absolute bottom-4 right-4 bg-white text-blue px-4 py-2 rounded shadow hover:text-blue-600"
         >
           <Maximize className="w-4 h-4" />
-        </button>
+        </button> */}
       </div>
     </div>
   );

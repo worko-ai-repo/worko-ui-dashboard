@@ -87,7 +87,7 @@ export interface CandidateParsedCvDetails {
   currentCTC: number;
   currentCompany: string;
   currentDesignation: string;
-  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "ADMIN_CAND_BULK_CV_UPLOAD" | "CORP_CAND_REFERRAL_CV";
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "ADMIN_CAND_BULK_CV_UPLOAD" | "CORP_CAND_REFERRAL_CV" | "CAND_SUBMIT_CV_JOB";
   cvAwsS3FileName: string;
   email: string;
   expectedCTC: number;
@@ -106,6 +106,7 @@ export interface CandidateParsedCvDetails {
   userDetailId: String;
   corporateBulkJdId: string;
   cvAwsS3FilePath:string;
+  isCandidateCvRefreshInProgress:boolean;
   //for admin db listing
   companyId: string;
   jobId: string;
@@ -118,6 +119,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   candidateEmail: string;
   candidateParsedCvDetails: CandidateParsedCvDetails;
   candidateParsedCvId: string;
+  latestCandidateParsedCvId:string;
   companyId: string;
   createdAt: string;
   id: string;
@@ -132,7 +134,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   currentCTC:number;
   expectedCTC:number;
   noticePeriod:number;
-  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "CORP_CAND_REFERRAL_CV";
+  cvAwsS3ResourceType?: "USER_RESUME" | "AGENCY_SUBMIT_USER_CV" | "BULK_CVS" | "CORP_CAND_BULK_CV_UPLOAD" | "CORP_CAND_REFERRAL_CV" | "CAND_SUBMIT_CV_JOB";
   cvAwsS3FileName:string;
   cvAwsS3FilePath:string;
   userDetailId:string;
@@ -142,6 +144,7 @@ export interface AgencyDatabaseApplicantDetailsDto {
   candidateMovedToApplicants:boolean;
   scoreDetails:string;
   hiringEligibilityStatus:string;
+  location: string;
   //fake data
   emailId: string;
   addedBy: string;

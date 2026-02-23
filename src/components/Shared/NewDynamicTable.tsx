@@ -331,8 +331,8 @@ export function NewDynamicTable<T extends { id: string }>({
                       return (
                         <td
                           key={col.key}
-                          className={`w-min max-w-60 w-32 px-4 ${isExpanded ? "" : "border-b"}  py-1 text-xs whitespace-nowrap ${
-                            col.key !== "email" ? "capitalize" : ""
+                          className={`w-min max-w-[150px] w-32 px-4 ${isExpanded ? "" : "border-b"}  py-0 text-xs whitespace-nowrap ${
+                            col.key !== "email" && col.key !== "candidateEmail" ? "capitalize" : ""
                           } ${baseBg}
                           ${col.contentWidth || ""}
                           ${index === columns.length - 1 ? "rounded-tr-xl" : ""}
@@ -340,7 +340,7 @@ export function NewDynamicTable<T extends { id: string }>({
                           ${isSelected && isFirstVisibleColumn ? "" : ""
                           }`}>
                           <div
-                            className="truncate cursor-pointer h-full w-full p-1" 
+                            className="truncate cursor-pointer h-full w-full p-0" 
                             onDoubleClick={(e) =>
                               navigator.clipboard.writeText(getCellValue(row, col) as string)
                             }

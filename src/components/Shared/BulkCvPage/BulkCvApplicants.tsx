@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Eye, FileText, ArrowLeft } from "lucide-react";
 import { NewDynamicTable, Column } from "../NewDynamicTable";
-import ProgressCircle from "@Components/Shared/CircularBar";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
 
 import { useAppContext } from "@Context/App.context";
 
@@ -305,10 +305,10 @@ export default function ApplicantScreeningTable() {
 
   const renderExpandedDetails = (row: (typeof applicantsData)[0]) => (
     <div className="flex justify-between items-center py-2">
-      <div className="text-sm text-gray-600">
+      <div className="text-xs text-gray-600">
         <strong>Status:</strong>
         <span
-          className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${
+          className={`ml-2 px-3 py-1 rounded-full text-[0.625rem] font-medium ${
             row?.status === "accepted"
               ? "bg-green-100 text-green-800"
               : row?.status === "rejected"
@@ -319,7 +319,7 @@ export default function ApplicantScreeningTable() {
         </span>
       </div>
 
-      <div className="flex gap-4 text-sm text-gray-600">
+      <div className="flex gap-4 text-xs text-gray-600">
         {row?.rejectedDate && (
           <div>
             <span className="font-medium">Rejected on:</span>

@@ -251,7 +251,6 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
       key: "companyDetails_name",
       label: "Company Name",
       sortable: true,
-      contentWidth: `max-w-none !min-w-auto`,
       render: (row: CorporateUserPageRecDataDto) => (
         <div className="flex flex-row items-center gap-1 min-w-0">
           {row?.companyDetails && row?.companyDetails.id ? (
@@ -327,7 +326,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
         const isAdmin = userType === "corporate-admin";
         return (
           <span
-            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-xs font-medium  block max-w-[99.3%] cursor-pointer ${
+            className={`capitalize w-fit mx-auto px-2  py-1 rounded-full text-[0.625rem] font-medium  block max-w-[99.3%] cursor-pointer ${
               isAdmin ? "bg-red-500 text-white" : "bg-blue-500 text-white"
             }`}
             data-tooltip-place="top">
@@ -359,7 +358,7 @@ const AdminCorporateUserTable: React.FC<AdminCorporateUserTableProps> = ({
         return (
           <div className="w-full flex justify-start  ">
             <span
-              className={`capitalize mx-auto   px-2 py-1 rounded-full text-xs font-medium ${getStatusStyle(
+              className={`capitalize mx-auto   px-2 py-1 rounded-full text-[0.625rem] font-medium ${getStatusStyle(
                 status
               )}`}>
               {status || "Active"}

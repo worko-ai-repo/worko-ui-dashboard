@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from 'react';
+import { FC, useEffect, useRef, useState } from 'react';
 
 interface ViewFullDetailProps {
   onClose: () => void;
@@ -16,6 +16,7 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
 
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -31,12 +32,19 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-[70] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
-        className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+        ref={modalRef}
+        className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] ${
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}
@@ -45,7 +53,9 @@ const ViewFullDetail: FC<ViewFullDetailProps> = ({
         </button>
 
         <h2 className="text-xl font-semibold mb-4 text-left">{displayText ?? "Requirement Detail"}</h2>
-        <p className='text-center bg-gray-300 p-2 rounded-xl text-sm'>{fullDetails}</p>
+            <div className="max-h-[65vh] overflow-y-auto bg-gray-300 p-3 rounded-xl">
+      <p className="text-sm">{fullDetails}</p>
+    </div>
       </div>
     </div>
   );

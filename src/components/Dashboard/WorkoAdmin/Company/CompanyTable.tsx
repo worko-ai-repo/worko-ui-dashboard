@@ -134,9 +134,10 @@ const CompanyTable: React.FC<CompanyTableProps> = ({
       key: "logo",
       label: "Logo",
       sortable: false,
-      render: (row: CompanyDto) => {
-        return <CompanyLogoRender {...row} key={row.id} />;
-      },
+      render: (row: CompanyDto) => <CompanyLogoRender {...row} key={row.id}/>
+      // {
+      //   return <CompanyLogoRender {...row} key={row.id} />;
+      // },
     },
     {
       key: "industry",

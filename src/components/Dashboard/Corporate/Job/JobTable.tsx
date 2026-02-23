@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Filter, X, Link, Loader2 } from "lucide-react";
+import { Filter, X, Link, Loader2, Link2, ViewIcon } from "lucide-react";
 import Modal from "../../../Shared/Modal";
 import CloseJob from "./CloseJob";
 import { JobApiResponse, JobData } from "@Interfaces/CorporateDashboard.dto";
@@ -274,7 +274,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               disabled: isRowUpdating,
             },
             {
-              icon: <Link className="w-5 h-5" />,
+              icon: <ViewIcon className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "View Job",
               onClick: () =>
@@ -282,6 +282,18 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   `${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`,
                   "_blank"
                 ),
+              disabled: isRowUpdating,
+            },
+            {
+              icon: <Link className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Copy External apply Link",
+              onClick: () => {
+                const baseUrl = window.location.origin; 
+                const finalUrl = `${baseUrl}/apply-job?jobId=${row?.id}`;
+                navigator.clipboard.writeText(finalUrl);
+                toast.success("Link copied!",getToastOptions({}));
+              },
               disabled: isRowUpdating,
             },
             ...(isCorporateAdmin

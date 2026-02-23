@@ -53,7 +53,13 @@ const getInitialFrame = () => {
         <div className="w-full sm:w-1/3 flex justify-between sm:justify-start">
           <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 flex-grow">
             <div className="flex items-center justify-between w-full sm:w-auto">
-              <img src={logo_text} onClick={()=>window.location.href = "/"} className="cursor-pointer w-20 h-auto sm:w-20 sm:h-auto flex-shrink-0" alt="Logo" />
+              <img src={logo_text} onClick={()=>{
+                if(dashboardType === "CORPORATE"){
+                 window.location.href = "/v1/corporate/jobs"
+                }else{
+                  window.location.href = "/"
+                }
+                }} className="cursor-pointer w-20 h-auto sm:w-20 sm:h-auto flex-shrink-0" alt="Logo" />
               
               <div className="flex items-center gap-3 sm:hidden">
                 <button 

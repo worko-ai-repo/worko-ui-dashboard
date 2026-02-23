@@ -5,6 +5,7 @@ import { ChevronDown, SendIcon, X } from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { JobData } from "@Interfaces/CorporateDashboard.dto";
+import SubmitButton from '@Components/ui/SubmitButton';
 
 
 interface RemoveJobModalProps {
@@ -34,6 +35,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
   const dropdownRef = useRef<HTMLDivElement>(null);
   const reasondropdownRef = useRef<HTMLDivElement>(null);
   const debounceTimer = useRef<any>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const reasons = [
     "Not getting good applicants",
@@ -222,13 +224,20 @@ const removeSelectedJob = (id: string) => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
       } ${visible ? 'visible' : 'invisible'}`}
     >
     <div
+      ref={modalRef}
       className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
-        isAnimatingIn ? 'translate-x-0' : 'translate-x-full'
+        !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
       }`}
     >
     <div className="p-6 min-h-[100vh] overflow-y-auto">
@@ -369,7 +378,7 @@ const removeSelectedJob = (id: string) => {
         </div>
 
 
-        <div className="absolute bottom-6 left-6">
+        {/* <div className="absolute bottom-6 left-6">
           <button
             onClick={handleSubmit}
             className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
@@ -377,6 +386,14 @@ const removeSelectedJob = (id: string) => {
           >
             <SendIcon className="h-4 w-4" />
             {isSubmitting ? 'Submitting...' : 'Submit'}
+          </button>
+        </div> */}
+        <div className="absolute bottom-6 left-6">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || selectedJobs.length === 0}
+          >
+            <SubmitButton isSubmitting={isSubmitting}/>
           </button>
         </div>
     </div>

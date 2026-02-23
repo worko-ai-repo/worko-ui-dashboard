@@ -351,8 +351,8 @@ const JobApplicationNotesApp: React.FC<NotesAppProps> = ({ jobApplication }) => 
   );
 
   return (
-    <div className="min-h-screen w-[800px] bg-gray-50 p-4 sm:p-6 lg:p-8">
-      <div className="mx-auto max-w-4xl">
+    <div className="min-h-screen max-w-3xl bg-gray-50 p-4 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-3xl">
         {/* Header */}
         {false && <div className="mb-8">
           <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">

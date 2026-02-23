@@ -146,8 +146,8 @@ const CandidateTable: React.FC<CandidateTableProps> = ({
         </span>
       ),
     },
-    { key: "referralApplied", label: "Referrals Applied", sortable: true },
-    { key: "referralCount", label: "Referrals Request Accepted", sortable: true },
+    // { key: "referralApplied", label: "Referrals Applied", sortable: true },
+    // { key: "referralCount", label: "Referrals Request Accepted", sortable: true },
     { key: "jobCount", label: "Job Applied", sortable: true },
     {
       key: "candidateExperience_designation",

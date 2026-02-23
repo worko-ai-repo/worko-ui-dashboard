@@ -181,13 +181,15 @@ const GuidancePageTable: React.FC<GuidancePageTableProps> = ({
       key: "status",
       label: "Status",
       sortable: true,
-      contentWidth: "max-w-none w-32",
+      // contentWidth: "max-w-none",
       render: (row: GuidanceRequestDto) => {
         const status = row.status as keyof typeof CommonDashboardServicesObj.getGuidanceStatusAlias;
         return (
           <div className="flex items-center justify-center gap-2">
             <span
-              className={`inline-block px-2 py-1 rounded-full text-sm font-medium ${CommonDashboardServicesObj.getGuidanceStatusColor[status]}`}>
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={CommonDashboardServicesObj.getGuidanceStatusAlias[status]}
+              className={`inline-block px-2 py-1 rounded-full text-[0.625rem] truncate font-medium ${CommonDashboardServicesObj.getGuidanceStatusColor[status]}`}>
               {CommonDashboardServicesObj.getGuidanceStatusAlias[status]}
             </span>
             {updatingGuidanceId === row.id && (

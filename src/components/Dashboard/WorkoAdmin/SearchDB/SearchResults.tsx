@@ -490,11 +490,11 @@ const handleSubmit = () => {
 
     const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
 
-    // All 3 fields must be non-zero
+    // All 3 fields must be undefined or null
     const allNonZero =
-      currentCTC !== 0 &&
-      expectedCTC !== 0 &&
-      noticePeriod !== 0;
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
 
     // updatedAt must be within last 90 days
     const updatedDate:any = new Date(updatedAt);
@@ -721,7 +721,7 @@ const handleSubmit = () => {
           />
           )}
 
-      {isAssignJobModelOpen && 
+      {/* {isAssignJobModelOpen &&  */}
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"ATLAS"}
@@ -734,9 +734,10 @@ const handleSubmit = () => {
           candidateData={selectedRows[0]}
           userDetails={userDetails}
           submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
-      />}
+      />
+      {/* } */}
 
-      {editProfileView &&
+      {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDB
         dashboardType={"ADMIN"}
         dashboardPage={"ATLAS"}
@@ -759,7 +760,8 @@ const handleSubmit = () => {
         setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
         setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-      />}
+      />
+      {/* } */}
 
       {isFinalReviewModalOpen && (
         <FinalReviewModal

@@ -10,6 +10,7 @@ import { PaginationInfo } from '@Components/Dashboard/Candidate/Pages/Job/JobTyp
 import { debounce } from 'lodash'
 import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
 import { JobData } from '@Interfaces/CorporateDashboard.dto'
+import Modal from '@Components/Shared/Modal'
 
 
 
@@ -169,7 +170,9 @@ const AgencyList = () => {
       fetchUserData(1, pageSize, "");
       fetchJobs()
     }
-  }, [userDetails, fetchUserData, pageSize]);
+  }, [userDetails]);
+  // }, [userDetails, fetchUserData, pageSize]);
+
 
     const searchInputRef = useRef<NodeJS.Timeout | null>(null);
   
@@ -326,13 +329,25 @@ const AgencyList = () => {
                 // }}
               />
       )}
-        <AddNewAgencyModal
+        {/* <AddNewAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => setIsAddAgencyModelOpen(false)}
           isOpen= {isAddAgencyModelOpen}
           companyId={userDetails?.companyId}
           setFetchData={setFetchData}
-        />
+        /> */}
+        <Modal
+          isOpen={isAddAgencyModelOpen}
+          onClose={() => setIsAddAgencyModelOpen(false)}
+          className="max-w-md">
+          <AddNewAgencyModal
+            dashboardType={"CORPORATE"}
+            onClose= {() => setIsAddAgencyModelOpen(false)}
+            isOpen= {isAddAgencyModelOpen}
+            companyId={userDetails?.companyId}
+            setFetchData={setFetchData}
+          />
+      </Modal>
     </div>
   )
 }

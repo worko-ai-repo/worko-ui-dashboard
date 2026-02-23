@@ -517,7 +517,7 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
 // For expanded mode: Use flex-wrap for compact, multi-row layout
 if (splitMode === "expanded") {
   return (
-    <div className="absolute left-0 right-0 -top-4 mx-auto max-w-[80px] flex flex-wrap gap-2 justify-center items-start ">
+    <div className="absolute left-0 right-0 -top-0 mx-auto max-w-[80px] flex flex-wrap gap-2 justify-center items-start ">
       {visibleActions}
     </div>
   );

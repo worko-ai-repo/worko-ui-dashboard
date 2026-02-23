@@ -9,7 +9,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 import { AgencyAllCandidatesListDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { Edit, View } from "@AssetsFolder/assets";
-import ProgressCircle from "@Components/Shared/CircularBar";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
 import {
   newDisplayStatus,
   statusColors,
@@ -475,7 +475,7 @@ export default function AgencyCandidateListTable(props: any) {
       label: "Contact number",
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => `+${row?.candidateParsedCvDetails?.phoneNumberDetails?.countryCode} 
-              ${row?.candidateParsedCvDetails?.phoneNumberDetails?.number}`
+              ${row?.candidateParsedCvDetails?.phoneNumberDetails?.number ?? "NA"}`
       // (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     {row?.candidateParsedCvDetails?.phoneNumberDetails?.countryCode &&
@@ -526,7 +526,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "totalYOE",
       label: "Total YOE",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -542,7 +541,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "relevantYOE",
       label: "Relevant YOE",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -558,7 +556,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "currentCTC",
       label: "CTC",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         // <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
@@ -574,7 +571,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "expectedCTC",
       label: "ECTC",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -590,7 +586,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "noticePeriod",
       label: "Notice Period",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center m-auto">
@@ -615,7 +610,6 @@ export default function AgencyCandidateListTable(props: any) {
       key: "readyToRelocate",
       label: "Ready to relocate",
       sortable: true,
-      contentWidth: `max-w-none`,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center m-auto ">
           <span>
@@ -632,27 +626,28 @@ export default function AgencyCandidateListTable(props: any) {
       key: "anyComment",
       label: "Any comment",
       sortable: true,
-      render: (row: AgencyAllCandidatesListDetailsDto) => (
-        <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
-          <span
-              className="truncate block w-[150px]"
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(row?.agencyComments || "N/A");
-              }}>
-            {row?.agencyComments ?? "NA"}
-          </span>
-        </div>
-      ),
+      render: (row: AgencyAllCandidatesListDetailsDto) => row?.agencyComments ?? "NA"
+      //   (
+      //   <div className={`flex ${isAllExpanded ? "" : "m-auto w-[100px]"}`}>
+      //     <span
+      //         className="truncate block w-[150px]"
+      //         data-tooltip-id="my-tooltip"
+      //         data-tooltip-content={"Click to view full details"}
+      //         onClick={() => {
+      //           setViewViewDetailsModal(true);
+      //           setFullDetails(row?.agencyComments || "N/A");
+      //         }}>
+      //       {row?.agencyComments ?? "NA"}
+      //     </span>
+      //   </div>
+      // ),
     },
     {
       key: "viewCV",
       label: "CV",
       sortable: false,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
-        <div className="flex justify-center m-auto w-[40px]">
+        <div className="flex justify-center m-auto">
           <button
             className="flex flex-row justify-center items-center"
             data-tooltip-id="my-tooltip"
@@ -670,7 +665,6 @@ export default function AgencyCandidateListTable(props: any) {
     {
       key: "workoScore",
       label: "Worko Score",
-      contentWidth: `max-w-none`,
       sortable: true,
       render: (row: AgencyAllCandidatesListDetailsDto) => (
         <div className="flex justify-center items-center m-auto">
@@ -692,7 +686,7 @@ export default function AgencyCandidateListTable(props: any) {
                     }
                 `}>
               <Trophy className="w-4 h-4 flex items-center justify-center stroke-[2]" />
-              <span className="leading-tight text-[10px] text-left">
+              <span className="leading-tight text-[0.625rem] text-left">
                 {row?.isFindMatchingScoreInProgress ? (
                   "Finding score..."
                 ) : (
@@ -739,7 +733,7 @@ export default function AgencyCandidateListTable(props: any) {
       sortable: false,
       render: (row: AgencyAllCandidatesListDetailsDto) => {
         return (
-          <div className="flex justify-center m-auto gap-2 text-[10px]">
+          <div className="flex justify-center m-auto gap-2 text-[0.625rem]">
             {/* <button 
                     onClick={()=>{
                         setEditProfileView(true)
@@ -756,8 +750,8 @@ export default function AgencyCandidateListTable(props: any) {
                   data-tooltip-place="top"
                   className="inline-flex items-center gap-2 rounded-lg text-xs transition p-1 text-center bg-green-500 text-white hover:bg-green-600"
                   onClick={() => moveToApplicantSingle(row)}>
-                  <Check className="w-6 h-6 flex items-center justify-center stroke-[2]" />
-                  <span className="leading-tight text-[10px]">
+                  <Check className="w-4 h-4 flex items-center justify-center stroke-[2]" />
+                  <span className="leading-tight text-[0.625rem]">
                     Accept & move
                     <br />
                     to applicant
@@ -786,7 +780,7 @@ export default function AgencyCandidateListTable(props: any) {
                         }}
                         >
                         <Send className="w-4 h-4" />
-                        <span className="leading-tight text-[10px]">Accept & send<br />for evaluation</span>
+                        <span className="leading-tight text-[0.625rem]">Accept & send<br />for evaluation</span>
                     </button> */}
               </>
             )}
@@ -798,6 +792,7 @@ export default function AgencyCandidateListTable(props: any) {
       key: "status",
       label: "Current status",
       sortable: true,
+      contentWidth: `max-w-none`,
       render: (row: AgencyAllCandidatesListDetailsDto) => {
         // <div className='flex justify-center m-auto w-[100px]'>
         //     <span>{row?.currentStatus ?? "NA"}</span>
@@ -812,7 +807,7 @@ export default function AgencyCandidateListTable(props: any) {
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row?.jobApplicationStatus as JobApplicationStatusType]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-xs font-medium overflow-visible  capitalize ${colorClass}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
               {newDisplayStatus[row?.jobApplicationStatus as JobApplicationStatusType]}
             </span>
           </div>
@@ -937,6 +932,35 @@ export default function AgencyCandidateListTable(props: any) {
       }
       try {
         const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
+    } else if (row?.candidateParsedCvDetails?.cvAwsS3ResourceType === "CAND_SUBMIT_CV_JOB") {
+      if (
+        !row?.candidateParsedCvDetails?.cvAwsS3FilePath ||
+        !row?.candidateParsedCvDetails?.cvAwsS3FileName ||
+        !row?.candidateParsedCvDetails?.jobId
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+      const splittedID = row?.candidateParsedCvDetails?.cvAwsS3FilePath.split("/")
+
+      const payload = { 
+        companyId: splittedID[2],
+        candCvAwsS3FileName: row?.candidateParsedCvDetails?.cvAwsS3FileName,
+        jobId:row?.jobId
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`, payload, true, {}, true );
 
         if (error) {
           toast.error(error.message, getToastOptions({}));

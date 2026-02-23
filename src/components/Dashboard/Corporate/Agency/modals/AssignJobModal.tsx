@@ -1,3 +1,4 @@
+import SubmitButton from "@Components/ui/SubmitButton";
 import { AgencyListDetailsDto, } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
 import { JobData } from "@Interfaces/CorporateDashboard.dto";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -26,7 +27,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
   const [selectedJobs, setSelectedJobs] = useState<JobData[]>([]);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   const dropdownRef = useRef<HTMLDivElement>(null);
-  
+  const modalRef = useRef<HTMLDivElement>(null);
   // Modal open/close animation
   useEffect(() => {
     if (isOpen) {
@@ -89,7 +90,11 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
       setIsSubmitting(false);
       return
     }
-
+    if(!agencyData.email || !agencyData.id){
+      toast.error("Agency email and id is missing",getToastOptions({}))
+      setIsSubmitting(false);
+      return
+    }
     const jobIds = selectedJobs.map((job)=>{
       return {
         jobId:job.id,
@@ -103,7 +108,6 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
       agencyEmail: agencyData.email,
       agencyInviteId: agencyData.id
     }
-
     try {
       const { response, error } = await httpServiceObj.post<any>( `${agencyBaseUrl}/agency-job-assignment/bulk`, payload, true, {}, true);
 
@@ -164,13 +168,20 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
       } ${visible ? 'visible' : 'invisible'}`}
     >
     <div
+      ref={modalRef}
       className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
-        isAnimatingIn ? 'translate-x-0' : 'translate-x-full'
+        !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
       }`}
     >
     <div className="p-6 min-h-[100vh] overflow-y-auto">
@@ -273,8 +284,7 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
         ))}
         </div>
 
-
-        <div className="absolute bottom-6 left-6">
+        {/* <div className="absolute bottom-6 left-6">
           <button
             onClick={handleSubmit}
             className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
@@ -282,6 +292,14 @@ const AssignJobModal: React.FC<AssignJobModalProps> = ({ dashboardType, onClose,
           >
             <SendIcon className="h-4 w-4" />
             {isSubmitting ? 'Submitting...' : 'Submit'}
+          </button>
+        </div> */}
+        <div className="absolute bottom-6 left-6">
+          <button
+            onClick={handleSubmit}
+            disabled={isSubmitting || selectedJobs.length === 0}
+          >
+            <SubmitButton isSubmitting={isSubmitting}/>
           </button>
         </div>
     </div>

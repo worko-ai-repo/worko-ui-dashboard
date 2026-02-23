@@ -1,5 +1,5 @@
 import { SendIcon } from "lucide-react";
-import { FC, useEffect, useState } from "react"; 
+import { FC, useEffect, useRef, useState } from "react"; 
 
 interface CandidateBulkBanModalProps {
   reason: string;
@@ -31,7 +31,7 @@ const CandidateBulkBanModal: FC<CandidateBulkBanModalProps> = ({
   ];
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-
+  const modalRef = useRef<HTMLDivElement>(null);
  useEffect(() => {
     if (isOpen) {
       setVisible(true);
@@ -46,13 +46,20 @@ const CandidateBulkBanModal: FC<CandidateBulkBanModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}
     >
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}
       >
         <button
@@ -90,16 +97,16 @@ const CandidateBulkBanModal: FC<CandidateBulkBanModalProps> = ({
         {/* Submit Button */}
         <button
           onClick={onSubmit}
-          disabled={isBulkBanSubmitting}
+          disabled={isBulkBanSubmitting || reason.length === 0 || comments.length === 0}
           className={`
-            w-30 flex items-center gap-2 text-white text-sm font-medium px-4 py-3 rounded-xl
+            w-30 flex items-center gap-1 text-white text-xs font-medium px-4 py-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed
             ${isBulkBanSubmitting 
             ? "bg-blue-300 cursor-not-allowed opacity-70" 
             : "bg-blue-500 hover:bg-blue-300"
             }
           `}
         >
-          <SendIcon className="w-4 h-4" />
+          <SendIcon className="w-3 h-3" />
           {isBulkBanSubmitting ? "Submitting..." : "Submit"}
         </button>
       </div>

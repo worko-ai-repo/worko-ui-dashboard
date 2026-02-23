@@ -130,7 +130,8 @@ const AgencyList = () => {
       fetchUserData(1, pageSize, "");
       // fetchJobs()
     }
-  }, [userDetails, fetchUserData, pageSize]);
+  }, [userDetails]);
+  // }, [userDetails, fetchUserData, pageSize]);
 
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
 

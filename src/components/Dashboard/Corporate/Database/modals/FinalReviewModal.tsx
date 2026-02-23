@@ -41,7 +41,7 @@ const FinalReviewModal: FC<FinalReviewModalProps> = ({
 	  } ${visible ? "visible" : "invisible"}`}>
 	  <div
 		className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
-		  isAnimatingIn ? "translate-x-0" : "translate-x-full"
+		  !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
 		}`}>
 		<button
 		  onClick={onClose}

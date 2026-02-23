@@ -1,3 +1,4 @@
+import SubmitButton from '@Components/ui/SubmitButton';
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
@@ -269,24 +270,27 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
 
 
     return (
-      <div
-        className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
-          isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-        } ${visible ? "visible" : "invisible"}`}>
-        <div
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-            isAnimatingIn ? "translate-x-0" : "translate-x-full"
-          }`}>
-          <button
-            onClick={()=>{
-                reset();
-                onClose();}}
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
-            ×
-          </button>
+      // <div
+      //   className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      //     isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+      //   } ${visible ? "visible" : "invisible"}`}>
+      //   <div
+      //     className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
+      //       isAnimatingIn ? "translate-x-0" : "translate-x-full"
+      //     }`}>
+      //     <button
+      //       onClick={()=>{
+      //           reset();
+      //           onClose();}}
+      //       className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+      //       ×
+      //     </button>
   
-          <h2 className="text-xl font-semibold mb-4 text-left">Add agency</h2>
-  
+      //     <h2 className="text-xl font-semibold mb-4 text-left">Add agency</h2>
+    <div className="flex flex-col gap-4 relative">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold mt-2 text-left">Add agency</h2>
+      </div>
           <form onSubmit={handleSubmit(formSubmit)}>
             <div className='text-left'>
                 <label>Enter agency name<span className='text-red-500'>*</span></label>
@@ -393,7 +397,7 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
             </div>
 
           <div className="flex justify-start mt-4">
-            <button
+            {/* <button
               disabled={isSubmitting}
               className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white 
                 ${isSubmitting 
@@ -403,11 +407,19 @@ const AddNewAgencyModal:React.FC<AddNewAgencyModalProps> = ({dashboardType,onClo
             >
               <SendIcon className="h-4 w-4" />
               {isSubmitting ? 'Inviting...' : 'Invite'}
-            </button>
+            </button> */}
+            <SubmitButton
+              isSubmitting={isSubmitting}
+              text="Invite"
+              submittingText="Inviting..."
+              icon={SendIcon}
+              iconHeight={14}
+              iconWidth={14}
+            />
           </div>
           </form>
-        </div>
-      </div>
+       </div>
+      // </div>
     )
   }
 

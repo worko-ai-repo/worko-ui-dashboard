@@ -21,8 +21,9 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import Modal from "@Components/Shared/Modal";
 import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
-import ProgressCircle from "@Components/Shared/CircularBar";
+import ProgressCircle from "@Components/Shared/CircularBarAgency";
 import RequestDocumentModal, { RequestDocModalProps } from "@Components/Shared/ApplicantsPage/RequestDocModal";
+import { newDisplayStatus, statusColors } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -540,7 +541,7 @@ const JobsTable = memo(
 
           VIEW_FEEDBACK: {
             color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
-            icon: <img src={viewFeedback} alt="View feedback" />,
+            icon: <img src={viewFeedback} alt="View feedback" className="w-5 h-5"/>,
             label: "View feedback",
             tooltip: "View feedback",
           },
@@ -607,23 +608,24 @@ const JobsTable = memo(
         key: "jobTitle",
         label: "Job Title",
         sortable: true,
-        render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]">
-            <span className="truncate block w-full" 
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={row?.jobTitle}
-              data-tooltip-place="top">
-              {row.jobTitle}
-            </span>
-          </div>
-        ),
+        render: (row: JobApplicationDetailsDto) => row.jobTitle ?? "NA"
+        //   (
+        //   <div className="flex justify-center m-auto w-[150px]">
+        //     <span className="truncate block w-full" 
+        //       data-tooltip-id="my-tooltip"
+        //       data-tooltip-content={row?.jobTitle}
+        //       data-tooltip-place="top">
+        //       {row.jobTitle}
+        //     </span>
+        //   </div>
+        // ),
       },
       {
         key: "companyName",
         label: "Company",
         sortable: true,
         contentWidth: `max-w-[150px]`,
-        render: (row: JobApplicationDetailsDto) => row.companyName
+        render: (row: JobApplicationDetailsDto) => row.companyName ?? "NA"
         //   (
         //   <div className="flex justify-center m-auto w-[150px]">
         //     <span className="truncate block w-full">
@@ -636,7 +638,7 @@ const JobsTable = memo(
         key: "createdAt",
         label: "Apply Date",
         sortable: true,
-        render: (row: JobApplicationDetailsDto) => new Date(row.createdAt).toLocaleDateString(),
+        render: (row: JobApplicationDetailsDto) => new Date(row.createdAt).toLocaleDateString() ?? "NA"
       },
       {
         key: "matchingScore",
@@ -700,23 +702,37 @@ const JobsTable = memo(
         key: "status",
         label: "Status",
         sortable: true,
-        contentWidth: "max-w-none !min-w-52",
-        render: (row: JobApplicationDetailsDto) => (
-          <div className="flex justify-center m-auto w-[150px]"
+        contentWidth: "max-w-none",
+        render: (row: JobApplicationDetailsDto) => {
+        const colorClass =
+          statusColors[row?.status as JobApplicationStatusType] ??
+          "bg-gray-100 text-gray-500";
+          return (
+          // <div className="flex justify-center m-auto w-[150px]"
+          //     data-tooltip-id="my-tooltip"
+          //     data-tooltip-content={row?.status?.replace(/_/g, " ")}
+          //     data-tooltip-place="top">
+          //   <StatusBadge status={row?.status} />
+          // </div>
+          <div className="flex justify-center  mx-auto p-2 w-fit relative">
+            <span
               data-tooltip-id="my-tooltip"
-              data-tooltip-content={row?.status?.replace(/_/g, " ")}
-              data-tooltip-place="top">
-            <StatusBadge status={row?.status} />
+              data-tooltip-content={newDisplayStatus[row?.status as JobApplicationStatusType]}
+              data-tooltip-place="top"
+              className={`w-32px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
+              {newDisplayStatus[row?.status as JobApplicationStatusType]}
+            </span>
           </div>
-        )
+        )}
       },
       {
         key: "action",
         label: "Action",
         sortable: true,
+        contentWidth: "max-w-none",
         render: (row: JobApplicationDetailsDto) =>
           row.action?.length ? (
-            <div className="flex gap-2 justify-center">
+            <div className="flex gap-2 justify-center text-[0.625rem]">
               {row.action.map((type:any) => (
                 <ActionButton
                   key={type}
@@ -731,11 +747,12 @@ const JobsTable = memo(
       {
         key: "followUp",
         label: "Follow up",
+        contentWidth: "max-w-none",
         render: (row: JobApplicationDetailsDto) => {
           const isDisabled = !!row.followUpRequest?.[0];
 
           return (
-            <div className="flex justify-center m-auto w-[150px]">
+            <div className="flex justify-center m-auto">
               <div className="relative group">
                 {row.status !== "JOINED" && row.status !== "REJECTED" ? (
                   <button

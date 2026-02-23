@@ -2,7 +2,7 @@ import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApp
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import ConfirmMessageModal from './ConfirmMessageModal';
@@ -51,6 +51,7 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting,setIsSubmitting]  = useState(false);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+  const modalRef = useRef<HTMLDivElement>(null);
   const [confirmModal, setConfirmModal] = useState({
         open: false,
         onContinue: () => {},
@@ -104,7 +105,11 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
     // Checking for those candidates for which details is not entered
     const incomplete = updated.filter(c => {
         const d = c.candidateParsedCvDetails;
-        return !d.currentCTC || !d.expectedCTC || !d.noticePeriod;
+        return (
+            d.currentCTC === null || d.currentCTC === undefined ||
+            d.expectedCTC === null || d.expectedCTC === undefined ||
+            d.noticePeriod === null || d.noticePeriod === undefined
+        );
     });
 
     if (incomplete.length > 0) {
@@ -123,12 +128,20 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
   const continueSubmit = async (updated: any) => {    
     const filtered = updated.filter((c:any) => {
         const d = c.candidateParsedCvDetails;
-        return d.currentCTC && d.expectedCTC && d.noticePeriod;
+        return (
+            d.currentCTC !== null && d.currentCTC !== undefined &&
+            d.expectedCTC !== null && d.expectedCTC !== undefined &&
+            d.noticePeriod !== null && d.noticePeriod !== undefined
+        );
     });
     // filtering out candidates with missing details
     const inCompleteCandidates = updated.filter((c:any) => {
         const d = c.candidateParsedCvDetails;
-        return !d.currentCTC || !d.expectedCTC || !d.noticePeriod;
+        return (
+            d.currentCTC === null || d.currentCTC === undefined ||
+            d.expectedCTC === null || d.expectedCTC === undefined ||
+            d.noticePeriod === null || d.noticePeriod === undefined
+        );
     });
     const nameOfIncompleteCandidates = inCompleteCandidates.map((row:any)=>{
         return row.candidateParsedCvDetails.name
@@ -213,12 +226,19 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-lg relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}
@@ -268,43 +288,59 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
 
         {/* Red warning text */}
         <h2 className="text-sm text-red-500 mb-4 text-left">
-        {`${currentCandidate?.candidateParsedCvDetails?.name ?? "Candidate"} profile does not contain CTC, ETC and Notice Period or details are older than 90 days — these fields are mandatory to update`}
+        {`${currentCandidate?.candidateParsedCvDetails?.name ?? "Candidate"} profile does not contain CTC, ETC and Notice Period or details are older than 90 days - these fields are mandatory to update`}
         </h2>
 
         <form onSubmit={handleSubmit(formSubmit)}>
             <div className='text-left'>
                 <label htmlFor="">Current CTC(LPA)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
-                <input type="number" 
+                <input 
+                step={0.1}
+                min={0}
+                type="number" 
                 className="input_primary auth_input capitalize"
-                {...register("currentCTC")}/>
+                {...register("currentCTC",{ valueAsNumber: true})}/>
             </div>
             <div className='text-left'>
                 <label htmlFor="">Expected CTC(LPA)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
-                <input type="number" 
+                <input 
+                step={0.1}
+                min={0}
+                type="number" 
                 className="input_primary auth_input capitalize"
-                {...register("expectedCTC")}/>
+                {...register("expectedCTC",{ valueAsNumber: true,            
+                    validate: (value) => {
+                    const current = watch("currentCTC");
+                    return value >= current || "Expected CTC cannot be less than Current CTC";
+                }})}/>
+                {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
+                )}
             </div>    
-            {/* <div className='text-left'>
-                <label htmlFor="">Notice Period <span className='text-red-500'>*</span></label>
-                <select 
-                    className="input_primary auth_input capitalize"
-                    {...register("noticePeriod")}
+            <div className='text-left flex-1'>
+                <label htmlFor="">Notice period (in days)<span className='text-red-500'>*</span></label>
+                <select
+                    className="input_primary auth_input"
+                    {...register("noticePeriod", {
+                        valueAsNumber: true,
+                    })}
                 >
-                    <option value="">Select notice period</option>
-                    <option value="15">15</option>
-                    <option value="30">30</option>
-                    <option value="45">45</option>
-                    <option value="60">60</option>
-                    <option value="90">90</option>
+                    <option value={0}>Immediate</option>
+                    <option value={15}>15 Days</option>
+                    <option value={30}>30 Days</option>
+                    <option value={45}>45 Days</option>
+                    <option value={60}>60 Days</option>
+                    <option value={90}>90 Days</option>
+                    <option value={120}>120 Days</option>
                 </select>
-            </div> */}
-            <div className='text-left'>
+                {errors.noticePeriod && <p className="text-red-500 text-sm">Please select from the options</p>}
+            </div>
+            {/* <div className='text-left'>
                 <label htmlFor="">Notice Period(in days)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
                 <input 
                     type="number"
@@ -314,20 +350,20 @@ const EditCTCETCAndNoticePeriodModal:React.FC<EditCTCETCAndNoticePeriodModalProp
                     })}
                 />
                 {errors.noticePeriod && <p className="text-red-500 text-sm">Please enter a valid number</p>}
-            </div>
+            </div> */}
             <div className="flex justify-start mt-4 gap-3">
             <button
-                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white text-xs
                 ${isSubmitting 
                     ? "bg-blue-300 cursor-not-allowed opacity-70" 
                     : "bg-blue-500"}`}
             >
-                <SendIcon className='h-4 w-4'/>
+                <SendIcon className='h-3 w-3'/>
                 {isSubmitting ? 'Submitting...' : 'Submit'}
             </button>
             <button
                 type="button"
-                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white bg-blue-500`}
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white bg-blue-500 text-xs`}
                 onClick={onClose}
             >
                 Close

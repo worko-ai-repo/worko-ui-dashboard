@@ -10,7 +10,7 @@ import { JobData } from "@Interfaces/CorporateDashboard.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
-import { Building2, Filter, Link, Loader2, X } from "lucide-react";
+import { Building2, Filter, Link, Link2, Loader2, ViewIcon, X } from "lucide-react";
 import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
@@ -238,11 +238,11 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
       render: (row: JobData) => (
         <div className="flex items-center justify-center gap-2">
           {!row?.createdByCorporateUserId && row?.createdByUserId ? (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-red-100 text-red-600">
+            <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-red-100 text-red-600">
               Worko
             </span>
           ) : (
-            <span className="px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-600">
+            <span className="px-3 py-1 rounded-full text-[0.625rem] font-medium bg-blue-100 text-blue-600">
               External
             </span>
           )}
@@ -299,7 +299,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               disabled: isRowUpdating,
             },
             {
-              icon: <Link className="w-5 h-5" />,
+              icon: <ViewIcon className="w-5 h-5" />,
               className: "btn-sky shrink-0",
               tooltip: "View Job",
               onClick: () =>
@@ -307,6 +307,18 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
                   `${import.meta.env.APP_PROXY_BASE}jobs/${row.companyDetails.name}/${row.id}`,
                   "_blank"
                 ),
+              disabled: isRowUpdating,
+            },
+            {
+              icon: <Link className="w-5 h-5" />,
+              className: "btn-sky shrink-0",
+              tooltip: "Copy External apply Link",
+              onClick: () => {
+                const baseUrl = window.location.origin; 
+                const finalUrl = `${baseUrl}/apply-job?jobId=${row?.id}`;
+                navigator.clipboard.writeText(finalUrl);
+                toast.success("Link copied!",getToastOptions({}));
+              },
               disabled: isRowUpdating,
             },
             {

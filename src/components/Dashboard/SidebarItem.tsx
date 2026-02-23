@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { NavItem, TabId } from "src/types/sidebar";
 
@@ -15,18 +15,57 @@ interface SidebarItemProps {
 const SidebarItem: React.FC<SidebarItemProps> = ({ item, isActive, activeTab, collapsed, onClick,expandable=false,child }) => {
   const [open, setOpen] = useState(false);
 
-  const handleClick = () => {
-  onClick(item);
-  // if(expandable) setOpen((v)=>!v)
-  // return
-  // just uncomment above and comment below if thats not the bevaiour we want and also remove handleClickArrow function
-  if (expandable && !open) setOpen(true); // only open
-};
+  useEffect(() => {
+    const handleCloseOthers = (e: any) => {
+      if (e.detail !== item.id) {
+        setOpen(false);
+      }
+    };
 
-const handleClickArrow = (e: React.MouseEvent) => {
-  e.stopPropagation();
-  if (expandable) setOpen((v) => !v); // open and close both
-};
+    window.addEventListener("sidebar-open", handleCloseOthers);
+
+    return () => {
+      window.removeEventListener("sidebar-open", handleCloseOthers);
+    };
+  }, [item.id]);
+
+  const handleClick = () => {
+    onClick(item);
+
+    // Always notify others to close
+    window.dispatchEvent(
+      new CustomEvent("sidebar-open", { detail: item.id })
+    );
+
+    // Only toggle if expandable
+    if (expandable) {
+      setOpen((v) => !v);
+    }
+  };
+
+  const handleClickArrow = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    window.dispatchEvent(
+      new CustomEvent("sidebar-open", { detail: item.id })
+    );
+
+    if (expandable) {
+      setOpen((v) => !v);
+    }
+  };
+
+
+  // comment above useeffect, handleClick and handleClickArrow function and uncomment handleClick and handleClickArrow function below to get a behaviour where all the expanded child in left sidebar is visible  
+  // const handleClick = () => {
+  //   onClick(item);
+  //   if (expandable && !open) setOpen(true);
+  // };
+
+  // const handleClickArrow = (e: React.MouseEvent) => {
+  //   e.stopPropagation();
+  //   if (expandable) setOpen((v) => !v);
+  // };
 
   return (
 <div>

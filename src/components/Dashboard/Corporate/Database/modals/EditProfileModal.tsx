@@ -2,7 +2,7 @@ import { AgencyDatabaseApplicantDetailsDto } from '@Interfaces/AgencyDatabaseApp
 import httpServiceObj from '@Services/ApiHandler.service';
 import { getToastOptions } from 'lib-worko-ui';
 import { SendIcon } from 'lucide-react';
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 
@@ -45,6 +45,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
     const [isAnimatingIn, setIsAnimatingIn] = useState(false);
     const [isSubmitting,setIsSubmitting]  = useState(false);
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+    const modalRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
     if (isOpen && candidateFullDetails) {
@@ -94,7 +95,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         //     toast.error("Cannot update same details",getToastOptions({}))
         //     return
         // }
-
+        
         const {response,error} =  await httpServiceObj.patch(`${agencyBaseUrl}/candidate-parsed-cv/${candidateID}`,data,true,{},true)   
         if(error){
             toast.error(error.message,getToastOptions({}))
@@ -137,12 +138,19 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-          isAnimatingIn ? "translate-x-0" : "translate-x-full"
+          !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
         }`}>
         <button
           onClick={onClose}
@@ -216,17 +224,29 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     <label htmlFor="">Current CTC(LPA)
                         {/* <span className='text-red-500'>*</span> */}
                     </label>
-                    <input type="text" 
+                    <input 
+                    type="number"
+                    min={0}
+                    step={0.1} 
                     className="input_primary auth_input capitalize"
-                    {...register("currentCTC")}/>
+                    {...register("currentCTC",{ valueAsNumber: true })}/>
                 </div>
                 <div className='text-left flex-1'>
                     <label htmlFor="">Expected CTC(LPA)
                         {/* <span className='text-red-500'>*</span> */}
                     </label>
-                    <input type="text" 
+                    <input 
+                    type="number"
+                    min={0}
+                    step={0.1} 
                     className="input_primary auth_input capitalize"
-                    {...register("expectedCTC")}/>
+                    {...register("expectedCTC",{ valueAsNumber: true,            
+                        validate: (value) => {
+                        const current = watch("currentCTC");
+                        return value >= current || "Expected CTC cannot be less than Current CTC";
+                    }})}/>
+                    {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
+                    )}
                 </div>
             </div>
             <div className='flex gap-2'>     
@@ -252,9 +272,9 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     <option value="90">90</option>
                 </select>
             </div> */}
-            <div className='text-left flex-1'>
+            {/* <div className='text-left flex-1'>
                 <label htmlFor="">Notice Period(in days)
-                    {/* <span className='text-red-500'>*</span> */}
+                    <span className='text-red-500'>*</span>
                 </label>
                 <input 
                     type="number"
@@ -264,6 +284,26 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     })}
                 />
                 {errors.noticePeriod && <p className="text-red-500 text-sm">Please enter a valid number</p>}
+            </div> */}
+            <div className='text-left flex-1'>
+                <label htmlFor="">Notice period (in days)
+                    {/* <span className='text-red-500'>*</span> */}
+                </label>
+                <select
+                    className="input_primary auth_input"
+                    {...register("noticePeriod", {
+                        valueAsNumber: true,
+                    })}
+                >
+                    <option value={0}>Immediate</option>
+                    <option value={15}>15 Days</option>
+                    <option value={30}>30 Days</option>
+                    <option value={45}>45 Days</option>
+                    <option value={60}>60 Days</option>
+                    <option value={90}>90 Days</option>
+                    <option value={120}>120 Days</option>
+                </select>
+                {errors.noticePeriod && <p className="text-red-500 text-sm">Please select from the options</p>}
             </div>
             </div>
             {/* <div className='text-left'>

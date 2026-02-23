@@ -149,7 +149,7 @@ const ReferralsTable = ({
       key: "name",
       label: "Name",
       sortable: true,
-      render: (row: any) => row.name
+      render: (row: any) => row.name ?? "NA"
       //   (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span className="truncate block w-full" title={row.name}>
@@ -163,7 +163,7 @@ const ReferralsTable = ({
       label: "Job Title",
       sortable: true,
       contentWidth: "min-w-[150px]",
-      render: (row: any) => row?.jobTitle
+      render: (row: any) => row?.jobTitle ?? "NA"
       //   (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span className="truncate block w-full" title={row.jobTitle}>
@@ -176,7 +176,7 @@ const ReferralsTable = ({
       key: "email",
       label: "Email",
       sortable: true,
-      render: (row: any) => row?.email?.toLowerCase() 
+      render: (row: any) => row?.email?.toLowerCase() ?? "NA"
       //   (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span className="truncate block w-full" title={row.email}>
@@ -189,7 +189,7 @@ const ReferralsTable = ({
     { key: "phone",
       label: "Phone" , 
       sortable:true,
-      render: (row: any) => `+91 ${row?.phone.toString()}`
+      render: (row: any) => row?.phone ? `+91 ${row.phone.toString()}` : "NA"
       //   (
       //   <div className="flex justify-center m-auto w-[150px]">
       //     <span className="truncate block w-full" 
@@ -205,15 +205,16 @@ const ReferralsTable = ({
       key: "status",
       label: "Status",
       sortable: true,
+      contentWidth:`max-w-none`,
       render: (row: any) => {
         if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
           return (
-            <div className="flex justify-center m-auto w-[150px]">
+            <div className="flex justify-center m-auto">
               <button
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content="Achieved"
                 data-tooltip-place="top"
-                className="w-32 px-4 py-3 text-sm text-white bg-green-600 rounded-full hover:bg-green-700"
+                className="px-5 py-2 text-[0.625rem] text-white bg-green-600 rounded-full hover:bg-green-700"
                 onClick={() => {
                   setSelectedReferral(row);
                   setStatusData({
@@ -238,12 +239,12 @@ const ReferralsTable = ({
         }
         if (row.jobApplicationStatus === "REJECTED") {
           return (
-            <div className="flex justify-center m-auto w-[150px]">
+            <div className="flex justify-center m-auto">
               <div               
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Rejected"
               data-tooltip-place="top"
-              className="px-4 py-3 text-sm text-white bg-red-600 rounded-full w-32 text-center truncate">
+              className="px-5 py-2 text-[0.625rem] text-white bg-red-600 rounded-full text-center truncate">
                 Rejected
               </div>
             </div>
@@ -251,12 +252,12 @@ const ReferralsTable = ({
         }
         // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
         return (
-          <div className="flex justify-center m-auto w-[150px]">
+          <div className="flex justify-center m-auto">
             <div 
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Not Achieved Yet"
               data-tooltip-place="top"
-              className=" px-4 py-3 text-sm text-blue-500 bg-blue-100 rounded-full w-32 text-center truncate">
+              className="px-5 py-2 text-[0.625rem] text-blue-500 bg-blue-100 rounded-full text-center truncate">
               Not Achieved Yet
             </div>
           </div>
@@ -281,8 +282,8 @@ const ReferralsTable = ({
               data-tooltip-id="my-tooltip"
               data-tooltip-content={label}
               data-tooltip-place="top"
-              className={`px-4 py-3 rounded-full border ${style}`}>
-            <span className="text-xs">{label}</span>
+              className={`px-5 py-2 text-[0.625rem] rounded-full border ${style}`}>
+            <span className="truncate">{label}</span>
           </div>
         );
       },
