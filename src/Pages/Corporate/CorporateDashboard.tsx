@@ -27,6 +27,9 @@ const SearchDB = lazy(() => import ("@Components/Dashboard/Corporate/SearchDB/Se
 const AgencyCandidateList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyCandidateList"));
 const AgencyList = lazy(() => import ("@Components/Dashboard/Corporate/Agency/AgencyList"));
 const ReferralSettings = lazy(() => import("@Components/Dashboard/Corporate/Settings/Referrals"));
+const Credits = lazy(() => import("@Components/Dashboard/Corporate/Recharge/Credits/Credits"));
+const RecruiterRecharge = lazy(() => import("@Components/Dashboard/Corporate/Recharge/RecruiterRecharge/RecruiterRecharge"));
+const DriveResumeFetcher = lazy(() => import("@Components/Dashboard/Corporate/Settings/DriveResumeFetcher"));
 
 // const SearchDB = lazy(() => import("@Components/Dashboard/Corporate/SearchDB/SearchDB"));
 // const AdminDatabase = lazy(() => import("@Components/Dashboard/WorkoAdmin/Database/AdminDatabase"));
@@ -173,6 +176,30 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<MainLoader />}>
               {isCorporateAdmin ? <ReferralSettings /> : <AccessDenied />}
+            </Suspense>
+          ),
+        },
+        {
+          path: "driveResumeFetcher",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              {isCorporateAdmin ? <DriveResumeFetcher /> : <AccessDenied />}
+            </Suspense>
+          ),
+        },
+        {
+          path: "credits",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              {isCorporateAdmin ? <Credits /> : <AccessDenied />}
+            </Suspense>
+          ),
+        },
+        {
+          path: "recruiterRecharge",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              {isCorporateAdmin ? <RecruiterRecharge /> : <AccessDenied />}
             </Suspense>
           ),
         },

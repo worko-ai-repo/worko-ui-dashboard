@@ -19,8 +19,9 @@ interface ExperienceEducationModalProps {
   educations: Education[];
   about: string | null;
   candidateName: string;
+  coreSkills?:[];
   onClose: () => void;
-  defaultSection?: "experience" | "education" | "about";
+  defaultSection?: "experience" | "education" | "about" | "coreSkills";
 }
 
 const ExperienceEducationModal: React.FC<ExperienceEducationModalProps> = ({
@@ -28,6 +29,7 @@ const ExperienceEducationModal: React.FC<ExperienceEducationModalProps> = ({
   educations,
   about,
   candidateName,
+  coreSkills,
   onClose,
 }) => {
   return (
@@ -97,6 +99,14 @@ const ExperienceEducationModal: React.FC<ExperienceEducationModalProps> = ({
             <h3 className="text-sm font-semibold text-gray-700 mb-2">About</h3>
             <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap ml-1">
               {about}
+            </p>
+          </div>
+        )}
+        {coreSkills && (
+          <div>
+            <h3 className="text-sm font-semibold text-gray-700 mb-2">Core Skills</h3>
+            <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap ml-1">
+              {coreSkills.map((skill:any) => skill?.skillName).join(", ")}
             </p>
           </div>
         )}

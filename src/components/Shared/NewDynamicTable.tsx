@@ -236,7 +236,7 @@ export function NewDynamicTable<T extends { id: string }>({
                     key={col.key}
                     className={`w-32 px-1 py-3 text-xs whitespace-nowrap text-center font-medium ${
                       isFirstVisibleColumn ? `sticky ${ showSelect && showExpand ? "left-12" : showSelect || showExpand ? "left-6" : "left-0"} z-30 bg-blue-50`: "" }`}>
-                    <span className="flex items-center justify-center gap-0 text-center">
+                    <span className="font-bold flex items-center justify-center gap-0 text-center">
                       {col.label}
                       {col.sortable && onSortChange && (
                         <span className="cursor-pointer text-center h-auto w-8">

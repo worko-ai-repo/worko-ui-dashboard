@@ -21,6 +21,7 @@ import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
 import { RefreshCcw } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
+import ExperienceEducationModal from "@Components/Shared/ApplicantsPage/ExperienceEducationModal";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -87,6 +88,7 @@ export default function CorporateDatabaseTable(props: any) {
     applicant: {} as any,
     action: "EDIT" as "EDIT" | "VIEW",
   });
+  const [selectedRow, setSelectedRow] = useState<any>(null);
   const [editProfileView, setEditProfileView] = useState<boolean>(false);
   const [editProfileData, setEditProfileData] = useState<
     AgencyDatabaseApplicantDetailsDto | undefined
@@ -99,6 +101,13 @@ export default function CorporateDatabaseTable(props: any) {
   const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
+  const [candidateDetailsModal, setCandidateDetailsModal] = useState<{
+    isOpen: boolean;
+    defaultSection: "experience" | "education" | "about" | "coreSkills";
+  }>({
+    isOpen: false,
+    defaultSection: "experience",
+  });
   const currentId = initialIds[0] ?? null;
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 
@@ -833,133 +842,311 @@ export default function CorporateDatabaseTable(props: any) {
   };
 
   const renderExpandedDetails = (row: any) => {
+  const workExperiences = row?.candidateParsedCvDetails?.multipleCandidateExperience || [];
+  const educations = row?.candidateParsedCvDetails?.education || [];
+  const about = row?.candidateParsedCvDetails?.about || null;
   const skillsText = (row?.candidateParsedCvDetails?.coreSkills ?? []).map((skill:any) => skill?.skillName).join(", ");
   return (
-    <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
-      <div className="flex gap-20">
-        {/* Work Experience */}
-        <div>
-          <span className="font-semibold text-black">Work Experience</span>
-          {Array.isArray(row?.candidateParsedCvDetails?.multipleCandidateExperience) &&
-          row.candidateParsedCvDetails.multipleCandidateExperience.length > 0 ? (
-            row.candidateParsedCvDetails.multipleCandidateExperience.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
-              const start = exp?.startDate
-                ? new Date(exp.startDate).getFullYear()
-                : "-";
+      <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
+        {/* <div className="grid grid-cols-[1fr_auto] gap-6"> */}
+        {/* LEFT SIDE: All content */}
+        <div className="min-w-0">
+          {" "}
+          {/* min-w-0 prevents grid blowout */}
+          {/* Main Info Grid */}
+          <div className="grid grid-cols-[300px_300px_300px_300px_100px_100px_100px_100px] gap-4 mb-1 text-left">
+            
+            {/* Work Experience */}
+            <div className="">
+              <h3 className="font-semibold text-black mb-1">Work Experience</h3>
+              <div className="space-y-1">
+                {workExperiences.length > 0 ? (
+                  <div
+                    className="cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={() =>{
+                      setSelectedRow(row);
+                      setCandidateDetailsModal({
+                        isOpen: true,
+                        defaultSection: "experience",
+                      })
+                    }
+                    }>
+                    {workExperiences.slice(0, 3).map((exp:any, index:number) => (
+                      <div key={index} className="text-xs">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-medium line-clamp-2 flex-1">
+                            {index + 1}. {exp.designation}{" "}
+                            {exp.companyName ? `at ${exp.companyName}` : ""} •{" "}
+                            {exp.startDate ? new Date(exp.startDate).getFullYear() : "N/A"} -{" "}
+                            {exp.endDate && !isNaN(new Date(exp.endDate).getFullYear())
+                              ? new Date(exp.endDate).getFullYear()
+                              : "Present"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex flex-col">
+                    {workExperiences.length > 3 && (
+                      <span className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                        +{workExperiences.length - 3} more
+                      </span>
+                    )}
+                    <span className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                      Read more
+                    </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div 
+                  className="cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"                    
+                  onClick={() =>{
+                      setSelectedRow(row);
+                      setCandidateDetailsModal({
+                        isOpen: true,
+                        defaultSection: "experience",
+                      })}
+                    }>
+                  <p className="text-xs text-gray-500">No experience listed</p>
+                    <span className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                      Read more
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
 
-              const end = exp?.endDate
-                ? new Date(exp.endDate).getFullYear()
-                : exp?.endDate === "" 
-                  ? "Present"
-                  : "-";
+            {/* Education */}
+            <div className="">
+              <h3 className="font-semibold text-black mb-1">Education</h3>
+              <div className="space-y-1">
+                {educations.length > 0 ? (
+                  <div
+                    className="cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                    onClick={() =>{
+                      setSelectedRow(row);
+                      setCandidateDetailsModal({
+                        isOpen: true,
+                        defaultSection: "education",
+                      })}
+                    }>
+                    {educations.slice(0, 3).map((edu:any, index:number) => (
+                      <div key={index} className="text-xs">
+                        <div className="flex justify-between items-start gap-2">
+                          <span className="font-medium line-clamp-2 flex-1">
+                            {index + 1}. {edu.degree} at {edu.collage} • {edu.passingYear || "N/A"}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {educations.length > 3 && (
+                      <span className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                        +{educations.length - 3} more
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-gray-500">No education listed</p>
+                )}
+              </div>
+            </div>
 
-              return (
-                <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
-                  {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
-                </p>
-              );
-            })
-          ) : (
-            <p>No experience found</p>
-          )}
-        </div>
-
-        {/* Education */}
-        <div>
-          <span className="font-semibold text-black">Education</span>
-          {Array.isArray(row?.candidateParsedCvDetails?.education) &&
-          row.candidateParsedCvDetails.education.length > 0 ? (
-            row.candidateParsedCvDetails.education.map((
-              edu:{degree:String, 
-                collage:String, 
-                YOE:number,
-                passingYear:number,
-                // startDate:string,
-                // endDate:string
-              }, index:number) => {
-              // const start = edu?.startDate
-              //   ? new Date(edu.startDate).getFullYear()
-              //   : "-";
-
-              // const end = edu?.endDate
-              //   ? new Date(edu.endDate).getFullYear()
-              //   : edu?.endDate === "" 
-              //     ? "Present"
-              //     : "-";
-
-              return (
-                <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
-                  {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
-                </p>
-              );
-            })
-          ) : (
-            <p>No Education found</p>
-          )}
-        </div>
-
-        {/* About */}
-        <div>
-          <span className="font-semibold text-black">About</span>
-          {/* <p className="w-[200px] truncate cursor-pointer">{row?.candidateParsedCvDetails?.about || "-"}</p> */}
-          <div className="w-[200px] truncate cursor-pointer">
-            <span 
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(row?.candidateParsedCvDetails?.about ?? "-");
-                setDisplayText("About")
-              }}
-              className="truncate block w-full">
-              {row?.candidateParsedCvDetails?.about ?? "-"}
-            </span>
-          </div>
-        </div>
-
-        {/* Core skills */}
-        <div>
-          <span className="font-semibold text-black">Core skills</span>
-          <div className="w-[200px] truncate cursor-pointer" 
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={"Click to view full details"}
-              onClick={() => {
-                setViewViewDetailsModal(true);
-                setFullDetails(skillsText.length ? skillsText : "-");
-                setDisplayText("Core skills")
-              }}>
-            {skillsText.length ? skillsText : "-"}
-          </div>
-        </div>
-
-          {/* Source type worko, internal, external, agency etc*/}
-          <div>
-            <span className="font-semibold text-black">Source type</span>
-            <p>{row?.refereeType || "-"}</p>
+          {/* About Section */}
+          <div className="">
+            <h3 className="font-semibold text-black mb-1">About</h3>
+            <div className="space-y-1">
+            {about && about.trim().length > 0 ? (          
+                <div
+                  className="cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors"
+                  onClick={() =>{
+                    setSelectedRow(row);
+                    setCandidateDetailsModal({
+                      isOpen: true,
+                      defaultSection: "about",
+                    })}
+                  }>
+                  <p className="font-medium text-xs leading-relaxed line-clamp-3">{about}</p>
+                  {/* {about.split(" ").length > 30 && (
+                    <span className="text-xs text-blue-600 hover:underline mt-1 inline-block">
+                      Read more
+                    </span>
+                  )} */}
+                </div>
+              ):  <p className="font-medium text-xs leading-relaxed line-clamp-3">-</p>}
+             </div>
           </div>
           
-          {/* Source type agency name, referral email*/}
+          {/* Core skills */}
           <div>
-            <span className="font-semibold text-black">Source name</span>
-            <p>{row?.source || "-"}</p>
+            <h3 className="font-semibold text-black mb-1">Core skills</h3>
+            <div className="truncate space-y-1 cursor-pointer hover:bg-gray-50 p-1 rounded transition-colors" 
+                // data-tooltip-id="my-tooltip"
+                // data-tooltip-content={"Click to view full details"}
+                onClick={() =>{
+                  setSelectedRow(row);
+                  setCandidateDetailsModal({
+                    isOpen: true,
+                    defaultSection: "coreSkills",
+                  })
+                }}>
+              {skillsText.length ? skillsText : "-"}
+            </div>
           </div>
 
-        {/* Under cooling period */} 
-        {/* NOT AVAILABLE IN DATA */}
-        <div>
-          <span className="font-semibold text-black">Under cooling period</span>
-          <p>{row?.candidateParsedCvDetails?.hiringEligibilityStatus === "UNDER_COOLING_PERIOD" ? "Yes" : "No"}</p>
-        </div>
+           {/* Source type worko, internal, external, agency etc*/}
+           <div>
+             <span className="font-semibold text-black">Source type</span>
+             <p>{row?.refereeType || "-"}</p>
+           </div>
+          
+           {/* Source type agency name, referral email*/}
+           <div>
+             <span className="font-semibold text-black">Source name</span>
+             <p>{row?.source || "-"}</p>
+           </div>
 
-        {/* Under process */}
-        {/* NOT AVAILABLE IN DATA */}
-        <div>
-          <span className="font-semibold text-black">Under Process</span>
-          <p>{"-"}</p>
+         {/* Under cooling period */} 
+         {/* NOT AVAILABLE IN DATA */}
+         <div>
+           <span className="font-semibold text-black">Under cooling period</span>
+           <p>{row?.candidateParsedCvDetails?.hiringEligibilityStatus === "UNDER_COOLING_PERIOD" ? "Yes" : "No"}</p>
+         </div>
+
+         {/* Under process */}
+         {/* NOT AVAILABLE IN DATA */}
+         <div>
+           <span className="font-semibold text-black">Under Process</span>
+           <p>{"-"}</p>
+         </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+  )
+  // return (
+  //   <div className="flex flex-col justify-start items-start gap-8 p-4 bg-gray-50 rounded-lg text-left">
+  //     <div className="flex gap-20">
+  //       {/* Work Experience */}
+  //       <div>
+  //         <span className="font-semibold text-black">Work Experience</span>
+  //         {Array.isArray(row?.candidateParsedCvDetails?.multipleCandidateExperience) &&
+  //         row.candidateParsedCvDetails.multipleCandidateExperience.length > 0 ? (
+  //           row.candidateParsedCvDetails.multipleCandidateExperience.map((exp:{designation:String, companyName:String, YOE:number,startDate:string,endDate:string}, index:number) => {
+  //             const start = exp?.startDate
+  //               ? new Date(exp.startDate).getFullYear()
+  //               : "-";
+
+  //             const end = exp?.endDate
+  //               ? new Date(exp.endDate).getFullYear()
+  //               : exp?.endDate === "" 
+  //                 ? "Present"
+  //                 : "-";
+
+  //             return (
+  //               <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
+  //                 {index + 1}. {exp?.designation || ""} at {exp?.companyName || ""} • {start} – {end}
+  //               </p>
+  //             );
+  //           })
+  //         ) : (
+  //           <p>No experience found</p>
+  //         )}
+  //       </div>
+
+  //       {/* Education */}
+  //       <div>
+  //         <span className="font-semibold text-black">Education</span>
+  //         {Array.isArray(row?.candidateParsedCvDetails?.education) &&
+  //         row.candidateParsedCvDetails.education.length > 0 ? (
+  //           row.candidateParsedCvDetails.education.map((
+  //             edu:{degree:String, 
+  //               collage:String, 
+  //               YOE:number,
+  //               passingYear:number,
+  //               // startDate:string,
+  //               // endDate:string
+  //             }, index:number) => {
+  //             // const start = edu?.startDate
+  //             //   ? new Date(edu.startDate).getFullYear()
+  //             //   : "-";
+
+  //             // const end = edu?.endDate
+  //             //   ? new Date(edu.endDate).getFullYear()
+  //             //   : edu?.endDate === "" 
+  //             //     ? "Present"
+  //             //     : "-";
+
+  //             return (
+  //               <p key={index} className="mt-2 min-w-[300px] max-w-[300px]">
+  //                 {index + 1}. {edu?.degree || ""} at {edu?.collage || ""} {edu?.passingYear ? `• Passing Year - ${edu.passingYear}` : null}
+  //               </p>
+  //             );
+  //           })
+  //         ) : (
+  //           <p>No Education found</p>
+  //         )}
+  //       </div>
+
+  //       {/* About */}
+  //       <div>
+  //         <span className="font-semibold text-black">About</span>
+  //         {/* <p className="w-[200px] truncate cursor-pointer">{row?.candidateParsedCvDetails?.about || "-"}</p> */}
+  //         <div className="w-[200px] truncate cursor-pointer">
+  //           <span 
+  //             data-tooltip-id="my-tooltip"
+  //             data-tooltip-content={"Click to view full details"}
+  //             onClick={() => {
+  //               setViewViewDetailsModal(true);
+  //               setFullDetails(row?.candidateParsedCvDetails?.about ?? "-");
+  //               setDisplayText("About")
+  //             }}
+  //             className="truncate block w-full">
+  //             {row?.candidateParsedCvDetails?.about ?? "-"}
+  //           </span>
+  //         </div>
+  //       </div>
+
+  //       {/* Core skills */}
+  //       <div>
+  //         <span className="font-semibold text-black">Core skills</span>
+  //         <div className="w-[200px] truncate cursor-pointer" 
+  //             data-tooltip-id="my-tooltip"
+  //             data-tooltip-content={"Click to view full details"}
+  //             onClick={() => {
+  //               setViewViewDetailsModal(true);
+  //               setFullDetails(skillsText.length ? skillsText : "-");
+  //               setDisplayText("Core skills")
+  //             }}>
+  //           {skillsText.length ? skillsText : "-"}
+  //         </div>
+  //       </div>
+
+  //         {/* Source type worko, internal, external, agency etc*/}
+  //         <div>
+  //           <span className="font-semibold text-black">Source type</span>
+  //           <p>{row?.refereeType || "-"}</p>
+  //         </div>
+          
+  //         {/* Source type agency name, referral email*/}
+  //         <div>
+  //           <span className="font-semibold text-black">Source name</span>
+  //           <p>{row?.source || "-"}</p>
+  //         </div>
+
+  //       {/* Under cooling period */} 
+  //       {/* NOT AVAILABLE IN DATA */}
+  //       <div>
+  //         <span className="font-semibold text-black">Under cooling period</span>
+  //         <p>{row?.candidateParsedCvDetails?.hiringEligibilityStatus === "UNDER_COOLING_PERIOD" ? "Yes" : "No"}</p>
+  //       </div>
+
+  //       {/* Under process */}
+  //       {/* NOT AVAILABLE IN DATA */}
+  //       <div>
+  //         <span className="font-semibold text-black">Under Process</span>
+  //         <p>{"-"}</p>
+  //       </div>
+  //     </div>
+  //   </div>
+  // );
 
   };
 
@@ -1039,6 +1226,30 @@ export default function CorporateDatabaseTable(props: any) {
       fullDetails={fullDetails}
       displayText={displayText}
     />
+    <Modal
+        isOpen={candidateDetailsModal.isOpen}
+        onClose={() =>
+          setCandidateDetailsModal({
+            isOpen: false,
+            defaultSection: "experience",
+          })
+        }
+        className="w-[90vw] sm:max-w-2xl h-auto">
+        <ExperienceEducationModal
+          workExperiences={selectedRow?.candidateParsedCvDetails?.multipleCandidateExperience || []}
+          educations={selectedRow?.candidateParsedCvDetails?.education || []}
+          about={selectedRow?.candidateParsedCvDetails?.about || null}
+          candidateName={selectedRow?.candidateName}
+          coreSkills={selectedRow?.candidateParsedCvDetails?.coreSkills}
+          defaultSection={candidateDetailsModal.defaultSection}
+          onClose={() =>
+            setCandidateDetailsModal({
+              isOpen: false,
+              defaultSection: "experience",
+            })
+          }
+        />
+      </Modal>
     </>
   );
 }

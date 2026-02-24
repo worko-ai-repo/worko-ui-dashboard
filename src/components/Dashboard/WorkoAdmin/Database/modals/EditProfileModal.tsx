@@ -196,7 +196,10 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             </div>
             <div className="flex justify-start mt-4">
             <button
-                className="flex items-center gap-1 px-3 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white text-xs
+                ${isSubmitting 
+                    ? "bg-blue-300 cursor-not-allowed opacity-70" 
+                    : "bg-blue-500"}`}
             >
                 <SendIcon className='h-4 w-4'/>
                 {isSubmitting ? 'Submitting...' : 'Submit'}

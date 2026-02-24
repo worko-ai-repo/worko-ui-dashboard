@@ -70,7 +70,7 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
   OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0]",
   HIRING_IN_PROCESS: "bg-[#D6F4FF] text-[#00ADC0]",
   DOCUMENT_ADDITIONAL_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0]",
-  OFFER_ISSUE_RAISED: "bg-[#FFD700] text-[#856404]",
+  OFFER_ISSUE_RAISED: "bg-[#FFD700] text-[#856404] has-notification",
   REVISED_OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0]",
   REVISED_LETTER: "bg-[#D6F4FF] text-[#00ADC0]",
   OFFER_ACCEPTED: "bg-[#D1E7DD] text-[#0F5132]",
@@ -88,9 +88,9 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
   HIRING_IN_PROCESS: "Hiring in Process",
   DOCUMENT_REQUESTED: "Document Requested",
   DOCUMENT_ADDITIONAL_REQUESTED: "Additional Document Requested",
-  DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: "Document Requested",
-  DOCUMENT_REVISION_REQUESTED: "Document Requested",
-  DOCUMENT_REVISION_REQUEST_SUBMITTED: "Document Requested",
+  DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: "Additional Document Submitted",
+  DOCUMENT_REVISION_REQUESTED: "Revision Document Requested",
+  DOCUMENT_REVISION_REQUEST_SUBMITTED: "Revision Document Submitted",
   DOCUMENT_SUBMITTED: "Document Submitted",
   DOCUMENT_VERIFIED: "Document Verified",
   HIRED: "Hired",
@@ -262,9 +262,14 @@ export default function ApplicationTable({
       label: "Applicants name",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <div className="flex items-center justify-center gap-2">
-          <User size={20} />
-          <span>{row.applicantDetails.name}</span>
+        <div className="flex font-semibold items-center justify-center gap-2">
+          {/* <User size={20} /> */}
+          <span 
+            data-tooltip-id="my-tooltip"
+            data-tooltip-content={row.applicantDetails.name}
+            className="truncate">
+              {row.applicantDetails.name}
+            </span>
           {updatingApplicationId === row.id && (
             <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
           )}
@@ -483,7 +488,7 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center mx-auto p-2 w-fit relative">
+          <div className="flex justify-center mx-auto w-fit relative">
             <span
               onClick={() => {
                 if (row.status === "REJECTED") {

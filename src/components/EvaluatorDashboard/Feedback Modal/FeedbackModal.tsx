@@ -17,6 +17,7 @@ interface FeedbackModalProps {
     selectedRequest: EvaluationRequest | null;
     selectedCandidateDetails: CandidateDetails | null;
     applicationDetails: ApplicationDetails | null;
+    onLocalUpdate?: (id: string, updated: Partial<EvaluationRequest>) => void;
 }
 
 const FeedbackModal: React.FC<FeedbackModalProps> = ({
@@ -27,7 +28,8 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
     selectedRequest,
     selectedCandidateDetails,
-    applicationDetails
+    applicationDetails,
+    onLocalUpdate,
 }) => {
     const {
         // Basic form state
@@ -127,8 +129,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     htmlComment,
                 } as SubmitEvaluationPayload);
                 toast.success('Feedback submitted successfully!',getToastOptions({}));
-            }
-            else if (nextStep === 'schedule') {
+            } else if (nextStep === 'schedule') {
                 const now = new Date();
                 const buildDateTimeFromHour = (date: string, hour: number) => {
                     const d = new Date(date + 'T00:00:00');
@@ -163,13 +164,18 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         actionDate: new Date().toISOString(),
                     }));
                     
-                await submitEvaluationResponse({
+                const response = await submitEvaluationResponse({
                     ...basePayload,
                     status: 'INTERVIEW_SCHEDULED',
                     scheduledInterviewDetails,
                 } as SubmitEvaluationPayload);
-
                 toast.success('Feedback submitted successfully!',getToastOptions({}));
+                if (onLocalUpdate && selectedRequest) {
+                onLocalUpdate(selectedRequest.id, {
+                    evaluationResponseStatus: "INTERVIEW_SCHEDULED",
+                    evaluationResponseId: response?.id,
+                });
+                }
             }
 
             if (onSubmitComplete) {

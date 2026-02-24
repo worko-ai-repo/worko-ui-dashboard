@@ -58,7 +58,7 @@ const handleLogout = async () => {
   try {
     await CognitoServiceObj.handleSignOut();
     sessionStorage.clear();
-    window.location.href = "https://worko.ai/";
+    // window.location.href = "https://worko.ai/";
   } catch (err) {
     console.error("Logout failed", err);
   }
@@ -88,7 +88,9 @@ const MainContent: React.FC<MainContentProps> = ({
   const [searchParams] = useSearchParams();
   const jobApplicationId = searchParams.get("jobApplicationId") || "";
   const evaluationRequestId = searchParams.get("evaluationRequestId") || "";
+  const [refreshFlag, setRefreshFlag] = useState(0);
   const { userDetails } = useAppContext();
+  const v1 = import.meta.env.APP_PROXY_DASH
 
   useEffect(() => {
     if (!EvaluationRequestDetails?.email || !EvaluationRequestDetails?.applicantUserId) {
@@ -222,6 +224,55 @@ const MainContent: React.FC<MainContentProps> = ({
       setIsAlreadyRequested(isInterviewRequestedAndNotCompleted || false);
     }
   }, [userInterviews]);
+
+  useEffect(() => {
+    const validate = async () => {
+      try {
+        const session = await fetchAuthSession();
+
+        if (!session?.tokens?.idToken) {
+          toast.error("No Logged in user found",getToastOptions({}))
+          handleLogout();
+          setTimeout(() => {
+            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          }, 1000);
+          return;
+        }
+
+        const token = session.tokens.idToken.toString();
+        const payload = JSON.parse(atob(token.split(".")[1]));
+        const sessionEmail = payload.email.toLowerCase();
+
+        const details = await fetchEvaluationDetails(jobApplicationId, evaluationRequestId);
+        const expectedEmail = details.evaluatorDetails.email.toLowerCase();
+
+        if (sessionEmail !== expectedEmail) {
+          toast.error("Unauthorized access. Redirecting...",getToastOptions({}));
+          handleLogout();
+          setTimeout(() => {
+            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          }, 1000);
+        }
+      } catch (err) {
+        console.error("Validation failed", err);
+        toast.error("Not details found please check id or try again later",getToastOptions({}))
+        handleLogout();
+        // window.location.href = "/auth/evaluator-dashboard/login";
+        setTimeout(() => {
+          window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+        }, 1000);
+      }
+    };
+
+    validate();
+  }, [jobApplicationId, evaluationRequestId]);
+
+  useEffect(() => {
+      if (EvaluationRequestDetails?.evaluationResponseId) {
+          setRefreshFlag(prev => prev + 1);
+      }
+  }, [EvaluationRequestDetails?.evaluationResponseId]);
+
 
   if (isLoadingData) {
     return (

@@ -328,6 +328,20 @@ const EvaluatorView: React.FC = () => {
     if (request) setSelectedRequest(request);
   };
 
+  const handleLocalUpdate = (requestId: string, updatedFields: Partial<EvaluationRequest>) => {
+    // 1. Update the requests list
+    setRequests(prev =>
+      prev.map(req =>
+        req.id === requestId ? { ...req, ...updatedFields } : req
+      )
+    );
+
+    // 2. Update the selected request if it matches
+    setSelectedRequest(prev =>
+      prev && prev.id === requestId ? { ...prev, ...updatedFields } : prev
+    );
+  };
+
   return (
     <div className="h-screen bg-gray-100 flex">
       <Sidebar
@@ -438,6 +452,7 @@ const EvaluatorView: React.FC = () => {
           selectedRequest={selectedRequest}
           selectedCandidateDetails={selectedCandidateDetails}
           applicationDetails={applicationDetails}
+          onLocalUpdate={handleLocalUpdate}
         />
       </Modal>
 

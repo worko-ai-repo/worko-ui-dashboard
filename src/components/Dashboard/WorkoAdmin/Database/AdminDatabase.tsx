@@ -277,8 +277,8 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
-    if (files.length > 1000) {
-      toast.error("You can upload a maximum of 1000 CVs at a time.", getToastOptions({}));
+    if (files.length > 500) {
+      toast.error("You can upload a maximum of 500 CVs at a time.", getToastOptions({}));
       return;
     }
 

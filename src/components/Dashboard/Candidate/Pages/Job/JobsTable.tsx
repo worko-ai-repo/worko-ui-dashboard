@@ -23,7 +23,7 @@ import { useAppContext } from "@Context/App.context";
 import ViewDetailsModal from "./modals/ViewDetailsModal";
 import ProgressCircle from "@Components/Shared/CircularBarAgency";
 import RequestDocumentModal, { RequestDocModalProps } from "@Components/Shared/ApplicantsPage/RequestDocModal";
-import { newDisplayStatus, statusColors } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
+import { newDisplayStatus } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 
 interface JobsTableProps {
   data: JobApiResponse | null;
@@ -36,6 +36,7 @@ interface JobsTableProps {
   onLocalUpdate: (jobId: string, updatedData: Partial<JobTypes>) => void;
   handleFollowUpRequestUpdate: (jobId: string, newFollowUps: { actionDate: string }[]) => void;
   fetchCounts: () => void;
+  handleLocalUpdateForSubmittingDocuments:(jobId: string, updatedData: any) => void;
 }
 
 interface StepperProps {
@@ -54,6 +55,7 @@ const JobsTable = memo(
     onLocalUpdate,
     handleFollowUpRequestUpdate,
     fetchCounts,
+    handleLocalUpdateForSubmittingDocuments,
   }: JobsTableProps) => {
     const [showFeedbackModal, setShowFeedbackModal] = useState(false);
     const [feedbackContent, setFeedbackContent] = useState<string>("");
@@ -87,6 +89,34 @@ const JobsTable = memo(
       onClose: () => setIsViewDocumentModal({ ...isViewDocumentModal, isOpen: false }),
     });
       
+    const statusColors: Record<JobApplicationStatusType, string> = {
+      APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
+      ACCEPTED: "bg-[#00ADC0] text-[#D6F4FF]",
+      REJECTED: "bg-[#FFD0D0] text-[#D40000]",
+      UNDER_EVALUATION: "bg-[#EFEFEF] text-[#616161]",
+      PROCESSING_INTERVIEW: "bg-green-100 text-green-500",
+      HIRED: "bg-[#4CBC9A38] text-[#00BF29]",
+      CV_DOWNLOADED: "bg-[#00ADC0] text-[#D6F4FF]",
+      INTERVIEW_DONE: "bg-[#E3F7F7] text-[#008B8B]",
+      ALL: "bg-[#E6E4FF] text-[#5C55D4]",
+      ON_HOLD: "bg-[#FFF3CD] text-[#856404]",
+      JOINED: "bg-[#D1E7DD] text-[#0F5132]",
+      DOCUMENT_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+      DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0]",
+      DOCUMENT_REVISION_REQUEST_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0]",
+      DOCUMENT_REVISION_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+      DOCUMENT_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0]",
+      DOCUMENT_VERIFIED: "bg-[#D6F4FF] text-[#00ADC0]",
+      OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+      HIRING_IN_PROCESS: "bg-[#D6F4FF] text-[#00ADC0]",
+      DOCUMENT_ADDITIONAL_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+      OFFER_ISSUE_RAISED: "bg-[#FFD700] text-[#856404]",
+      REVISED_OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+      REVISED_LETTER: "bg-[#D6F4FF] text-[#00ADC0]",
+      OFFER_ACCEPTED: "bg-[#D1E7DD] text-[#0F5132]",
+      AWAITING: "bg-[#D6F4FF] text-[#00ADC0]",
+    };
+
     const [isError, setIsError] = useState(false);
     const { userDetails } = useAppContext();
     // Map the status to action for the specific cases
@@ -534,7 +564,7 @@ const JobsTable = memo(
 
           CHECK_ACCEPT: {
             color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
-            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 min-w-[20px]"/>,
+            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 flex-shrink-0"/>,
             label: "Check & accept",
             tooltip: "Check & accept offer letter",
           },
@@ -548,7 +578,7 @@ const JobsTable = memo(
           
           DOCUMENT_SUBMITTED: {
             color: "bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30",
-            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 min-w-[20px]" />,
+            icon: <img src={checkAndAccept} alt="Check & accept" className="w-5 h-5 flex-shrink-0" />,
             label: "",
             tooltip: "View submitted documents",
           },
@@ -576,11 +606,9 @@ const JobsTable = memo(
             data-tooltip-id="my-tooltip"
             data-tooltip-content={config.tooltip}
             data-tooltip-place="top"
-            className={`${
-              config.label ? "w-36 px-4" : "w-11 px-0"
-            } rounded-xl ${config.color} h-11 flex items-center justify-center gap-0.5 text-white ${
-              isProcessing ? "opacity-75 cursor-not-allowed" : ""
-            }`}
+            className={`p-2 rounded-xl flex items-center justify-center text-white ${config.color} 
+            ${config.label ? "w-32 gap-1" : ""}  
+            ${isProcessing ? "opacity-75 cursor-not-allowed" : ""}`}
 
             onClick={() => {
               if (!isProcessing) {
@@ -590,11 +618,11 @@ const JobsTable = memo(
             }}
             disabled={isProcessing}>
             {isProcessing ? (
-              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
             ) : (
               config.icon
             )}
-            <div className="leading-normal font-semibold">
+            <div className="leading-normal font-semibold truncate overflow-hidden whitespace-nowrap min-w-0">
               {isProcessing ? "Processing..." : config.label}
             </div>
           </button>
@@ -714,12 +742,12 @@ const JobsTable = memo(
           //     data-tooltip-place="top">
           //   <StatusBadge status={row?.status} />
           // </div>
-          <div className="flex justify-center  mx-auto p-2 w-fit relative">
+          <div className="flex justify-center mx-auto w-fit relative">
             <span
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row?.status as JobApplicationStatusType]}
               data-tooltip-place="top"
-              className={`w-32px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate ${colorClass}`}>
               {newDisplayStatus[row?.status as JobApplicationStatusType]}
             </span>
           </div>
@@ -758,29 +786,29 @@ const JobsTable = memo(
                   <button
                     onClick={() => !isDisabled && requestFollowup(row.id)}
                     disabled={isDisabled}
-                    className={`w-14 h-11 rounded-xl flex items-center justify-center transition-all
-            ${
-              isDisabled
-                ? "bg-gray-300 cursor-not-allowed grayscale"
-                : "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6] hover:brightness-105"
-            }`}>
+                    className={`p-2 rounded-lg flex items-center justify-center transition-all
+                    ${
+                      isDisabled
+                        ? "bg-gray-300 cursor-not-allowed grayscale"
+                        : "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6] hover:brightness-105"
+                    }`}>
                     <img
                       src={askQuestion}
                       alt="Ask question"
                       data-tooltip-id="my-tooltip"
-                      data-tooltip-content={`${!isDisabled ? `Request a follow up` : ""}`}
+                      data-tooltip-content={`${!isDisabled ? `Request a follow up` : "Follow up already sent"}`}
                       data-tooltip-place="top"
-                      className={`transition-all ${isDisabled ? "opacity-60" : ""}`}
+                      className={`h-5 w-5 transition-all ${isDisabled ? "opacity-60" : ""}`}
                     />
                   </button>
                 ) : null}
 
                 {/* Hover on disabled feedback */}
-                {isDisabled && (
+                {/* {isDisabled && (
                   <div className="absolute inset-0 flex items-center justify-center pointer-events-none group-hover:opacity-100 opacity-0 transition-opacity bg-white/80 backdrop-blur-sm text-xs font-medium text-gray-700 rounded-md px-4 py-2">
                     Follow up already sent
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           );
@@ -947,11 +975,12 @@ const JobsTable = memo(
           onSuccess={() => {
             setShowDocumentUploadModal(false);
             fetchCounts();
-            onRefresh();
+            // onRefresh();
           }}
           userID={user?.sub ?? ""}
           jobId={parsingJobId ?? ""}
           onLocalUpdate={onLocalUpdate}
+          handleLocalUpdateForSubmittingDocuments={handleLocalUpdateForSubmittingDocuments}
         />
 
         {showCheckAcceptModal && currentJobForCheckAccept && (
@@ -960,7 +989,7 @@ const JobsTable = memo(
             job={currentJobForCheckAccept}
             onClose={() => setShowCheckAcceptModal(false)}
             onSuccess={() => {
-              onRefresh();
+              // onRefresh();
               setShowCheckAcceptModal(false);
               fetchCounts();
             }}

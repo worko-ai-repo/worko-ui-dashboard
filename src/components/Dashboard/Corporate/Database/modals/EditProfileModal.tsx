@@ -314,7 +314,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             </div> */}
             <div className="flex justify-start mt-4">
             <button
-                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white
+                className={`flex items-center gap-1 px-3 py-3 rounded-xl text-white text-xs
                 ${isSubmitting 
                     ? "bg-blue-300 cursor-not-allowed opacity-70" 
                     : "bg-blue-500"}`}

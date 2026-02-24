@@ -39,6 +39,7 @@ export interface EvaluationRequest {
   createdByCorporateUserId?:string;
   evaluationResponseId?:string;
   candidateParsedCvId:string;
+  evaluationResponseStatus:string;
 }
 
 export interface EvaluationDetails extends EvaluationRequest {

@@ -32,6 +32,8 @@ import ScorePointsModal, { ScorePointsModalProps } from "@Components/Shared/Deta
 import { useIsFetching, useQuery } from "@tanstack/react-query";
 import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ViewFullDetail from "@Components/Dashboard/Candidate/Pages/Guidance/modals/ViewFullDetail";
+import FinalReviewModal from "@Components/Dashboard/Corporate/Database/modals/FinalReviewModal";
+import EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle from "@Components/Dashboard/Corporate/Agency/modals/EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle";
 
 export const getCvViewDate = (statusTracker: any[]) => {
   const cvDownloadedEntry = statusTracker?.find((entry) => entry.newStatus === "CV_DOWNLOADED");
@@ -112,6 +114,14 @@ export default function AgencyCandidateListTable(props: any) {
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [candidateList, setCandidateList] = useState<any[]>([]);
+  const [skippableCandidates, setSkippableCandidates] = useState<any[]>([]);
+  const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+  const [repeatedCandidatesList, setRepeatedCandidatesList] = useState<string>("");
+  const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
+  const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
 
   const currentId = initialIds[0] ?? null;
   const isFetchingMatchingScore = useIsFetching({ queryKey: ["matching-score"] });
@@ -358,31 +368,65 @@ export default function AgencyCandidateListTable(props: any) {
       jobTitle: row?.jobDetails?.jobTitle,
       // applicantEmail: row?.candidateParsedCvDetails?.email,
     };
-    try {
-      const { response, error } = await httpServiceObj.post(
-        `${agencyBaseUrl}/agency-user-submission/move-to-applicant`,
-        payload,
-        true,
-        {},
-        true
-      );
+    setSuccessfullySentCandidateList(row?.candidateParsedCvDetails?.name)
+    handleUpdateDetails([row])
+    // try {
+    //   const { response, error } = await httpServiceObj.post(
+    //     `${agencyBaseUrl}/agency-user-submission/move-to-applicant`,
+    //     payload,
+    //     true,
+    //     {},
+    //     true
+    //   );
 
-      if (error) {
-        toast.error(error.message, getToastOptions({}));
-        return;
-      }
-      if (response) {
-        const updatedData = { ...data, jobApplicationStatus: "ACCEPTED" };
-        localUpdate(row?.id, updatedData);
-        toast.success("candidate moved to applicants successfully", getToastOptions({}));
-      }
-    } catch (error) {
-      console.error("moveToApplicantSingle error:", error);
-      toast.error(
-        "Something went wrong while moving the candidate. Please try again.",
-        getToastOptions({})
-      );
-    }
+    //   if (error) {
+    //     toast.error(error.message, getToastOptions({}));
+    //     return;
+    //   }
+    //   if (response) {
+    //     const updatedData = { ...data, jobApplicationStatus: "ACCEPTED" };
+    //     localUpdate(row?.id, updatedData);
+    //     toast.success("candidate moved to applicants successfully", getToastOptions({}));
+    //   }
+    // } catch (error) {
+    //   console.error("moveToApplicantSingle error:", error);
+    //   toast.error(
+    //     "Something went wrong while moving the candidate. Please try again.",
+    //     getToastOptions({})
+    //   );
+    // }
+  };
+
+  const days90 = 90 * 24 * 60 * 60 * 1000;
+  const isSkippable = (row:any) => {
+    if (!row?.candidateParsedCvDetails) return false;
+
+    const details = row.candidateParsedCvDetails;
+
+    const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
+
+    // All 3 fields must be undefined or null
+    const allNonZero =
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
+
+
+    // updatedAt must be within last 90 days
+    const updatedDate:any = new Date(updatedAt);
+    const today:any = new Date();
+    const isRecent = today - updatedDate <= days90;
+    return allNonZero && isRecent;
+  };
+
+  const handleUpdateDetails = (selectedRows:any) => {
+    if (selectedRows.length === 0) return;
+    const unskippableList = selectedRows.filter((row:any) => !isSkippable(row));
+    const skippableList = selectedRows.filter((row:any) => isSkippable(row));
+    setSkippableCandidates(skippableList);
+    setCandidateList(unskippableList);
+    setCurrentIndex(0);
+    setEditProfileView(true);
   };
 
   // Column definitions (kept same as previous "All" view)
@@ -749,7 +793,10 @@ export default function AgencyCandidateListTable(props: any) {
                   data-tooltip-content="Accept & move to applicant"
                   data-tooltip-place="top"
                   className="inline-flex items-center gap-2 rounded-lg text-xs transition p-1 text-center bg-green-500 text-white hover:bg-green-600"
-                  onClick={() => moveToApplicantSingle(row)}>
+                  onClick={() => {
+                    moveToApplicantSingle(row);
+                    setEditProfileData(row);
+                  }}>
                   <Check className="w-4 h-4 flex items-center justify-center stroke-[2]" />
                   <span className="leading-tight text-[0.625rem]">
                     Accept & move
@@ -802,12 +849,12 @@ export default function AgencyCandidateListTable(props: any) {
           "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center  mx-auto p-2 w-fit relative">
+          <div className="flex justify-center mx-auto w-fit relative">
             <span
               data-tooltip-id="my-tooltip"
               data-tooltip-content={newDisplayStatus[row?.jobApplicationStatus as JobApplicationStatusType]}
               data-tooltip-place="top"
-              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible  capitalize ${colorClass}`}>
+              className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate ${colorClass}`}>
               {newDisplayStatus[row?.jobApplicationStatus as JobApplicationStatusType]}
             </span>
           </div>
@@ -1200,6 +1247,43 @@ export default function AgencyCandidateListTable(props: any) {
           fullDetails={fullDetails}
           displayText={"Comments"}
         />
+    <EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle
+      dashboardType={"CORPORATE"}
+      dashboardPage={"AGENCYCANDIDATES"}
+      onClose={()=>{
+        setEditProfileView(false)
+        setCandidateList([])
+        setSkippableCandidates([])
+        setCurrentIndex(0)
+        setEditProfileData(undefined)
+      }}
+      isOpen={editProfileView}    
+      setCandidateList={setCandidateList}
+      candidateList={candidateList}
+      skippableCandidates={skippableCandidates}
+      currentIndex={currentIndex}
+      setCurrentIndex={setCurrentIndex}
+      localUpdate={localUpdate}
+      setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+      setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+      setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+      setSelectedRows={setSelectedRows}
+    />
+
+    {isFinalReviewModalOpen && (
+    <FinalReviewModal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+          setIsFinalReviewModalOpen(false)
+          setSuccessfullySentCandidateList("")
+          setRepeatedCandidatesList("")
+          setEditProfileData(undefined)
+      }}
+      successfullySentCandidateList={successfullySentCandidateList}
+      incompleteSentCandidateList={incompleteSentCandidateList}
+      repeatedCandidatesList={repeatedCandidatesList}
+    />
+    )}
     </>
   );
 }

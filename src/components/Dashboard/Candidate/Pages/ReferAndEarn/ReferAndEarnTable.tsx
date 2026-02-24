@@ -209,12 +209,12 @@ const ReferralsTable = ({
       render: (row: any) => {
         if (row.jobApplicationStatus === "JOINED" || row.jobApplicationStatus === "HIRED") {
           return (
-            <div className="flex justify-center m-auto">
+            <div className="flex justify-center mx-auto w-fit relative">
               <button
                 data-tooltip-id="my-tooltip"
                 data-tooltip-content="Achieved"
                 data-tooltip-place="top"
-                className="px-5 py-2 text-[0.625rem] text-white bg-green-600 rounded-full hover:bg-green-700"
+                className="px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate text-white bg-green-600 hover:bg-green-700"
                 onClick={() => {
                   setSelectedReferral(row);
                   setStatusData({
@@ -239,12 +239,12 @@ const ReferralsTable = ({
         }
         if (row.jobApplicationStatus === "REJECTED") {
           return (
-            <div className="flex justify-center m-auto">
+            <div className="flex justify-center mx-auto w-fit relative">
               <div               
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Rejected"
               data-tooltip-place="top"
-              className="px-5 py-2 text-[0.625rem] text-white bg-red-600 rounded-full text-center truncate">
+              className="px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate text-white bg-red-600 text-center">
                 Rejected
               </div>
             </div>
@@ -252,12 +252,12 @@ const ReferralsTable = ({
         }
         // if (row.jobApplicationStatus === "PENDING" || row.jobApplicationStatus === "PROCESSING_INTERVIEW") {
         return (
-          <div className="flex justify-center m-auto">
+          <div className="flex justify-center mx-auto w-fit relative">
             <div 
               data-tooltip-id="my-tooltip"
               data-tooltip-content="Not Achieved Yet"
               data-tooltip-place="top"
-              className="px-5 py-2 text-[0.625rem] text-blue-500 bg-blue-100 rounded-full text-center truncate">
+              className="px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate text-blue-500 bg-blue-100 text-center">
               Not Achieved Yet
             </div>
           </div>
@@ -282,8 +282,8 @@ const ReferralsTable = ({
               data-tooltip-id="my-tooltip"
               data-tooltip-content={label}
               data-tooltip-place="top"
-              className={`px-5 py-2 text-[0.625rem] rounded-full border ${style}`}>
-            <span className="truncate">{label}</span>
+              className="flex justify-center mx-auto w-fit relative">
+            <span className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate border ${style}`}>{label}</span>
           </div>
         );
       },

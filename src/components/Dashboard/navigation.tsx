@@ -16,7 +16,7 @@ import {
   FolderOpenIcon,
   Warehouse
 } from "./icons";
-import { IdCard, List, Settings, User } from "lucide-react";
+import { IdCard, List, Settings, User, Zap } from "lucide-react";
 
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
@@ -231,6 +231,7 @@ const navigationItems: NavItem[] = [
         label: "Invites",
         icon: InviteIcon,
         dashboardTypes: ["CORPORATE"],
+        expandable: false,
       },
       { 
         id: "referralsSettings",
@@ -240,6 +241,13 @@ const navigationItems: NavItem[] = [
         expandable: false,
       },
       // { 
+      //   id: "driveResumeFetcher",
+      //   label: "Drive Fetcher",
+      //   icon: <User/>,
+      //   dashboardTypes: ["CORPORATE"],
+      //   expandable: false,
+      // },
+      // { 
       //   id: "profileSettings",
       //   label: "Profile Settings",
       //   icon: <User/>,
@@ -248,6 +256,29 @@ const navigationItems: NavItem[] = [
       // },
     ]
   },
+  // {
+  //   id: "recharge",
+  //   label: "Recharge",
+  //   icon: <Zap/>,
+  //   dashboardTypes: ["CORPORATE"],
+  //   expandable:true,
+  //   child: [
+  //     {
+  //       id: "credits",
+  //       label: "Credits",
+  //       icon: ReferralIcon,
+  //       dashboardTypes: ["CORPORATE"],
+  //       expandable: false,
+  //     },
+  //     {
+  //       id: "recruiterRecharge",
+  //       label: "Recruiter Recharge",
+  //       icon: ReferralIcon,
+  //       dashboardTypes: ["CORPORATE"],
+  //       expandable: false,
+  //     },
+  //   ]
+  // },
   /* {
         id: 'invoice-&-payment',
         label: 'Invoice & Payment',

@@ -169,7 +169,7 @@ const RequestDocumentModal: React.FC<
       setIsLoading(true);
       const payload = {
         jobApplicationId: jobApplication.id,
-        userId: jobApplication?.applicantDetails?.id,
+        userId: jobApplication?.applicantDetails?.id || userDetails?.id,
         cloudFileNames: [cloudFileName],
       };
 

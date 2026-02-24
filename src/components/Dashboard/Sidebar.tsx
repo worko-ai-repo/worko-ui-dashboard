@@ -82,7 +82,12 @@ const removeSettingsForRecruiter = navigationItems.filter(item => {
   ) {
     return false;
   }
-
+  if (
+    item.id === "recharge" &&
+    !userDetails?.userType?.includes("corporate-admin")
+  ) {
+    return false;
+  }
   return true;
 });
 
@@ -135,6 +140,7 @@ const removeSettingsForRecruiter = navigationItems.filter(item => {
       }
     } else {
       if(NavItem.label === "Settings") return 
+      if(NavItem.label === "Recharge") return 
       setActiveTab(NavItem.label);
       onNavigate(dashboardType, NavItem.id);
       setSidebarOpen(false); // Close sidebar on mobile after navigation

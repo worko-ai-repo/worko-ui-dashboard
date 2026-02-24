@@ -282,30 +282,14 @@ const GuidanceTable = memo(
         render: (row: GuidanceRequest) => {
           const color = getStatusColor(row.status);
           return (
-            <div
-              className={`w-32 rounded-full px-1 py-3 text-[0.625rem] font-medium flex justify-center items-center truncate ${color.bg} ${color.text}`}
-              data-tooltip-id="my-tooltip"
-              data-tooltip-content={color.label}
-              data-tooltip-place="top">
-              <span className="truncate block max-w-full text-center">{color.label}</span>
+            <div className={`flex justify-center mx-auto w-fit relative`}>
+              <span               
+                data-tooltip-id="my-tooltip"
+                data-tooltip-content={color.label}
+                data-tooltip-place="top"
+                className={`px-3 py-1 h-fit rounded-full text-[0.625rem] font-medium overflow-visible capitalize max-w-32 truncate ${color.bg} ${color.text}`}>{color.label}
+              </span>
             </div>
-            //     <div className="flex justify-center ">
-            // <div
-            //     className={`w-32 text-center rounded-full px-1 py-3 text-sm font-medium ${
-            //       row.status === "ACCEPTED"
-            //       ? "bg-green-100 text-green-500"
-            //       : row.status === "PENDING"
-            //       ? "bg-yellow-100 text-yellow-600"
-            //       : row.status === "AWAITING"
-            //       ? "bg-blue-100 text-blue-500"
-            //       : row.status === "DONE"
-            //       ? "bg-gray-100 text-gray-600"
-            //       : "bg-red-400 text-white"
-            //   }`}
-            // >
-            //   {row.status}
-            // </div>
-            // </div>
           );
         },
       },
@@ -320,7 +304,7 @@ const GuidanceTable = memo(
 
           return (
             <div
-              className={`m-auto rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-2 px-4 flex items-center justify-center gap-0 cursor-pointer text-white ${
+              className={`m-auto rounded-2xl text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-1 px-4 flex items-center justify-center gap-1 cursor-pointer text-white ${
                 isProcessing ? "opacity-75" : ""
               }`}
               onClick={() => !isProcessing && handleViewDetails(row)}>
@@ -329,7 +313,7 @@ const GuidanceTable = memo(
               ) : (
                 <img src={eyeIcon} className="h-5 w-5" alt="View feedback" />
               )}
-              <div className="ml-2 tracking-wide leading-6 font-semibold">
+              <div className="tracking-wide leading-6 font-semibold text-[0.625rem]">
                 {isProcessing ? "Loading..." : "See details"}
               </div>
             </div>
@@ -347,7 +331,7 @@ const GuidanceTable = memo(
           return (
             <div className="flex justify-center m-auto">
               <button
-                className={`rounded-lg ${
+                className={`rounded-lg p-2 ${
                   isProcessing
                     ? "bg-blue-300"
                     : "bg-[#98b5ff] bg-gradient-to-t from-[#316bff] to-[#38a1d6]"
@@ -355,11 +339,12 @@ const GuidanceTable = memo(
                   isProcessing ? "opacity-75 cursor-not-allowed" : "cursor-pointer"
                 }`}
                 onClick={() => !isProcessing && handleAcceptAndPay(row)}
-                disabled={isProcessing}>
+                disabled={isProcessing}
+                >
                 {isProcessing ? (
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 ) : (
-                  <img src={checkbubble} className="p-2 w-10 h-10 shrink-0" alt="Ask question" />
+                  <img src={checkbubble} className="w-4 h-4 shrink-0" alt="Ask question" />
                 )}
               </button>
             </div>

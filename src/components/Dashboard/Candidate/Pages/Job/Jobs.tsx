@@ -244,6 +244,25 @@ const StatusFilterDropdown = [
     });
   }, []);
 
+  const handleLocalUpdateForSubmittingDocuments = useCallback(
+    (jobId: string, updatedApplication: JobTypes) => {
+      setData(prevData => {
+        if (!prevData) return prevData;
+
+        return {
+          ...prevData,
+          data: prevData.data.map(job =>
+            job.id === jobId
+              ? updatedApplication
+              : job
+          )
+        };
+      });
+    },
+    []
+  );
+
+
 const handleFollowUpRequestUpdate = useCallback(
   (jobId: string, followUpRequest: { actionDate: string }[]) => {
     setData(prevData => {
@@ -420,6 +439,7 @@ const handleFollowUpRequestUpdate = useCallback(
           onLocalUpdate={handleLocalUpdate}
           handleFollowUpRequestUpdate={handleFollowUpRequestUpdate}
           fetchCounts={fetchCounts}
+          handleLocalUpdateForSubmittingDocuments={handleLocalUpdateForSubmittingDocuments}
         />
       )}
     </div>

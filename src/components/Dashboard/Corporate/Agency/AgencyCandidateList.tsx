@@ -19,6 +19,7 @@ import { CompanyDetails } from '@Interfaces/CorporateDashboard.dto'
 import secureStorage from '@Utils/SecureStorage.utils'
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum'
 import FinalReviewModal from '../Database/modals/FinalReviewModal'
+import EditCTCETCAndNoticePeriodModalForAgencyCandidates from './modals/EditCTCETCAndNoticePeriodModalForAgencyCandidates'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -87,6 +88,13 @@ const AgencyCandidateList = () => {
   const [repeatedCandidatesList, setRepeatedCandidatesList] = useState<string>("");
   const [isFinalReviewModalOpen,setIsFinalReviewModalOpen]  = useState<boolean>(false);
   const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
+
+  const [editProfileView, setEditProfileView] = useState<boolean>(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [candidateList, setCandidateList] = useState<any[]>([]);
+  const [skippableCandidates, setSkippableCandidates] = useState<any[]>([]);
+  const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
+
   const { userDetails } = useAppContext();
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
@@ -401,25 +409,63 @@ const AgencyCandidateList = () => {
     .map(candidate => candidate?.candidateParsedCvDetails?.name)
 
     setSuccessfullySentCandidateList(namesArrayOfNotSent.join(", "))
-    try {
-      const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/agency-user-submission/move-to-applicant/bulk`, payload, true, {}, true);
-      if(error){
-        toast.error(error.message,getToastOptions({}))
-        return
-      }
-      setIsFinalReviewModalOpen(true)
-      toast.success("Bulk Move to applicant process initiated successfully.",getToastOptions({}))
-      filterAlreadySentCandidate.map(candidate=>{
-        return handleLocalUpdate(candidate?.id, { ...candidate, jobApplicationStatus: "ACCEPTED" });
-      })
-      setSelectedRows([])
-    } catch (error) {
-      console.error("Error finding matching score:", error);
-    } finally {
-      setAcceptingCandidate(false);
-    }
+    setSelectedRows(filterAlreadySentCandidate)
+    handleUpdateDetails(filterAlreadySentCandidate)
+    // try {
+    //   const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/agency-user-submission/move-to-applicant/bulk`, payload, true, {}, true);
+    //   if(error){
+    //     toast.error(error.message,getToastOptions({}))
+    //     return
+    //   }
+    //   setIsFinalReviewModalOpen(true)
+    //   toast.success("Bulk Move to applicant process initiated successfully.",getToastOptions({}))
+    //   filterAlreadySentCandidate.map(candidate=>{
+    //     return handleLocalUpdate(candidate?.id, { ...candidate, jobApplicationStatus: "ACCEPTED" });
+    //   })
+    //   setSelectedRows([])
+    // } catch (error) {
+    //   console.error("Bulk Move to applicant process Failed", error);
+    // } finally {
+    //   setAcceptingCandidate(false);
+    // }
   }
    
+  const days90 = 90 * 24 * 60 * 60 * 1000;
+
+  const isSkippable = (row:any) => {
+    if (!row?.candidateParsedCvDetails) return false;
+
+    const details = row.candidateParsedCvDetails;
+
+    const { currentCTC, expectedCTC, noticePeriod, updatedAt } = details;
+
+    // All 3 fields must be undefined or null
+    const allNonZero =
+      (currentCTC !== undefined && currentCTC !== null) &&
+      (expectedCTC !== undefined && expectedCTC !== null) &&
+      (noticePeriod !== undefined && noticePeriod !== null);
+
+
+    // updatedAt must be within last 90 days
+    const updatedDate:any = new Date(updatedAt);
+    const today:any = new Date();
+    const isRecent = today - updatedDate <= days90;
+    return allNonZero && isRecent;
+  };
+
+  const handleUpdateDetails = (selectedRows:any) => {
+    if (selectedRows.length === 0) return;
+
+    const unskippableList = selectedRows.filter((row:any) => !isSkippable(row));
+    const skippableList = selectedRows.filter((row:any) => isSkippable(row));
+    setSkippableCandidates(skippableList);
+
+    // if (unskippableList.length === 0) return;
+
+    setCandidateList(unskippableList);
+    setCurrentIndex(0);
+    setEditProfileView(true);
+  };
 
   const findMatchingScoreBulk = async () => {
     const candidatesToSend = selectedRows.filter(row => row?.matchingScoreDetails?.matchingScore == null && !row?.jobApplicationStatus && !row?.isFindMatchingScoreInProgress)
@@ -670,52 +716,75 @@ const AgencyCandidateList = () => {
       />
       {/* } */}
 
-      <Modal
-        isOpen={isEvaluatorForm}
-        onClose={() => setIsEvaluatorForm(false)}
-        className="w-[90vw] sm:w-[455px] h-auto">
-        {isEvaluatorForm &&
-          <EvaluatorForm
-          Defaultvalues={selectedRows as any}
-          isBulk={true}
-          onClose = {()=>setIsEvaluatorForm(false)}
-          formLimit={10}/>
-        }
-      </Modal>
-      
-      <Modal
-        isOpen={isEvaluatorForm}
-        onClose={() => setIsEvaluatorForm(false)}
-        className="w-[90vw] sm:w-[455px] h-auto"
-      >
-  {isEvaluatorForm && (
-    <EvaluatorForm
-      Defaultvalues={{
-        jobApplicationId: selectedRows.map(r => r.id ?? ""),
-        jobId: selectedRows[0]?.candidateParsedCvDetails?.jobId ?? "",
-        jobTitle: selectedRows[0]?.jobDetails?.jobTitle ?? "",
-        companyId: selectedRows[0]?.companyId ?? "",
-        candidateParsedCvId: selectedRows.map(r => r.candidateParsedCvId ?? ""),
-        agencyUserSubmissionId: selectedRows[0]?.candidateParsedCvDetails?.agencyUserSubmissionId ?? "",
-
-        applicantUserId: selectedRows.map(r => r.candidateParsedCvDetails?.applicantUserId ?? ""),
-        applicantUserName: selectedRows.map(r => r.candidateParsedCvDetails?.name ?? ""),
-        applicantUserEmail: selectedRows.map(r => r.candidateParsedCvDetails?.email ?? ""),
-
-        hrName: userDetails?.fullName ?? "",
-        hrCurrentCompanyName: companyDetails?.name ?? "",
-      }}
-      isBulk={true}
+    <Modal
+      isOpen={isEvaluatorForm}
       onClose={() => setIsEvaluatorForm(false)}
-      formLimit={5}
-      localUpdate={handleLocalUpdate}
-      rowData={selectedRows}
-      isAgency={true}
-      isBulkInAgency={true}
-      resetSelectedRows={()=>setSelectedRows([])}
+      className="w-[90vw] sm:w-[455px] h-auto">
+      {isEvaluatorForm &&
+        <EvaluatorForm
+        Defaultvalues={selectedRows as any}
+        isBulk={true}
+        onClose = {()=>setIsEvaluatorForm(false)}
+        formLimit={10}/>
+      }
+    </Modal>
+    
+    <Modal
+      isOpen={isEvaluatorForm}
+      onClose={() => setIsEvaluatorForm(false)}
+      className="w-[90vw] sm:w-[455px] h-auto"
+    >
+{isEvaluatorForm && (
+  <EvaluatorForm
+    Defaultvalues={{
+      jobApplicationId: selectedRows.map(r => r.id ?? ""),
+      jobId: selectedRows[0]?.candidateParsedCvDetails?.jobId ?? "",
+      jobTitle: selectedRows[0]?.jobDetails?.jobTitle ?? "",
+      companyId: selectedRows[0]?.companyId ?? "",
+      candidateParsedCvId: selectedRows.map(r => r.candidateParsedCvId ?? ""),
+      agencyUserSubmissionId: selectedRows[0]?.candidateParsedCvDetails?.agencyUserSubmissionId ?? "",
+
+      applicantUserId: selectedRows.map(r => r.candidateParsedCvDetails?.applicantUserId ?? ""),
+      applicantUserName: selectedRows.map(r => r.candidateParsedCvDetails?.name ?? ""),
+      applicantUserEmail: selectedRows.map(r => r.candidateParsedCvDetails?.email ?? ""),
+
+      hrName: userDetails?.fullName ?? "",
+      hrCurrentCompanyName: companyDetails?.name ?? "",
+    }}
+    isBulk={true}
+    onClose={() => setIsEvaluatorForm(false)}
+    formLimit={5}
+    localUpdate={handleLocalUpdate}
+    rowData={selectedRows}
+    isAgency={true}
+    isBulkInAgency={true}
+    resetSelectedRows={()=>setSelectedRows([])}
+  />
+)}
+    </Modal>
+
+    <EditCTCETCAndNoticePeriodModalForAgencyCandidates
+    dashboardType={"CORPORATE"}
+    dashboardPage={"AGENCYCANDIDATES"}
+    onClose={()=>{
+      setEditProfileView(false)
+      setCandidateList([])
+      setSkippableCandidates([])
+      setCurrentIndex(0)
+    }}
+    isOpen={editProfileView}    
+    setCandidateList={setCandidateList}
+    candidateList={candidateList}
+    skippableCandidates={skippableCandidates}
+    currentIndex={currentIndex}
+    setCurrentIndex={setCurrentIndex}
+    localUpdate={handleLocalUpdate}
+    setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+    setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+    setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+    setSelectedRows={setSelectedRows}
+    setAcceptingCandidate={setAcceptingCandidate}
     />
-  )}
-      </Modal>
 
     {isFinalReviewModalOpen && (
     <FinalReviewModal
@@ -726,7 +795,7 @@ const AgencyCandidateList = () => {
             setRepeatedCandidatesList("")
         }}
         successfullySentCandidateList={successfullySentCandidateList}
-        incompleteSentCandidateList={""}
+        incompleteSentCandidateList={incompleteSentCandidateList}
         repeatedCandidatesList={repeatedCandidatesList}
     />
     )}

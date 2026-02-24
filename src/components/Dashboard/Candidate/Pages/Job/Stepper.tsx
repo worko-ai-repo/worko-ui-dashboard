@@ -157,12 +157,12 @@ const Stepper: FunctionComponent<StepperProps> = ({ steps, statusTracker }) => {
               <div className={`h-0.5 w-16 md:w-24 ${displaySteps[index].completed && displaySteps[index + 1].completed ? 'bg-green-500' : 'bg-gray-300'}`}></div>
             )}
           </div>
-         <div className="text-xs mt-1 font-medium text-center">
+         <div className="text-[0.625rem] mt-1 font-medium text-center">
             {step.step.split(' ').map((word, i) => (
               <div key={i}>{word}</div>
             ))}
           </div>
-          <div className="text-xs text-gray-500">{step.date}</div>
+          <div className="text-[0.625rem] text-gray-500">{step.date}</div>
         </div>
       ))}
     </div>

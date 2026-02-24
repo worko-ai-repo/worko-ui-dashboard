@@ -118,7 +118,7 @@ export const fetchApplicationDetails = async (
 export const submitEvaluationResponse = async (
   payload: SubmitEvaluationPayload
 ) => {
-  const { response, error } = await httpServiceObj.post(RESPONSE_EVALUATION_URL, payload, true, {}, true);
+  const { response, error } = await httpServiceObj.post<EvaluationResponse>(RESPONSE_EVALUATION_URL, payload, true, {}, true);
   if (error) {
     console.error('Error submitting evaluation response:', error);
     throw error;

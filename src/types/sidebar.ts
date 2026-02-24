@@ -32,6 +32,10 @@ export type TabId =
 | 'settings'
 | 'referralsSettings'
 | 'profileSettings'
+| 'driveResumeFetcher'
+| 'recharge'
+| 'credits'
+| 'recruiterRecharge'
 // Admin Dashboard Tabs
 | 'ajobs'
 | 'aApplicants'

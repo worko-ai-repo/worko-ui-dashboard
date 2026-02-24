@@ -24,6 +24,7 @@ interface SubmitDocumentModalProps {
   userID: string;
   jobId: string;
   onLocalUpdate:((jobId: string, updatedData: Partial<JobTypes>)=>void);
+  handleLocalUpdateForSubmittingDocuments:((jobId: string, updatedData: JobTypes)=>void);
 }
 
 interface DocumentItem {
@@ -51,6 +52,7 @@ const SubmitDocumentModal = ({
   onSuccess,
   userDetails,
   onLocalUpdate,
+  handleLocalUpdateForSubmittingDocuments,
 }: SubmitDocumentModalProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
@@ -381,15 +383,15 @@ const SubmitDocumentModal = ({
         if (patchResult.status !== 200) {
           throw new Error(`Failed to update application status for ${status}`);
         }
-
-        return { status, documentMapping };
+        const patchResultResponse = patchResult.response as JobTypes;
+        return { status, documentMapping, patchResultResponse};
       });
 
       const results = await Promise.all(updatePromises);
-
       toast.success("Documents uploaded successfully!", getToastOptions({}));
-      results.forEach(({ status }) => {
-        onLocalUpdate(jobId, { status: status as JobTypes["status"] });
+      results.forEach(({ status,patchResultResponse }) => {
+        // onLocalUpdate(jobId, { status: status as JobTypes["status"] });
+        handleLocalUpdateForSubmittingDocuments(jobId,patchResultResponse);
       });
       onSuccess?.();
       onClose();

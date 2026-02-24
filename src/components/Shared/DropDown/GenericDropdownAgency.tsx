@@ -68,6 +68,13 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
     };
   }, [isOpen]);
 
+  useEffect(() => {
+    if (disabled) {
+      setSelectedLabel(null);
+      setQuery("");
+    }
+  }, [disabled]);
+
   return (
     <div
       ref={wrapperRef}

@@ -5,7 +5,7 @@ import { getToastOptions } from 'lib-worko-ui';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import { JobTypes } from '../JobTypes';
-import { Download, Maximize } from 'lucide-react';
+import { Download, Maximize, SendIcon } from 'lucide-react';
 
 type CheckAcceptModalProps = {
   userDetails: any;
@@ -291,9 +291,10 @@ const CheckAcceptModal: React.FC<CheckAcceptModalProps> = ({
             <div className="flex justify-end mt-4">
               <button
                 onClick={() => handleConfirm('raise')}
-                className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700"
+                className="px-6 py-3 rounded-xl bg-blue-600 text-white hover:bg-blue-700 text-xs flex justify-center items-center gap-1"
                 disabled={!issueDetail.trim() || loadingRaise}
               >
+                <SendIcon className="w-4 h-4" />
                 {loadingRaise ? 'Submitting...' : 'Submit'}
               </button>
             </div>

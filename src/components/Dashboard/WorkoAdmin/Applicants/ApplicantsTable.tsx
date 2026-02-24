@@ -287,7 +287,12 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex font-semibold items-center justify-center gap-2">
           {/* <User size={20} /> */}
-          <span>{row.applicantDetails.name}</span>
+          <span 
+          data-tooltip-id="my-tooltip"
+          data-tooltip-content={row.applicantDetails.name}
+          className="truncate">
+            {row.applicantDetails.name}
+          </span>
           {updatingApplicationId === row.id && (
             <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
           )}
@@ -550,7 +555,7 @@ export default function ApplicationTable({
           statusColors[row.status as JobApplicationStatusType] ?? "bg-gray-100 text-gray-500";
 
         return (
-          <div className="flex justify-center mx-auto p-2 w-fit relative">
+          <div className="flex justify-center mx-auto w-fit relative">
             <span
               onClick={() => {
                 if (row.status === "REJECTED") {

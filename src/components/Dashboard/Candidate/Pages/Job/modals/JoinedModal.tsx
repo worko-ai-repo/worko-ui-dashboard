@@ -7,6 +7,7 @@ import { toast } from "react-toastify";
 import { joining_success_img } from "@Assets";
 import { getToastOptions } from "@Utils/Toast.utils";
 import { JobTypes } from "../JobTypes";
+import { SendIcon } from "lucide-react";
 
 interface JoinedModalProps {
   isOpen: boolean;
@@ -231,14 +232,14 @@ export default function JoinedModal({
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex items-center disabled:opacity-50"
+                className="px-3 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 flex gap-1 items-center disabled:opacity-50 text-xs"
               >
-                <img src={Submit} alt="submit" className="w-4 h-4 mr-2" />
+                <SendIcon className="w-4 h-4" />
                 {loading ? "Submitting..." : "Submit"}
               </button>
               <button
                 onClick={onClose}
-                className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100"
+                className="px-5 py-2 rounded-lg border border-gray-300 hover:bg-gray-100 text-xs"
               >
                 Cancel
               </button>
