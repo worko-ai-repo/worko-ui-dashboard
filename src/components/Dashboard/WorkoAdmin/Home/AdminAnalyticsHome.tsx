@@ -101,6 +101,7 @@ const AdminAnalyticsHome = () => {
           dateRange,
           jobStatus,
         }),
+      enabled: !!selectedCompanyId, // Only fetch when a company is selected
       staleTime: 5 * 60 * 1000,
       refetchOnWindowFocus: false,
       retry: 3,
@@ -125,6 +126,7 @@ const AdminAnalyticsHome = () => {
         jobStatus,
         topN: 5,
       }),
+    enabled: !!selectedCompanyId, // Only fetch when a company is selected
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
     retry: 3,
