@@ -7,6 +7,7 @@ import { useAppContext } from "@Context/App.context";
 import AnalyticsServiceObj from "@Services/Analytics.service";
 import { FunnelVelocityResponse } from "@Interfaces/Analytics.dto";
 import { CorporateHomeChartDataDto } from "@Interfaces/CorporateHomeDto";
+import { Loader } from "lucide-react";
 
 interface FunnelVelocityProps {
   companyId?: string;
@@ -48,15 +49,17 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
     enabled: isCorporatePage ? !!companyId : true,
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff for retries
   });
 
   // Define the stage progression we want to display
   const STAGE_PROGRESSION = [
-    { from: 'APPLIED', to: 'ACCEPTED', label: 'Accepted' },
-    { from: 'ACCEPTED', to: 'UNDER_EVALUATION', label: 'Evaluation' },
-    { from: 'UNDER_EVALUATION', to: 'PROCESSING_INTERVIEW', label: 'Interview' },
-    { from: 'PROCESSING_INTERVIEW', to: 'OFFER_SENT', label: 'Offer' },
-    { from: 'OFFER_SENT', to: 'JOINED', label: 'Joined' },
+    { from: "APPLIED", to: "ACCEPTED", label: "Accepted" },
+    { from: "ACCEPTED", to: "UNDER_EVALUATION", label: "Evaluation" },
+    { from: "UNDER_EVALUATION", to: "PROCESSING_INTERVIEW", label: "Interview" },
+    { from: "PROCESSING_INTERVIEW", to: "OFFER_SENT", label: "Offer" },
+    { from: "OFFER_SENT", to: "JOINED", label: "Joined" },
   ];
 
   // Handle responsive chart width
@@ -68,36 +71,36 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
     };
 
     updateWidth();
-    window.addEventListener('resize', updateWidth);
-    return () => window.removeEventListener('resize', updateWidth);
+    window.addEventListener("resize", updateWidth);
+    return () => window.removeEventListener("resize", updateWidth);
   }, []);
 
   // Determine if we should display in hours or days based on the data magnitude
   const { useHoursFormat, timeUnit } = useMemo(() => {
-    if (!funnelData?.stageBreakdown) return { useHoursFormat: false, timeUnit: 'days' };
+    if (!funnelData?.stageBreakdown) return { useHoursFormat: false, timeUnit: "days" };
 
-    const relevantStages = STAGE_PROGRESSION.map((stageConfig) => 
+    const relevantStages = STAGE_PROGRESSION.map((stageConfig) =>
       funnelData.stageBreakdown.find(
         (s) => s.fromStatus === stageConfig.from && s.toStatus === stageConfig.to
       )
     ).filter((s) => s !== undefined);
 
-    if (relevantStages.length === 0) return { useHoursFormat: false, timeUnit: 'days' };
+    if (relevantStages.length === 0) return { useHoursFormat: false, timeUnit: "days" };
 
     // Calculate average and median of all stages
-    const avgOfAverages = relevantStages.reduce((sum, s) => sum + s!.averageDays, 0) / relevantStages.length;
+    const avgOfAverages =
+      relevantStages.reduce((sum, s) => sum + s!.averageDays, 0) / relevantStages.length;
     const medians = relevantStages.map((s) => s!.medianDays).sort((a, b) => a - b);
     const mid = Math.floor(medians.length / 2);
-    const overallMedian = medians.length % 2 === 0
-      ? (medians[mid - 1] + medians[mid]) / 2
-      : medians[mid];
+    const overallMedian =
+      medians.length % 2 === 0 ? (medians[mid - 1] + medians[mid]) / 2 : medians[mid];
 
     // If both average and median are less than 1 day (24 hours), use hours format
     const shouldUseHours = avgOfAverages < 1 && overallMedian < 1;
 
-    return { 
-      useHoursFormat: shouldUseHours, 
-      timeUnit: shouldUseHours ? 'hours' : 'days' 
+    return {
+      useHoursFormat: shouldUseHours,
+      timeUnit: shouldUseHours ? "hours" : "days",
     };
   }, [funnelData]);
 
@@ -109,7 +112,7 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
       const stage = funnelData.stageBreakdown.find(
         (s) => s.fromStatus === stageConfig.from && s.toStatus === stageConfig.to
       );
-      
+
       if (!stage) {
         return {
           year: stageConfig.label,
@@ -119,10 +122,10 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
 
       // Convert to hours if needed (1 day = 24 hours)
       const rawValue = stage.averageDays;
-      const displayValue = useHoursFormat 
-        ? Math.round(rawValue * 24 * 10) / 10  // Convert days to hours
-        : Math.round(rawValue * 10) / 10;      // Keep in days
-      
+      const displayValue = useHoursFormat
+        ? Math.round(rawValue * 24 * 10) / 10 // Convert days to hours
+        : Math.round(rawValue * 10) / 10; // Keep in days
+
       return {
         year: stageConfig.label,
         value: displayValue,
@@ -132,33 +135,30 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
 
   // Calculate median time in the appropriate format
   const { medianTime, medianUnit } = useMemo(() => {
-    if (!funnelData?.stageBreakdown) return { medianTime: 0, medianUnit: 'days' };
+    if (!funnelData?.stageBreakdown) return { medianTime: 0, medianUnit: "days" };
 
-    const relevantStages = STAGE_PROGRESSION.map((stageConfig) => 
+    const relevantStages = STAGE_PROGRESSION.map((stageConfig) =>
       funnelData.stageBreakdown.find(
         (s) => s.fromStatus === stageConfig.from && s.toStatus === stageConfig.to
       )
     ).filter((s) => s !== undefined);
 
-    if (relevantStages.length === 0) return { medianTime: 0, medianUnit: 'days' };
+    if (relevantStages.length === 0) return { medianTime: 0, medianUnit: "days" };
 
-    const sortedMedians = relevantStages
-      .map((stage) => stage!.medianDays)
-      .sort((a, b) => a - b);
+    const sortedMedians = relevantStages.map((stage) => stage!.medianDays).sort((a, b) => a - b);
 
     const mid = Math.floor(sortedMedians.length / 2);
-    const medianInDays = sortedMedians.length % 2 === 0
-      ? (sortedMedians[mid - 1] + sortedMedians[mid]) / 2
-      : sortedMedians[mid];
+    const medianInDays =
+      sortedMedians.length % 2 === 0
+        ? (sortedMedians[mid - 1] + sortedMedians[mid]) / 2
+        : sortedMedians[mid];
 
     // Convert to hours if using hours format
-    const displayMedian = useHoursFormat 
-      ? medianInDays * 24 
-      : medianInDays;
+    const displayMedian = useHoursFormat ? medianInDays * 24 : medianInDays;
 
-    return { 
-      medianTime: displayMedian, 
-      medianUnit: useHoursFormat ? 'h' : 'd' 
+    return {
+      medianTime: displayMedian,
+      medianUnit: useHoursFormat ? "h" : "d",
     };
   }, [funnelData, useHoursFormat]);
 
@@ -166,7 +166,7 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
     return (
       <StatCard title="Funnel Velocity (Avg. Time Per Stage)" className="text-left h-full">
         <div className="flex items-center justify-center h-64">
-          <div className="text-slate-400 text-sm">Loading funnel velocity data...</div>
+          <Loader className="animate-spin text-slate-400 h-8 w-8" />
         </div>
       </StatCard>
     );
@@ -183,7 +183,7 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
   }
 
   // Dynamic title based on time unit
-  const chartTitle = `Funnel Velocity (Avg. ${timeUnit === 'hours' ? 'Hours' : 'Days'} Per Stage)`;
+  const chartTitle = `Funnel Velocity (Avg. ${timeUnit === "hours" ? "Hours" : "Days"} Per Stage)`;
 
   return (
     <StatCard title={chartTitle} className="text-left h-full">
@@ -191,25 +191,23 @@ const FunnelVelocity: React.FC<FunnelVelocityProps> = ({
       <div className="flex justify-end gap-6 mb-4">
         <div className="text-right">
           <p className="text-xs text-slate-500">Total Candidates</p>
-          <p className="text-2xl font-semibold text-slate-800">
-            {funnelData.applicationsAnalyzed}
-          </p>
+          <p className="text-2xl font-semibold text-slate-800">{funnelData.applicationsAnalyzed}</p>
         </div>
         <div className="text-right">
           <p className="text-xs text-slate-500">Median Time</p>
           <p className="text-2xl font-semibold text-blue-600">
-            {medianTime.toFixed(1)}{medianUnit}
+            {medianTime.toFixed(1)}
+            {medianUnit}
           </p>
         </div>
       </div>
 
       {/* Line chart */}
       <div ref={chartContainerRef} className="mb-0 w-full ">
-        <div className="w-full" style={{ minHeight: '400px' }}>
+        <div className="w-full" style={{ minHeight: "400px" }}>
           <BarChart data={chartData} width={chartWidth} height={300} />
         </div>
       </div>
-
     </StatCard>
   );
 };

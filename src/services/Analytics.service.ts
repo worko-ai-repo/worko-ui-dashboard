@@ -48,7 +48,9 @@ class AnalyticsService {
       false,
       "JOB"
     );
-
+    if (response === null || (response as any)?.errorMsg) {
+      throw new Error((response as any)?.errorMsg || "Unknown error occurred");
+    }
     if (error || !response) {
       console.error(
         "[AnalyticsService]: Failed to fetch aggregate funnel velocity analytics.",
@@ -95,14 +97,16 @@ class AnalyticsService {
     if (params.dateRange) query.dateRange = params.dateRange;
     if (params.jobStatus) query.jobStatus = params.jobStatus;
 
-    const { response, error } = await httpServiceObj.get<OnboardingPipelineResponse>(
+    const { response, error, status } = await httpServiceObj.get<OnboardingPipelineResponse>(
       "/analytics/onboarding-pipeline",
       true,
       query,
       false,
       "JOB"
     );
-
+      if (response === null || (response as any)?.errorMsg) {
+        throw new Error((response as any)?.errorMsg || "Unknown error occurred");
+      }
     if (error || !response) {
       console.error("[AnalyticsService]: Failed to fetch onboarding pipeline analytics.", error);
       return {
@@ -154,7 +158,9 @@ class AnalyticsService {
       false,
       "JOB"
     );
-
+    if (response === null || (response as any)?.errorMsg) {
+      throw new Error((response as any)?.errorMsg || "Unknown error occurred");
+    }
     if (error || !response) {
       console.error("[AnalyticsService]: Failed to fetch dropoff analytics.", error);
       return {
@@ -203,7 +209,9 @@ class AnalyticsService {
       false,
       "JOB"
     );
-
+    if (response === null || (response as any)?.errorMsg) {
+      throw new Error((response as any)?.errorMsg || "Unknown error occurred");
+    }
     if (error || !response) {
       console.error("[AnalyticsService]: Failed to fetch hiring trend analytics.", error);
       return {
@@ -221,4 +229,3 @@ class AnalyticsService {
 
 const AnalyticsServiceObj = new AnalyticsService();
 export default AnalyticsServiceObj;
-

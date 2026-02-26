@@ -13,6 +13,9 @@ import secureStorage from "@Utils/SecureStorage.utils";
 import { toLower } from "lodash";
 import React from "react";
 import { JobApplicationStatusType } from "src/types/JobsAndApplication.type";
+import { Loader } from "lucide-react";
+
+type DateRange = "7d" | "30d" | "90d" | "180d";
 
 // Status tracker component for showing dots based on application journey
 const getStatusDot = (job: JobApplicationDetailsDto, targetStatus: JobApplicationStatusType) => {
@@ -24,8 +27,9 @@ const getStatusDot = (job: JobApplicationDetailsDto, targetStatus: JobApplicatio
   const statusTracker = job.statusTracker;
 
   // Check if there's an offer letter issue
-  const hasOfferLetterIssue = job.offerLetterIssueRaisedDetails && 
-    Array.isArray(job.offerLetterIssueRaisedDetails) && 
+  const hasOfferLetterIssue =
+    job.offerLetterIssueRaisedDetails &&
+    Array.isArray(job.offerLetterIssueRaisedDetails) &&
     job.offerLetterIssueRaisedDetails.length > 0;
 
   // Define the proper order of statuses
@@ -46,10 +50,7 @@ const getStatusDot = (job: JobApplicationDetailsDto, targetStatus: JobApplicatio
   ];
 
   // Offer-related statuses that should show orange when there's an issue
-  const offerRelatedStatuses: JobApplicationStatusType[] = [
-    "OFFER_SENT",
-    "OFFER_ACCEPTED",
-  ];
+  const offerRelatedStatuses: JobApplicationStatusType[] = ["OFFER_SENT", "OFFER_ACCEPTED"];
 
   const isRejected = currentStatus === "REJECTED";
   const isOnHold = currentStatus === "ON_HOLD";
@@ -62,13 +63,16 @@ const getStatusDot = (job: JobApplicationDetailsDto, targetStatus: JobApplicatio
   const formatDate = (dateString: string | Date) => {
     const date = new Date(dateString);
     const day = date.getDate();
-    const month = date.toLocaleString('en-US', { month: 'short' });
+    const month = date.toLocaleString("en-US", { month: "short" });
     const year = date.getFullYear().toString().slice(-2); // Get last 2 digits of year
     return `${day} ${month} ${year}`;
   };
 
   // Helper function to get date for a status (falls back to previous stage date if not found)
-  const getDateForStatus = (targetStatus: JobApplicationStatusType, targetIndex: number): string | null => {
+  const getDateForStatus = (
+    targetStatus: JobApplicationStatusType,
+    targetIndex: number
+  ): string | null => {
     // Check if this status exists in tracker
     const statusEntry = statusTracker.find((st) => st.newStatus === targetStatus);
     if (statusEntry) {
@@ -174,7 +178,9 @@ const getStatusDot = (job: JobApplicationDetailsDto, targetStatus: JobApplicatio
           dateText = foundDate;
           showDate = true;
           const issueDetails = job.offerLetterIssueRaisedDetails?.[0];
-          const issueRemarks = issueDetails?.remarks ? ` - Issue: ${issueDetails.remarks}` : " - Offer Letter Issue Raised";
+          const issueRemarks = issueDetails?.remarks
+            ? ` - Issue: ${issueDetails.remarks}`
+            : " - Offer Letter Issue Raised";
           tooltipText = `${newDisplayStatus[targetStatus]} - ${dateText}${issueRemarks}`;
         } else {
           tooltipText = `${newDisplayStatus[targetStatus]} - Offer Letter Issue`;
@@ -234,10 +240,7 @@ const StatusLegend = () => {
 
       {showLegend && (
         <>
-          <div
-            className="fixed inset-0 z-40"
-            onClick={() => setShowLegend(false)}
-          />
+          <div className="fixed inset-0 z-40" onClick={() => setShowLegend(false)} />
           <div className="absolute right-0 top-8 z-50 bg-white border border-slate-200 rounded-lg shadow-xl p-4 min-w-[250px]">
             <h3 className="text-sm font-semibold text-slate-700 mb-3">Status Legend</h3>
             <div className="space-y-2">
@@ -269,10 +272,38 @@ const StatusLegend = () => {
   );
 };
 
-const HiringIntelligence = () => {
+interface HiringIntelligenceProps {
+  companyIdOverride?: string;
+  dateRange?: DateRange;
+}
+
+/**
+ * Helper function to convert date range to fromDate/toDate timestamps
+ */
+const getDateRangeTimestamps = (dateRange: DateRange) => {
+  const now = Date.now();
+  const daysMap = {
+    "7d": 7,
+    "30d": 30,
+    "90d": 90,
+    "180d": 180,
+  };
+
+  const days = daysMap[dateRange];
+  const fromDate = now - days * 24 * 60 * 60 * 1000;
+
+  return {
+    fromDate,
+    toDate: now,
+  };
+};
+
+const HiringIntelligence = ({ companyIdOverride, dateRange = "30d" }: HiringIntelligenceProps) => {
   const { userDetails } = useAppContext();
-  const companyId = userDetails?.companyId;
-  const userType = secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) ?? "ADMIN";
+
+  const companyId = companyIdOverride;
+  const userType =
+    secureStorage.getItem<UserRole>(SecureStorageKeyEnum.CORPORATEUSERTYPE) ?? "ADMIN";
   const { pageSize, setPageSize: handlePageSizeChange } = useUrlState<TabType>({
     search: {
       defaultValue: null,
@@ -283,11 +314,17 @@ const HiringIntelligence = () => {
     },
   });
 
+  // Convert date range to timestamps
+  const { fromDate, toDate } = React.useMemo(() => getDateRangeTimestamps(dateRange), [dateRange]);
+
   const params: Omit<CursorPaginationApplicationDataParams, "lastKey"> = {
     userType: userType ?? undefined,
     pageSize: pageSize,
+    companyId: companyId,
     sortOrder: "descending",
     includeInterviewDetails: true,
+    fromDate,
+    toDate,
   };
 
   const baseQueryKey = [
@@ -310,8 +347,13 @@ const HiringIntelligence = () => {
     queryKey: baseQueryKey,
     queryFn: CorporateServiceObj.fetchApplications,
     baseParams: params,
-    enabled:!!userType &&  userType.includes("CORPORATE") ? !!companyId:true, //@Check this
+    enabled: !!companyId && !!userType && userType.includes("CORPORATE") ? !!companyId : true,
   });
+
+  // Reset pagination when date range changes
+  React.useEffect(() => {
+    reset();
+  }, [dateRange, reset]);
 
   const topJobs = jobsWithApplications ?? [];
   const [dropdownOpen, setDropdownOpen] = React.useState(false);
@@ -382,6 +424,37 @@ const HiringIntelligence = () => {
     "JOINED",
   ];
 
+  // Check if company is not selected (for admin users)
+  if (!companyId) {
+    return (
+      <div>
+        <StatCard title="Hiring Intelligence" className="text-left h-full">
+          <div className="flex items-center justify-center py-20">
+            <div className="text-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-16 w-16 mx-auto text-slate-300 mb-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                />
+              </svg>
+              <p className="text-slate-600 font-medium mb-2">Please select a company</p>
+              <p className="text-xs text-slate-400">
+                Choose a company from the filters above to view hiring intelligence data
+              </p>
+            </div>
+          </div>
+        </StatCard>
+      </div>
+    );
+  }
+
   return (
     <div>
       {/* Jobs with applications & critical drop-offs */}
@@ -423,7 +496,7 @@ const HiringIntelligence = () => {
               </span>
             ))}
           </div>
-          
+
           {/* Search dropdown */}
           <div className="relative inline-flex capitalize dropdown-container flex-1 max-w-[250px]">
             <input
@@ -460,7 +533,7 @@ const HiringIntelligence = () => {
             )}
           </div>
         </div>
-        <div className="overflow-x-auto -mx-2">
+        <div className="overflow-x-auto -mx-2 relative">
           <div className="border max-h-[500px] overflow-auto border-slate-200 rounded-lg">
             <table className="min-w-full text-xs relative">
               <thead className="sticky top-0 z-20 bg-gradient-to-r from-blue-50 to-blue-50 shadow-sm">
@@ -509,7 +582,7 @@ const HiringIntelligence = () => {
                     ))}
                   </tr>
                 ))}
-                {!displayedJobs.length && (
+                {!displayedJobs.length && !queryIsJobsLoading && (
                   <tr>
                     <td
                       colSpan={relevantStatuses.length + 1}
@@ -521,6 +594,20 @@ const HiringIntelligence = () => {
               </tbody>
             </table>
           </div>
+
+          {queryIsJobsLoading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+              <Loader className="animate-spin text-slate-400 h-8 w-8" />
+            </div>
+          )}
+
+          {!queryIsJobsLoading && !displayedJobs.length && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white/80">
+              <p className="text-xs text-slate-400">
+                No applications found for the selected company.
+              </p>
+            </div>
+          )}
         </div>
       </StatCard>
     </div>

@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { StatCard } from "@Components/Dashboard/Corporate/Home/StatCard";
 import { useQuery } from "@tanstack/react-query";
 import AnalyticsServiceObj from "@Services/Analytics.service";
@@ -18,6 +18,7 @@ import { CompanyDto } from "@Interfaces/JobsAndCompany.dto";
 import { newDisplayStatus } from "@Components/Dashboard/Corporate/Applicants/ApplicantsTable";
 import { AdminAnalyticsHomeSkeleton } from "@Components/Loader/Skeleton/SkeletonLoader";
 import { useAnalyticsUrlState } from "@Hooks/useAnalyticsUrlState.hook";
+import { Loader } from "lucide-react";
 
 type DateRange = "7d" | "30d" | "90d" | "180d";
 type JobStatusFilter = "ALL" | "PUBLISHED";
@@ -42,7 +43,7 @@ const AdminAnalyticsHome = () => {
   const selectedRecruiterName = state.recruiterName || undefined;
   const dateRange = (state.dateRange || "30d") as DateRange;
   const jobStatus = (state.jobStatus || "ALL") as JobStatusFilter;
-
+  const [hiringTrendSummary, setHiringTrendSummary] = useState<HiringTrendResponse | null>(null);
   // Fetch companies list for admin filter
   const { data: companiesResponse } = useQuery<ApiResponseDto<CompanyDto>>({
     queryKey: ["analyticsAdminCompanies"],
@@ -82,60 +83,33 @@ const AdminAnalyticsHome = () => {
     return recruiters.find((r) => r.id === selectedRecruiterId) || null;
   }, [selectedRecruiterId, recruiters]);
 
-  // Fetch hiring trend analytics data
-  const {
-    data: hiringTrendSummary,
-    isLoading: isHiringTrendLoading,
-  } = useQuery<HiringTrendResponse>({
-    queryKey: [
-      "analyticsHiringTrend",
-      selectedCompanyId,
-      selectedRecruiterId,
-      dateRange,
-      jobStatus,
-    ],
-    enabled: !!selectedCompanyId,
-    queryFn: () =>
-      AnalyticsServiceObj.getHiringTrend({
-        companyId: selectedCompanyId,
-        recruiterId: selectedRecruiterId,
-        granularity: "monthly",
-        dateRange,
-        jobStatus,
-      }),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
   // Fetch onboarding pipeline data
-  const {
-    data: onboarding,
-    isLoading: isOnboardingLoading,
-  } = useQuery<OnboardingPipelineResponse>({
-    queryKey: [
-      "analyticsOnboardingAdmin",
-      selectedCompanyId,
-      selectedRecruiterId,
-      dateRange,
-      jobStatus,
-    ],
-    queryFn: () =>
-      AnalyticsServiceObj.getOnboardingPipeline({
-        companyId: selectedCompanyId,
-        recruiterId: selectedRecruiterId,
-        includeDetails: true,
+  const { data: onboarding, isLoading: isOnboardingLoading } = useQuery<OnboardingPipelineResponse>(
+    {
+      queryKey: [
+        "analyticsOnboardingAdmin",
+        selectedCompanyId,
+        selectedRecruiterId,
         dateRange,
         jobStatus,
-      }),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
+      ],
+      queryFn: () =>
+        AnalyticsServiceObj.getOnboardingPipeline({
+          companyId: selectedCompanyId,
+          recruiterId: selectedRecruiterId,
+          includeDetails: true,
+          dateRange,
+          jobStatus,
+        }),
+      staleTime: 5 * 60 * 1000,
+      refetchOnWindowFocus: false,
+      retry: 3,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff for retries
+    }
+  );
 
   // Fetch critical dropoff analytics data
-  const {
-    data: dropoff,
-    isLoading: isDropoffLoading,
-  } = useQuery<CriticalDropoffResponse>({
+  const { data: dropoff, isLoading: isDropoffLoading } = useQuery<CriticalDropoffResponse>({
     queryKey: [
       "analyticsDropoffAdmin",
       selectedCompanyId,
@@ -153,12 +127,14 @@ const AdminAnalyticsHome = () => {
       }),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff for retries
   });
 
   const totalDropoffRate = dropoff?.overallDropoffRate ?? 0;
 
   // Show skeleton loader while initial data is loading (only when company is selected)
-  const isLoading = isHiringTrendLoading || isOnboardingLoading || isDropoffLoading;
+  const isLoading = isOnboardingLoading || isDropoffLoading;
 
   // Show skeleton loader while data is loading
   if (selectedCompanyId && isLoading && !hiringTrendSummary && !onboarding && !dropoff) {
@@ -189,14 +165,25 @@ const AdminAnalyticsHome = () => {
                   // Show selected company with clear button
                   <div className="relative">
                     <div className="input_primary bg-gray-100 w-full px-4 py-3 pl-14 text-sm border-none flex items-center justify-between">
-                      <span className="text-slate-700 font-medium truncate">{selectedCompanyName}</span>
+                      <span className="text-slate-700 font-medium truncate">
+                        {selectedCompanyName}
+                      </span>
                       <button
                         onClick={() => {
                           setCompany(undefined, undefined);
                         }}
                         className="text-slate-400 hover:text-slate-600 ml-2 flex-shrink-0">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg
+                          className="w-4 h-4"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
                         </svg>
                       </button>
                     </div>
@@ -295,7 +282,7 @@ const AdminAnalyticsHome = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <StatCard title="Total jobs">
                   <div className="text-3xl font-semibold text-slate-800">
-                    {hiringTrendSummary?.totalJobs ?? (isHiringTrendLoading ? "--" : 0)}
+                    {hiringTrendSummary?.totalJobs ?? "--"}
                   </div>
                   <p className="text-xs text-slate-400 mt-1">Across all companies in scope</p>
                 </StatCard>
@@ -309,13 +296,13 @@ const AdminAnalyticsHome = () => {
                   <div className="flex items-center justify-center gap-6">
                     <div className="text-center">
                       <div className="text-2xl font-semibold text-emerald-600">
-                        {hiringTrendSummary?.activeJobs ?? (isHiringTrendLoading ? "--" : 0)}
+                        {hiringTrendSummary?.activeJobs ?? "--"}
                       </div>
                       <p className="text-xs text-slate-400 mt-1">Active</p>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-semibold text-slate-500">
-                        {hiringTrendSummary?.closedJobs ?? (isHiringTrendLoading ? "--" : 0)}
+                        {hiringTrendSummary?.closedJobs ?? "--"}
                       </div>
                       <p className="text-xs text-slate-400 mt-1">Closed</p>
                     </div>
@@ -334,170 +321,284 @@ const AdminAnalyticsHome = () => {
               {/* Middle Row - Hiring Trend Chart & Onboarding Pipeline */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Hiring Trend Chart */}
-                <HiringTrend
-                  dateRange={dateRange}
-                  jobStatus={jobStatus}
-                  companyIdOverride={selectedCompanyId}
-                  recruiterIdOverride={selectedRecruiterId}
-                />
+                {!selectedCompanyId ? (
+                  <StatCard title="Hiring trend" className="text-left">
+                    <div className="flex items-center justify-center py-20">
+                      <div className="text-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-16 w-16 mx-auto text-slate-300 mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                          />
+                        </svg>
+                        <p className="text-slate-600 font-medium mb-2">Please select a company</p>
+                        <p className="text-xs text-slate-400">
+                          Choose a company from the filters above to view hiring trend data
+                        </p>
+                      </div>
+                    </div>
+                  </StatCard>
+                ) : (
+                  <HiringTrend
+                    dateRange={dateRange}
+                    jobStatus={jobStatus}
+                    companyIdOverride={selectedCompanyId}
+                    recruiterIdOverride={selectedRecruiterId}
+                    setHiringTrendSummary={setHiringTrendSummary}
+                  />
+                )}
 
                 {/* Onboarding Pipeline Snapshot */}
-                <StatCard
-                  title="Onboarding pipeline"
-                  className="mt-0 !py-3 text-left lg:col-span-1">
-                  <div className="space-y-4">
-                    <p className="text-xs font-semibold text-gray-400">
-                      Recently onboarded candidates
-                    </p>
-                    <div className="flex flex-wrap gap-3 overflow-auto max-h-56">
-                      {(onboarding?.candidates ?? []).slice(0, 12).map((cand) => (
-                        <div
-                          key={cand.applicationId}
-                          className="flex items-center justify-center px-3 py-2 rounded-lg border border-slate-200 bg-white shadow-sm min-w-[180px]">
-                          <div className="border-r-2 p-1 mr-2 text-center">
-                            <p className="text-md font-semibold text-slate-700">
-                              {cand.joinedDate
-                                ? new Date(cand.joinedDate).toLocaleDateString("en-IN", {
-                                    day: "2-digit",
-                                  })
-                                : "--"}
-                            </p>
-                            <p className="text-[8px] font-semibold text-gray-400">
-                              {cand.joinedDate
-                                ? new Date(cand.joinedDate).toLocaleDateString("en-IN", {
-                                    month: "short",
-                                  })
-                                : "--"}
-                            </p>
-                          </div>
-                          <div className="">
-                            <p className="mt-1 text-sm capitalize font-medium text-slate-900 truncate">
-                              {cand.applicantName || cand.applicantEmail}
-                            </p>
-                            <p className="text-[11px] text-slate-500 truncate">
-                              {cand.jobTitle || "Job title not available"}
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-
-                      {!(onboarding?.candidates ?? []).length && (
-                        <p className="text-xs mx-auto text-align: center; mt-[10%]
-                        text-slate-400">
-                          No onboarded candidates in the selected period.
+                {!selectedCompanyId ? (
+                  <StatCard
+                    title="Onboarding pipeline"
+                    className="mt-0 !py-3 text-left lg:col-span-1">
+                    <div className="flex items-center justify-center py-20">
+                      <div className="text-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-16 w-16 mx-auto text-slate-300 mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                          />
+                        </svg>
+                        <p className="text-slate-600 font-medium mb-2">Please select a company</p>
+                        <p className="text-xs text-slate-400">
+                          Choose a company from the filters above to view onboarding pipeline
                         </p>
-                      )}
+                      </div>
                     </div>
-                  </div>
-                </StatCard>
+                  </StatCard>
+                ) : (
+                  <StatCard
+                    title="Onboarding pipeline"
+                    className="mt-0 !py-3 text-left lg:col-span-1">
+                    <div className="space-y-4 h-[70%] relative">
+                      <p className="text-xs font-semibold text-gray-400">
+                        Recently onboarded candidates
+                      </p>
+                      <div className="flex flex-wrap gap-3 overflow-auto max-h-56">
+                        {(onboarding?.candidates ?? []).slice(0, 12).map((cand) => (
+                          <div
+                            key={cand.applicationId}
+                            className="flex items-center justify-center px-3 py-2 rounded-lg border border-slate-200 bg-white shadow-sm min-w-[180px]">
+                            <div className="border-r-2 p-1 mr-2 text-center ">
+                              <p className="text-md font-semibold text-slate-700">
+                                {cand.joinedDate
+                                  ? new Date(cand.joinedDate).toLocaleDateString("en-IN", {
+                                      day: "2-digit",
+                                    })
+                                  : "--"}
+                              </p>
+                              <p className="text-[8px] font-semibold text-gray-400">
+                                {cand.joinedDate
+                                  ? new Date(cand.joinedDate).toLocaleDateString("en-IN", {
+                                      month: "short",
+                                    })
+                                  : "--"}
+                              </p>
+                            </div>
+                            <div className="">
+                              <p className="mt-1 text-sm capitalize font-medium text-slate-900 truncate">
+                                {cand.applicantName || cand.applicantEmail}
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate">
+                                {cand.jobTitle || "Job title not available"}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {isOnboardingLoading ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <Loader className="animate-spin text-slate-400 h-8 w-8" />
+                        </div>
+                      ) : !(onboarding?.candidates ?? []).length ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <p className="text-xs text-slate-400">
+                            No onboarded candidates in the selected period.
+                          </p>
+                        </div>
+                      ) : null}
+                    </div>
+                  </StatCard>
+                )}
               </div>
 
               {/* Bottom Row - Critical Drop-offs & Funnel Velocity */}
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                 {/* Critical Drop-off Stages Card */}
-                <StatCard title="Critical drop-off stages" className="h-full text-left">
-                  {/* Top Summary Stats */}
-                  <div className="flex text-center items-center justify-between mb-6 pb-4 border-b border-slate-200">
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Total Applications</p>
-                      <p className="text-2xl font-bold text-slate-800">
-                        {dropoff?.totalApplications ?? 0}
-                      </p>
+                {!selectedCompanyId ? (
+                  <StatCard title="Critical drop-off stages" className="h-full text-left">
+                    <div className="flex items-center justify-center py-20">
+                      <div className="text-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-16 w-16 mx-auto text-slate-300 mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
+                          />
+                        </svg>
+                        <p className="text-slate-600 font-medium mb-2">Please select a company</p>
+                        <p className="text-xs text-slate-400">
+                          Choose a company from the filters above to view drop-off analytics
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Total Drop-offs</p>
-                      <p className="text-2xl font-bold text-rose-500">
-                        {dropoff?.totalDropoffs ?? 0}
-                      </p>
+                  </StatCard>
+                ) : (
+                  <StatCard title="Critical drop-off stages" className="h-full text-left">
+                    <div className="flex text-center items-center justify-between mb-6 pb-4 border-b border-slate-200">
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Total Applications</p>
+                        <p className="text-2xl font-bold text-slate-800">
+                          {dropoff?.totalApplications ?? 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Total Drop-offs</p>
+                        <p className="text-2xl font-bold text-rose-500">
+                          {dropoff?.totalDropoffs ?? 0}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs text-slate-500 mb-1">Overall Drop-off Rate</p>
+                        <p className="text-3xl font-bold text-rose-600">
+                          {totalDropoffRate.toFixed(1)}%
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Overall Drop-off Rate</p>
-                      <p className="text-3xl font-bold text-rose-600">
-                        {totalDropoffRate.toFixed(1)}%
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Drop-off Stages */}
-                  <div className="space-y-4 max-h-[340px] overflow-y-auto no-scrl-web">
-                    {dropoff?.dropoffByStage
-                      .filter((stage) => stage.dropoffRate > 0)
-                      .map((stage) => {
-                        const maxDropoffRate = Math.max(
-                          ...dropoff.dropoffByStage
-                            .filter((s) => s.dropoffRate > 0)
-                            .map((s) => s.dropoffRate)
-                        );
-                        const isHighestDropoff = stage.dropoffRate === maxDropoffRate;
+                    {/* Drop-off Stages */}
+                    <div className="space-y-4 max-h-[340px] overflow-y-auto no-scrl-web">
+                      {dropoff?.dropoffByStage
+                        .filter((stage) => stage.dropoffRate > 0)
+                        .map((stage) => {
+                          const maxDropoffRate = Math.max(
+                            ...dropoff.dropoffByStage
+                              .filter((s) => s.dropoffRate > 0)
+                              .map((s) => s.dropoffRate)
+                          );
+                          const isHighestDropoff = stage.dropoffRate === maxDropoffRate;
 
-                        return (
-                          <div
-                            key={stage.stage}
-                            className={`relative rounded-lg p-3 ${
-                              isHighestDropoff
-                                ? "bg-rose-50 border-2 border-rose-300"
-                                : "bg-slate-50 border border-slate-200"
-                            }`}>
-                            <div className="flex items-center justify-between mb-0">
-                              <div className="flex items-center gap-1">
-                                <span className="font-semibold text-sm text-slate-800">
-                                  {newDisplayStatus[stage.stage as keyof typeof newDisplayStatus] ||
-                                    stage.stage}
-                                </span>
-                                {isHighestDropoff && (
-                                  <span className="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full">
-                                    HIGHEST
+                          return (
+                            <div
+                              key={stage.stage}
+                              className={`relative rounded-lg p-3 ${
+                                isHighestDropoff
+                                  ? "bg-rose-50 border-2 border-rose-300"
+                                  : "bg-slate-50 border border-slate-200"
+                              }`}>
+                              <div className="flex items-center justify-between mb-0">
+                                <div className="flex items-center gap-1">
+                                  <span className="font-semibold text-sm text-slate-800">
+                                    {newDisplayStatus[
+                                      stage.stage as keyof typeof newDisplayStatus
+                                    ] || stage.stage}
                                   </span>
-                                )}
-                              </div>
-                              <div className="flex items-center">
-                                <div className="text-right">
-                                  <p className="text-xl font-bold text-rose-600">
-                                    {stage.dropoffRate.toFixed(1)}%
-                                  </p>
-                                  <p className="text-[10px] text-slate-500">
-                                    {stage.dropoffs} out of {stage.applicationsReached} Candidate
-                                    Dropped
-                                  </p>
+                                  {isHighestDropoff && (
+                                    <span className="text-[10px] font-bold bg-rose-500 text-white px-2 py-0.5 rounded-full">
+                                      HIGHEST
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex items-center">
+                                  <div className="text-right">
+                                    <p className="text-xl font-bold text-rose-600">
+                                      {stage.dropoffRate.toFixed(1)}%
+                                    </p>
+                                    <p className="text-[10px] text-slate-500">
+                                      {stage.dropoffs} out of {stage.applicationsReached} Candidate
+                                      Dropped
+                                    </p>
+                                  </div>
                                 </div>
                               </div>
-                            </div>
 
-                            {/* Progress Bar */}
-                            <div className="relative w-full h-2 bg-white rounded-full overflow-hidden">
-                              <div
-                                className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${
-                                  isHighestDropoff
-                                    ? "bg-gradient-to-r from-yellow-500 to-rose-700"
-                                    : "bg-gradient-to-r from-yellow-300 to-rose-500"
-                                }`}
-                                style={{ width: `${stage.dropoffRate}%` }}
-                              />
+                              {/* Progress Bar */}
+                              <div className="relative w-full h-2 bg-white rounded-full overflow-hidden">
+                                <div
+                                  className={`absolute top-0 left-0 h-full rounded-full transition-all duration-500 ${
+                                    isHighestDropoff
+                                      ? "bg-gradient-to-r from-yellow-500 to-rose-700"
+                                      : "bg-gradient-to-r from-yellow-300 to-rose-500"
+                                  }`}
+                                  style={{ width: `${stage.dropoffRate}%` }}
+                                />
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
 
-                    {!dropoff?.dropoffByStage.filter((s) => s.dropoffRate > 0).length && (
-                      <div className="py-8 text-center text-slate-400 text-sm">
-                        No drop-off analytics available for the selected range.
-                      </div>
-                    )}
-                  </div>
-                </StatCard>
+                      {!dropoff?.dropoffByStage.filter((s) => s.dropoffRate > 0).length && (
+                        <div className="py-8 text-center text-slate-400 text-sm">
+                          No drop-off analytics available for the selected range.
+                        </div>
+                      )}
+                    </div>
+                  </StatCard>
+                )}
 
                 {/* Funnel Velocity Chart */}
-                <FunnelVelocity
-                  companyId={selectedCompanyId}
-                  recruiterId={selectedRecruiterId}
-                  dateRange={dateRange}
-                  jobStatus={jobStatus}
-                />
+                {!selectedCompanyId ? (
+                  <StatCard
+                    title="Funnel Velocity (Avg. Time Per Stage)"
+                    className="h-full text-left">
+                    <div className="flex items-center justify-center py-20">
+                      <div className="text-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-16 w-16 mx-auto text-slate-300 mb-4"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={1.5}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <p className="text-slate-600 font-medium mb-2">Please select a company</p>
+                        <p className="text-xs text-slate-400">
+                          Choose a company from the filters above to view funnel velocity data
+                        </p>
+                      </div>
+                    </div>
+                  </StatCard>
+                ) : (
+                  <FunnelVelocity
+                    companyId={selectedCompanyId}
+                    recruiterId={selectedRecruiterId}
+                    dateRange={dateRange}
+                    jobStatus={jobStatus}
+                  />
+                )}
               </div>
 
               {/* Hiring Intelligence Table */}
               <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
-                <HiringIntelligence />
+                <HiringIntelligence companyIdOverride={selectedCompanyId} dateRange={dateRange} />
               </div>
             </div>
           </div>

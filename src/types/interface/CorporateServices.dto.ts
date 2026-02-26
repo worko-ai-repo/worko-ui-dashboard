@@ -355,6 +355,9 @@ export interface CursorPaginationApplicationDataParams {
   jobId?: string | undefined;
   userType?: string;
   lastKey?: string | undefined;
+  companyId?: string;
+  fromDate?: number;
+  toDate?: number;
   includeInterviewDetails?: boolean;
 }
 

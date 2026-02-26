@@ -4,6 +4,7 @@ import AnalyticsServiceObj from "@Services/Analytics.service";
 import { HiringTrendResponse, HiringTrendPoint } from "@Interfaces/Analytics.dto";
 import { useAppContext } from "@Context/App.context";
 import * as d3 from "d3";
+import { Loader } from "lucide-react";
 
 type TrendFilter = "weekly" | "monthly" | "yearly";
 
@@ -30,6 +31,7 @@ interface HiringTrendProps {
   jobStatus: "ALL" | "PUBLISHED";
   companyIdOverride?: string;
   recruiterIdOverride?: string;
+  setHiringTrendSummary?: React.Dispatch<React.SetStateAction<HiringTrendResponse | null>>;
 }
 
 const HiringTrend: React.FC<HiringTrendProps> = ({
@@ -37,19 +39,14 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
   jobStatus,
   companyIdOverride,
   recruiterIdOverride,
+  setHiringTrendSummary,
 }) => {
   const { userDetails } = useAppContext();
   const defaultCompanyId = userDetails?.companyId;
   const companyId = companyIdOverride ?? defaultCompanyId;
 
-  const { data } = useQuery<HiringTrendResponse>({
-    queryKey: [
-      "analyticsHiringTrend",
-      companyId,
-      recruiterIdOverride,
-      dateRange,
-      jobStatus,
-    ],
+  const { data, isLoading } = useQuery<HiringTrendResponse>({
+    queryKey: ["analyticsHiringTrend", companyId, recruiterIdOverride, dateRange, jobStatus],
     // enabled: !!companyId,
     queryFn: () =>
       AnalyticsServiceObj.getHiringTrend({
@@ -61,6 +58,8 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
       }),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 30000), // Exponential backoff for retries
   });
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -70,7 +69,9 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
     if (!points.length) {
       return { labels: [] as string[], jobs: [], applications: [], hires: [] };
     }
-
+    if (setHiringTrendSummary && data) {
+      setHiringTrendSummary(data);
+    }
     const formatLabel = (isoDate: string) => {
       const d = new Date(isoDate);
       return d.toLocaleDateString("en-IN", { month: "short", year: "2-digit" });
@@ -106,22 +107,17 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
       .attr("transform", `translate(${margin.left},${margin.top})`);
 
     if (!hasData) {
-      g
-        .append("text")
+      g.append("text")
         .attr("x", innerWidth / 2.6)
         .attr("y", innerHeight / 2)
         .attr("text-anchor", "middle")
         .attr("fill", "#9CA3AF")
         .style("font-size", "12px")
-        .text("No hiring trend data available.");
+        .text("");
       return;
     }
 
-    const xScale = d3
-      .scalePoint<string>()
-      .domain(labels)
-      .range([0, innerWidth])
-      .padding(0.5);
+    const xScale = d3.scalePoint<string>().domain(labels).range([0, innerWidth]).padding(0.5);
 
     const maxY = d3.max([...jobs, ...applications, ...hires]) ?? 0;
     const yScale = d3
@@ -196,35 +192,28 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
         .attr("stroke-width", 1)
         .style("cursor", "pointer")
         .on("mouseover", function (event, d) {
-          d3.select(this)
-            .attr("r", 5)
-            .attr("stroke-width", 2);
+          d3.select(this).attr("r", 5).attr("stroke-width", 2);
         })
         .on("mouseout", function () {
-          d3.select(this)
-            .attr("r", 3)
-            .attr("stroke-width", 1);
+          d3.select(this).attr("r", 3).attr("stroke-width", 1);
         });
 
       // Add tooltips (title element)
-      circles
-        .append("title")
-        .text((d) => {
-          const label = serie.key === "jobs" ? "Jobs" : serie.key === "applications" ? "Applications" : "Hires";
-          return `${label}: ${d.value}`;
-        });
+      circles.append("title").text((d) => {
+        const label =
+          serie.key === "jobs" ? "Jobs" : serie.key === "applications" ? "Applications" : "Hires";
+        return `${label}: ${d.value}`;
+      });
     });
 
-    g
-      .append("g")
+    g.append("g")
       .attr("transform", `translate(0,${innerHeight})`)
       .call(d3.axisBottom(xScale))
       .selectAll("text")
       .style("font-size", "11px")
       .style("fill", "#94A3B8");
 
-    g
-      .append("g")
+    g.append("g")
       .call(d3.axisLeft(yScale).ticks(5))
       .selectAll("text")
       .style("font-size", "11px")
@@ -239,39 +228,46 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
       <div className="flex items-center justify-between">
         <div className="text-left">
           <p className="text-lg font-semibold text-slate-700">Hiring trend</p>
-          <p className="text-xs text-slate-400">
-            Jobs, applications & hires over time
-          </p>
+          <p className="text-xs text-slate-400">Jobs, applications & hires over time</p>
         </div>
       </div>
 
-
-      <div className="w-full  h-56 mb-2">
+      <div className="w-full h-56 mb-2 relative">
         <svg ref={svgRef} className="w-full h-full overflow-visible" />
-      
+
+        {isLoading ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Loader className="animate-spin text-slate-400 h-8 w-8" />
+          </div>
+        ) : !chartData.labels.length ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <p className="text-xs text-slate-400">No hiring trend data available.</p>
+          </div>
+        ) : null}
+
         <div className="flex justify-center items-center gap-4 text-xs text-slate-500 mb-2">
-        <div className="flex items-center gap-1">
-          <span
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ backgroundColor: SERIES_COLORS.jobs }}
-          />
-          Jobs posted
+          <div className="flex items-center gap-1">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: SERIES_COLORS.jobs }}
+            />
+            Jobs posted
+          </div>
+          <div className="flex items-center gap-1">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: SERIES_COLORS.applications }}
+            />
+            Applications
+          </div>
+          <div className="flex items-center gap-1">
+            <span
+              className="inline-block w-3 h-3 rounded-full"
+              style={{ backgroundColor: SERIES_COLORS.hires }}
+            />
+            Hires
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <span
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ backgroundColor: SERIES_COLORS.applications }}
-          />
-          Applications
-        </div>
-        <div className="flex items-center gap-1">
-          <span
-            className="inline-block w-3 h-3 rounded-full"
-            style={{ backgroundColor: SERIES_COLORS.hires }}
-          />
-          Hires
-        </div>
-      </div>
       </div>
     </div>
   );
