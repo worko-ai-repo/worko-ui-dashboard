@@ -1471,7 +1471,7 @@ const Profile = () => {
                         !detailsData[0]?.cvAwsS3SignedUrl ? "cursor-not-allowed opacity-50" : ""
                       }>
                       <img
-                        className="w-8 h-8 rounded-md bg-[#57E1E1]"
+                        className="w-8 h-8 btn-sky shrink-0"
                         src={eyeIcon}
                         alt="View CV"
                       />
@@ -1799,10 +1799,10 @@ const Profile = () => {
                     style={{
                       display: "flex",
                       flexWrap: "wrap",
-                      gap: "16px",
+                      gap: "13px",
                       alignItems: "center",
                     }}>
-                    <Link strokeWidth={1.5} />
+                    <Link className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                     {(() => {
                       const validLinks = (socialLinks || []).flatMap(
                         (item: Record<string, string[]>, index: number) => {

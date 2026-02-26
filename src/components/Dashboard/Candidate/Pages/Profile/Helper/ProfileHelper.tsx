@@ -304,7 +304,7 @@ export const renderListSection = ({
         (items as React.ReactNode[]).map((item, index) => (
           <React.Fragment key={index}>
             <div className="flex items-start gap-4 mb-4">
-              <Briefcase strokeWidth={1.5} />
+              <Briefcase className="w-5 h-5 shrink-0" strokeWidth={1.5} />
               <div className="flex-1">
                 <div className="text-sm">{item}</div>
               </div>

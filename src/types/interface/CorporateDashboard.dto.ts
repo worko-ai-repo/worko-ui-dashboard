@@ -280,6 +280,7 @@ export interface JobApplicationDetailsDto {
     actionDate: string;
   }>;
   scoreDetailsForApplicant:string;
+  isFindMatchingScoreInProgress:boolean;
 }
 
 export type JobApplicationDocumentStatusType =

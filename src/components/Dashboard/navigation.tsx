@@ -14,7 +14,8 @@ import {
   Subscription,
   Guidance,
   FolderOpenIcon,
-  Warehouse
+  Warehouse,
+  Vault,
 } from "./icons";
 import { IdCard, List, Settings, User, Zap } from "lucide-react";
 
@@ -63,10 +64,16 @@ const navigationItems: NavItem[] = [
     icon: InterviewIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
+  // {
+  //   id: "subscription",
+  //   label: "Subscription",
+  //   icon: Subscription,
+  //   dashboardTypes: ["CANDIDATE"],
+  // },
   {
-    id: "subscription",
-    label: "Subscription",
-    icon: Subscription,
+    id: "documentVault",
+    label: "Document Vault",
+    icon: Vault,
     dashboardTypes: ["CANDIDATE"],
   },
   {

@@ -12,6 +12,7 @@ export type TabId =
 | 'refer-and-earn'
 | 'subscription'
 | 'support'
+| 'documentVault'
 //Employee Dashboard Tabs
 | 'switch-dashboard'
 | 'profile'

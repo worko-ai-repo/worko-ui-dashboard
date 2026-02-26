@@ -183,7 +183,7 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
 
     return (
       <div className="w-full space-y-[16px] px-0">
-        <div className='flex flex-col sm:flex-row gap-4 sm:gap-14 justify-between'>
+        <div className='flex flex-col sm:flex-row gap-4 sm:gap-4 justify-between'>
           <div className=" flex-1 flex flex-col gap-4">
             <div className="hidden sm:flex flex-col sm:flex-row gap-4 justify-start overflow-x-auto">
               {stats.map((stat) => (

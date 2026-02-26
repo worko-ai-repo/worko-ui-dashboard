@@ -438,7 +438,7 @@ export default function JobDescription({
       {/* Submit Button */}
       <div className="mt-2 flex justify-start gap-2">
         {/* Skip button */}
-        <button
+        {/* <button
           type="button"
           onClick={() => {
             onClose();
@@ -448,7 +448,7 @@ export default function JobDescription({
           }}
           className="border text-gray-500 text-sm font-medium px-4 py-2 rounded-lg hover:bg-gray-100 transition mr-2">
           Skip
-        </button>
+        </button> */}
         <button
           type="submit"
           disabled={isLoading}

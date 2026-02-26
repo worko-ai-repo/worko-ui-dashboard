@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useMemo, useRef, useCallback } from "react";
 import ApplicationTable from "./ApplicantsTable";
 import HeaderDetails from "../../../Shared/Stats";
 import SearchBar from "../../../Shared/SearchBar";
@@ -164,7 +164,7 @@ const Applicants = () => {
   const [apiStatus, setApiStatus] = useState<JobApplicationStatusType | undefined>(
     getInitialApiStatus(activeTab)
   );
-
+  const [initialIds,setInitialIds] = useState<any[]>([])
   // Add filter state
   const [filters, setFilters] = useState<ApplicantFilterValues>({});
 
@@ -223,6 +223,21 @@ const Applicants = () => {
     baseParams: params,
     enabled: !!jobId && !!userDetails?.companyId && !!userType,
   });
+
+  useEffect(() => {
+    if (!data || data.length === 0) return;
+
+    // Only run on the first load — avoid overwriting user changes
+    if (initialIds.length > 0) return;
+
+    const inProgressIds = data
+      .filter(app => app.isFindMatchingScoreInProgress)
+      .map(app => app.id);
+
+    if (inProgressIds.length > 0) {
+      setInitialIds(inProgressIds);
+    }
+  }, [data]);
 
   // Update current page index ref whenever page changes
   useEffect(() => {
@@ -471,6 +486,27 @@ const Applicants = () => {
     });
   };
 
+  const handleLocalUpdate = useCallback(
+  (jobId: string, updatedData: any) => {
+    const actualQueryKey = [...baseQueryKey, currentPageIndexRef.current];
+
+    queryClient.setQueryData(actualQueryKey, (old: any) => {
+      if (!old?.pages) return old;
+
+      return {
+        ...old,
+        pages: old.pages.map((page: any) => ({
+          ...page,
+          data: page.data.map((job: any) =>
+            job.id === jobId ? { ...job, ...updatedData } : job
+          ),
+        })),
+      };
+    });
+  },
+  [queryClient, baseQueryKey]
+  );
+
   return (
     <div>
       <div className="flex flex-col sm:flex-col gap-4 sm:gap-[25px]">
@@ -606,6 +642,9 @@ const Applicants = () => {
             isBulkEvaluation={!!(ListSelection.selectedRows.length > 0)}
             onBulkUpdate={onBulkUpdate}
             isUpdating={updateApplicationMutation.isPending}
+            initialIds={initialIds}
+            setInitialIds={setInitialIds}
+            localUpdate={handleLocalUpdate}
           />
         )}
       </div>

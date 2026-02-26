@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Eye, NotebookIcon, User, Loader2, Send } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Eye, NotebookIcon, User, Loader2, Send, Trophy } from "lucide-react";
 
 // Component imports
 import CVPreview from "@Components/Shared/ApplicantsPage/CVPreview";
@@ -48,6 +48,8 @@ import { NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import ApplicantExpandedRowDetails, {
   expandedExtraApplicationRow,
 } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
+import { useQuery } from "@tanstack/react-query";
+import httpServiceObj from "@Services/ApiHandler.service";
 
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -125,6 +127,9 @@ export interface ApplicationTableProps {
   isBulkEvaluation: boolean;
   onBulkUpdate: (JobApplicationStatusType: JobApplicationStatusType) => void;
   isUpdating?: boolean;
+  initialIds:string[];
+  setInitialIds: React.Dispatch<React.SetStateAction<any[]>>;
+  localUpdate: (jobId: string, updatedData: any) => void;
 }
 
 export default function ApplicationTable({
@@ -143,6 +148,9 @@ export default function ApplicationTable({
   onBulkUpdate,
   refetch,
   isUpdating = false,
+  initialIds,
+  setInitialIds,
+  localUpdate
 }: ApplicationTableProps) {
   // State management for expanded rows and modals
   const [expandedRows, setExpandedRows] = useState<string[]>([]);
@@ -207,6 +215,83 @@ export default function ApplicationTable({
     application: JobApplicationDetailsDto;
   }>({ isOpen: false, application: {} as JobApplicationDetailsDto });
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
+  const currentId = initialIds[0] ?? null;
+    const {
+    data: apidata,
+    isLoading,
+    error,
+    isFetched,
+  } = useQuery({
+    queryKey: ["matching-score", currentId],
+    queryFn: () => matchingScoreUpdate(currentId!),
+    enabled: !!currentId,
+    refetchInterval: 50000,
+    refetchOnWindowFocus: false,
+  });
+
+  useEffect(() => {
+    if (!currentId) return;
+    if (
+      apidata?.isFindMatchingScoreInProgress === false &&
+      apidata?.matchingScore
+    ) {
+      const candidateEmail = apidata?.PK.split("#")[2]
+      toast.success(`Score generated for ${candidateEmail}`, getToastOptions({}));
+      const updatedData = {
+        ...apidata,
+        isFindMatchingScoreInProgress: false,
+        matchingScore:apidata?.matchingScore,
+        rejectionFeedbackBySystem:apidata?.rejectionFeedbackBySystem,
+        scoreDetails:apidata?.scoreDetails,
+        rejectionFeedbackBySystemForApplicant:apidata?.rejectionFeedbackBySystemForApplicant
+      };
+      localUpdate(apidata?.id, updatedData);
+      setInitialIds((prev: any) => prev.slice(1));
+      return;
+    }
+    if (
+      apidata?.isFindMatchingScoreInProgress === false &&
+      !apidata?.matchingScore
+    ) {
+      const candidateEmail = apidata?.PK.split("#")[2]
+      toast.error(`Failed to generate score for ${candidateEmail}`, getToastOptions({}));
+      const updatedData = { ...apidata, isFindMatchingScoreInProgress: false };
+      localUpdate(apidata?.id, updatedData);
+      setInitialIds((prev: any) => prev.slice(1));
+      return;
+    }
+    if (apidata?.matchingScore) {
+      const candidateEmail = apidata?.PK.split("#")[2]
+      toast.success(`Score generated for ${candidateEmail}`, getToastOptions({}));
+      const updatedData = {
+        ...apidata,
+        isFindMatchingScoreInProgress: false,
+        matchingScore:apidata?.matchingScore,
+        rejectionFeedbackBySystem:apidata?.rejectionFeedbackBySystem,
+        scoreDetails:apidata?.scoreDetails,
+        rejectionFeedbackBySystemForApplicant:apidata?.rejectionFeedbackBySystemForApplicant
+      };
+      localUpdate(apidata?.id, updatedData);
+      setInitialIds((prev: any) => prev.slice(1));
+      return;
+    }
+  }, [apidata, setInitialIds]);
+
+  const matchingScoreUpdate = async (passedJobId: string) => {
+    if (!userDetails?.email) return;
+
+    try {
+      const { response } = await httpServiceObj.get<JobApplicationDetailsDto>(`/job-application/${passedJobId}`,true,{},false,"JOB");
+
+      if (response) {
+        return response;
+      } else {
+        console.error("Cannot fetch user details");
+      }
+    } catch (err) {
+      console.error("Exception in Agency all candidates list", err);
+    }
+  };
 
   const keyFallbacks = {
     yoe: ["yoe", "applicantDetails.YOE"],
@@ -252,6 +337,39 @@ export default function ApplicationTable({
       handleUpdate(payload, row.id, hasRefetch);
     } finally {
       setUpdatingApplicationId(null);
+    }
+  };
+
+  const findMatchingScoreSingle = async (row:JobApplicationDetailsDto) => {
+    if (row?.scoreDetails) {
+      toast.error("Cannot re-generate score again", getToastOptions({}));
+      return;
+    }
+    if(!row?.candidateParsedCvId || !row?.id){
+      toast.error("Id is missing cannot find matching score",getToastOptions({}))
+      return
+    }
+    const updatedData = { ...data, isFindMatchingScoreInProgress: true };
+    localUpdate(row?.id, updatedData);
+    const payload = {
+      userJobApplicationId: row?.id,
+      candidateParsedCvId: row?.candidateParsedCvId
+    };
+
+    try {
+      const { response, error } = await httpServiceObj.post( `/job-application/find-matching-score`, payload, true, {}, false, "JOB");
+      if (error) {
+        toast.error(error.message, getToastOptions({}));
+        const updatedData = { ...data, isFindMatchingScoreInProgress: false };
+        localUpdate(row?.id, updatedData);
+      }
+
+      if (response) {
+        setInitialIds((prev: string[]) => [...prev, row?.id]);
+      }
+    } catch (err) {
+      console.error(err, getToastOptions({}));
+    } finally {
     }
   };
 
@@ -354,8 +472,9 @@ export default function ApplicationTable({
       label: "Matching Score",
       sortable: true,
       render: (row: JobApplicationDetailsDto) => (
-        <div className="flex justify-center">
-          <ProgressCircle
+        <div className="flex justify-center items-center m-auto">
+          {row?.matchingScore
+          ?<ProgressCircle
             onClick={() => {
               setFeedbackModalOpen(true);
               const application = jobApplicationServiceObj.getScoreDetails(row);
@@ -373,6 +492,35 @@ export default function ApplicationTable({
             }}
             value={row.matchingScore}
           />
+          : <button
+              type="button"
+              disabled={row?.isFindMatchingScoreInProgress}
+              // disabled={true}
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content="Find matching score"
+              data-tooltip-place="top"
+              onClick={() => findMatchingScoreSingle(row)}
+              className={`w-28 inline-flex items-center gap-2 rounded-lg text-white text-xs transition p-1 text-center flex-row justify-center
+                    ${
+                      row?.isFindMatchingScoreInProgress
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : "bg-cyan-400 hover:bg-cyan-600"
+                    }
+                `}>
+              <Trophy className="w-4 h-4 flex items-center justify-center stroke-[2]" />
+              <span className="leading-tight text-[0.625rem] text-left">
+                {row?.isFindMatchingScoreInProgress ? (
+                  "Finding score..."
+                ) : (
+                  <p>
+                    Find matching
+                    <br />
+                    score
+                  </p>
+                )}
+              </span>
+            </button>
+            }
         </div>
       ),
     },

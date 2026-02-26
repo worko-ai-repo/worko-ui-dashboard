@@ -365,7 +365,7 @@ const GuidanceTable = memo(
 
           return (
             <div
-              className={`m-auto rounded-2xl text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-1 px-4 flex items-center justify-center gap-1 cursor-pointer text-white ${
+              className={`m-auto rounded-lg text-xs text-nowrap bg-[#57e1e1] bg-gradient-to-t from-blue-500/30 to-cyan-500/30 py-1 px-4 flex items-center justify-center gap-1 cursor-pointer text-white ${
                 isProcessing ? "opacity-75" : ""
               }`}
               onClick={() => !isProcessing && handleViewDetails(row)}>

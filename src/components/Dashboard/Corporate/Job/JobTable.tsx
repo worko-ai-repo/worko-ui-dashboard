@@ -243,14 +243,14 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         > = {
           PUBLISHED: [
             {
-              icon: <img src={View} className="w-5 h-5" />,
+              icon: <img src={View} className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "View Applicants",
               onClick: () => nav(`/corporate/cApplicants/${row.id}`),
               disabled: isRowUpdating,
             },
             {
-              icon: <Filter className="w-5 h-5" />,
+              icon: <Filter className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Screen Resumes",
               onClick: () =>
@@ -260,21 +260,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               disabled: isRowUpdating,
             },
             {
-              icon: <img src={Duplicate} className="w-5 h-5" />,
+              icon: <img src={Duplicate} className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Duplicate Job",
               onClick: () => handleJobCreation("DUPLICATE", row),
               disabled: isRowUpdating,
             },
             {
-              icon: <img src={Edit} className="w-5 h-5" />,
+              icon: <img src={Edit} className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Update Job",
               onClick: () => handleJobCreation("UPDATE", row),
               disabled: isRowUpdating,
             },
             {
-              icon: <ViewIcon className="w-5 h-5" />,
+              icon: <ViewIcon className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "View Job",
               onClick: () =>
@@ -285,7 +285,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               disabled: isRowUpdating,
             },
             {
-              icon: <Link className="w-5 h-5" />,
+              icon: <Link className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Copy External apply Link",
               onClick: () => {
@@ -300,9 +300,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               ? [
                   {
                     icon: isRowUpdating ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     ),
                     className: "btn-blue shrink-0",
                     tooltip: "Close Job",
@@ -314,9 +314,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               : []),
             {
               icon: isRowUpdating ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <img src={Archive} className="w-5 h-5" />
+                <img src={Archive} className="w-4 h-4" />
               ),
               className: "btn-blue shrink-0",
               tooltip: "Archive Job",
@@ -333,9 +333,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               ? [
                   {
                     icon: isRowUpdating ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4" />
                     ),
                     className: "btn-blue shrink-0",
                     tooltip: "Close Job",
@@ -347,9 +347,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               : []),
             {
               icon: isRowUpdating ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
+                <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <img src={Repost} className="w-5 h-5" />
+                <img src={Repost} className="w-4 h-4" />
               ),
               className: "btn-sky shrink-0",
               tooltip: "Repost Job",
@@ -361,7 +361,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               disabled: isRowUpdating,
             },
             {
-              icon: <img src={Duplicate} className="w-5 h-5" />,
+              icon: <img src={Duplicate} className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Duplicate",
               onClick: () => handleJobCreation("DUPLICATE", row),
@@ -370,7 +370,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
           ],
           CLOSED: [
             {
-              icon: <img src={Duplicate} className="w-5 h-5" />,
+              icon: <img src={Duplicate} className="w-4 h-4" />,
               className: "btn-sky shrink-0",
               tooltip: "Duplicate Job",
               onClick: () => handleJobCreation("DUPLICATE", row),

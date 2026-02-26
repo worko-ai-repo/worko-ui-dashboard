@@ -363,28 +363,49 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     try {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
+    const totalfiles = event.target.files;
+    if (!totalfiles || totalfiles.length === 0) return;
 
-    if (files.length > 500) {
+    if (totalfiles.length > 500) {
       toast.error("You can upload a maximum of 500 CVs at a time.", getToastOptions({}));
       return;
     }
 
-    const pdfFiles = Array.from(files).filter(
-      (file) => file.type === "application/pdf"
+    const invalidPDFFilesNames = Array.from(totalfiles).filter(
+      (file) => file.type !== "application/pdf"
+    ).map(file =>{
+      return{
+        fileName:file.name,
+        fileType:file.type,
+      }
+    })
+
+    const overSizedPDFFilesNames = Array.from(totalfiles).filter(
+      (file) => file.size > 3 * 1024 * 1024
+    ).map(file =>{
+      return{
+        fileName:file.name,
+        fileType:file.type,
+      }
+    })
+
+    const files = Array.from(totalfiles).filter(
+      file => file.size <= 3 * 1024 * 1024 && file.type === "application/pdf"
     );
+    // const pdfFiles = Array.from(files).filter(
+    //   (file) => file.type === "application/pdf"
+    // );
 
-    if (pdfFiles.length !== files.length) {
-      toast.error("Only PDF files are allowed.",getToastOptions({}));
-      return;
-    }
+    // if (pdfFiles.length !== files.length) {
+    //   toast.error("Only PDF files are allowed.",getToastOptions({}));
+    //   return;
+    // }
 
-    const oversizedFiles = pdfFiles.filter((file) => file.size > 2 * 1024 * 1024);
-    if (oversizedFiles.length > 0) {
-      toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
-      return;
-    }
+    // const oversizedFiles = pdfFiles.filter((file) => file.size > 2 * 1024 * 1024);
+    // if (oversizedFiles.length > 0) {
+    //   toast.error(`Max limit for each CV is 2MB`,getToastOptions({}));
+    //   return;
+    // }
 
     const resumeCountResponse = await sendResumeCount({totalResumesUploaded:files.length})
     if (!resumeCountResponse.success) {
@@ -394,8 +415,8 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const resumeCountResponseId = resumeCountResponse?.data?.id
 
     const chunkSize = 50;
-    for (let i = 0; i < pdfFiles.length; i += chunkSize) {
-    const currentChunk = pdfFiles.slice(i, i + chunkSize);
+    for (let i = 0; i < files.length; i += chunkSize) {
+    const currentChunk = files.slice(i, i + chunkSize);
 
     const pdfFilesNameAndType  = currentChunk.map(file =>{
       return {
