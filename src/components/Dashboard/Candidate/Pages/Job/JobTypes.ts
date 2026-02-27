@@ -18,6 +18,9 @@ export interface JobTypes {
   applicationSteps?: ApplicationStep[];
   jobType: string;
   requestedDocumentDetails?: RequestedDocumentDetail[];
+  responseDocumentDetails?:ResponseDocumentDetails[];
+  documentCurrentStatusMap?: Record<string, string>;
+  documentCurrentMapping?: Record<string, string>;
   followUpRequest?: {
     actionDate: string;
   }[];
@@ -30,7 +33,18 @@ export interface RequestedDocumentDetail {
   userId: string;
   userType: string;
 }
+export interface DocumentMappingItem {
+  documentName: string;
+  cloudFileName: string;
+}
 
+export interface ResponseDocumentDetails {
+  actionDate: string;
+  documentMapping: DocumentMappingItem[];
+  documentStatus: string;
+  userId: string;
+  userType: string;
+}
 
 export interface StatusTracker {
   userType: string;

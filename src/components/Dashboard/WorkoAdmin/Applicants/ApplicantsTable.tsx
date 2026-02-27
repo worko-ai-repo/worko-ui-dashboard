@@ -468,7 +468,8 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>
-            {row.applicantDetails?.noticePeriod
+            {row?.applicantDetails?.noticePeriod !== null &&
+            row?.applicantDetails?.noticePeriod !== undefined
               ? `${row.applicantDetails.noticePeriod} Days`
               : "N/A"}
           </span>
@@ -511,7 +512,7 @@ export default function ApplicationTable({
           ? <ProgressCircle
             onClick={() => {
               setFeedbackModalOpen(true);
-              const application = jobApplicationServiceObj.getScoreDetails(row);
+              const application = jobApplicationServiceObj.getScoreDetailsWithoutDisplayToCorporate(row);
               if (application === null) return;
               setScorePointsModal({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",

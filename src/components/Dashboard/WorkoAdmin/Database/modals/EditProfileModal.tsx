@@ -27,8 +27,8 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         // },
         currentDesignation: "",
         YOE: "",
-        currentCTC: "",
-        expectedCTC: "",
+        currentCTC: null,
+        expectedCTC: null,
         locationComfortableWith: "",
         noticePeriod: "",
         coolingPeriodCompanies: "",
@@ -51,8 +51,8 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
             currentCompany: fullDetails.currentCompany || "",
             currentDesignation:fullDetails.currentDesignation || "",
             YOE: fullDetails.YOE || "",
-            currentCTC: fullDetails.currentCTC || "",
-            expectedCTC: fullDetails.expectedCTC || "",
+            currentCTC: fullDetails.currentCTC || null,
+            expectedCTC: fullDetails.expectedCTC || null,
             locationComfortableWith: fullDetails.locationComfortableWith || "",
             noticePeriod: fullDetails.noticePeriod || "",
             coolingPeriodCompanies: fullDetails.coolingPeriodCompanies || "",
@@ -134,8 +134,10 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     <input 
                     type="number"
                     step={0.1}
-                    min={0}  
-                    className="input_primary auth_input capitalize"
+                    min={0}
+                    max={300}  
+                    placeholder='Enter your salary in LPA'
+                    className="input_primary auth_input capitalize placeholder:text-xs"
                     {...register("currentCTC",{ valueAsNumber: true })}/>
                 </div>
                 <div className='text-left flex-1'>
@@ -144,14 +146,19 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
                     type="number"
                     step={0.1}
                     min={0}
-                    className="input_primary auth_input capitalize"
+                    max={400}
+                    placeholder='Enter your salary in LPA'
+                    className="input_primary auth_input capitalize placeholder:text-xs"
                     {...register("expectedCTC",{ valueAsNumber: true,                         
                         validate: (value) => {
                         const current = watch("currentCTC");
-                        return value >= current || "Expected CTC cannot be less than Current CTC";
+                        const expectedNum = Number(value ?? 0);
+                        const currentNum = Number(current ?? 0);
+                        return expectedNum >= currentNum || "Expected CTC cannot be less than Current CTC";
                     }})}/>
                     {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
                     )}
+                    <p className='text-xs text-slate-500 text-left'>Enter your salary in LPA(e.g., 25 for 25,00,000 Lakhs per annum).</p>
                 </div>
             </div>
             <div className='flex gap-2'>     

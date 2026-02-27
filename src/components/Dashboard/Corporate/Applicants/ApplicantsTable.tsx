@@ -66,7 +66,7 @@ export const statusColors: Record<JobApplicationStatusType, string> = {
   DOCUMENT_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0]",
   DOCUMENT_ADDITIONAL_REQUEST_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
   DOCUMENT_REVISION_REQUEST_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
-  DOCUMENT_REVISION_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
+  DOCUMENT_REVISION_REQUESTED: "bg-[#D6F4FF] text-[#00ADC0]",
   DOCUMENT_SUBMITTED: "bg-[#D6F4FF] text-[#00ADC0] has-notification",
   DOCUMENT_VERIFIED: "bg-[#D6F4FF] text-[#00ADC0]",
   OFFER_SENT: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -434,7 +434,8 @@ export default function ApplicationTable({
       render: (row: JobApplicationDetailsDto) => (
         <div className="flex items-center justify-center gap-2">
           <span>
-            {row.applicantDetails?.noticePeriod
+            {row?.applicantDetails?.noticePeriod !== null &&
+            row?.applicantDetails?.noticePeriod !== undefined
               ? `${row.applicantDetails.noticePeriod} Days`
               : "N/A"}
           </span>
@@ -477,7 +478,7 @@ export default function ApplicationTable({
           ?<ProgressCircle
             onClick={() => {
               setFeedbackModalOpen(true);
-              const application = jobApplicationServiceObj.getScoreDetails(row);
+              const application = jobApplicationServiceObj.getScoreDetailsWithoutDisplayToCorporate(row);
               if (application === null) return;
               setScorePointsModal({
                 title: application.type === "SCORE" ? "Matching Score Details" : "Rejected Reason",

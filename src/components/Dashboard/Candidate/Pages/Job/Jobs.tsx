@@ -244,23 +244,50 @@ const StatusFilterDropdown = [
     });
   }, []);
 
-  const handleLocalUpdateForSubmittingDocuments = useCallback(
-    (jobId: string, updatedApplication: JobTypes) => {
-      setData(prevData => {
-        if (!prevData) return prevData;
+  const mergeJobDeep = (oldJob: JobTypes, patch: Partial<JobTypes>): JobTypes => {
+  return {
+    ...oldJob,
+    ...patch,
 
-        return {
-          ...prevData,
-          data: prevData.data.map(job =>
-            job.id === jobId
-              ? updatedApplication
-              : job
-          )
-        };
-      });
+    documentCurrentStatusMap: {
+      ...oldJob.documentCurrentStatusMap,
+      ...patch.documentCurrentStatusMap,
     },
-    []
-  );
+
+    documentCurrentMapping: {
+      ...oldJob.documentCurrentMapping,
+      ...patch.documentCurrentMapping,
+    },
+
+    requestedDocumentDetails: [
+      ...(oldJob.requestedDocumentDetails || []),
+      ...(patch.requestedDocumentDetails || []),
+    ],
+
+    responseDocumentDetails: [
+      ...(oldJob.responseDocumentDetails || []),
+      ...(patch.responseDocumentDetails || []),
+    ],
+  };
+};
+
+const handleLocalUpdateForSubmittingDocuments = useCallback(
+  (jobId: string, updatedApplication: JobTypes) => {
+    setData(prevData => {
+      if (!prevData) return prevData;
+
+      return {
+        ...prevData,
+        data: prevData.data.map(job =>
+          job.id === jobId
+            ? mergeJobDeep(job, updatedApplication)
+            : job
+        )
+      };
+    });
+  },
+  []
+);
 
 
 const handleFollowUpRequestUpdate = useCallback(

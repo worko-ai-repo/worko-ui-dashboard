@@ -145,6 +145,37 @@ class JobApplicationService {
     );
   }
 
+  public getScoreDetailsWithoutDisplayToCorporate(jobApplication: JobApplicationDetailsDto): {
+    feedback: any;
+    type: "REJ" | "SCORE";
+  } {
+    if (
+      !jobApplication ||
+      jobApplication.matchingScore === null ||
+      jobApplication.matchingScore === undefined
+    ) {
+      console.error("Invalid input: job is null or undefined");
+      return {
+        feedback: null,
+        type: "REJ",
+      };
+    }
+      if (
+        jobApplication.matchingScore >= this.THRESHOLD_SCORE &&
+        jobApplication.matchingScore <= this.UPPER_MID_SCORE
+      ) {
+        return this.createResponse(jobApplication.rejectionFeedbackBySystem, "REJ");
+      } else if (jobApplication.matchingScore >= this.HIGH_SCORE) {
+        return this.createResponse(jobApplication.scoreDetails, "SCORE");
+      } else if (jobApplication.matchingScore < this.THRESHOLD_SCORE) {
+        return this.createResponse(jobApplication.rejectionFeedbackBySystem, "REJ");
+      }
+    return this.createResponse(
+      jobApplication.scoreDetails || "No score details available",
+      "SCORE"
+    );
+  }
+
   /**
    * Helper method to create a response object.
    */

@@ -43,8 +43,8 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
 }) => {
   const { register, handleSubmit, reset, setValue, watch, getValues,formState: { errors },} = useForm({ mode: "onChange",
       defaultValues: {
-        currentCTC: 0,
-        expectedCTC: 0,
+        currentCTC: null,
+        expectedCTC: null,
         noticePeriod: 0,
       },
     });
@@ -76,8 +76,8 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
   useEffect(() => {
     if (currentCandidate) {
         reset({
-            currentCTC: currentCandidate?.currentCTC || 0,
-            expectedCTC: currentCandidate?.expectedCTC || 0,
+            currentCTC: currentCandidate?.currentCTC || null,
+            expectedCTC: currentCandidate?.expectedCTC || null,
             noticePeriod: currentCandidate?.noticePeriod || 0,
         });
     }
@@ -281,9 +281,12 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
                 <input 
                 step={0.1}
                 min={0}
+                max={300}
                 type="number"
-                className="input_primary auth_input capitalize"
+                placeholder='Enter your salary in LPA'
+                className="input_primary auth_input capitalize placeholder:text-xs"
                 {...register("currentCTC",{ valueAsNumber: true})}/>
+                <p className='text-xs text-slate-500 text-left'>Enter your salary in LPA(e.g., 25 for 25,00,000 Lakhs per annum).</p>
             </div>
             <div className='text-left'>
                 <label htmlFor="">Expected CTC(LPA)
@@ -292,15 +295,20 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
                 <input 
                 step={0.1}
                 min={0}
+                max={400}
                 type="number" 
-                className="input_primary auth_input capitalize"
+                placeholder='Enter your salary in LPA'
+                className="input_primary auth_input capitalize placeholder:text-xs"
                 {...register("expectedCTC",{ valueAsNumber: true,            
                     validate: (value) => {
                     const current = watch("currentCTC");
-                    return value >= current || "Expected CTC cannot be less than Current CTC";
+                    const expectedNum = Number(value ?? 0);
+                    const currentNum = Number(current ?? 0);
+                    return expectedNum >= currentNum || "Expected CTC cannot be less than Current CTC";
                 }})}/>
                 {errors.expectedCTC && (<p className="text-red-500 text-sm">{errors.expectedCTC.message}</p>
                 )}
+                <p className='text-xs text-slate-500 text-left'>Enter your salary in LPA(e.g., 25 for 25,00,000 Lakhs per annum).</p>
             </div>    
             <div className='text-left'>
                 <label htmlFor="">Notice period (in days)<span className='text-red-500'>*</span></label>
