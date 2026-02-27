@@ -234,7 +234,7 @@ const MainContent: React.FC<MainContentProps> = ({
           toast.error("No Logged in user found",getToastOptions({}))
           handleLogout();
           setTimeout(() => {
-            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+            window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
           }, 1000);
           return;
         }
@@ -250,7 +250,7 @@ const MainContent: React.FC<MainContentProps> = ({
           toast.error("Unauthorized access. Redirecting...",getToastOptions({}));
           handleLogout();
           setTimeout(() => {
-            window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+            window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
           }, 1000);
         }
       } catch (err) {
@@ -259,7 +259,7 @@ const MainContent: React.FC<MainContentProps> = ({
         handleLogout();
         // window.location.href = "/auth/evaluator-dashboard/login";
         setTimeout(() => {
-          window.location.href = `${window.location.origin}/v0/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
+          window.location.href = `${window.location.origin}/auth/evaluator-dashboard/login?jobApplicationId=${jobApplicationId}&evaluationRequestId=${evaluationRequestId}`;
         }, 1000);
       }
     };
