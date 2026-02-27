@@ -96,8 +96,8 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
 
     updated[currentIndex] = {
       ...updated[currentIndex],
-      currentCTC: Number(data.currentCTC),
-      expectedCTC: Number(data.expectedCTC),
+      currentCTC: data.currentCTC === null || data.currentCTC === "" ? null : Number(data.currentCTC),
+      expectedCTC: data.expectedCTC === null || data.expectedCTC === "" ? null : Number(data.expectedCTC),
       noticePeriod: Number(data.noticePeriod),
     };
 
@@ -168,6 +168,11 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
       toast.error(message,getToastOptions({}))
       setIsSubmitting(false);
       return
+    }
+    if (finalFilteredList.length === 0) {
+        toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
+        setIsSubmitting(false);
+        return;
     }
     const candidateParsedCvs= finalFilteredList.map(c => ({
         candidateParsedCvId: c.id,

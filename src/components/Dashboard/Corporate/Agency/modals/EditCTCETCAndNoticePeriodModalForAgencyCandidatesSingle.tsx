@@ -98,8 +98,8 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle:React.FC<EditCTCET
         ...updated[currentIndex],
         candidateParsedCvDetails: {
             ...updated[currentIndex].candidateParsedCvDetails,
-            currentCTC: Number(data.currentCTC),
-            expectedCTC: Number(data.expectedCTC),
+            currentCTC: data.currentCTC === null || data.currentCTC === "" ? null : Number(data.currentCTC),
+            expectedCTC: data.expectedCTC === null || data.expectedCTC === "" ? null : Number(data.expectedCTC),
             noticePeriod: Number(data.noticePeriod),
         },
     };
@@ -179,6 +179,11 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle:React.FC<EditCTCET
     return;
     }
 
+    if (finalFilteredList.length === 0) {
+        toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
+        setIsSubmitting(false);
+        return;
+    }
     const payload = {
         agencyUserSubmissionId: finalFilteredList[0].candidateParsedCvDetails?.agencyUserSubmissionId,
         companyName: finalFilteredList[0].jobDetails?.companyName,
