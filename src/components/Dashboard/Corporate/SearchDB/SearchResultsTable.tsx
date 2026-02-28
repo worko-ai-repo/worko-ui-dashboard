@@ -971,7 +971,31 @@ export default function SearchResultsTable(props: any) {
       } catch (error) {
         console.log(error)
       }      
-    } else{
+    } else if (row?.cvAwsS3ResourceType === "ADMIN_CAND_BULK_CV_UPLOAD") {
+      if (
+        !row?.cvAwsS3FilePath
+      ) {
+        toast.error("Missing details", getToastOptions({}));
+        return;
+      }
+
+      const payload = { 
+        candCvAwsS3FileName: row?.cvAwsS3FileName 
+      }
+      try {
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
+
+        if (error) {
+          toast.error(error.message, getToastOptions({}));
+          return;
+        }
+
+        setPdfViewDetails(response?.objectUrl);
+        setIsViewCVModalOpen(true);
+      } catch (error) {
+        console.log(error)
+      }      
+    }else{
       if(!row?.companyId 
         || !row?.jobId 
         || !row?.agencyUserId 

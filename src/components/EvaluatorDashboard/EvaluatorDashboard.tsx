@@ -112,7 +112,7 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleViewCV = async() => {
-    // console.log('Viewing CV for candidate:', selectedCandidateId);
+    // console.log(selectedCandidateDetails?.cvAwsS3ResourceType);
     if(selectedCandidateDetails?.cvAwsS3SignedUrl){
       setCVLink(selectedCandidateDetails?.cvAwsS3SignedUrl)
     }else if(selectedCandidateDetails?.cvAwsS3ResourceType){
@@ -153,7 +153,102 @@ const EvaluatorView: React.FC = () => {
             } catch (error) {
               console.log(error)
             }      
-      }else{
+      }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
+            if (
+              !selectedCandidateDetails?.cvAwsS3FilePath ||
+              !selectedCandidateDetails?.cvAwsS3FileName
+            ) {
+              toast.error("Missing details", getToastOptions({}));
+              return;
+            }
+            const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
+            const payload = { 
+              companyId: splittedID[1],
+              candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName 
+            }
+            try {
+              const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
+      
+              if (error) {
+                toast.error(error.message, getToastOptions({}));
+                return;
+              }
+              setCVLink(response?.objectUrl ?? "")
+            } catch (error) {
+              console.log(error)
+            }      
+          }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "ADMIN_CAND_BULK_CV_UPLOAD") {
+            if (
+              !selectedCandidateDetails?.cvAwsS3FileName
+            ) {
+              toast.error("Missing details", getToastOptions({}));
+              return;
+            }
+            const payload = { 
+              candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName 
+            }
+            try {
+              const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
+      
+              if (error) {
+                toast.error(error.message, getToastOptions({}));
+                return;
+              }
+              setCVLink(response?.objectUrl ?? "")
+            } catch (error) {
+              console.log(error)
+            }      
+          }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CAND_SUBMIT_CV_JOB") {
+            if (
+              !selectedCandidateDetails?.cvAwsS3FilePath ||
+              !selectedCandidateDetails?.cvAwsS3FileName ||
+              !selectedCandidateDetails?.jobId
+            ) {
+              toast.error("Missing details", getToastOptions({}));
+              return;
+            }
+            const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
+            const payload = { 
+              companyId: splittedID[2],
+              candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName,
+              jobId:selectedCandidateDetails?.jobId
+            }
+            try {
+              const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`, payload, true, {}, true );
+      
+              if (error) {
+                toast.error(error.message, getToastOptions({}));
+                return;
+              }
+              setCVLink(response?.objectUrl ?? "")
+            } catch (error) {
+              console.log(error)
+            }      
+          }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
+            if (
+              !selectedCandidateDetails?.cvAwsS3FilePath ||
+              !selectedCandidateDetails?.cvAwsS3FileName
+            ) {
+              toast.error("Missing details", getToastOptions({}));
+              return;
+            }
+            const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
+            const payload = { 
+              companyId: splittedID[1],
+              candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName
+            }
+            try {
+              const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
+      
+              if (error) {
+                toast.error(error.message, getToastOptions({}));
+                return;
+              }
+              setCVLink(response?.objectUrl ?? "")
+            } catch (error) {
+              console.log(error)
+            }      
+          }else{
         if(!selectedCandidateDetails?.companyId 
           || !selectedCandidateDetails?.jobId 
           || !selectedCandidateDetails?.agencyUserId 

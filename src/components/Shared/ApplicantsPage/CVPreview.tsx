@@ -174,6 +174,21 @@ const handleCVUrlGenerator = async (jobApplicationData: JobApplicationDetailsDto
         }
         return response.objectUrl;
       }
+      case "BULK_CVS": {
+        const splitted = jobApplicationData?.applicantDetails?.cvAwsS3FilePath.split("/")
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
+          `/file/${splitted[1]}/${jobApplicationData?.applicantDetails?.CV}/BULK_CVS`,
+          true,
+          { corporateBulkJdId: splitted[3] },
+          false,
+          "BASE"
+        );
+        if (error || !response) {
+          toast.error(error?.message || "An unknown error occurred", getToastOptions({}));
+          return;
+        }
+        return response.objectUrl;
+      }
       default:
         toast.error("Unsupported document type", getToastOptions({}));
         return;
