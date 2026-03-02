@@ -1,4 +1,3 @@
-
 /**
  * Skeleton loader component for the Job Filter Panel.
  * Displays a placeholder UI for filter dropdown buttons.
@@ -141,7 +140,6 @@ export const JobCardListSkeleton = ({ count = 3 }) => {
     );
   };
 
-
 /**
  * Skeleton loader component for a single Company Card.
  * Displays a placeholder UI for the company card design.
@@ -274,4 +272,192 @@ export const SubscriptionSkeletonLoader = () => {
       </div>
     );
   };
-  
+
+/**
+ * Skeleton loader component for Analytics Home Page (Corporate & Admin).
+ * Displays placeholders for filters, KPI cards, charts, and other sections.
+ *
+ * @param {Object} props - Component props.
+ * @param {boolean} [props.showAdminFilters=false] - Whether to show admin-specific filters (company & recruiter dropdowns).
+ * @returns {JSX.Element} The skeleton loader for Analytics Home.
+ */
+export const AnalyticsHomeSkeleton = ({ showAdminFilters = false }) => {
+  return (
+    <div className="flex flex-col gap-4 lg:gap-10 justify-between animate-pulse">
+      <div className="flex-1 flex flex-col gap-4">
+        <div className="flex flex-col w-full gap-4 justify-start">
+          {/* Filters Section */}
+          <div className="flex flex-wrap items-start justify-between gap-4 bg-white rounded-xl border border-gray-100 px-4 py-3">
+            <div className="flex-shrink-0">
+              <div className="h-5 bg-gray-200 rounded w-48 mb-2"></div>
+              <div className="h-3 bg-gray-200 rounded w-64"></div>
+            </div>
+            <div className="flex flex-wrap items-end gap-4 text-xs">
+              {/* Admin-specific filters (Company & Recruiter) */}
+              {showAdminFilters && (
+                <>
+                  <div className="flex flex-col min-w-[240px]">
+                    <div className="h-3 bg-gray-200 rounded w-16 mb-1.5"></div>
+                    <div className="h-[38px] bg-gray-200 rounded-lg"></div>
+                  </div>
+                  <div className="flex flex-col min-w-[200px]">
+                    <div className="h-3 bg-gray-200 rounded w-16 mb-1.5"></div>
+                    <div className="h-[38px] bg-gray-200 rounded-lg"></div>
+                  </div>
+                </>
+              )}
+              
+              {/* Date Range Filter */}
+              <div className="flex flex-col">
+                <div className="h-3 bg-gray-200 rounded w-20 mb-1.5"></div>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-[30px] w-16 bg-gray-200 rounded-full"></div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Job Status Filter */}
+              <div className="flex flex-col">
+                <div className="h-3 bg-gray-200 rounded w-20 mb-1.5"></div>
+                <div className="flex gap-2">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-[30px] w-20 bg-gray-200 rounded-full"></div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="min-h-screen">
+            <div className="mx-auto space-y-8">
+              {/* Top Row - KPI Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="bg-white rounded-xl border border-gray-100 p-6">
+                    <div className="h-4 bg-gray-200 rounded w-24 mb-4"></div>
+                    <div className="h-8 bg-gray-200 rounded w-16 mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-32"></div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Middle Row - Hiring Trend & Onboarding Pipeline */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Hiring Trend Chart */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
+                  <div className="h-64 bg-gray-200 rounded"></div>
+                </div>
+
+                {/* Onboarding Pipeline */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="h-5 bg-gray-200 rounded w-40 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-48 mb-4"></div>
+                  <div className="flex flex-wrap gap-3">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="min-w-[180px] h-16 bg-gray-200 rounded-lg"></div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Row - Critical Drop-offs & Funnel Velocity */}
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                {/* Critical Drop-off Stages */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="h-5 bg-gray-200 rounded w-40 mb-6"></div>
+                  
+                  {/* Summary Stats */}
+                  <div className="flex justify-between mb-6 pb-4 border-b border-slate-200">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="text-center">
+                        <div className="h-3 bg-gray-200 rounded w-24 mb-2 mx-auto"></div>
+                        <div className="h-6 bg-gray-200 rounded w-16 mx-auto"></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Drop-off Stages */}
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="bg-slate-50 rounded-lg p-3">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="h-4 bg-gray-200 rounded w-32"></div>
+                          <div className="h-6 bg-gray-200 rounded w-16"></div>
+                        </div>
+                        <div className="h-2 bg-gray-200 rounded-full"></div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Funnel Velocity */}
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="h-5 bg-gray-200 rounded w-32 mb-4"></div>
+                  <div className="h-64 bg-gray-200 rounded"></div>
+                </div>
+              </div>
+
+              {/* Hiring Intelligence */}
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+                <div className="bg-white rounded-xl border border-gray-100 p-6">
+                  <div className="h-5 bg-gray-200 rounded w-40 mb-4"></div>
+                  <div className="h-3 bg-gray-200 rounded w-64 mb-4"></div>
+                  
+                  {/* Position Chips */}
+                  <div className="flex gap-2 mb-4">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="h-8 w-24 bg-gray-200 rounded-full"></div>
+                    ))}
+                  </div>
+
+                  {/* Table */}
+                  <div className="border border-slate-200 rounded-lg overflow-hidden">
+                    <div className="bg-gray-100 p-3">
+                      <div className="flex gap-4">
+                        <div className="h-4 bg-gray-200 rounded w-32"></div>
+                        {[1, 2, 3, 4, 5].map((i) => (
+                          <div key={i} className="h-4 bg-gray-200 rounded w-20"></div>
+                        ))}
+                      </div>
+                    </div>
+                    <div className="space-y-2 p-3">
+                      {[1, 2, 3, 4].map((i) => (
+                        <div key={i} className="flex gap-4">
+                          <div className="h-10 bg-gray-200 rounded w-32"></div>
+                          {[1, 2, 3, 4, 5].map((j) => (
+                            <div key={j} className="h-10 bg-gray-200 rounded w-20"></div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * Skeleton loader for Corporate Home Analytics.
+ * 
+ * @returns {JSX.Element} The skeleton loader for Corporate Home.
+ */
+export const CorporateAnalyticsHomeSkeleton = () => {
+  return <AnalyticsHomeSkeleton showAdminFilters={false} />;
+};
+
+/**
+ * Skeleton loader for Admin Analytics Home.
+ * Includes additional filters for company and recruiter selection.
+ * 
+ * @returns {JSX.Element} The skeleton loader for Admin Analytics Home.
+ */
+export const AdminAnalyticsHomeSkeleton = () => {
+  return <AnalyticsHomeSkeleton showAdminFilters={true} />;
+};
