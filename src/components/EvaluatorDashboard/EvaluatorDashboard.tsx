@@ -106,7 +106,17 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleFeedbackComplete = (data: any) => {
-    // Remove the submitted request from the list (evaluation is complete)
+    // Only remove request for REJECT or ON_HOLD
+    // For INTERVIEW_SCHEDULED, keep it in the list (it's just scheduled, not complete)
+    const shouldRemove = data.status === 'reject' || data.status === 'hold';
+
+    if (!shouldRemove) {
+      // For INTERVIEW_SCHEDULED, just close modal and keep evaluation in list
+      // (the onLocalUpdate in FeedbackModal already updated the status)
+      return;
+    }
+
+    // Remove the submitted request from the list (for REJECT/ON_HOLD only)
     const updatedRequests = requests.filter(req => req.id !== selectedRequest?.id);
     setRequests(updatedRequests);
 
