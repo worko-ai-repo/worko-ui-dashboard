@@ -1,5 +1,5 @@
 import React from "react";
-import { FileText, Play, Send, Info } from "lucide-react";
+import { FileText, Play, Send, Info, Calendar, Clock } from "lucide-react";
 import {
   ApplicationDetails,
   CandidateDetails,
@@ -28,6 +28,7 @@ import jobApplicationServiceObj from "@Utils/ApplicationPage.utils";
 import { EvaluatorDetails } from "@Interfaces/CorporateServices.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import Modal from "@Components/Shared/Modal";
+import CandidateCard from "./CandidateCard";
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
   companyLogo: string;
@@ -52,6 +53,16 @@ interface MainContentProps {
       userName: string;
     }>
   >;
+  companyCandidates?: Array<{
+    request: any;
+    details: EvaluationDetails;
+    candidate: CandidateDetails | null;
+    application: ApplicationDetails | null;
+  }>;
+  onViewCVCompany?: (req: any, cand: any) => void;
+  onSubmitFeedbackCompany?: (req: any, cand: any) => void;
+  onViewFeedbackCompany?: (req: any, cand: any) => void;
+  onViewInterview?: (interviewDetails: any, name: string) => void;
 }
 
 const handleLogout = async () => {
@@ -78,6 +89,11 @@ const MainContent: React.FC<MainContentProps> = ({
   evaluatorDetails,
   interviewDetailviewModal,
   setInterviewDetailviewModal,
+  companyCandidates = [],
+  onViewCVCompany,
+  onSubmitFeedbackCompany,
+  onViewFeedbackCompany,
+  onViewInterview
 }) => {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [evaluatorEmail, setEvaluatorEmail] = useState<string>("");
@@ -91,6 +107,10 @@ const MainContent: React.FC<MainContentProps> = ({
   const [refreshFlag, setRefreshFlag] = useState(0);
   const { userDetails } = useAppContext();
   const v1 = import.meta.env.APP_PROXY_DASH
+  const [expandedCard, setExpandedCard] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<
+    "about" | "worko" | "note" | null
+  >(null);
 
   useEffect(() => {
     if (!EvaluationRequestDetails?.email || !EvaluationRequestDetails?.applicantUserId) {
@@ -273,10 +293,42 @@ const MainContent: React.FC<MainContentProps> = ({
       }
   }, [EvaluationRequestDetails?.evaluationResponseId]);
 
+  const [dateStr, setDateStr] = useState("");
+  const [timeStr, setTimeStr] = useState("");
 
+  useEffect(() => {
+    const updateDateTime = () => {
+      const now = new Date();
+
+      const date = now.toLocaleDateString("en-US", {
+        weekday: "long",
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "Asia/Kolkata",
+      });
+
+      const time = now.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: true,
+        timeZone: "Asia/Kolkata",
+      });
+
+      setDateStr(date);
+      setTimeStr(time);
+    };
+
+    updateDateTime();
+    const interval = setInterval(updateDateTime, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+  
   if (isLoadingData) {
     return (
-      <div className="flex flex-col items-center justify-center w-full min-h-[200px] text-slate-600 text-base sm:text-lg font-semibold">
+      <div className="flex flex-col items-center justify-center min-h-[200px] text-slate-600 text-base sm:text-lg font-semibold m-auto">
         <span className="mb-3">Please wait, loading data</span>
         <span className="flex space-x-1 text-xl sm:text-2xl">
           <span className="animate-bounce">.</span>
@@ -287,358 +339,393 @@ const MainContent: React.FC<MainContentProps> = ({
     );
   }
 
-  if (requests.length > 0 && !isLoadingData) {
+  // MULTI-CANDIDATE MODE (correct return)
+  if (companyCandidates.length > 0 && !isLoadingData) {
     return (
-      <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
-        {/* Header */}
-        <div className="flex items-center justify-end mb-6">
-          {/* <img
-          src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=200&h=80&fit=crop"
-          alt="Company Logo"
-          className="h-10 rounded-lg object-cover"
-        /> */}
-          <div className="flex items-center gap-8 text-sm text-slate-500">
-            <span>
-              Profile sent on{" "}
-              {new Date(EvaluationRequestDetails.profileSentDate).toLocaleString(undefined, {
-                year: "numeric",
-                month: "numeric",
-                day: "numeric",
-                hour: "numeric",
-                minute: "numeric",
-                hour12: true,
-              })}
-            </span>
+    <div className="flex-1 bg-gray-50 p-6 overflow-y-auto space-y-6">
+        <div className="flex gap-4 items-center justify-end text-xs">
+      {/* DATE */}
+      <div className="flex items-center gap-2 bg-blue-100 text-blue-700 px-4 py-2 rounded-xl shadow-sm">
+        <Calendar size={16} />
+        <span className="font-medium">{dateStr}</span>
+      </div>
 
-            <span
-              className="flex items-center gap-1 max-w-[250px] truncate"
-              title={toTitleCase(EvaluationRequestDetails.recruiterName)}>
-              <span className="text-[#316BFF] font-semibold whitespace-nowrap">
-                Recruiter name:
-              </span>
-              <span className="text-slate-800 truncate font-bold">
-                {toTitleCase(EvaluationRequestDetails.recruiterName)}
-              </span>
-            </span>
-          </div>
+      {/* TIME */}
+      <div className="flex items-center gap-2 bg-purple-100 text-purple-700 px-4 py-2 rounded-xl shadow-sm">
+        <Clock size={16} />
+        <span className="font-medium">{timeStr}</span>
+      </div>
         </div>
-
-        {/* Content Cards */}
-        <div className="space-y-2">
-          {/* Role Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-800">Role being interviewed for</h3>
-              <span className="text-slate-600 font-medium">
-                {toTitleCase(EvaluationRequestDetails.role)}
-              </span>
-            </div>
-          </div>
-
-          {/* About Candidate Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">About Candidate</h3>
-              <button
-                onClick={onViewCV}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r bg-[#316BFF] text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105">
-                <FileText className="w-4 h-4" />
-                <span className="text-sm font-semibold">View CV</span>
-              </button>
-            </div>
-
-            <div className="space-y-4 text-left">
-              <div>
-                <span className="font-semibold text-slate-700">Name - </span>
-                <span className="text-slate-600">{toTitleCase(EvaluationRequestDetails.name)}</span>
-              </div>
-              <p className="text-slate-600 leading-relaxed">
-                {EvaluationRequestDetails.aboutCandidate}
-              </p>
-            </div>
-          </div>
-
-          {/* Social Links Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold text-slate-800 text-start">Social Links</h3>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-slate-700">
-              {Object.values(socialLinks).some((urls: string[]) => urls.length > 0) ? (
-                Object.entries(socialLinks).map(([key, urls]: [string, string[]]) =>
-                  urls.length > 0 ? (
-                    // if want to show all links of all keys
-                    // <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
-                    //   {urls.map((url, idx) => (
-                    //     <a
-                    //       key={idx}
-                    //       href={url}
-                    //       target="_blank"
-                    //       rel="noopener noreferrer"
-                    //       className="text-blue-600 hover:underline"
-                    //     >
-                    //       {toTitleCase(key)}{urls.length > 1 ? ` #${idx + 1}` : ''}
-                    //     </a>
-                    //   ))}
-                    // </div>
-                    <div
-                      className="flex items-center gap-1"
-                      key={key}
-                      style={{ marginBottom: "1rem" }}>
-                      <a
-                        href={urls[0]}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline">
-                        {toTitleCase(key)}
-                      </a>
-                    </div>
-                  ) : null
-                )
-              ) : (
-                <div className="text-gray-500 text-sm">N/A</div>
-              )}
-            </div>
-          </div>
-
-          {/* Worko Feedback Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-            <div className="flex items-start justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">Worko Feedback</h3>
-              <div className="bg-blue-50 rounded-lg p-4 text-center">
-                <div className="flex items-center justify-center gap-1 mb-1">
-                  <span className="text-xs font-semibold text-slate-600">Overall Score</span>
-                  <Info className="w-3 h-3 text-slate-400" />
-                </div>
-                <div className="text-2xl font-bold text-[#316BFF]">
-                  {EvaluationRequestDetails.matchingScore}%
-                </div>
-              </div>
-            </div>
-
-            {/* 
-           //text-indigo-600 */}
-
-            <div className="mt-4 text-left">
-              {(() => {
-                let data = EvaluationRequestDetails.scoreDetails;
-                if (typeof data === "string") {
-                  try {
-                    const parsed = JSON.parse(data);
-                    const converted = [];
-
-                    if (parsed.RecruiterNote) {
-                      converted.push({
-                        heading: "Recruiter Note",
-                        detail: parsed.RecruiterNote,
-                      });
-                    }
-
-                    if (Array.isArray(parsed.Strengths)) {
-                      converted.push({
-                        heading: "Strengths",
-                        detail: parsed.Strengths.join("\n• "),
-                      });
-                    }
-
-                    if (Array.isArray(parsed.AreasOfConcern)) {
-                      converted.push({
-                        heading: "Areas Of Concern",
-                        detail: parsed.AreasOfConcern.join("\n• "),
-                      });
-                    }
-                    data = converted;
-                  } catch {}
-                }
-
-                return Array.isArray(data) ? (
-                  <div className="space-y-4">
-                    {data.map((score, index) => (
-                      <div key={index} className="flex items-start gap-3">
-                        <div
-                          className="mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0"
-                          style={{ backgroundColor: "#316BFF" }}></div>
-                        <div>
-                          <div className="text-base font-semibold text-slate-800">
-                            {score.heading}
-                          </div>
-                          <div className="text-base text-slate-700 whitespace-pre-line">
-                            {score.detail}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-base text-slate-700 whitespace-pre-line">
-                    {data || "No feedback provided."}
-                  </p>
-                );
-              })()}
-            </div>
-          </div>
-
-          {/* Recruiter Feedback Card */}
-          <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-semibold text-slate-800">Recruiter Feedback</h3>
-            </div>
-
-            <div className="space-y-4 text-left">
-              <p className="text-slate-600 leading-relaxed">
-                {EvaluationRequestDetails.recruiterFeedback || "No feedback provided."}
-              </p>
-            </div>
-          </div>
-
-          {/* Video Interview Card (disabled style) */}
-          <div className="bg-white border rounded-lg p-6 shadow-sm ">
-            <div className="flex items-start justify-between mb-4">
-              <h3 className="text-lg font-semibold text-slate-500">Video Interview</h3>
-              {checkValidInterview() && !isAlreadyRequested && (
-                <button
-                  onClick={() => {
-                    setInterviewDetailviewModal({
-                      isOpen: true,
-                      interviewDetails: interviewDetails || ({} as InterviewDto),
-                      userName: evaluatorDetails?.applicantName || "",
-                    });
-                  }}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
-                    interviewDetails && !isAlreadyRequested
-                      ? "bg-green-600 text-white hover:bg-green-700 transform hover:scale-105 cursor-pointer"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  }`}>
-                  <Play className="w-4 h-4" />
-                  <span className="text-sm font-semibold">
-                    {interviewDetails && !isAlreadyRequested ? "View Interview" : "View"}
-                  </span>
-                </button>
-              )}
-            </div>
-
-            {checkValidInterview() && !isAlreadyRequested ? (
-              <div className="flex items-center  rounded-lg  p-6 mb-6">
-                <h3 className="text-lg font-semibold text-gray-700 ">Scores: &nbsp;</h3>
-                <div className="flex justify-evenly p-3 rounded-lg gap-6 bg-cyan-100 flex-1  ">
-                  {formatObjectForDisplay(interviewDetails?.scoreBreakdown || {}).map(
-                    ({ label, value }, index) => (
-                      <div key={index}>
-                        <span className="text-md font-semibold text-gray-400 mr-2">{label}</span>
-                        <span className={`text-sm text-blue-500 font-semibold`}>{value}%</span>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
-            ) : (
-              <>
-                <p className="text-slate-500 leading-relaxed">
-                  Video interview data not available.
-                </p>
-
-                {/*  <button
-                  onClick={async () => {
-                    if (!userDetails?.email || !applicationDetails) {
-                      toast.error(
-                        "Error requesting interview. Please try again later.[EC-404]",
-                        getToastOptions({})
-                      );
-                      return;
-                    }
-
-                    if (
-                      !EvaluationRequestDetails?.email ||
-                      !EvaluationRequestDetails?.name ||
-                      !EvaluationRequestDetails?.role
-                    ) {
-                      toast.error(
-                        "Missing candidate information. Cannot request interview.",
-                        getToastOptions({})
-                      );
-                      return;
-                    }
-
-                    if (
-                      !jobApplicationId ||
-                      !applicationDetails?.companyId ||
-                      !applicationDetails?.companyName
-                    ) {
-                      toast.error(
-                        "Missing application details. Cannot request interview.",
-                        getToastOptions({})
-                      );
-                      return;
-                    }
-
-                    if (!userDetails?.fullName && !evaluatorDetails) {
-                      toast.error(
-                        "Missing user information. Cannot request interview.",
-                        getToastOptions({})
-                      );
-                      return;
-                    }
-
-                    if (!evaluatorDetails?.applicantUserEmail) {
-                      toast.error(
-                        "Missing evaluator email. Cannot request interview.",
-                        getToastOptions({})
-                      );
-                      return;
-                    }
-
-                    try {
-                      const payload = jobApplicationServiceObj.generateInterviewRequestPayload({
-                        candidateEmail: evaluatorDetails.applicantUserEmail,
-                        jobId: jobApplicationId,
-                        candidateFullName: evaluatorDetails.applicantName,
-                        companyId: applicationDetails.companyId,
-                        companyName: applicationDetails.companyName,
-                        position: EvaluationRequestDetails.role,
-                        requesterUserName: userDetails.fullName,
-                      });
-                      await interviewServiceObj.requestInterview(payload);
-                      toast.success(
-                        "Interview request submitted successfully!",
-                        getToastOptions({})
-                      );
-                    } catch (error) {
-                      toast.error(
-                        "Failed to request interview. Please try again.",
-                        getToastOptions({})
-                      );
-                      console.error("Interview request error:", error);
-                    }
-                  }}
-                  className="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105">
-                  Request Video Interview
-                </button> */}
-              </>
-            )}
-          </div>
-
-          {/* Submit or View Feedback Button */}
-          <div className="flex justify-center pt-4">
-            {EvaluationRequestDetails.evaluationResponseId ? (
-              <button
-                onClick={onViewFeedback}
-                className="flex items-center gap-3 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
-                <FileText className="w-5 h-5" />
-                <span className="font-semibold">View Feedback</span>
-              </button>
-            ) : (
-              <button
-                onClick={onSubmitFeedback}
-                className="flex items-center gap-3 px-6 py-3 bg-[#316BFF] text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
-                <Send className="w-5 h-5" />
-                <span className="font-semibold">Submit Feedback</span>
-              </button>
-            )}
-          </div>
-        </div>
+        {companyCandidates.map((item) => (
+          <CandidateCard
+            key={item.request.id}
+            item={item}
+            onViewCV={onViewCVCompany}
+            onSubmitFeedback={onSubmitFeedbackCompany}
+            onViewFeedback={onViewFeedbackCompany}
+            onViewInterview={onViewInterview}
+            expandedCard={expandedCard}
+            expandedSection={expandedSection}
+            setExpandedCard={setExpandedCard}
+            setExpandedSection={setExpandedSection}
+          />
+        ))}
       </div>
     );
   }
+
+  // if (requests.length > 0 && !isLoadingData) {
+  //   return (
+  //     <div className="flex-1 bg-gray-50 p-6 overflow-y-auto">
+  //       {/* Header */}
+  //       <div className="flex items-center justify-end mb-6">
+  //         {/* <img
+  //         src="https://images.pexels.com/photos/3184291/pexels-photo-3184291.jpeg?auto=compress&cs=tinysrgb&w=200&h=80&fit=crop"
+  //         alt="Company Logo"
+  //         className="h-10 rounded-lg object-cover"
+  //       /> */}
+  //         <div className="flex items-center gap-8 text-sm text-slate-500">
+  //           <span>
+  //             Profile sent on{" "}
+  //             {new Date(EvaluationRequestDetails.profileSentDate).toLocaleString(undefined, {
+  //               year: "numeric",
+  //               month: "numeric",
+  //               day: "numeric",
+  //               hour: "numeric",
+  //               minute: "numeric",
+  //               hour12: true,
+  //             })}
+  //           </span>
+
+  //           <span
+  //             className="flex items-center gap-1 max-w-[250px] truncate"
+  //             title={toTitleCase(EvaluationRequestDetails.recruiterName)}>
+  //             <span className="text-[#316BFF] font-semibold whitespace-nowrap">
+  //               Recruiter name:
+  //             </span>
+  //             <span className="text-slate-800 truncate font-bold">
+  //               {toTitleCase(EvaluationRequestDetails.recruiterName)}
+  //             </span>
+  //           </span>
+  //         </div>
+  //       </div>
+
+  //       {/* Content Cards */}
+  //       <div className="space-y-2">
+  //         {/* Role Card */}
+  //         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+  //           <div className="flex items-center justify-between">
+  //             <h3 className="text-lg font-semibold text-slate-800">Role being interviewed for</h3>
+  //             <span className="text-slate-600 font-medium">
+  //               {toTitleCase(EvaluationRequestDetails.role)}
+  //             </span>
+  //           </div>
+  //         </div>
+
+  //         {/* About Candidate Card */}
+  //         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+  //           <div className="flex items-center justify-between mb-6">
+  //             <h3 className="text-lg font-semibold text-slate-800">About Candidate</h3>
+  //             <button
+  //               onClick={onViewCV}
+  //               className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r bg-[#316BFF] text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105">
+  //               <FileText className="w-4 h-4" />
+  //               <span className="text-sm font-semibold">View CV</span>
+  //             </button>
+  //           </div>
+
+  //           <div className="space-y-4 text-left">
+  //             <div>
+  //               <span className="font-semibold text-slate-700">Name - </span>
+  //               <span className="text-slate-600">{toTitleCase(EvaluationRequestDetails.name)}</span>
+  //             </div>
+  //             <p className="text-slate-600 leading-relaxed">
+  //               {EvaluationRequestDetails.aboutCandidate}
+  //             </p>
+  //           </div>
+  //         </div>
+
+  //         {/* Social Links Card */}
+  //         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+  //           <div className="mb-6">
+  //             <h3 className="text-lg font-semibold text-slate-800 text-start">Social Links</h3>
+  //           </div>
+  //           <div className="flex flex-wrap items-center gap-x-6 gap-y-4 text-sm text-slate-700">
+  //             {Object.values(socialLinks).some((urls: string[]) => urls.length > 0) ? (
+  //               Object.entries(socialLinks).map(([key, urls]: [string, string[]]) =>
+  //                 urls.length > 0 ? (
+  //                   // if want to show all links of all keys
+  //                   // <div className="flex items-center gap-1" key={key} style={{ marginBottom: '1rem' }}>
+  //                   //   {urls.map((url, idx) => (
+  //                   //     <a
+  //                   //       key={idx}
+  //                   //       href={url}
+  //                   //       target="_blank"
+  //                   //       rel="noopener noreferrer"
+  //                   //       className="text-blue-600 hover:underline"
+  //                   //     >
+  //                   //       {toTitleCase(key)}{urls.length > 1 ? ` #${idx + 1}` : ''}
+  //                   //     </a>
+  //                   //   ))}
+  //                   // </div>
+  //                   <div
+  //                     className="flex items-center gap-1"
+  //                     key={key}
+  //                     style={{ marginBottom: "1rem" }}>
+  //                     <a
+  //                       href={urls[0]}
+  //                       target="_blank"
+  //                       rel="noopener noreferrer"
+  //                       className="text-blue-600 hover:underline">
+  //                       {toTitleCase(key)}
+  //                     </a>
+  //                   </div>
+  //                 ) : null
+  //               )
+  //             ) : (
+  //               <div className="text-gray-500 text-sm">N/A</div>
+  //             )}
+  //           </div>
+  //         </div>
+
+  //         {/* Worko Feedback Card */}
+  //         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+  //           <div className="flex items-start justify-between mb-6">
+  //             <h3 className="text-lg font-semibold text-slate-800">Worko Feedback</h3>
+  //             <div className="bg-blue-50 rounded-lg p-4 text-center">
+  //               <div className="flex items-center justify-center gap-1 mb-1">
+  //                 <span className="text-xs font-semibold text-slate-600">Overall Score</span>
+  //                 <Info className="w-3 h-3 text-slate-400" />
+  //               </div>
+  //               <div className="text-2xl font-bold text-[#316BFF]">
+  //                 {EvaluationRequestDetails.matchingScore}%
+  //               </div>
+  //             </div>
+  //           </div>
+
+  //           {/* 
+  //          //text-indigo-600 */}
+
+  //           <div className="mt-4 text-left">
+  //             {(() => {
+  //               let data = EvaluationRequestDetails.scoreDetails;
+  //               if (typeof data === "string") {
+  //                 try {
+  //                   const parsed = JSON.parse(data);
+  //                   const converted = [];
+
+  //                   if (parsed.RecruiterNote) {
+  //                     converted.push({
+  //                       heading: "Recruiter Note",
+  //                       detail: parsed.RecruiterNote,
+  //                     });
+  //                   }
+
+  //                   if (Array.isArray(parsed.Strengths)) {
+  //                     converted.push({
+  //                       heading: "Strengths",
+  //                       detail: parsed.Strengths.join("\n• "),
+  //                     });
+  //                   }
+
+  //                   if (Array.isArray(parsed.AreasOfConcern)) {
+  //                     converted.push({
+  //                       heading: "Areas Of Concern",
+  //                       detail: parsed.AreasOfConcern.join("\n• "),
+  //                     });
+  //                   }
+  //                   data = converted;
+  //                 } catch {}
+  //               }
+
+  //               return Array.isArray(data) ? (
+  //                 <div className="space-y-4">
+  //                   {data.map((score, index) => (
+  //                     <div key={index} className="flex items-start gap-3">
+  //                       <div
+  //                         className="mt-2 w-2.5 h-2.5 rounded-full flex-shrink-0"
+  //                         style={{ backgroundColor: "#316BFF" }}></div>
+  //                       <div>
+  //                         <div className="text-base font-semibold text-slate-800">
+  //                           {score.heading}
+  //                         </div>
+  //                         <div className="text-base text-slate-700 whitespace-pre-line">
+  //                           {score.detail}
+  //                         </div>
+  //                       </div>
+  //                     </div>
+  //                   ))}
+  //                 </div>
+  //               ) : (
+  //                 <p className="text-base text-slate-700 whitespace-pre-line">
+  //                   {data || "No feedback provided."}
+  //                 </p>
+  //               );
+  //             })()}
+  //           </div>
+  //         </div>
+
+  //         {/* Recruiter Feedback Card */}
+  //         <div className="bg-white rounded-lg p-6 shadow-sm border border-slate-200">
+  //           <div className="flex items-center justify-between mb-6">
+  //             <h3 className="text-lg font-semibold text-slate-800">Recruiter Feedback</h3>
+  //           </div>
+
+  //           <div className="space-y-4 text-left">
+  //             <p className="text-slate-600 leading-relaxed">
+  //               {EvaluationRequestDetails.recruiterFeedback || "No feedback provided."}
+  //             </p>
+  //           </div>
+  //         </div>
+
+  //         {/* Video Interview Card (disabled style) */}
+  //         <div className="bg-white border rounded-lg p-6 shadow-sm ">
+  //           <div className="flex items-start justify-between mb-4">
+  //             <h3 className="text-lg font-semibold text-slate-500">Video Interview</h3>
+  //             {checkValidInterview() && !isAlreadyRequested && (
+  //               <button
+  //                 onClick={() => {
+  //                   setInterviewDetailviewModal({
+  //                     isOpen: true,
+  //                     interviewDetails: interviewDetails || ({} as InterviewDto),
+  //                     userName: evaluatorDetails?.applicantName || "",
+  //                   });
+  //                 }}
+  //                 className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-200 ${
+  //                   interviewDetails && !isAlreadyRequested
+  //                     ? "bg-green-600 text-white hover:bg-green-700 transform hover:scale-105 cursor-pointer"
+  //                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
+  //                 }`}>
+  //                 <Play className="w-4 h-4" />
+  //                 <span className="text-sm font-semibold">
+  //                   {interviewDetails && !isAlreadyRequested ? "View Interview" : "View"}
+  //                 </span>
+  //               </button>
+  //             )}
+  //           </div>
+
+  //           {checkValidInterview() && !isAlreadyRequested ? (
+  //             <div className="flex items-center  rounded-lg  p-6 mb-6">
+  //               <h3 className="text-lg font-semibold text-gray-700 ">Scores: &nbsp;</h3>
+  //               <div className="flex justify-evenly p-3 rounded-lg gap-6 bg-cyan-100 flex-1  ">
+  //                 {formatObjectForDisplay(interviewDetails?.scoreBreakdown || {}).map(
+  //                   ({ label, value }, index) => (
+  //                     <div key={index}>
+  //                       <span className="text-md font-semibold text-gray-400 mr-2">{label}</span>
+  //                       <span className={`text-sm text-blue-500 font-semibold`}>{value}%</span>
+  //                     </div>
+  //                   )
+  //                 )}
+  //               </div>
+  //             </div>
+  //           ) : (
+  //             <>
+  //               <p className="text-slate-500 leading-relaxed">
+  //                 Video interview data not available.
+  //               </p>
+
+  //               {/*  <button
+  //                 onClick={async () => {
+  //                   if (!userDetails?.email || !applicationDetails) {
+  //                     toast.error(
+  //                       "Error requesting interview. Please try again later.[EC-404]",
+  //                       getToastOptions({})
+  //                     );
+  //                     return;
+  //                   }
+
+  //                   if (
+  //                     !EvaluationRequestDetails?.email ||
+  //                     !EvaluationRequestDetails?.name ||
+  //                     !EvaluationRequestDetails?.role
+  //                   ) {
+  //                     toast.error(
+  //                       "Missing candidate information. Cannot request interview.",
+  //                       getToastOptions({})
+  //                     );
+  //                     return;
+  //                   }
+
+  //                   if (
+  //                     !jobApplicationId ||
+  //                     !applicationDetails?.companyId ||
+  //                     !applicationDetails?.companyName
+  //                   ) {
+  //                     toast.error(
+  //                       "Missing application details. Cannot request interview.",
+  //                       getToastOptions({})
+  //                     );
+  //                     return;
+  //                   }
+
+  //                   if (!userDetails?.fullName && !evaluatorDetails) {
+  //                     toast.error(
+  //                       "Missing user information. Cannot request interview.",
+  //                       getToastOptions({})
+  //                     );
+  //                     return;
+  //                   }
+
+  //                   if (!evaluatorDetails?.applicantUserEmail) {
+  //                     toast.error(
+  //                       "Missing evaluator email. Cannot request interview.",
+  //                       getToastOptions({})
+  //                     );
+  //                     return;
+  //                   }
+
+  //                   try {
+  //                     const payload = jobApplicationServiceObj.generateInterviewRequestPayload({
+  //                       candidateEmail: evaluatorDetails.applicantUserEmail,
+  //                       jobId: jobApplicationId,
+  //                       candidateFullName: evaluatorDetails.applicantName,
+  //                       companyId: applicationDetails.companyId,
+  //                       companyName: applicationDetails.companyName,
+  //                       position: EvaluationRequestDetails.role,
+  //                       requesterUserName: userDetails.fullName,
+  //                     });
+  //                     await interviewServiceObj.requestInterview(payload);
+  //                     toast.success(
+  //                       "Interview request submitted successfully!",
+  //                       getToastOptions({})
+  //                     );
+  //                   } catch (error) {
+  //                     toast.error(
+  //                       "Failed to request interview. Please try again.",
+  //                       getToastOptions({})
+  //                     );
+  //                     console.error("Interview request error:", error);
+  //                   }
+  //                 }}
+  //                 className="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105">
+  //                 Request Video Interview
+  //               </button> */}
+  //             </>
+  //           )}
+  //         </div>
+
+  //         {/* Submit or View Feedback Button */}
+  //         <div className="flex justify-center pt-4">
+  //           {EvaluationRequestDetails.evaluationResponseId ? (
+  //             <button
+  //               onClick={onViewFeedback}
+  //               className="flex items-center gap-3 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+  //               <FileText className="w-5 h-5" />
+  //               <span className="font-semibold">View Feedback</span>
+  //             </button>
+  //           ) : (
+  //             <button
+  //               onClick={onSubmitFeedback}
+  //               className="flex items-center gap-3 px-6 py-3 bg-[#316BFF] text-white rounded-lg hover:bg-indigo-700 transition-all duration-200 transform hover:scale-105 shadow-lg">
+  //               <Send className="w-5 h-5" />
+  //               <span className="font-semibold">Submit Feedback</span>
+  //             </button>
+  //           )}
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
 
   function checkValidInterview() {
     

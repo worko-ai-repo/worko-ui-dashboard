@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
-import { Users, FileText } from 'lucide-react';
-import { Candidate } from 'src/types/index';
+import { Users, FileText, Briefcase, UsersRound } from 'lucide-react';
+import { Candidate, EvaluationRequest } from 'src/types/index';
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import { Menu, X, ChevronDown, LogOut, User } from "lucide-react";
 import CognitoServiceObj from '@Utils/Cognito.utils';
@@ -12,6 +12,11 @@ interface SidebarProps {
   companyLogo: string;
   isLoadingData:boolean;
   setIsLoadingData:(value:boolean) => void;
+  selectedCompanyId?: string;
+  onCompanySelect?: (companyId: string) => void;
+  groupedCompanies?: string[];
+  requests: EvaluationRequest[];
+  groupedCompaniesWithCompanyName?:any[]
 }
 
 const Sidebar: React.FC<SidebarProps> = ({
@@ -21,16 +26,29 @@ const Sidebar: React.FC<SidebarProps> = ({
   userName,
   companyLogo,
   isLoadingData,
-  setIsLoadingData
+  setIsLoadingData,
+  selectedCompanyId,
+  onCompanySelect,
+  groupedCompanies,
+  requests,
+  groupedCompaniesWithCompanyName
 }) => {
   
+  // useEffect(() => {
+  //   if (candidates.length === 0) return
+  //   if (selectedCandidateId) return
+  //   setIsLoadingData(true)
+  //   onCandidateSelect(candidates[0].id)
+  //   setIsLoadingData(false)
+  // }, [candidates, selectedCandidateId])
+
   useEffect(() => {
-    if (candidates.length === 0) return
-    if (selectedCandidateId) return
-    setIsLoadingData(true)
-    onCandidateSelect(candidates[0].id)
-    setIsLoadingData(false)
-  }, [candidates, selectedCandidateId])
+  if (!groupedCompanies || groupedCompanies.length === 0) return;
+  if (selectedCompanyId) return;
+
+  // auto select first company
+  onCompanySelect?.(groupedCompanies[0]);
+}, [groupedCompanies, selectedCompanyId]);
 
   const handleLogout = async () => {
   try {
@@ -47,30 +65,33 @@ const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-4 flex-1 overflow-auto">
         {/* User Profile Section */}
         <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-indigo-700/50">
-          <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center">
+          {/* <div className="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center"> */}
             {/* <img
               src="https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100&h=100&fit=crop"
               alt="Profile"
               className="w-full h-full rounded-full object-cover"
             /> */}
-            <User className="w-6 h-6 text-white cursor-pointer" />
-          </div>
-          <div>
-            <div className="font-medium text-lg">{toTitleCase(userName)}</div>
+            {/* <User className="w-6 h-6 text-white cursor-pointer" /> */}
+          {/* </div> */}
+          <div className='text-left'>
+            <div className="font-medium text-sm">{toTitleCase(userName)}</div>
+            <p className='text-[0.625rem]'>Review and assess candidate profiles</p>
           </div>
         </div>
 
         {/* Candidates Section Header */}
-        <div className="flex items-center gap-2 mb-4">
-          <Users className="w-5 h-5" />
-          <h2 className="text-lg font-semibold">Candidates</h2>
+        <div className="flex flex-col items-start justify-start mb-4">
+          <div className='flex items-center gap-2'>
+            <Briefcase className="w-4 h-4" />
+            <h2 className="text-md font-semibold">Hiring Roles</h2>
+          </div>
+          <p className='text-[10px]'>{groupedCompanies?.length} {groupedCompanies && groupedCompanies?.length > 1 ? "roles to evaluate" : "role to evaluate"}</p>
         </div>
 
         {/* Candidates List */}
-        <div className="space-y-2">
-          {candidates.map((candidate) => {
+        <div className="space-y-2 border-t-2">
+          {/* {candidates.map((candidate) => {
             const isSelected = selectedCandidateId === candidate.id;
-            // console.log('Candidate:', candidate.id, 'Selected ID:', selectedCandidateId, 'isSelected:', isSelected)
             return (
               <div
                 key={candidate.id}
@@ -90,7 +111,6 @@ const Sidebar: React.FC<SidebarProps> = ({
                       data-tooltip-id="my-tooltip"
                       data-tooltip-content={(candidate.applicantName) || toTitleCase(candidate.email)}
                       data-tooltip-place="top"
-                      // title={toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     >
                       {toTitleCase(candidate.applicantName) || toTitleCase(candidate.email)}
                     </div>
@@ -124,7 +144,56 @@ const Sidebar: React.FC<SidebarProps> = ({
                 </div>
               </div>
             );
-          })}
+          })} */}
+          {/* ---------------- NEW COMPANY SECTION ---------------- */}
+          {groupedCompanies && groupedCompanies.length > 0 && (
+            <div className="mt-8">
+              {/* <h3 className="text-md font-semibold mb-3 flex items-center gap-2">
+                <Users className="w-4 h-4" />
+                Companies
+              </h3> */}
+
+              <div className="space-y-2">
+                {groupedCompanies.map((companyId) => {
+                const isSelected = selectedCompanyId === companyId;
+
+                // Lookup name
+                const companyObj = groupedCompaniesWithCompanyName?.find(
+                  (c) => c.companyId === companyId
+                );
+                const companyName = companyObj?.companyName || companyId;
+
+                const count = requests.filter((r) => r.companyId === companyId).length;
+                  return (
+                    <div
+                      key={companyId}
+                      onClick={() => onCompanySelect && onCompanySelect(companyId)}
+                      className={`flex gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                        isSelected
+                          ? 'bg-white text-slate-800 hover:bg-gray-50'
+                          : 'hover:bg-[#3D78FF] text-white'
+                      }`}
+                    >
+                      <div>
+                        <Briefcase className='h-12'/>
+                      </div>
+                      <div>                
+                        <div className="text-sm text-left font-semibold truncate">
+                          <p className='truncate max-w-[170px]'>{companyName}</p>
+                        </div>
+                        <div className="text-xs truncate flex gap-1 justify-start items-center">
+                          <UsersRound className="w-3 h-3"/>
+                          {count} {count > 1 ? "Candidates" : "Candidate"}
+                        </div>
+                      </div>
+
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
         </div>
       </div>
       <div className="border-t border-white/20 pt-4 hover:text-red-600 pb-3">
