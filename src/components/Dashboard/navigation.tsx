@@ -33,12 +33,12 @@ const navigationItems: NavItem[] = [
     icon: UserIcon,
     dashboardTypes: ["CANDIDATE","EMPLOYEE"],
   },
-/*   {
+  {
     id: "home",
-    label: "Home",
+    label: "Analytics",
     icon: HomeIcon,
-    dashboardTypes: ["CORPORATE"],
-  }, */
+    dashboardTypes: ["CORPORATE","ADMIN"],
+  },
   {
     id: "jobs",
     label: "Jobs",
