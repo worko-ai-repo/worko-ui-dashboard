@@ -212,7 +212,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="flex-1 overflow-y-auto px-8 py-6 ">
                 <div className="space-y-8 max-w-none">
                     {/* Score Section */}
                     <div className="space-y-4">

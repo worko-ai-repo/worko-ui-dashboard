@@ -33,7 +33,7 @@ const OnHoldSection: React.FC<OnHoldSectionProps> = ({
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 w-[450px]">
       {/* Reason Selection */}
       <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700">

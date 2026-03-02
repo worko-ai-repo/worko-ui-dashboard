@@ -5,6 +5,7 @@ import { EvaluationResponse } from '@Services/EvaluationService.service';
 interface ViewFeedbackModalProps {
     data: EvaluationResponse;
     onClose: () => void;
+    candidateName:string;
 }
 
 const formatDate = (dateStr:string) => {
@@ -14,14 +15,17 @@ const formatDate = (dateStr:string) => {
 };
 
 
-const ViewFeedbackModal: React.FC<ViewFeedbackModalProps> = ({ data, onClose }) => {
+const ViewFeedbackModal: React.FC<ViewFeedbackModalProps> = ({ data, onClose,candidateName }) => {
     const latestFeedback = data.statusTracker?.[0];
     // console.log(data.scheduledInterviewDetails)
     return (
         <div className="bg-white rounded-xl p-4 space-y-6 max-h-[80vh] overflow-y-auto">
             {/* Header */}
-            <div className="flex justify-between items-center border-b pb-4">
-                <h2 className="text-xl font-semibold text-gray-800">Evaluation Feedback</h2>
+            <div className="flex justify-start items-center border-b pb-4">
+                <div>
+                    <h2 className="text-2xl font-semibold text-gray-900">Evaluation Feedback</h2>
+                    <p className="text-sm text-gray-500 mt-1">for {candidateName}</p>
+                </div>
                 {/* <button onClick={onClose} className="text-gray-500 hover:text-red-600">
                     <X size={20} />
                 </button> */}
