@@ -339,7 +339,7 @@ const AdminCompany = () => {
             <div className="flex">
               <button
                 onClick={() => setIsCreateCompanyModalOpen(true)}
-                className="bg-gradient-to-b text-nowrap from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
+                className="text-sm bg-gradient-to-b text-nowrap from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
                 + Add Company
               </button>
             </div>

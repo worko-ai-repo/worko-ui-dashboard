@@ -10,7 +10,7 @@ import { JobData } from "@Interfaces/CorporateDashboard.dto";
 import { useSortableData } from "@Hooks/useSortTableData.hook";
 import { Archive, Duplicate, Edit, Repost, View } from "@Assets";
 import { JobStatusType } from "src/types/JobsAndApplication.type";
-import { Building2, Filter, Link, Link2, Loader2, ViewIcon, X } from "lucide-react";
+import { Building2, Eye, Filter, Link, Link2, Loader2, ViewIcon, X } from "lucide-react";
 import { Column, NewDynamicTable } from "@Components/Shared/NewDynamicTable";
 import CreatedByDisplay from "@Components/Shared/PostJob/CreatedByDisplay";
 
@@ -268,8 +268,8 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
         > = {
           PUBLISHED: [
             {
-              icon: <img src={View} className="w-4 h-4" />,
-              className: "btn-sky shrink-0",
+              icon: <Eye size={16} />,
+              className: "btn-info shrink-0",
               tooltip: "View Applicants",
               onClick: () => nav(`/admin/aApplicants/${row.id}`),
               disabled: isRowUpdating,
@@ -286,21 +286,21 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             },
             {
               icon: <img src={Duplicate} className="w-4 h-4" />,
-              className: "btn-sky shrink-0",
+              className: "btn-process shrink-0",
               tooltip: "Duplicate Job",
               onClick: () => handleJobCreation("DUPLICATE", row),
               disabled: isRowUpdating,
             },
             {
               icon: <img src={Edit} className="w-4 h-4" />,
-              className: "btn-sky shrink-0",
+              className: "btn-info bg-orange-500 hover:bg-orange-600 shrink-0",
               tooltip: "Update Job",
               onClick: () => handleJobCreation("UPDATE", row),
               disabled: isRowUpdating,
             },
             {
               icon: <ViewIcon className="w-4 h-4" />,
-              className: "btn-sky shrink-0",
+              className: "btn-info-2 shrink-0",
               tooltip: "View Job",
               onClick: () =>
                 window.open(
@@ -311,7 +311,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
             },
             {
               icon: <Link className="w-4 h-4" />,
-              className: "btn-sky shrink-0",
+              className: "btn-hiring shrink-0",
               tooltip: "Copy External apply Link",
               onClick: () => {
                 const baseUrl = window.location.origin; 
@@ -325,9 +325,9 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
               icon: isRowUpdating ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
-                <X className="w-4 h-4" />
+                <X size={16} />
               ),
-              className: "btn-blue shrink-0",
+              className: "btn-danger shrink-0",
               tooltip: "Close Job",
               onClick: () =>
                 setIsCloseJobModalOpen({ id: row.id, companyId: row?.companyDetails?.id }),

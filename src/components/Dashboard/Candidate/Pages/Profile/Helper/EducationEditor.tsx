@@ -278,7 +278,7 @@ const handleRemoveItem = (index: number) => {
           </div>
         ))
       )}
-        {formModal && (
+        {/* {formModal && ( */}
         <EducationForm
           title={title}
           isOpen={formModal}
@@ -294,7 +294,7 @@ const handleRemoveItem = (index: number) => {
           setPassingYear={setPassingYear}
           onSubmit={handleAddOrUpdate}
         />
-      )}
+      {/* )} */}
     </div>
   );
 };

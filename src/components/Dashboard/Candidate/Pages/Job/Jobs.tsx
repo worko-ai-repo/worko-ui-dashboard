@@ -10,6 +10,7 @@ import { JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.
 import { useAppContext } from '@Context/App.context';
 import httpServiceObj from '@Services/ApiHandler.service';
 import HeaderDetails from '@Components/Shared/Stats';
+import SearchBarAgency from '@Components/Shared/SearchBarAgency';
 
 interface CountsProps{
   PK: string,
@@ -38,7 +39,7 @@ const initialPaginationState: PaginationInfo = {
 };
 
 const Jobs = () => {
-  const [searchBarText, setSearchBarText] = useState<string>('');
+  const [searchBarText, setSearchBarText] = useState<string | null>('');
   const [data, setData] = useState<JobApiResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
@@ -144,7 +145,7 @@ const StatusFilterDropdown = [
   };
   
   // Debounced search - will be triggered by onBlur or Enter key
-  const handleSearch = useCallback((searchValue: string = searchBarText) => {
+  const handleSearch = useCallback((searchValue: string = searchBarText || "") => {
     // Clear any pending debounce
     if (searchInputRef.current) {
       clearTimeout(searchInputRef.current);
@@ -370,7 +371,15 @@ const handleFollowUpRequestUpdate = useCallback(
           {/* search bar */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
             {/* Search bar with search button */}
-            <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
+              <div className="w-full md:basis-full">
+                <SearchBarAgency
+                  searchBarText={searchBarText}
+                  setSearchBarText={setSearchBarText}
+                  handleClick={() => handleSearch(searchBarText || "")}
+                  placeholder="Search candidates by name, email and company name"
+                />
+              </div>
+            {/* <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
             <input
               type="text"
               placeholder="Search by company name"
@@ -399,32 +408,8 @@ const handleFollowUpRequestUpdate = useCallback(
               className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 rounded-[15px] rounded-l-none">
               Search
             </button>
-          </div>
+            </div> */}
             <div className="relative">
-               {/* <div className="relative w-[140px]">
-                <select
-                  className="h-full w-[140px] pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer truncate"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="">All Statuses</option>
-                  <option value="APPLIED">Applied</option>
-                  <option value="CV_DOWNLOADED">CV Downloaded</option>
-                  <option value="UNDER_EVALUATION">Under Evaluation</option>
-                  <option value="PROCESSING_INTERVIEW">Processing</option>
-                  <option value="INTERVIEW_DONE">Interview Done</option>
-                  <option value="HIRING_IN_PROCESS">Hiring</option>
-                  <option value="DOCUMENT_REQUESTED">Document Requested</option>
-                  <option value="DOCUMENT_SUBMITTED">Document Submitted</option>
-                  <option value="OFFER_SENT">Offer Recieved</option>
-                  <option value="HIRED">Hired</option>
-                  <option value="JOINED">Joined</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <ChevronDown className="w-4 h-4 text-gray-500" />
-                </div>
-              </div> */}
               <div className="flex gap-3 font-semibold w-full sm:w-auto">
               <GenericDropdown
                 selectTitle={"Status"}

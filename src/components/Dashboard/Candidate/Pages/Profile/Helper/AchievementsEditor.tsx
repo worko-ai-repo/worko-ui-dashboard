@@ -189,7 +189,7 @@ const AchievementsEditor: React.FC<AchievementsEditorProps> = ({
         </React.Fragment>
       ))}
 
-      {formModal && (
+      {/* {formModal && ( */}
         <AchievementForm
           title={title}
           isOpen={formModal}
@@ -205,7 +205,7 @@ const AchievementsEditor: React.FC<AchievementsEditorProps> = ({
           setAchievDate={setAchievDate}
           onSubmit={handleAddItem}
         />
-      )}
+      {/* )} */}
     </div>
   );
 };

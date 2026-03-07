@@ -114,7 +114,7 @@ const CompanyFilter: React.FC<CompanyFilterProps> = ({ onFilterChange, jobs, cla
       {/* Filter Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-6 py-2 h-10 text-base font-semibold rounded-2xl transition-colors ${
+        className={`flex items-center gap-2 px-6 py-2 h-9 text-sm font-semibold rounded-2xl transition-colors ${
           hasActiveFilters
             ? "bg-blue-50 border-blue-500 text-blue-700"
             : "bg-white border-gray-300 text-gray-800 hover:bg-gray-50"

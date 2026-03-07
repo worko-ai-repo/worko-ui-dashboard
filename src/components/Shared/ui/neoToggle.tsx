@@ -36,7 +36,7 @@ const NeoToggle: React.FC<NeoToggleProps> = ({ buttonOne, buttonTwo, isChecked, 
                     {/* Button One */}
                     <div
                         className={`
-                            relative flex items-center gap-2 px-5 py-2 rounded-xl transition-all duration-300 ease-in-out
+                            relative flex items-center gap-2 px-4 py-1 rounded-xl transition-all duration-300 ease-in-out
                             ${!isChecked ? "shadow-neomorphism-inset text-blue-600" : "text-gray-500 hover:text-gray-600"}
                         `}
                         style={{ backgroundColor: "#eeeeee" }}
@@ -48,7 +48,7 @@ const NeoToggle: React.FC<NeoToggleProps> = ({ buttonOne, buttonTwo, isChecked, 
                     {/* Button Two */}
                     <div
                         className={`
-                            relative flex items-center gap-2 px-5 py-2 rounded-xl transition-all duration-300 ease-in-out
+                            relative flex items-center gap-2 px-4 py-1 rounded-xl transition-all duration-300 ease-in-out
                             ${isChecked ? "shadow-neomorphism-inset text-blue-600" : "text-gray-500 hover:text-gray-600"}
                         `}
                         style={{ backgroundColor: "#eeeeee" }}

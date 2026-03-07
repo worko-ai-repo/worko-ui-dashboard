@@ -51,7 +51,7 @@ const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
             type="date"
             value={fromDate}
             onChange={(e) => handleFromDateChange(e.target.value)}
-            className="text-sm p-1 border rounded"
+            className="text-xs p-1 border rounded"
           />
         </div>
         <div className="flex flex-col">
@@ -60,7 +60,7 @@ const InputFromDataToDateFilter: React.FC<Props> = ({ onDateChange }) => {
             type="date"
             value={toDate}
             onChange={(e) => handleToDateChange(e.target.value)}
-            className="text-sm p-1 border rounded"
+            className="text-xs p-1 border rounded"
             min={fromDate}
           />
         </div>

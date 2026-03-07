@@ -3,7 +3,7 @@ import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
 import { DatabaseStatusType, JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import AdminDatabaseTable from './AdminDatabaseTable';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
@@ -16,6 +16,9 @@ import EditCTCETCAndNoticePeriodModal from '@Components/Dashboard/Corporate/Data
 import FinalReviewModal from '@Components/Dashboard/Corporate/Database/modals/FinalReviewModal';
 import { useUrlState } from '@Hooks/useUrlState.hook';
 import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants';
+import { filterDatabaseCandidates } from '@Utils/DatabaseFilter.utils';
+import DatabaseFilters, { DatabaseFilterValues } from '@Components/Shared/DatabasePage/DatabaseFilters';
+
 interface AdminDatabaseProps{
 
 }
@@ -30,7 +33,7 @@ icons needs to be changed
 */}
 
 const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
-  const [searchBarText, setSearchBarText] = useState<string|null>("")
+  // const [searchBarText, setSearchBarText] = useState<string|null>("")
   const [apiStatus, setApiStatus] = useState<DatabaseStatusType>();
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -44,7 +47,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   // const [pageSize,setPageSize] = useState<number>(200);
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
-  const [filters, setFilters] = useState<DatabaseListFilters>({});
+  const [apiFilters, setApiFilters] = useState<DatabaseListFilters>({});
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
   const [currentPage, setCurrentPage] = useState(1);
   
@@ -59,12 +62,21 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
   const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
   const [initialIds,setInitialIds] = useState<string[]>([]);
-  const { pageSize, setPageSize } = useUrlState({
+  const [filters, setFilters] = useState<DatabaseFilterValues>({});
+  const { searchText: searchBarText, setSearchText: setSearchBarText, pageSize, setPageSize } = useUrlState({
+  search: {
+    defaultValue: ""
+  },
     pageSize: {
       defaultValue: 200,
       validValues: [10, 25, 50, 100, 150, 200]
     }
   });
+  const filteredData = useMemo(() => {
+    if (!fetchData) return fetchData;
+    return filterDatabaseCandidates(fetchData, filters);
+  }, [fetchData, filters]);
+
   useEffect(() => {
     function handleClickOutside(event:any) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -99,7 +111,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     page: number = 1,
     size: number = pageSize,
     lastKey: string = "",
-    searchFilters = filters,
+    searchFilters = apiFilters,
     isSearch = false,
     sortOrder = "desc",
     statusOverride?: DatabaseStatusType
@@ -118,8 +130,12 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         sortOrder,
       }
 
-      // include filters if present
-      if (searchBarText?.trim()) params.candidateEmail = searchBarText;
+      // include apiFilters if present
+      const searchValue = searchBarText?.trim() ?? "";
+      if (searchValue) {
+        params.candidateEmail = searchValue;
+      }
+
       if (searchFilters?.userType) params.userType = searchFilters.userType;
 
       // include status (apiStatus state or override if provided)
@@ -157,7 +173,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       setIsLoading(false);
     }
   },
-  [userDetails, pageSize, filters, apiStatus, searchBarText]
+  [userDetails, pageSize, apiFilters, apiStatus, searchBarText]
 );
 
   useEffect(() => {
@@ -167,14 +183,34 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         paginationKeysRef.current = { 1: "" };
         fetchDatabaseData(1, pageSize, "");
       }
-    // }, [userDetails?.email, searchBarText]);
-    }, [userDetails, fetchDatabaseData, pageSize]);
+    }, [userDetails?.email, pageSize, apiStatus]);
+    // }, [userDetails, fetchDatabaseData, pageSize]);
     
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!userDetails?.email) return;
 
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchBarText(e.target.value);
-  };
+    if (searchInputRef.current) {
+      clearTimeout(searchInputRef.current);
+    }
+
+    searchInputRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+
+      fetchDatabaseData(1, pageSize, "", apiFilters, true);
+    }, 500); // 500ms debounce
+
+    return () => {
+      if (searchInputRef.current) {
+        clearTimeout(searchInputRef.current);
+      }
+    };
+  }, [searchBarText]);
+  // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setSearchBarText(e.target.value);
+  // };
 
 
   const handlePageChange = useCallback((page: number) => {
@@ -193,9 +229,9 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
-      fetchDatabaseData(1, size, "");
+      // fetchDatabaseData(1, size, "", apiFilters, false);
     },
-    [fetchDatabaseData]
+    [setPageSize]
   );
 
   const removeAgencyLocally = (id: string) => {
@@ -558,7 +594,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           {/* Search Bar */}
           <SearchBarAgency
             searchBarText={searchBarText}
-            setSearchBarText={setSearchBarText}
+            setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
             handleClick={() => {}}
             placeholder="Search candidates by name, email and company name"
           />
@@ -608,7 +644,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
               <span>Bulk CV upload</span>
             </button>
           </div>
-
+          <DatabaseFilters onFilterChange={setFilters} className="min-w-fit" />
           <div className="w-full lg:w-auto">
               <DatabaseDropdown
               selectTitle="Source"
@@ -748,7 +784,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
         />
         ) : (
         <AdminDatabaseTable
-          data={fetchData}
+          data={filteredData}
           userType="ADMIN"
           refetch={refetch}
           ListSelection={ListSelection}

@@ -3,7 +3,7 @@ import SearchBar from '@Components/Shared/SearchBar';
 import SkeletonLoader from '@Components/Shared/SkeletonLoader';
 import { DatabaseStatusType, JobApplicationStatusType } from '@TypesAndConstants/JobsAndApplication.type';
 import { Ban, Download, Forward, Pencil, Trash2, Upload,Eye, User } from 'lucide-react';
-import React, { useCallback, useEffect, useRef, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import CorporateDatabaseTable from './CorporateDatabaseTable';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
@@ -19,6 +19,10 @@ import { HiringEligibilityStatus, RefereeTypeStatus } from '@TypesAndConstants/J
 import EditCTCETCAndNoticePeriodModal from './modals/EditCTCETCAndNoticePeriodModal';
 import MoveToApplicantsBulk from './modals/MoveToApplicantsBulk';
 import FinalReviewModal from './modals/FinalReviewModal';
+import { filterDatabaseCandidates } from '@Utils/DatabaseFilter.utils';
+import DatabaseFilters, { DatabaseFilterValues } from '@Components/Shared/DatabasePage/DatabaseFilters';
+import { useUrlState } from '@Hooks/useUrlState.hook';
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants';
 
 interface CorporateDatabaseProps{
 
@@ -73,7 +77,7 @@ interface ResponseApi {
   isSuccess:boolean;
 }
 const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
-    const [searchBarText, setSearchBarText] = useState<string|null>("")
+    // const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [refereeTypeStatus, setRefereeTypeStatus] = useState<RefereeTypeStatus>();
     const [hiringEligibiltyStatus, setHiringEligibiltyStatus] = useState<HiringEligibilityStatus>();
     const [selectedRows, setSelectedRows] = useState<any[]>([]);
@@ -87,9 +91,9 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [fetchData, setFetchData] = useState<any[]>([]);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
-    const [pageSize,setPageSize] = useState<number>(200);
+    // const [pageSize,setPageSize] = useState<number>(200);
     const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
-    const [filters, setFilters] = useState<DatabaseListFilters>({});
+    const [apiFilters, setApiFilters] = useState<DatabaseListFilters>({});
     const paginationKeysRef = useRef<Record<number, string>>({1: "",});
     const [currentPage, setCurrentPage] = useState(1);
     const [isSelectJobForBulkMatch,setIsSelectJobForBulkMatch] = useState<boolean>(false);
@@ -111,7 +115,20 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [successfullySentCandidateList,setSuccessfullySentCandidateList]  = useState<string>("");
     const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
     const [initialIds,setInitialIds] = useState<string[]>([])
-
+    const [filters, setFilters] = useState<DatabaseFilterValues>({});
+    const { searchText: searchBarText, setSearchText: setSearchBarText, pageSize, setPageSize } = useUrlState({
+    search: {
+      defaultValue: ""
+    },
+      pageSize: {
+        defaultValue: 200,
+        validValues: [10, 25, 50, 100, 150, 200]
+      }
+    });
+    const filteredData = useMemo(() => {
+      if (!fetchData) return fetchData;
+      return filterDatabaseCandidates(fetchData, filters);
+    }, [fetchData, filters]);
     useEffect(() => {
       function handleClickOutside(event:any) {
         if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -142,7 +159,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       page: number = 1,
       size: number = pageSize,
       lastKey: string = "",
-      searchFilters = filters,
+      searchFilters = apiFilters,
       isSearch = false,
       sortOrder = "desc",
       // statusOverride?: DatabaseStatusType
@@ -160,8 +177,11 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
           sortOrder,
         };
 
-        // include filters if present
-        if (searchBarText?.trim()) params.candidateEmail = searchBarText;
+        // include apiFilters if present
+        const searchValue = searchBarText?.trim() ?? "";
+        if (searchValue) {
+          params.candidateEmail = searchValue;
+        }
         if (searchFilters?.userType) params.userType = searchFilters.userType;
 
         // include status hiringEligibilityStatus if provided
@@ -201,7 +221,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         setIsLoading(false);
       }
     },
-    [userDetails, pageSize, filters, hiringEligibiltyStatus, refereeTypeStatus,searchBarText]
+    [userDetails, pageSize, apiFilters, hiringEligibiltyStatus, refereeTypeStatus,searchBarText]
   );
 
     useEffect(() => {
@@ -211,14 +231,35 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
           paginationKeysRef.current = { 1: "" };
           fetchDatabaseData(1, pageSize, "");
         }
-    // }, [userDetails?.email, searchBarText]);
-    }, [userDetails, fetchDatabaseData, pageSize]);
+      }, [userDetails?.email, pageSize, hiringEligibiltyStatus, refereeTypeStatus]);
+    // }, [userDetails, fetchDatabaseData, pageSize]);
     
     const searchInputRef = useRef<NodeJS.Timeout | null>(null);
-  
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchBarText(e.target.value);
-    };
+    useEffect(() => {
+      if (!userDetails?.email) return;
+
+      if (searchInputRef.current) {
+        clearTimeout(searchInputRef.current);
+      }
+
+      searchInputRef.current = setTimeout(() => {
+        setCurrentPage(1);
+        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+
+        fetchDatabaseData(1, pageSize, "", apiFilters, true);
+      }, 500); // 500ms debounce
+
+      return () => {
+        if (searchInputRef.current) {
+          clearTimeout(searchInputRef.current);
+        }
+      };
+    }, [searchBarText]);
+
+    // const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //   setSearchBarText(e.target.value);
+    // };
       
     const handlePageChange = useCallback((page: number) => {
         const lastKey = paginationKeysRef.current[page] || "";
@@ -230,14 +271,14 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     );
       
     const handlePageSizeChange = useCallback(
-      (size: number) => {
+      (size: CommonPaginationPageSizeOptionsType) => {
         setPageSize(size);
         setCurrentPage(1);
         setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
         paginationKeysRef.current = { 1: "" };
-        fetchDatabaseData(1, size, "");
+        // fetchDatabaseData(1, size, "");
       },
-      [fetchDatabaseData]
+      [setPageSize]
     );
     
     const removeAgencyLocally = (id: string) => {
@@ -655,12 +696,11 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       <div className="w-full lg:flex-1">
         <SearchBarAgency
           searchBarText={searchBarText}
-          setSearchBarText={setSearchBarText}
-          handleClick={() => console.log("")}
+          setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
+          handleClick={() => {}}
           placeholder="Search candidates by name or email"
         />
       </div>
-
       {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
       <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
         <div className="basis-[40%] w-full lg:w-auto flex flex-col gap-2 lg:flex-row lg:items-center lg:gap-1">
@@ -687,6 +727,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
 
     {/* Row 3 (mobile/tablet stacked): Source, Status */}
         <div className="w-full lg:w-auto flex flex-row gap-2 lg:flex-row lg:items-center lg:gap-1 ">
+          <DatabaseFilters onFilterChange={setFilters} className="min-w-fit" />
           {/* Source dropdown */}
           <div className="w-full lg:w-auto">
             <DatabaseDropdown
@@ -816,7 +857,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
       />
       ) : (
       <CorporateDatabaseTable
-        data={fetchData}
+        data={filteredData}
         userType="CORPORATE"
         refetch={refetch}
         ListSelection={ListSelection}

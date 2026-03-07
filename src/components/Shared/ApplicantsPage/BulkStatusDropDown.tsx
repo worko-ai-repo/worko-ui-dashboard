@@ -100,7 +100,7 @@ const BulkStatusDropDown: React.FC<BulkStatusDropDownProps> = ({
       {/* Trigger Button */}
       <div
         onClick={toggleBulk}
-        className={`flex justify-center min-w-40 bg-white px-8 py-2 items-center font-semibold focus:outline-none transition-all ${
+        className={`text-sm flex justify-center min-w-40 bg-white px-8 py-2 items-center font-semibold focus:outline-none transition-all ${
           isOpen ? "rounded-b-none rounded-2xl text-blue-600" : "rounded-2xl"
         } ${disabled ? "cursor-not-allowed" : ""}`}>
         <span>{selectTitle}</span>

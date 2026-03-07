@@ -64,6 +64,7 @@ const MoveToApplicants: React.FC<MoveToApplicantsProps> = ({ dashboardType, text
   const [companyJobs, setCompanyJobs] = useState<JobData[]>([]);
   const [isLoadingCompany, setIsLoadingCompany] = useState(false);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
   // Modal open/close animation
   useEffect(() => {
     if (isOpen) {
@@ -249,11 +250,18 @@ const handleSubmit = async () => {
 
   return (
     <div
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
       className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
       } ${visible ? 'visible' : 'invisible'}`}
     >
     <div
+      ref={modalRef}
       className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
         isAnimatingIn ? 'translate-x-0' : 'translate-x-full'
       }`}

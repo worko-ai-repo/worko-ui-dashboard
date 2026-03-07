@@ -1,4 +1,4 @@
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import {
   Calendar,
@@ -81,6 +81,7 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [expandedRequests, setExpandedRequests] = useState<Record<string, boolean>>({});
   const { userDetails } = useAppContext();
+  const modalRef = useRef<HTMLDivElement>(null);
   const basePath = import.meta.env.APP_PROXY_DASH ? `/${import.meta.env.APP_PROXY_DASH}` : "";
 
   const openInterviewWindow = (relativePath: string) => {
@@ -340,10 +341,17 @@ const VideoInterviewModal: FC<VideoInterviewModalProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-4xl relative transform transition-transform duration-300 ease-in-out self-auto max-h-[90vh] overflow-y-auto ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
         }`}>

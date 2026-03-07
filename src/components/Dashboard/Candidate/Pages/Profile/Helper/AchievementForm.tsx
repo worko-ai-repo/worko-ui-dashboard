@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Plus } from 'lucide-react';
 
 interface AchievementFormProps {
@@ -28,7 +28,7 @@ const AchievementForm: React.FC<AchievementFormProps> = ({
 }) => {
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-
+  const modalRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (isOpen) {
       setVisible(true);
@@ -43,11 +43,18 @@ const AchievementForm: React.FC<AchievementFormProps> = ({
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}
     >
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[80vh] overflow-y-auto ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
         }`}

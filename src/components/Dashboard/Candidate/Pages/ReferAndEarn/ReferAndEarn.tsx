@@ -8,6 +8,7 @@ import { useDashboardContext } from "@Context/Dashboard.context";
 import { ChevronDown, X } from "lucide-react";
 import GenericDropdown from "@Components/Shared/DropDown/GenericDropdown";
 import { useAppContext } from "@Context/App.context";
+import SearchBarAgency from "@Components/Shared/SearchBarAgency";
   
 interface CountsProps{
   PK:string;
@@ -34,10 +35,10 @@ interface Stat {
     const [isJobDescriptionModalOpen, setIsJobDescriptionModalOpen] = useState(false);
     const [isJobFormModalOpen, setIsJobFormModalOpen] = useState(false);
     const [activeTab, setActiveTab] = useState<"PUBLISHED" | "CLOSED" | "ARCHIVED">("PUBLISHED");
-    const [searchBarText, setsearchBarText] = useState<string>('');
+    const [searchBarText, setSearchBarText] = useState<string | null>('');
     const [data, setData] = useState<JobApiResponse | null>(null);
     const [jobDetails, setJobDetails] = useState<JobDetails | null>(null);
-    const [searchBarTextTemp, setsearchBarTextTemp] = useState<string>('');
+    const [searchBarTextTemp, setSearchBarTextTemp] = useState<string>('');
     const [statusFilter, setStatusFilter] = useState<string>("");
     const [referrals, setReferrals] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -205,53 +206,41 @@ const handlePageSizeChange: React.Dispatch<React.SetStateAction<number>> = (valu
               ))}
             </div>
             <div className="flex flex-col sm:flex-row justify-center gap-2">
-            <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
+              <div className="w-full md:basis-full">
+                <SearchBarAgency
+                  searchBarText={searchBarText}
+                  setSearchBarText={setSearchBarText}
+                  handleClick={() => setSearchBarTextTemp(searchBarText || "")}
+                  placeholder="Search candidates by name, email and company name"
+                />
+              </div>
+            {/* <div className="flex flex-row w-full bg-white shadow-md rounded-[15px] overflow-hidden">
               <input
                 type="text"
                 placeholder="Search by name or job"
                 value={searchBarTextTemp}
-                onChange={(e) => setsearchBarTextTemp(e.target.value)}
+                onChange={(e) => setSearchBarTextTemp(e.target.value)}
                 className="px-4 py-3 w-full outline-none focus:outline-none focus:ring-0 bg-[#FAFAFA] text-sm"
               />
               {searchBarTextTemp && (
                 <button
                     onClick={() => {
-                      setsearchBarTextTemp("")
-                      setsearchBarText("")
+                      setSearchBarTextTemp("")
+                      setSearchBarText("")
                     }}
                   className="scale-50 active:scale-[45%] right-[5%] h-full w-fit rounded-full">
                   <X className="p-1 text-white bg-blue-600 rounded-full w-10 h-auto relative" />
                 </button>
               )}
               <button
-                onClick={()=>setsearchBarText(searchBarTextTemp)}
+                onClick={()=>setSearchBarText(searchBarTextTemp)}
                 className="bg-gradient-to-t from-[#316BFF] to-[#5FC9FF] text-white px-6 py-0 rounded-[15px] rounded-l-none">
                 Search
               </button>
-            </div>
+            </div> */}
             <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
               {/* Container for filter and button side by side */}
               <div className="flex flex-row items-center gap-2">
-                
-                {/* Filter Dropdown */}
-                {/* <div className="relative w-[150px]">
-                  <select
-                    className="h-full w-full pl-4 pr-10 py-3 bg-white text-sm text-gray-700 border border-gray-300 rounded-xl appearance-none cursor-pointer"
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                  >
-                    <option value="">All Statuses</option>
-                    <option value="WITHDRAWAL_ACCEPTED">Withdrawal Accepted</option>
-                    <option value="WITHDRAWAL_REJECTED">Withdraw Rejected</option>
-                    <option value="PAYMENT_COMPLETED">Payment Completed</option>
-                    <option value="NOT_ACHIEVED_YET">Under Process</option>
-                    <option value="ACHIEVED">Achieved</option>
-                  </select>
-                  
-                  <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
-                  </div>
-                </div> */}
               <div className="flex font-semibold sm:w-auto">
                 <GenericDropdown
                   selectTitle={"Status"}

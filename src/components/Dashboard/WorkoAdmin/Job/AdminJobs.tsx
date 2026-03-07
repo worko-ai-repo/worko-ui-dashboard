@@ -464,7 +464,7 @@ const AdminJobs = () => {
               handleClick={() => refetch()}
             />
             <div className=" flex w-3/9 flex-shrink-0  gap-4 justify-end lg:items-end">
-              <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold">
+              <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold text-sm">
                 <CompanyFilter
                   onFilterChange={setCompanyFilters}
                   jobs={data ?? []}
@@ -498,7 +498,7 @@ const AdminJobs = () => {
               <div className="flex">
                 <button
                   onClick={() => setIsJobDescriptionModalOpen(true)}
-                  className="bg-gradient-to-b from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
+                  className="bg-gradient-to-b from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full text-sm">
                   + Post Job
                 </button>
               </div>

@@ -12,7 +12,7 @@ const SearchBarAgency: React.FC<SearchBarAgencyProps> = ({ searchBarText, setSea
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const onClear = useCallback(() => {
-    setSearchBarText(null);
+    setSearchBarText("");
     if (searchInputRef.current) {
       searchInputRef.current.value = "";
     }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import httpServiceObj from "@Services/ApiHandler.service";
 import { SendIcon } from "lucide-react";
 import { toast } from "react-toastify";
@@ -15,7 +15,7 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
   const [loading, setLoading] = useState(false);
   const [visible, setVisible] = useState(false);
   const [isAnimatingIn, setIsAnimatingIn] = useState(false);
-
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const handleSubmit = async () => {
     if (
@@ -77,10 +77,17 @@ const WithdrawDialog = ({ isOpen, onClose, referral, statusData }: any) => {
 
   return (
     <div
-      className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ease-in-out ${
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onClose();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex justify-end transition-opacity duration-300 ease-in-out ${
         isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
       } ${visible ? "visible" : "invisible"}`}>
       <div
+        ref={modalRef}
         className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out h-[100vh] ${
           isAnimatingIn ? "translate-x-0" : "translate-x-full"
         }`}>

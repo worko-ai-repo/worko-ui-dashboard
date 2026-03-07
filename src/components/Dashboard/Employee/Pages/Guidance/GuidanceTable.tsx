@@ -471,7 +471,7 @@ const GuidanceTable = memo(
 
         {/* Modal */}
         {modalState.selectedRequest && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[80]">
             <div className="relative">
               <button
                 onClick={closeModal}

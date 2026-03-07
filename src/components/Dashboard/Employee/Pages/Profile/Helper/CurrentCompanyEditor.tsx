@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import httpServiceObj from '@Services/ApiHandler.service';
 import { toast } from 'react-toastify';
 import { getToastOptions } from 'lib-worko-ui';
@@ -68,7 +68,7 @@ const CurrentCompanyEditor: React.FC<CurrentCompanyEditorProps> = ({ items, onSa
   const [showOtpInput, setShowOtpInput] = useState(false);
   const [otp, setOtp] = useState('');
   const [showAddCompanyForm, setShowAddCompanyForm] = useState(false);
-
+  const modalRef = useRef<HTMLDivElement>(null);
   
 useEffect(() => {
   // console.log(onlyVerifyClicked,items)
@@ -258,10 +258,19 @@ useEffect(() => {
   }, []);
 
   return (
-    <div className={`fixed inset-0 z-50 flex justify-end transition-opacity duration-300 ${
+    <div 
+      onMouseDown={(e) => {
+        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+          // reset();
+          onCancel();
+        }
+      }}
+      className={`fixed inset-0 z-[80] flex justify-end transition-opacity duration-300 ${
       visible ? "bg-black bg-opacity-50" : "bg-black bg-opacity-0"
     }`}>
-    <div className={`bg-white rounded-l-xl p-6 max-w-xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
+    <div 
+    ref={modalRef}
+    className={`bg-white rounded-l-xl p-6 max-w-xl w-full shadow-lg flex flex-col h-[100vh] relative transform transition-transform duration-300 ease-in-out ${
         visible ? "translate-x-0" : "translate-x-full"
       } overflow-y-auto`}>
         <h2 className="text-xl font-semibold mb-4">Edit Current Company</h2>

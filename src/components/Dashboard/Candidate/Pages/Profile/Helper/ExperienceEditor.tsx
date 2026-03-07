@@ -227,7 +227,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           </div>
         ))
       )}
-        {formModal && (
+        {/* {formModal && ( */}
         <ExperienceForm
           title={title}
           isOpen={formModal}
@@ -251,7 +251,7 @@ const ExperienceEditor: React.FC<ExperienceEditorProps> = ({
           setChecked={setChecked}
           onSubmit={handleAddOrUpdate}
         />
-      )}
+      {/* )} */}
     </div>
   );
 };

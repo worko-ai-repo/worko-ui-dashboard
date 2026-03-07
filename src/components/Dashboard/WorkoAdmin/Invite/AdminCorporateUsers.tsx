@@ -69,7 +69,7 @@ const AdminCorporateInvites = () => {
           <div className="flex">
             <button
               onClick={() => setIsSendInviteModalOpen(true)}
-              className="bg-gradient-to-b text-nowrap from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full">
+              className="bg-gradient-to-b text-nowrap from-[#80E7E7] to-[#316BFF] text-white px-5 py-2 rounded-xl font-medium w-full text-sm">
               + Send Invite
             </button>
           </div>

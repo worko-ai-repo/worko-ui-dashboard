@@ -150,7 +150,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
 
     if (request?.status === 'CANCELLED') {
     return (
-      <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
+      <div className={`w-full fixed top-0 right-0 max-w-xl bg-white rounded-xl shadow-lg overflow-hidden ${className}`}>
         <div className="flex justify-between items-center p-6 pb-4">
           <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Cancel Reason</h2>
         </div>
@@ -164,7 +164,7 @@ const MentorDetails: FunctionComponent<MentorDetailsProps> = ({
   }
 
   return (
-    <div className={`w-full fixed top-0 right-0 max-w-[500px] bg-white rounded-xl shadow-lg max-h-screen overflow-y-auto ${className}`}>
+    <div className={`w-full fixed top-0 right-0 max-w-xl bg-white rounded-xl shadow-lg max-h-screen overflow-y-auto ${className}`}>
       <div className="flex justify-between items-center p-6 pb-4">
         <h2 className="text-sm font-semibold text-black font-['Poppins'] truncate">Candidate details</h2>
         {linkedin !== "" &&
