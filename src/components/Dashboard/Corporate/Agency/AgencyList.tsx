@@ -11,6 +11,8 @@ import { debounce } from 'lodash'
 import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetailsDto'
 import { JobData } from '@Interfaces/CorporateDashboard.dto'
 import Modal from '@Components/Shared/Modal'
+import { useUrlState } from '@Hooks/useUrlState.hook'
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
 
 
 
@@ -48,7 +50,7 @@ const AgencyList = () => {
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const { userDetails } = useAppContext();
   const { user, isLoadingUser } = useDashboardContext();
-  const [pageSize,setPageSize] = useState<number>(10);
+  // const [pageSize,setPageSize] = useState<number>(10);
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
   const [filters, setFilters] = useState<AgencyListFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
@@ -56,6 +58,12 @@ const AgencyList = () => {
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
   const [jobsList,setJobsList] = useState([]);
   const [jobsListForRemove,setJobsListForRemove] = useState([]);
+  const { pageSize, setPageSize } = useUrlState({
+    pageSize: {
+      defaultValue: 200,
+      validValues: [10, 25, 50, 100, 150, 200]
+    }
+  });
   //@TODO use callback maybe to call api
 
   // useEffect(() => {
@@ -138,20 +146,20 @@ const AgencyList = () => {
       setIsLoading(false);
     }
   },
-  [userDetails, pageSize, filters]
+  [userDetails?.email, pageSize, filters]
 );
 
   const fetchJobs = async() =>{
-    const params = {
+    const params: Record<string, any> = {
       pageSize: 200,
       sortOrder: "desc",
       dashboard: "CORPORATE",
-      userRole: "corporate-recruiter",
+      userRole:userDetails?.userType[0],
       status: "PUBLISHED",
       companyId: userDetails?.companyId,
-      corporateRecruiterUserId: userDetails?.id,
+      // corporateRecruiterUserId: userDetails?.id,
     }
-
+    if(userDetails?.userType[0] === "corporate-recruiter") params.corporateRecruiterUserId = userDetails?.id
     try {
       const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
       if(response?.data){
@@ -168,39 +176,41 @@ const AgencyList = () => {
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
       fetchUserData(1, pageSize, "");
-      fetchJobs()
     }
-  }, [userDetails]);
+  }, [userDetails?.email, pageSize]);
   // }, [userDetails, fetchUserData, pageSize]);
 
+  useEffect(() => {
+    if (userDetails?.email) {
+      fetchJobs();
+    }
+  }, [userDetails?.email]);
 
-    const searchInputRef = useRef<NodeJS.Timeout | null>(null);
-  
-    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSearchBarText(e.target.value);
-    };
+  const searchInputRef = useRef<NodeJS.Timeout | null>(null);
 
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchBarText(e.target.value);
+  };
+
+  const handlePageChange = useCallback((page: number) => {
+      const lastKey = paginationKeysRef.current[page] || "";
+      
+      setCurrentPage(page);
+      fetchUserData(page, pageSize, lastKey);
+    },
+    [fetchUserData, pageSize]
+  );
   
-    const handlePageChange = useCallback((page: number) => {
-        const lastKey = paginationKeysRef.current[page] || "";
-        
-        setCurrentPage(page);
-        fetchUserData(page, pageSize, lastKey);
-      },
-      [fetchUserData, pageSize]
-    );
-  
-  
-    const handlePageSizeChange = useCallback(
-      (size: number) => {
-        setPageSize(size);
-        setCurrentPage(1);
-        setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
-        paginationKeysRef.current = { 1: "" };
-        fetchUserData(1, size, "");
-      },
-      [fetchUserData]
-    );
+  const handlePageSizeChange = useCallback(
+    (size: CommonPaginationPageSizeOptionsType) => {
+      setPageSize(size);
+      setCurrentPage(1);
+      setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+      // fetchUserData(1, size, "");
+    },
+    [setPageSize]
+  );
 
   const removeAgencyLocally = (id: string) => {
     setFetchData((prev:any) => prev?.filter((item:any) => item.id !== id));

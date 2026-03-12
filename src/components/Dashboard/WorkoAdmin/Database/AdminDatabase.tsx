@@ -331,15 +331,26 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       return{
         fileName:file.name,
         fileType:file.type,
+        fileSize:file.size,
       }
     })
 
-    const overSizedPDFFilesNames = Array.from(totalfiles).filter(
-      (file) => file.size > 3 * 1024 * 1024
+    const validPDFFilesNames = Array.from(totalfiles).filter(
+      (file) => file.type === "application/pdf"
     ).map(file =>{
       return{
         fileName:file.name,
         fileType:file.type,
+        fileSize:file.size,
+      }
+    })
+
+    const overSizedPDFFilesNames = Array.from(validPDFFilesNames).filter(
+      (file) => file.fileSize > 3 * 1024 * 1024
+    ).map(file =>{
+      return{
+        fileName:file.fileName,
+        fileType:file.fileType,
       }
     })
 
@@ -361,7 +372,17 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     //   return;
     // }
 
-    const resumeCountResponse = await sendResumeCount({totalResumesUploaded:files.length})
+    if(!files.length){
+      toast.error("All the selected files are either Invalid or Oversized",getToastOptions({}))
+      return
+    }
+    const countsPayload: Partial<SendResumeCountApiResponse> = {
+      totalResumesUploaded:files.length
+    }
+    if(invalidPDFFilesNames.length) countsPayload.totalInvalidFileNamesUploaded=invalidPDFFilesNames.length
+    if(overSizedPDFFilesNames.length) countsPayload.totalLargeResumesUploaded=overSizedPDFFilesNames.length
+
+    const resumeCountResponse = await sendResumeCount(countsPayload)
     if (!resumeCountResponse.success) {
       toast.error((resumeCountResponse?.error as { message?: string })?.message, getToastOptions({}));
       return; 
@@ -372,12 +393,32 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     for (let i = 0; i < files.length; i += chunkSize) {
     const currentChunk = files.slice(i, i + chunkSize);
 
-    const pdfFilesNameAndType  = currentChunk.map(file =>{
+    let pdfFilesNameAndType  = currentChunk.map(file =>{
       return {
         fileMimeType:file.type,
         fileName:file.name
       }
     })
+    if(invalidPDFFilesNames.length){
+      pdfFilesNameAndType = [
+        ...pdfFilesNameAndType,
+        ...invalidPDFFilesNames.map(file => ({
+          bulkSourceTypeParseResumeStatus: "INVALID_FILE_NAME",
+          fileMimeType: file.fileType,
+          fileName: file.fileName
+        }))
+      ]
+    }
+    if(overSizedPDFFilesNames.length){
+      pdfFilesNameAndType = [
+        ...pdfFilesNameAndType,
+        ...overSizedPDFFilesNames.map(file => ({
+          bulkSourceTypeParseResumeStatus: "LARGE_RESUME_FILE",
+          fileMimeType: file.fileType,
+          fileName: file.fileName
+        }))
+      ]
+    }
     const payload = {
       bulkCvs:pdfFilesNameAndType,
       bulkSourceTypeResumeId:resumeCountResponseId

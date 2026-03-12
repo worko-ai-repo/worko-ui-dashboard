@@ -15,6 +15,8 @@ import { PaginationInfo } from "../Agency/AgencyCandidateList";
 import MoveToApplicantsBulk from "../Database/modals/MoveToApplicantsBulk";
 import EditCTCETCAndNoticePeriodModalForSearchInDB from "./modals/EditCTCETCAndNoticePeriodModalForSearchInDB";
 import FinalReviewModal from "../Database/modals/FinalReviewModal";
+import { useUrlState } from "@Hooks/useUrlState.hook";
+import { CommonPaginationPageSizeOptionsType } from "@TypesAndConstants/common.constants";
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -51,7 +53,7 @@ export type FailedCandidateDetails = {
     const [fetchData,setFetchData] = useState<any>([])
     const { userDetails } = useAppContext();
     const [jobsList,setJobsList] = useState<JobOption[]>([]);
-    const [pageSize,setPageSize] = useState<number>(200);
+    // const [pageSize,setPageSize] = useState<number>(200);
     const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -70,21 +72,25 @@ export type FailedCandidateDetails = {
     const [textToDisplay,setTextToDisplay]  = useState<string>("");
     const [initialIds, setInitialIds] = useState<any[]>([]);
     const [failedCandidateDetails, setFailedCandidateDetails] = useState<FailedCandidateDetails[]>([]);
-
+    const { pageSize, setPageSize } = useUrlState({
+      pageSize: {
+        defaultValue: 200,
+        validValues: [10, 25, 50, 100, 150, 200]
+      }
+    });
     const navigate = useNavigate();
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
     
       useEffect(()=>{
         setIsJobsLoading(true)
       const fetchJobs = async() =>{
-      const params = {
+      const params: Record<string, any> = {
         pageSize: 200,
         sortOrder: "desc",
         dashboard: "CORPORATE",
-        userRole: "corporate-recruiter",
+        userRole:userDetails?.userType[0],
         status: "PUBLISHED",
         companyId: userDetails?.companyId,
-        corporateRecruiterUserId: userDetails?.id,
       }
 
       try {
@@ -256,7 +262,7 @@ const handlePageChange = useCallback(
 
 
   const handlePageSizeChange = useCallback(
-    (size: number) => {
+    (size: CommonPaginationPageSizeOptionsType) => {
       const queryValue = mode === "jobs" ? selectedJobId : input;
       setPageSize(size);
       setCurrentPage(1);
@@ -301,8 +307,15 @@ const handlePageChange = useCallback(
   setIsSuggestionsOpen(false);
   setCurrentPage(1);
 
+  const params = new URLSearchParams(location.search);
+
+  params.delete("jobs");
+  params.delete("prompt");
+
+  params.set(mode, queryValue);
+
   navigate(
-    `/corporate/aSearchDB/results?${mode}=${encodeURIComponent(queryValue)}`
+    `/corporate/aSearchDB/results?${params.toString()}`
   );
   };
 

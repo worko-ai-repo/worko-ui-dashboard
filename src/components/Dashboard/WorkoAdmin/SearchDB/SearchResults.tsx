@@ -16,6 +16,8 @@ import FinalReviewModal from "@Components/Dashboard/Corporate/Database/modals/Fi
 import MoveToApplicantsBulk from "@Components/Dashboard/Corporate/Database/modals/MoveToApplicantsBulk";
 import EditCTCETCAndNoticePeriodModalForSearchInDB from "@Components/Dashboard/Corporate/SearchDB/modals/EditCTCETCAndNoticePeriodModalForSearchInDB";
 import { FailedCandidateDetails } from "@Components/Dashboard/Corporate/SearchDB/SearchResults";
+import { useUrlState } from '@Hooks/useUrlState.hook'
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -49,7 +51,7 @@ const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [fetchData,setFetchData] = useState<any>([])
     const { userDetails } = useAppContext();
     const [jobsList,setJobsList] = useState<JobOption[]>([]);
-    const [pageSize,setPageSize] = useState<number>(200);
+    // const [pageSize,setPageSize] = useState<number>(200);
     const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
     const [hasMore, setHasMore] = useState<boolean>(false);
     const [currentPage, setCurrentPage] = useState(1);
@@ -68,6 +70,12 @@ const [searchBarText, setSearchBarText] = useState<string|null>("")
     const [textToDisplay,setTextToDisplay]  = useState<string>("");
     const [initialIds, setInitialIds] = useState<any[]>([]);
     const [failedCandidateDetails, setFailedCandidateDetails] = useState<FailedCandidateDetails[]>([]);
+    const { pageSize, setPageSize } = useUrlState({
+      pageSize: {
+        defaultValue: 200,
+        validValues: [10, 25, 50, 100, 150, 200]
+      }
+    });
 
     const navigate = useNavigate();
     const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
@@ -200,13 +208,13 @@ const handlePageChange = useCallback(
 
 
   const handlePageSizeChange = useCallback(
-    (size: number) => {
+    (size: CommonPaginationPageSizeOptionsType) => {
       const queryValue = mode === "jobs" ? selectedJobId : input;
       setPageSize(size);
       setCurrentPage(1);
       fetchCandidates(queryValue, mode, 1, size);
     },
-    [input, mode]
+    [input, mode, setPageSize]
   );
 
   const toggleRow = (row: any) => {
@@ -271,16 +279,21 @@ const handlePageChange = useCallback(
 //           }
 //   };
   
-const handleSubmit = () => {
+  const handleSubmit = () => {
     const queryValue = mode === "jobs" ? selectedJobId : input;
-  if (!queryValue.trim()) return;
+    if (!queryValue.trim()) return;
 
-  setIsSuggestionsOpen(false);
-  setCurrentPage(1);
+    setIsSuggestionsOpen(false);
+    setCurrentPage(1);
 
-  navigate(
-    `/admin/aSearchDB/results?${mode}=${encodeURIComponent(queryValue)}`
-  );
+    const params = new URLSearchParams(location.search);
+
+    params.delete("jobs");
+    params.delete("prompt");
+
+    params.set(mode, queryValue);
+
+    navigate(`/admin/aSearchDB/results?${params.toString()}`);
   };
 
   const handleMicToggle = () => {

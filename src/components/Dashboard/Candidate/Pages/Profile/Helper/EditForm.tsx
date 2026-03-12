@@ -1,4 +1,6 @@
+import { getToastOptions } from 'lib-worko-ui';
 import React from 'react';
+import { toast } from 'react-toastify';
 
 interface EditFormProps {
   onSave: (data: any) => Promise<boolean>;
@@ -11,6 +13,8 @@ interface EditFormProps {
     placeholder?: string;
     required?: boolean;
     options?: { value: string; label: string }[];
+    min?:number;
+    max?:number;
   }[];
   title?: string;
 }
@@ -38,7 +42,11 @@ const EditForm: React.FC<EditFormProps> = ({
     e.preventDefault();
     setIsSubmitting(true);
     setError(null);
-    
+    if(Number(formData.CTC) > Number(formData.ECTC)){
+      toast.error("Expected salary cannot be less than current salary", getToastOptions({}))
+      setIsSubmitting(false);
+      return
+    }
     try {
       const success = await onSave(formData);
       if (success) {
@@ -104,6 +112,8 @@ const EditForm: React.FC<EditFormProps> = ({
                 onChange={handleChange}
                 placeholder={field.placeholder}
                 required={field.required}
+                min={field.min}
+                max={field.max}
                 className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             )}

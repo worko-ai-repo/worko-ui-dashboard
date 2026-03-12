@@ -48,8 +48,16 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
 
   const filteredOptions = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return options;
-    return options.filter((opt) => opt.label.toLowerCase().includes(q));
+
+    const safeOptions = (options || []).filter(
+      (opt): opt is DropDownOption => !!opt?.label
+    );
+
+    if (!q) return safeOptions;
+
+    return safeOptions.filter((opt) =>
+      opt.label.toLowerCase().includes(q)
+    );
   }, [options, query]);
 
   useEffect(() => {
@@ -116,41 +124,68 @@ const GenericDropdownAgency: React.FC<GenericDropdownAgencyProps> = ({
 
       {/* Dropdown Panel */}
       {isOpen && !disabled && (
-        <div className="absolute left-0 top-full w-full min-w-52 max-w-full sm:max-w-none bg-white rounded-2xl rounded-t-none shadow-lg z-50 overflow-auto max-h-60">
+        <div className="absolute left-0 top-full w-full bg-white rounded-2xl rounded-t-none shadow-lg z-50 overflow-auto max-h-60">
           <div className="flex flex-col gap-1">
-            {isJobsLoading && (
+            {isJobsLoading ? (
                 <button
                   className={`text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition`}
                 >
                   Loading jobs...
                 </button>
-              )}
-            {filteredOptions.map((option, index) => {
-              const isSelected = option.label === selectedLabel;
-              return (
-                <button
-                  key={option.label + index}
-                  onClick={() => {
-                    option.onClick?.();
-                    onSelect?.(option);
-                    setSelectedLabel(option.label);
-                    setQuery(option.label);     // NEW
-                    setIsOpen(false);
-                  }}
-                  className={`text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition
-                    ${isSelected ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
-                >
-                  {option.label}
+              )
+              : !isJobsLoading && filteredOptions.length ? (
+                filteredOptions.map((option, index) => {
+                  const isSelected = option.label === selectedLabel;
+                  return (
+                    <button
+                      key={option.label + index}
+                      onClick={() => {
+                        option.onClick?.();
+                        onSelect?.(option);
+                        setSelectedLabel(option.label);
+                        setQuery(option.label);     // NEW
+                        setIsOpen(false);
+                      }}
+                      className={`text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition
+                        ${isSelected ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })
+                )
+              : (
+                <button className="text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition">
+                  No jobs found
                 </button>
-              );
-            })}
-            {filteredOptions.length === 0 && !isJobsLoading &&(
+              )
+            }
+            {/* // {filteredOptions.map((option, index) => {
+            //   const isSelected = option.label === selectedLabel;
+            //   return (
+            //     <button
+            //       key={option.label + index}
+            //       onClick={() => {
+            //         option.onClick?.();
+            //         onSelect?.(option);
+            //         setSelectedLabel(option.label);
+            //         setQuery(option.label);     // NEW
+            //         setIsOpen(false);
+            //       }}
+            //       className={`text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition
+            //         ${isSelected ? "text-blue-600 font-semibold" : "text-gray-600 hover:text-blue-600"}`}
+            //     >
+            //       {option.label}
+            //     </button>
+            //   );
+            // })} */}
+            {/* {filteredOptions.length === 0 && !isJobsLoading &&(
               <button
                 className={`text-left border-b px-4 py-2 text-xs font-medium whitespace-normal break-words transition`}
               >
                 No jobs found
               </button>
-            )}
+            )} */}
           </div>
         </div>
       )}

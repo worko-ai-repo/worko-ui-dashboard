@@ -13,7 +13,8 @@ import AdminServiceObj from '../Services/Admin.service'
 import { toast } from 'react-toastify'
 import { getToastOptions } from 'lib-worko-ui'
 import RejectCandidateModal from '@Components/Dashboard/Corporate/Agency/modals/RejectCandidateModal'
-
+import { useUrlState } from '@Hooks/useUrlState.hook'
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -52,7 +53,7 @@ const initialPaginationState: PaginationInfo = {
 
 
 const AgencyCandidateList = () => {
-  const [searchBarText,setSearchBarText] = useState<string|null>("")
+  // const [searchBarText,setSearchBarText] = useState<string|null>("")
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isRejecting,setIsRejecting] = useState<boolean>(false);
@@ -64,7 +65,7 @@ const AgencyCandidateList = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
   const [isEvaluatorForm,setIsEvaluatorForm] = useState<boolean>(false);
-  const [pageSize,setPageSize] = useState<number>(10);
+  // const [pageSize,setPageSize] = useState<number>(10);
   const [filters, setFilters] = useState<AgencyAllCandidatesListFilters>({});
   const [isLoading,setIsLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,7 +83,15 @@ const AgencyCandidateList = () => {
     experienceInMonths: '',
     emailId: '',
   });
-
+  const { searchText: searchBarText, setSearchText: setSearchBarText, pageSize, setPageSize } = useUrlState({
+    search: {
+      defaultValue: ""
+    },
+    pageSize: {
+      defaultValue: 200,
+      validValues: [10, 25, 50, 100, 150, 200]
+    },
+  });
   const [isJobsLoading,setIsJobsLoading] = useState<boolean>(false);
   const [jobFilter,setJobFilter] = useState<any>([]);
   const [selectedJobId, setSelectedJobId] = useState<string>("");
@@ -178,7 +187,7 @@ const AgencyCandidateList = () => {
           setIsLoading(false);
         }
       },
-      [userDetails, pageSize, filters, selectedCompany, selectedJobId, searchBarText]
+      [userDetails?.email, pageSize, filters]
     );
 
 
@@ -345,9 +354,9 @@ const AgencyCandidateList = () => {
         setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
         paginationKeysRef.current = { 1: "" };
         fetchAllCandidatesData(1, pageSize, "", filters, false, "desc", selectedJobId, selectedAgencyName,searchBarText || "");
-        fetchAllAgency()
+        // fetchAllAgency()
       }
-    }, [userDetails, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
+    }, [userDetails?.email, pageSize, selectedJobId, selectedAgencyName, filters]);
   // }, [userDetails, fetchAllCandidatesData, pageSize, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
 
   useEffect(() => {
@@ -357,6 +366,38 @@ const AgencyCandidateList = () => {
 
   
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+      if (!userDetails?.email) return;
+  
+      if (searchInputRef.current) {
+        clearTimeout(searchInputRef.current);
+      }
+  
+      searchInputRef.current = setTimeout(() => {
+        setCurrentPage(1);
+        setPaginationInfo(prev => ({ ...prev, lastKey: "" }));
+        paginationKeysRef.current = { 1: "" };
+  
+        fetchAllCandidatesData(
+          1,
+          pageSize,
+          "",
+          filters,
+          true,
+          "desc",
+          selectedJobId,
+          selectedAgencyName,
+          searchBarText || ""
+        );
+      }, 500);
+  
+      return () => {
+        if (searchInputRef.current) {
+          clearTimeout(searchInputRef.current);
+        }
+      };
+  }, [searchBarText]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchBarText(e.target.value);
@@ -372,14 +413,14 @@ const AgencyCandidateList = () => {
   );
 
   const handlePageSizeChange = useCallback(
-    (size: number) => {
+    (size: CommonPaginationPageSizeOptionsType) => {
       setPageSize(size);
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
-      fetchAllCandidatesData(1, size, "");
+      // fetchAllCandidatesData(1, size, "");
     },
-    [fetchAllCandidatesData]
+    [setPageSize]
   );
       
   const removeAgencyLocally = (id: string) => {
@@ -520,8 +561,8 @@ const AgencyCandidateList = () => {
         <div className="w-full md:basis-full">
           <SearchBarAgency
             searchBarText={searchBarText}
-            setSearchBarText={setSearchBarText}
-            handleClick={(e) => console.log(searchBarText)}
+            setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
+            handleClick={() => {}}
             placeholder="Search candidates by name, email and company name"
           />
         </div>

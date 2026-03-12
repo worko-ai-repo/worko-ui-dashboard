@@ -8,6 +8,8 @@ import { AgencyListDetailsDto } from '@Interfaces/AgencyDatabaseApplicantDetails
 import { CognitoMetaDataDto, useAppContext } from "@Context/App.context";
 import { useDashboardContext } from '@Context/Dashboard.context'
 import httpServiceObj from '@Services/ApiHandler.service'
+import { useUrlState } from '@Hooks/useUrlState.hook'
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
 
   const initialPaginationState: PaginationInfo = {
     count: 0,
@@ -43,14 +45,19 @@ const AgencyList = () => {
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
   const { userDetails } = useAppContext();
   const { user, isLoadingUser } = useDashboardContext();
-  const [pageSize,setPageSize] = useState<number>(10);
+  // const [pageSize,setPageSize] = useState<number>(10);
   const [paginationInfo, setPaginationInfo] = useState(initialPaginationState);
   const [filters, setFilters] = useState<AgencyListFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const paginationKeysRef = useRef<Record<number, string>>({1: "",});
   const [jobsList,setJobsList] = useState([]);
-
+  const { pageSize, setPageSize } = useUrlState({
+    pageSize: {
+      defaultValue: 200,
+      validValues: [10, 25, 50, 100, 150, 200]
+    }
+  });
   const fetchUserData = useCallback(
     async (
       page: number = 1,
@@ -98,7 +105,7 @@ const AgencyList = () => {
         setIsLoading(false);
       }
     },
-    [userDetails, pageSize, filters]
+    [userDetails?.email, pageSize, filters]
   );
 
   // const fetchJobs = async() =>{
@@ -130,7 +137,7 @@ const AgencyList = () => {
       fetchUserData(1, pageSize, "");
       // fetchJobs()
     }
-  }, [userDetails]);
+  }, [userDetails?.email, pageSize]);
   // }, [userDetails, fetchUserData, pageSize]);
 
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
@@ -149,14 +156,14 @@ const AgencyList = () => {
   );
 
   const handlePageSizeChange = useCallback(
-    (size: number) => {
+    (size: CommonPaginationPageSizeOptionsType) => {
       setPageSize(size);
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
-      fetchUserData(1, size, "");
+      // fetchUserData(1, size, "");
     },
-    [fetchUserData]
+    [setPageSize]
   );
 
   const removeAgencyLocally = (id: string) => {

@@ -205,7 +205,7 @@ const handleSubmit = async () => {
     // call this with selectedCompany.id
   const fetchJobs = async () => {
     setIsLoadingJobs(true)
-    let params
+    let params: Record<string, any> = {}
     if(dashboardType === "ADMIN"){
       params = {
         pageSize: 200,
@@ -220,13 +220,12 @@ const handleSubmit = async () => {
         pageSize: 200,
         sortOrder: "desc",
         dashboard: "CORPORATE",
-        userRole: "corporate-recruiter",
+        userRole:userDetails?.userType[0],
         status: "PUBLISHED",
         companyId: userDetails?.companyId,
-        corporateRecruiterUserId: userDetails?.id,
       }
     }
-
+    if(userDetails?.userType[0] === "corporate-recruiter") params.corporateRecruiterUserId = userDetails?.id
     try {
       const {response} = await httpServiceObj.get<any>(`/job`,true,params,false,"JOB")
       if (response?.data) {

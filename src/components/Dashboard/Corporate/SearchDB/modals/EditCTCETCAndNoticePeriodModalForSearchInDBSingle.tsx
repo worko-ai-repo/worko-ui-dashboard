@@ -87,7 +87,7 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
     if (isOpen && candidateList.length === 0 && skippableCandidates.length > 0) {
         continueSubmit(skippableCandidates);
     }
-  }, [isOpen]);
+  }, [isOpen, candidateList, skippableCandidates]);
 
   const formSubmit = async (data:any) => {
     setIsSubmitting(true);
@@ -167,11 +167,13 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
         : "Company name not found"
       toast.error(message,getToastOptions({}))
       setIsSubmitting(false);
+      onClose();
       return
     }
     if (finalFilteredList.length === 0) {
         toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
         setIsSubmitting(false);
+        onClose();
         return;
     }
     const candidateParsedCvs= finalFilteredList.map(c => ({
@@ -206,11 +208,11 @@ const EditCTCETCAndNoticePeriodModalForSearchInDBSingle:React.FC<EditCTCETCAndNo
         };
         localUpdate(payload.candidateParsedCvId, updatedData);
       reset()
-      onClose()
     } catch (error) {
         console.log(error)
     } finally {
         setIsSubmitting(false)
+        onClose();
     }
 };
 

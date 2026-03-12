@@ -87,7 +87,7 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidates:React.FC<EditCTCETCAndNo
     if (isOpen && candidateList.length === 0 && skippableCandidates.length > 0) {
         continueSubmit(skippableCandidates);
     }
-  }, [isOpen]);
+  }, [isOpen, candidateList, skippableCandidates]);
 
   const formSubmit = async (data:any) => {
     setIsSubmitting(true);
@@ -176,12 +176,14 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidates:React.FC<EditCTCETCAndNo
         getToastOptions({})
     );
     setIsSubmitting(false);
+    onClose()
     return;
     }
 
     if (finalFilteredList.length === 0) {
         toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
         setIsSubmitting(false);
+        onClose()
         return;
     }
     
@@ -235,12 +237,13 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidates:React.FC<EditCTCETCAndNo
         }
       }
       reset()
-      onClose()
+    //   onClose()
     } catch (error) {
         console.log(error)
     } finally {
         setIsSubmitting(false)
         if(setAcceptingCandidate) setAcceptingCandidate(false);
+        onClose()
     }
 };
 

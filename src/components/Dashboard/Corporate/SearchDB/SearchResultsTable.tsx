@@ -1036,16 +1036,15 @@ export default function SearchResultsTable(props: any) {
   };
 
   const fetchJobs = async () => {
-    const params = {
+    const params: Record<string, any> = {
       pageSize: 200,
       sortOrder: "desc",
       dashboard: "CORPORATE",
-      userRole: "corporate-recruiter",
+      userRole:userDetails?.userType[0],
       status: "PUBLISHED",
       companyId: userDetails?.companyId,
-      corporateRecruiterUserId: userDetails?.id,
     };
-
+    if(userDetails?.userType[0] === "corporate-recruiter") params.corporateRecruiterUserId = userDetails?.id
     try {
       const { response } = await httpServiceObj.get<any>(`/job`, true, params, false, "JOB");
       if (response?.data) {

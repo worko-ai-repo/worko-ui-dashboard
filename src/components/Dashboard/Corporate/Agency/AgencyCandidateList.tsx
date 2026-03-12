@@ -20,6 +20,8 @@ import secureStorage from '@Utils/SecureStorage.utils'
 import { SecureStorageKeyEnum } from '@Enums/SecureStorage.enum'
 import FinalReviewModal from '../Database/modals/FinalReviewModal'
 import EditCTCETCAndNoticePeriodModalForAgencyCandidates from './modals/EditCTCETCAndNoticePeriodModalForAgencyCandidates'
+import { useUrlState } from '@Hooks/useUrlState.hook'
+import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -57,7 +59,7 @@ const initialPaginationState: PaginationInfo = {
 };
 
 const AgencyCandidateList = () => {
-  const [searchBarText,setSearchBarText] = useState<string|null>("")
+  // const [searchBarText,setSearchBarText] = useState<string|null>("")
   const [selectedRows, setSelectedRows] = useState<any[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("");
   const [isRejecting,setIsRejecting] = useState<boolean>(false);
@@ -68,7 +70,7 @@ const AgencyCandidateList = () => {
   const [isPolling, setIsPolling] = useState(false);
   const [pollingStartTime, setPollingStartTime] = useState<number | null>(null);
   const [isEvaluatorForm,setIsEvaluatorForm] = useState<boolean>(false);
-  const [pageSize,setPageSize] = useState<number>(10);
+  // const [pageSize,setPageSize] = useState<number>(10);
   const [filters, setFilters] = useState<AgencyAllCandidatesListFilters>({});
   const [isLoading,setIsLoading] = useState<boolean>(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -100,6 +102,16 @@ const AgencyCandidateList = () => {
   const companyDetails: CompanyDetails | null = secureStorage.getItem<CompanyDetails>(
     SecureStorageKeyEnum.CORPORATECOMPANYDERAILS
   );
+  const { searchText: searchBarText, setSearchText: setSearchBarText, pageSize, setPageSize } = useUrlState({
+    search: {
+      defaultValue: ""
+    },
+    pageSize: {
+      defaultValue: 200,
+      validValues: [10, 25, 50, 100, 150, 200]
+    },
+  });
+
   //to debounce just uncomment the below
   //   useEffect(() => {
   //   const timer = setTimeout(() => {
@@ -178,7 +190,7 @@ const AgencyCandidateList = () => {
         setIsLoading(false);
       }
     },
-    [userDetails, pageSize, filters]
+    [userDetails?.email, pageSize, filters]
   );
 
 // FETCHING THE JOBS
@@ -191,10 +203,9 @@ const AgencyCandidateList = () => {
         toast.error("Company id not found",getToastOptions({}))
         return
       }
-
       setIsJobsLoading(true);
       try {
-      const params = {
+      const params: Record<string, any>  = {
         pageSize: 200,
         sortOrder: "desc",
         dashboard: "CORPORATE",
@@ -202,7 +213,9 @@ const AgencyCandidateList = () => {
         includeCompanyDetails: true,
         includeCountCompanyJobEntityJobApplication:true,
         companyId: userDetails?.companyId ?? "",
+        userRole:userDetails?.userType[0]
       }
+        if(userDetails?.userType[0] === "corporate-recruiter") params.corporateRecruiterUserId = userDetails?.id
         const response  = await CorporateServiceObj.fetchJobs(params);
       
         if (response && Array.isArray(response.data)) {
@@ -310,18 +323,50 @@ const AgencyCandidateList = () => {
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
       fetchAllCandidatesData(1, pageSize, "", filters, false, "desc", selectedJobId, selectedAgencyName, searchBarText || "");
-      fetchAllAgency();
+      // fetchAllAgency();
     }
-  }, [userDetails, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
+  }, [userDetails?.email, pageSize, selectedJobId, selectedAgencyName, filters]);
     // }, [userDetails, fetchAllCandidatesData, pageSize, selectedJobId, selectedAgencyName, fetchAllAgency, filters, searchBarText]);
 
   useEffect(()=>{
     if (userDetails?.email && userDetails.companyId) {
         fetchAllJobs()
     }
-  },[userDetails])
+  },[userDetails?.email])
 
   const searchInputRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (!userDetails?.email) return;
+
+    if (searchInputRef.current) {
+      clearTimeout(searchInputRef.current);
+    }
+
+    searchInputRef.current = setTimeout(() => {
+      setCurrentPage(1);
+      setPaginationInfo(prev => ({ ...prev, lastKey: "" }));
+      paginationKeysRef.current = { 1: "" };
+
+      fetchAllCandidatesData(
+        1,
+        pageSize,
+        "",
+        filters,
+        true,
+        "desc",
+        selectedJobId,
+        selectedAgencyName,
+        searchBarText || ""
+      );
+    }, 500);
+
+    return () => {
+      if (searchInputRef.current) {
+        clearTimeout(searchInputRef.current);
+      }
+    };
+  }, [searchBarText]);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchBarText(e.target.value);
@@ -337,14 +382,14 @@ const AgencyCandidateList = () => {
   );
 
   const handlePageSizeChange = useCallback(
-    (size: number) => {
+    (size: CommonPaginationPageSizeOptionsType) => {
       setPageSize(size);
       setCurrentPage(1);
       setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
       paginationKeysRef.current = { 1: "" };
-      fetchAllCandidatesData(1, size, "", filters, false, "desc", selectedJobId, selectedAgencyName);
+      // fetchAllCandidatesData(1, size, "", filters, false, "desc", selectedJobId, selectedAgencyName);
     },
-    [fetchAllCandidatesData]
+    [setPageSize]
   );
       
   const removeAgencyLocally = (id: string) => {
@@ -584,8 +629,8 @@ const AgencyCandidateList = () => {
         <div className="w-full md:basis-full lg:flex-1">
           <SearchBarAgency
             searchBarText={searchBarText}
-            setSearchBarText={setSearchBarText}
-            handleClick={(e) => console.log(searchBarText)}
+            setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
+            handleClick={() => {}}
             placeholder="Search candidates by name or email"
           />
         </div>

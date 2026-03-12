@@ -87,7 +87,7 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle:React.FC<EditCTCET
     if (isOpen && candidateList.length === 0 && skippableCandidates.length > 0) {
         continueSubmit(skippableCandidates);
     }
-  }, [isOpen]);
+  }, [isOpen, candidateList, skippableCandidates]);
 
   const formSubmit = async (data:any) => {
     setIsSubmitting(true);
@@ -171,18 +171,17 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle:React.FC<EditCTCET
     );
 
     if (invalidCandidate) {
-    toast.error(
-        `Missing job details for ${invalidCandidate.candidateParsedCvDetails?.name}`,
-        getToastOptions({})
-    );
-    setIsSubmitting(false);
-    return;
+      toast.error(`Missing job details for ${invalidCandidate.candidateParsedCvDetails?.name}`,getToastOptions({}));
+      setIsSubmitting(false);
+      onClose()
+      return;
     }
 
     if (finalFilteredList.length === 0) {
-        toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
-        setIsSubmitting(false);
-        return;
+      toast.error("Please enter Current CTC, Expected CTC, and Notice Period before continuing.",getToastOptions({}))
+      setIsSubmitting(false);
+      onClose()
+      return;
     }
     const payload = {
         agencyUserSubmissionId: finalFilteredList[0].candidateParsedCvDetails?.agencyUserSubmissionId,
@@ -221,12 +220,13 @@ const EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle:React.FC<EditCTCET
         localUpdate(finalFilteredList[0]?.id, updatedData);
       }
       reset()
-      onClose()
+    //   onClose()
     } catch (error) {
         console.log(error)
     } finally {
         setIsSubmitting(false)
         if(setAcceptingCandidate) setAcceptingCandidate(false);
+        onClose()
     }
 };
 

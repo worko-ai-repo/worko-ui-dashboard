@@ -56,6 +56,7 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
   }, [isOpen]);
 
   useEffect(()=>{
+    if (!agencyData?.email) return;
     fetchJobsForRemoving(searchBarText)
   },[agencyData])
 

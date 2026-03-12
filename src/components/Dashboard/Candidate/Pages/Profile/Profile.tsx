@@ -2017,6 +2017,8 @@ const Profile = () => {
                     type: "number",
                     placeholder: "Enter current CTC",
                     required: true,
+                    min:0,
+                    max:300,
                   },
                   {
                     name: "ECTC",
@@ -2024,12 +2026,23 @@ const Profile = () => {
                     type: "number",
                     placeholder: "Enter expected CTC",
                     required: true,
+                    min:0,
+                    max:400,
                   },
                   {
                     name: "noticePeriod",
                     label: "Notice Period (in days)",
-                    type: "number",
-                    placeholder: "Enter notice period",
+                    type: "select",
+                    // placeholder: "Enter notice period",
+                    options: [
+                      { label: "Immediate", value: 0 },
+                      { label: "15 Days", value: 15 },
+                      { label: "30 Days", value: 30 },
+                      { label: "45 Days", value: 45 },
+                      { label: "60 Days", value: 60 },
+                      { label: "90 Days", value: 90 },
+                      { label: "120 Days", value: 120 },
+                    ],
                     required: false,
                   },
                   {
@@ -2075,7 +2088,7 @@ const Profile = () => {
                         <div>
                           <span className="font-medium">Notice Period - </span>
                           <span className="font-semibold text-blue-600">
-                            {detailsData[0]?.noticePeriod ?? "30"} days
+                            {detailsData[0]?.noticePeriod ?? "0"} days
                           </span>
                           <span className="ml-2 text-sm italic font-semibold text-blue-600">
                             (
