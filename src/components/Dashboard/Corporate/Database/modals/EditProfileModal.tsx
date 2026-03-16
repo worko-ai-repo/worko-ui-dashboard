@@ -174,6 +174,7 @@ const EditProfileModal:React.FC<EditProfileModalProps> = ({
         let payload = {}
         if(resourceType === "AGENCY_SUBMIT_USER_CV"){
           payload = {
+            agencyUserId:pathName[1],
             companyId:pathName[3],
             jobId:pathName[5],
             fileName: cv[0]?.name,
