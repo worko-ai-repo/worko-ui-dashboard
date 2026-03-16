@@ -39,8 +39,8 @@ const SearchPrompt: React.FC = () => {
       console.log(error)
     }
   }
-  fetchJobs()
-  },[])
+  if(userDetails?.userType && userDetails?.companyId) fetchJobs()
+  },[userDetails?.userType, userDetails?.companyId])
 
   const navigate = useNavigate();
     const {

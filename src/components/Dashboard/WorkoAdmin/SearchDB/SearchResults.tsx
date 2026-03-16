@@ -18,6 +18,7 @@ import EditCTCETCAndNoticePeriodModalForSearchInDB from "@Components/Dashboard/C
 import { FailedCandidateDetails } from "@Components/Dashboard/Corporate/SearchDB/SearchResults";
 import { useUrlState } from '@Hooks/useUrlState.hook'
 import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
+import Modal from "@Components/Shared/Modal";
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -734,7 +735,15 @@ const handlePageChange = useCallback(
           />
           )}
 
-      {/* {isAssignJobModelOpen &&  */}
+      <Modal
+      isOpen={isAssignJobModelOpen}
+      onClose={() => {
+        setIsAssignJobModelOpen(false);
+        setTextToDisplay("")
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[100vh]">
+      {isAssignJobModelOpen && 
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"ATLAS"}
@@ -748,7 +757,8 @@ const handlePageChange = useCallback(
           userDetails={userDetails}
           submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
       />
-      {/* } */}
+      }
+      </Modal>
 
       {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDB
@@ -776,6 +786,17 @@ const handlePageChange = useCallback(
       />
       {/* } */}
 
+      <Modal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+          setIsFinalReviewModalOpen(false)
+          setSuccessfullySentCandidateList("")
+          setIncompleteSentCandidateList("")
+          setRepeatedCandidatesList("")
+          setFailedCandidateDetails([])
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[50vh]">
       {isFinalReviewModalOpen && (
         <FinalReviewModal
             isOpen={isFinalReviewModalOpen}
@@ -792,6 +813,7 @@ const handlePageChange = useCallback(
             failedCandidateDetails={failedCandidateDetails}
         />
       )}
+      </Modal>
       </div>
   );
 };

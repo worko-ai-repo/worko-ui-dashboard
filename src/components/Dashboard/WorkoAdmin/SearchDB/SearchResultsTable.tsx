@@ -101,7 +101,7 @@ export default function SearchResultsTable(props: any) {
   const [selectedJobId, setSelectedJobId] = useState<string>("");
   const [mode, setMode] = React.useState<"jobs" | "prompt">("prompt");
   const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
-  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  // const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
 
@@ -1410,7 +1410,17 @@ useEffect(() => {
         handlePreviousPage={() => onPageChange(currentPage - 1)}
         handleNextPage={() => onPageChange(currentPage + 1)}
       />
-      {/* {editProfileData && ( */}
+
+      <Modal
+      isOpen={isAssignJobModelOpen}
+      onClose={() => {
+        setIsAssignJobModelOpen(false);
+        setEditProfileData(null);
+        setTextToDisplay("");
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[100vh]">
+      {editProfileData && isAssignJobModelOpen && (
         <MoveToApplicants
           dashboardType={"ADMIN"}
           textToDisplay={textToDisplay}
@@ -1426,7 +1436,9 @@ useEffect(() => {
           submitFunction={textToDisplay === "Find matching score" ? findMatchingScoreSingle : moveToApplicantSingle}
           selectedJobId={selectedJobId}
         />
-        {/* )} */}
+      )}
+      </Modal>
+
       {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDBSingle
         dashboardType={"CORPORATE"}
@@ -1452,6 +1464,16 @@ useEffect(() => {
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
       />
     {/* } */}
+
+    <Modal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+          setIsFinalReviewModalOpen(false)
+          setSuccessfullySentCandidateList("")
+          setIncompleteSentCandidateList("")
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[50vh]">
       {isFinalReviewModalOpen && (
         <FinalReviewModal
             isOpen={isFinalReviewModalOpen}
@@ -1466,12 +1488,15 @@ useEffect(() => {
             failedCandidateDetails={[]}
         />
       )}
+      </Modal>
+
       <Modal
         isOpen={feedbackModalOpen}
         onClose={() => setFeedbackModalOpen(false)}
         className="py-5">
         {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
       </Modal>
+
       <Modal
         isOpen={isViewCVModalOpen}
         onClose={() => {
@@ -1492,40 +1517,42 @@ useEffect(() => {
           />
         )}
       </Modal>
-      <ViewFullDetail
-      onClose={() => {
-        setViewViewDetailsModal(false);
-        setFullDetails("");
-        setDisplayText("");
-      }}
-      isOpen={viewViewDetailsModal}
-      fullDetails={fullDetails}
-      displayText={displayText}
-    />
-    <Modal
-      isOpen={candidateDetailsModal.isOpen}
-      onClose={() =>
-        setCandidateDetailsModal({
-          isOpen: false,
-          defaultSection: "experience",
-        })
-      }
-      className="w-[90vw] sm:max-w-2xl h-auto">
-      <ExperienceEducationModal
-        workExperiences={selectedRow?.multipleCandidateExperience || []}
-        educations={selectedRow?.education || []}
-        about={selectedRow?.about || null}
-        candidateName={selectedRow?.candidateName}
-        coreSkills={selectedRow?.coreSkills}
-        defaultSection={candidateDetailsModal.defaultSection}
+
+      {/* <ViewFullDetail
+        onClose={() => {
+          setViewViewDetailsModal(false);
+          setFullDetails("");
+          setDisplayText("");
+        }}
+        isOpen={viewViewDetailsModal}
+        fullDetails={fullDetails}
+        displayText={displayText}
+      /> */}
+
+      <Modal
+        isOpen={candidateDetailsModal.isOpen}
         onClose={() =>
           setCandidateDetailsModal({
             isOpen: false,
             defaultSection: "experience",
           })
         }
-      />
-    </Modal>
+        className="w-[90vw] sm:max-w-2xl h-auto">
+        <ExperienceEducationModal
+          workExperiences={selectedRow?.multipleCandidateExperience || []}
+          educations={selectedRow?.education || []}
+          about={selectedRow?.about || null}
+          candidateName={selectedRow?.candidateName}
+          coreSkills={selectedRow?.coreSkills}
+          defaultSection={candidateDetailsModal.defaultSection}
+          onClose={() =>
+            setCandidateDetailsModal({
+              isOpen: false,
+              defaultSection: "experience",
+            })
+          }
+        />
+      </Modal>
     </>
   );
 }

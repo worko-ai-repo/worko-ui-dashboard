@@ -18,8 +18,8 @@ interface RemoveJobModalProps {
 }
 
 const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose, isOpen, agencyData, userDetails, localUpdate }) => {
-  const [visible, setVisible] = useState(false);
-  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  // const [visible, setVisible] = useState(false);
+  // const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDropDownOpen, setIsDropDownOpen] = useState(false);
   const [isReasonDropDownOpen, setIsReasonDropDownOpen] = useState(false);
@@ -43,17 +43,17 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
     "Position is in hold"
   ]
   // Modal open/close animation
-  useEffect(() => {
-    if (isOpen) {
-      setVisible(true);
-      const timer = setTimeout(() => setIsAnimatingIn(true), 10);
-      return () => clearTimeout(timer);
-    } else {
-      setIsAnimatingIn(false);
-      const timer = setTimeout(() => setVisible(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     setVisible(true);
+  //     const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+  //     return () => clearTimeout(timer);
+  //   } else {
+  //     setIsAnimatingIn(false);
+  //     const timer = setTimeout(() => setVisible(false), 300);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isOpen]);
 
   useEffect(()=>{
     if (!agencyData?.email) return;
@@ -159,6 +159,12 @@ const RemoveJobModal: React.FC<RemoveJobModalProps> = ({ dashboardType, onClose,
       return
     }
 
+    if(selectedReason.trim() === ""){
+      toast.error("Please select a reason to submit",getToastOptions({}))
+      setIsSubmitting(false);
+      return
+    }
+
     const jobIds = selectedJobs.map((job)=>{
       return job.id
     })
@@ -224,25 +230,25 @@ const removeSelectedJob = (id: string) => {
 
 
   return (
-    <div
-      onMouseDown={(e) => {
-        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-          // reset();
-          onClose();
-        }
-      }}
-      className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
-        isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
-      } ${visible ? 'visible' : 'invisible'}`}
-    >
-    <div
-      ref={modalRef}
-      className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
-        !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
-      }`}
-    >
-    <div className="p-6 min-h-[100vh] overflow-y-auto">
-        <button
+    // <div
+    //   onMouseDown={(e) => {
+    //     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+    //       // reset();
+    //       onClose();
+    //     }
+    //   }}
+    //   className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+    //     isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
+    //   } ${visible ? 'visible' : 'invisible'}`}
+    // >
+    // <div
+    //   ref={modalRef}
+    //   className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
+    //     !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
+    //   }`}
+    // >
+    <div className="py-6">
+        {/* <button
           onClick={()=>{
             onClose();
             setSelectedJobs([]);
@@ -251,7 +257,7 @@ const removeSelectedJob = (id: string) => {
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
         >
           ×
-        </button>
+        </button> */}
 
         <h2 className="text-xl font-semibold mb-4 text-left">Removal jobs</h2>
 
@@ -392,14 +398,15 @@ const removeSelectedJob = (id: string) => {
         <div className="absolute bottom-6 left-6">
           <button
             onClick={handleSubmit}
-            disabled={isSubmitting || selectedJobs.length === 0}
+            disabled={isSubmitting || selectedJobs.length === 0 || selectedReason.trim() === ""}
+            className="disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <SubmitButton isSubmitting={isSubmitting}/>
           </button>
         </div>
     </div>
-    </div>
-    </div>
+    //</div>
+    //</div>
   );
 };
 

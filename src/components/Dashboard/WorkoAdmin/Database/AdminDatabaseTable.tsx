@@ -94,7 +94,7 @@ export default function AdminDatabaseTable(props: any) {
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
-  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  // const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
   const currentId = initialIds?.[0] ?? null;
@@ -1206,6 +1206,15 @@ const keyFallbacks = {
         hasPrevPage={currentPage > 1}
         hasNextPage={!!pagination?.lastKey}
       />
+
+      <Modal
+        isOpen={editProfileView}
+        onClose={() => {
+          setEditProfileView(false);
+          setEditProfileData(undefined);
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[100vh]">
       <EditProfileModal
         onClose={() => {
           setEditProfileView(false);
@@ -1215,6 +1224,8 @@ const keyFallbacks = {
         candidateFullDetails={editProfileData}
         localUpdate={localUpdate}
       />
+      </Modal>
+
       <Modal
         isOpen={isViewCVModalOpen}
         onClose={() => {
@@ -1235,16 +1246,18 @@ const keyFallbacks = {
           />
         )}
       </Modal>
-      <ViewFullDetail
-      onClose={() => {
-        setViewViewDetailsModal(false);
-        setFullDetails("");
-        setDisplayText("");
-      }}
-      isOpen={viewViewDetailsModal}
-      fullDetails={fullDetails}
-      displayText={displayText}
-    />
+
+      {/* <ViewFullDetail
+        onClose={() => {
+          setViewViewDetailsModal(false);
+          setFullDetails("");
+          setDisplayText("");
+        }}
+        isOpen={viewViewDetailsModal}
+        fullDetails={fullDetails}
+        displayText={displayText}
+      /> */}
+
     <Modal
         isOpen={candidateDetailsModal.isOpen}
         onClose={() =>

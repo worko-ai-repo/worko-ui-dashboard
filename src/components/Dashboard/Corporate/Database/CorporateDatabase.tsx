@@ -23,6 +23,7 @@ import { filterDatabaseCandidates } from '@Utils/DatabaseFilter.utils';
 import DatabaseFilters, { DatabaseFilterValues } from '@Components/Shared/DatabasePage/DatabaseFilters';
 import { useUrlState } from '@Hooks/useUrlState.hook';
 import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants';
+import Modal from '@Components/Shared/Modal';
 
 interface CorporateDatabaseProps{
 
@@ -98,7 +99,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     const [apiFilters, setApiFilters] = useState<DatabaseListFilters>({});
     const paginationKeysRef = useRef<Record<number, string>>({1: "",});
     const [currentPage, setCurrentPage] = useState(1);
-    const [isSelectJobForBulkMatch,setIsSelectJobForBulkMatch] = useState<boolean>(false);
+    // const [isSelectJobForBulkMatch,setIsSelectJobForBulkMatch] = useState<boolean>(false);
     const [loader, setLoader] = useState(false);
 
     const [reason,setReason] = useState<string>("");
@@ -918,7 +919,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         handleLocalUpdateForQuery={handleLocalUpdateForQuery}
       />
       )}
-      <SelectJobForBulkMatch
+      {/* <SelectJobForBulkMatch
         dashboardType={"CORPORATE"}
         onClose= {() => setIsSelectJobForBulkMatch(false)}
         isOpen= {isSelectJobForBulkMatch}
@@ -926,40 +927,55 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         userDetails={userDetails}
         setLoader={setLoader}
         loader={loader}
-      />
-  {/* {isCandidateBulkBanModelOpen &&  */}
-    <CandidateBulkBanModal
-      comments={comments}
-      setComments={setComments}
-      reason={reason}
-      setReason={setReason}
-      onSubmit={()=>handleBulkBan()}
+      /> */}
+    <Modal
+      isOpen={isCandidateBulkBanModelOpen}
       onClose={()=>{
-        setIsBulkBanSubmitting(false)
         setIsCandidateBulkBanModelOpen(false)
+        setIsBulkBanSubmitting(false)
         setReason("")
         setComments("")
       }}
-      isOpen={isCandidateBulkBanModelOpen}
-      isBulkBanSubmitting={isBulkBanSubmitting}
-    />
-    {/* } */}
-
-  {/* {isAssignJobModelOpen &&  */}
-    <MoveToApplicantsBulk
-      dashboardType={"CORPORATE"}
-      pageType={"DATABASE"}
-      textToDisplay={"Move to applicant :"}
-      onClose={() => {
-        setIsAssignJobModelOpen(false);
-      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[65vh]">
+      {isCandidateBulkBanModelOpen && (
+        <CandidateBulkBanModal
+          comments={comments}
+          setComments={setComments}
+          reason={reason}
+          setReason={setReason}
+          onSubmit={()=>handleBulkBan()}
+          onClose={()=>{
+            setIsBulkBanSubmitting(false)
+            setIsCandidateBulkBanModelOpen(false)
+            setReason("")
+            setComments("")
+          }}
+          isOpen={isCandidateBulkBanModelOpen}
+          isBulkBanSubmitting={isBulkBanSubmitting}
+        />)
+        } 
+    </Modal>
+    <Modal
       isOpen={isAssignJobModelOpen}
-      candidateData={selectedRows[0]}
-      userDetails={userDetails}
-      submitFunction={handleBulkMoveToApplicants}
-    />
-    {/* } */}
-
+      onClose={() => setIsAssignJobModelOpen(false)}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[100vh]">
+      {isAssignJobModelOpen && (
+        <MoveToApplicantsBulk
+          dashboardType={"CORPORATE"}
+          pageType={"DATABASE"}
+          textToDisplay={"Move to applicant :"}
+          onClose={() => {
+            setIsAssignJobModelOpen(false);
+          }}
+          isOpen={isAssignJobModelOpen}
+          candidateData={selectedRows[0]}
+          userDetails={userDetails}
+          submitFunction={handleBulkMoveToApplicants}
+        />)
+      }
+    </Modal>
   {/* {editProfileView && */}
     <EditCTCETCAndNoticePeriodModal
     dashboardType={"CORPORATE"}
@@ -984,7 +1000,16 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
     setIncompleteSentCandidateList={setIncompleteSentCandidateList}
     />
     {/* } */}
-
+    <Modal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+        setIsFinalReviewModalOpen(false)
+        setSuccessfullySentCandidateList("")
+        setIncompleteSentCandidateList("")
+        setRepeatedCandidatesList("")
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[50vh]">
     {isFinalReviewModalOpen && (
     <FinalReviewModal
         isOpen={isFinalReviewModalOpen}
@@ -999,6 +1024,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         repeatedCandidatesList={repeatedCandidatesList}
     />
     )}
+    </Modal>
     </div>
   )
 }

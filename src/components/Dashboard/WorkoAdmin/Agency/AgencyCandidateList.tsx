@@ -15,6 +15,7 @@ import { getToastOptions } from 'lib-worko-ui'
 import RejectCandidateModal from '@Components/Dashboard/Corporate/Agency/modals/RejectCandidateModal'
 import { useUrlState } from '@Hooks/useUrlState.hook'
 import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants'
+import Modal from '@Components/Shared/Modal'
 
 export interface AgencyAllCandidatesListFilters {
   searchText?: string;
@@ -704,16 +705,22 @@ const AgencyCandidateList = () => {
                 onPageSizeChange={handlePageSizeChange}
               />
       )}
-      {isRejecting &&      
-        <RejectCandidateModal
-          onClose={()=>setIsRejecting(false)}
-          isOpen={isRejecting}
-          data={selectedRows}
-          type={"bulk"}
-          setFetchData={setFetchData}
-          setSelectedRows={setSelectedRows}
-          localUpdate={handleLocalUpdate}
-      />}
+      {/* <Modal
+      isOpen={isRejecting}
+      onClose={()=>setIsRejecting(false)}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[80vh]">
+        {isRejecting &&      
+          <RejectCandidateModal
+            onClose={()=>setIsRejecting(false)}
+            isOpen={isRejecting}
+            data={selectedRows}
+            type={"bulk"}
+            setFetchData={setFetchData}
+            setSelectedRows={setSelectedRows}
+            localUpdate={handleLocalUpdate}
+        />}
+      </Modal> */}
     </div>
   )
 }

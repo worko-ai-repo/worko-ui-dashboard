@@ -377,16 +377,22 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
           hasPrevPage={currentPage > 1}
           hasNextPage={!!pagination?.lastKey}
         />
-                
-        <AssignJobModal
-          dashboardType={"ADMIN"}
+        <Modal
+          isOpen={isAssignJobModelOpen}
           onClose= {() => setIsAssignJobModelOpen(false)}
-          isOpen= {isAssignJobModelOpen}
-          // jobsList={jobsList}
-          agencyData={editProfileData}
-          userDetails={userDetails}
-          localUpdate={localUpdate}
-        />
+          className="max-w-md sm:w-[400px]"
+          classNameHeight="h-[100vh]">    
+          <AssignJobModal
+            dashboardType={"ADMIN"}
+            onClose= {() => setIsAssignJobModelOpen(false)}
+            isOpen= {isAssignJobModelOpen}
+            // jobsList={jobsList}
+            agencyData={editProfileData}
+            userDetails={userDetails}
+            localUpdate={localUpdate}
+          />
+        </Modal> 
+
         {/* <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {

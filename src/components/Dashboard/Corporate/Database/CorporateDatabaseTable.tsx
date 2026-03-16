@@ -98,7 +98,7 @@ export default function CorporateDatabaseTable(props: any) {
   // App context
   const { userDetails } = useAppContext() as { userDetails: NormalizedUser };
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
-  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  // const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
   const [displayText, setDisplayText] = useState<string>("");
   const [candidateDetailsModal, setCandidateDetailsModal] = useState<{
@@ -1211,15 +1211,24 @@ export default function CorporateDatabaseTable(props: any) {
         hasPrevPage={currentPage > 1}
         hasNextPage={!!pagination?.lastKey}
       />
-      <EditProfileModal
+      <Modal
+        isOpen={editProfileView}
         onClose={() => {
           setEditProfileView(false);
           setEditProfileData(undefined);
         }}
-        isOpen={editProfileView}
-        candidateFullDetails={editProfileData}
-        localUpdate={localUpdate}
-      />
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[100vh]">
+        <EditProfileModal
+          onClose={() => {
+            setEditProfileView(false);
+            setEditProfileData(undefined);
+          }}
+          isOpen={editProfileView}
+          candidateFullDetails={editProfileData}
+          localUpdate={localUpdate}
+        />
+      </Modal>
       <Modal
         isOpen={isViewCVModalOpen}
         onClose={() => {
@@ -1240,7 +1249,7 @@ export default function CorporateDatabaseTable(props: any) {
           />
         )}
       </Modal>
-      <ViewFullDetail
+      {/* <ViewFullDetail
       onClose={() => {
         setViewViewDetailsModal(false);
         setFullDetails("");
@@ -1249,8 +1258,8 @@ export default function CorporateDatabaseTable(props: any) {
       isOpen={viewViewDetailsModal}
       fullDetails={fullDetails}
       displayText={displayText}
-    />
-    <Modal
+    /> */}
+      <Modal
         isOpen={candidateDetailsModal.isOpen}
         onClose={() =>
           setCandidateDetailsModal({

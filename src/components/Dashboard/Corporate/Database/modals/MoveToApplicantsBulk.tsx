@@ -48,8 +48,8 @@ export interface CompanyAPIResponse {
 }
 
 const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardType, pageType, textToDisplay, onClose, isOpen, userDetails, submitFunction }) => {
-  const [visible, setVisible] = useState(false);
-  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  // const [visible, setVisible] = useState(false);
+  // const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDropDownOpen, setIsDropDownOpen] = useState(false);
 
@@ -58,20 +58,20 @@ const MoveToApplicantsBulk: React.FC<MoveToApplicantsBulkProps> = ({ dashboardTy
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [companyJobs, setCompanyJobs] = useState<JobData[]>([]);
   const [isLoadingJobs, setIsLoadingJobs] = useState(false);
-  const modalRef = useRef<HTMLDivElement>(null);
+  // const modalRef = useRef<HTMLDivElement>(null);
 
   // Modal open/close animation
-  useEffect(() => {
-    if (isOpen) {
-      setVisible(true);
-      const timer = setTimeout(() => setIsAnimatingIn(true), 10);
-      return () => clearTimeout(timer);
-    } else {
-      setIsAnimatingIn(false);
-      const timer = setTimeout(() => setVisible(false), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen]);
+  // useEffect(() => {
+  //   if (isOpen) {
+  //     setVisible(true);
+  //     const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+  //     return () => clearTimeout(timer);
+  //   } else {
+  //     setIsAnimatingIn(false);
+  //     const timer = setTimeout(() => setVisible(false), 300);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -174,31 +174,35 @@ const handleSubmit = async () => {
   };
 
   useEffect(() => {
-    fetchJobs();
     setSelectedJobs([]);
     setInput("");
-  }, []);
+    if(dashboardType === "ADMIN"){
+      fetchJobs()
+    } else if(dashboardType === "CORPORATE"){
+      if(userDetails?.userType && userDetails?.companyId) fetchJobs()
+    }
+  }, [userDetails?.userType,userDetails?.companyId]);
 
   return (
-    <div
-      onMouseDown={(e) => {
-        if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-          // reset();
-          onClose();
-        }
-      }}
-      className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
-        isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
-      } ${visible ? 'visible' : 'invisible'}`}
-    >
-    <div
-      ref={modalRef}
-      className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
-        !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
-      }`}
-    >
-    <div className="p-6 min-h-[100vh] overflow-y-auto">
-        <button
+    // <div
+    //   onMouseDown={(e) => {
+    //     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+    //       // reset();
+    //       onClose();
+    //     }
+    //   }}
+    //   className={`fixed inset-0 z-[100] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+    //     isAnimatingIn ? 'bg-black bg-opacity-50' : 'bg-opacity-0 bg-black'
+    //   } ${visible ? 'visible' : 'invisible'}`}
+    // >
+    // <div
+    //   ref={modalRef}
+    //   className={`bg-white rounded-l-lg w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto ${
+    //     !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
+    //   }`}
+    // >
+    <div className="py-6">
+        {/* <button
           onClick={()=>{
             onClose();
             setIsSubmitting(false);
@@ -207,7 +211,7 @@ const handleSubmit = async () => {
           className="absolute top-2 right-2 text-gray-500 hover:text-gray-700 text-2xl"
         >
           ×
-        </button>
+        </button> */}
 
         <h2 className="text-xl font-semibold mb-4 text-left">{textToDisplay}</h2>
       
@@ -327,8 +331,8 @@ const handleSubmit = async () => {
           </button>
         </div>
     </div>
-    </div>
-    </div>
+    //</div>
+    //</div>
   );
 };
 

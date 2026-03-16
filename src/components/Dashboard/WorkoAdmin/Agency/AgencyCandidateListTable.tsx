@@ -104,7 +104,7 @@ export default function AgencyCandidateListTable(props: any) {
   >();
   const [feedbackModalOpen, setFeedbackModalOpen] = useState<boolean>(false);
   const [isAllExpanded, setIsAllExpanded] = React.useState(false);
-  const [isRejecting, setIsRejecting] = useState<boolean>(false);
+  // const [isRejecting, setIsRejecting] = useState<boolean>(false);
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState<boolean>(false);
   const [pdfViewDetails, setPdfViewDetails] = useState<string>();
   const [pageSize, setPageSize] = useState(pagination?.pageSize || 10);
@@ -125,7 +125,7 @@ export default function AgencyCandidateListTable(props: any) {
 
   const currentId = initialIds[0] ?? null;
   const isFetchingMatchingScore = useIsFetching({ queryKey: ["matching-score"] });
-  const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
+  // const [viewViewDetailsModal, setViewViewDetailsModal] = useState<boolean>(false);
   const [fullDetails, setFullDetails] = useState<string>("");
 
   const {
@@ -1170,6 +1170,12 @@ export default function AgencyCandidateListTable(props: any) {
         // mainColumns={["jobProfile","agencyName",'applicantName','email',"viewCV","workoScore","action","currentStatus"]}
         // expandedColumns={['currentCompany',"currentDesignation",'currentCTC','expectedCTC', 'totalYOE','relevantYOE', 'readyToRelocate','anyComment','achievements']}
       />
+      
+      {/* <Modal
+      isOpen={isRejecting}
+      onClose={() => setIsRejecting(false)}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[30vh]">
       <RejectCandidateModal
         onClose={() => setIsRejecting(false)}
         isOpen={isRejecting}
@@ -1179,6 +1185,7 @@ export default function AgencyCandidateListTable(props: any) {
         type={"single"}
         setSelectedRows={setSelectedRows}
       />
+      </Modal> */}
 
       <Modal
         isOpen={isEvaluatorForm}
@@ -1238,6 +1245,15 @@ export default function AgencyCandidateListTable(props: any) {
         className="py-5">
         {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
       </Modal>
+
+      {/* <Modal
+      isOpen={viewViewDetailsModal}
+      onClose={() => {
+        setViewViewDetailsModal(false);
+        setFullDetails("");
+      }}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[30vh]">
       <ViewFullDetail
           onClose={() => {
             setViewViewDetailsModal(false);
@@ -1247,6 +1263,8 @@ export default function AgencyCandidateListTable(props: any) {
           fullDetails={fullDetails}
           displayText={"Comments"}
         />
+      </Modal> */}
+
     <EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle
       dashboardType={"CORPORATE"}
       dashboardPage={"AGENCYCANDIDATES"}
@@ -1270,8 +1288,7 @@ export default function AgencyCandidateListTable(props: any) {
       setSelectedRows={setSelectedRows}
     />
 
-    {isFinalReviewModalOpen && (
-    <FinalReviewModal
+    <Modal
       isOpen={isFinalReviewModalOpen}
       onClose={() => {
           setIsFinalReviewModalOpen(false)
@@ -1279,11 +1296,23 @@ export default function AgencyCandidateListTable(props: any) {
           setRepeatedCandidatesList("")
           setEditProfileData(undefined)
       }}
-      successfullySentCandidateList={successfullySentCandidateList}
-      incompleteSentCandidateList={incompleteSentCandidateList}
-      repeatedCandidatesList={repeatedCandidatesList}
-    />
-    )}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[50vh]">
+      {isFinalReviewModalOpen && (
+      <FinalReviewModal
+        isOpen={isFinalReviewModalOpen}
+        onClose={() => {
+            setIsFinalReviewModalOpen(false)
+            setSuccessfullySentCandidateList("")
+            setRepeatedCandidatesList("")
+            setEditProfileData(undefined)
+        }}
+        successfullySentCandidateList={successfullySentCandidateList}
+        incompleteSentCandidateList={incompleteSentCandidateList}
+        repeatedCandidatesList={repeatedCandidatesList}
+      />
+      )}
+    </Modal>
     </>
   );
 }

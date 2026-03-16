@@ -18,6 +18,7 @@ import { useUrlState } from '@Hooks/useUrlState.hook';
 import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.constants';
 import { filterDatabaseCandidates } from '@Utils/DatabaseFilter.utils';
 import DatabaseFilters, { DatabaseFilterValues } from '@Components/Shared/DatabasePage/DatabaseFilters';
+import Modal from '@Components/Shared/Modal';
 
 interface AdminDatabaseProps{
 
@@ -844,7 +845,15 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           handleLocalUpdateForQuery={handleLocalUpdateForQuery}
         />
         )}
-      {/* {isAssignJobModelOpen &&  */}
+      
+      <Modal
+      isOpen={isAssignJobModelOpen}
+      onClose={() => {
+        setIsAssignJobModelOpen(false);
+      }}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[100vh]">
+      {isAssignJobModelOpen && 
         <MoveToApplicantsBulk
           dashboardType={"ADMIN"}
           pageType={"DATABASE"}
@@ -857,47 +866,59 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
           userDetails={userDetails}
           submitFunction={handleBulkMoveToApplicants}
         />
-    {/* } */}
+      }
+      </Modal>
+      
+      {/* {editProfileView && */}
+        <EditCTCETCAndNoticePeriodModal
+        dashboardType={"ADMIN"}
+        dashboardPage={"MYDATABASE"}
+        onClose={()=>{
+          setEditProfileView(false)
+          setCandidateList([])
+          setSkippableCandidates([])
+          setCurrentIndex(0)
+          setSelectedCompany(null)
+        }}
+        isOpen={editProfileView}    
+        setCandidateList={setCandidateList}
+        candidateList={candidateList}
+        skippableCandidates={skippableCandidates}
+        currentIndex={currentIndex}
+        setCurrentIndex={setCurrentIndex}
+        selectedCompany={selectedCompany}
+        localUpdate={handleLocalUpdate}
+        setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
+        setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
+        setIncompleteSentCandidateList={setIncompleteSentCandidateList}
+        />
+      {/* } */}
 
-        {/* {editProfileView && */}
-          <EditCTCETCAndNoticePeriodModal
-          dashboardType={"ADMIN"}
-          dashboardPage={"MYDATABASE"}
-          onClose={()=>{
-            setEditProfileView(false)
-            setCandidateList([])
-            setSkippableCandidates([])
-            setCurrentIndex(0)
-            setSelectedCompany(null)
-          }}
-          isOpen={editProfileView}    
-          setCandidateList={setCandidateList}
-          candidateList={candidateList}
-          skippableCandidates={skippableCandidates}
-          currentIndex={currentIndex}
-          setCurrentIndex={setCurrentIndex}
-          selectedCompany={selectedCompany}
-          localUpdate={handleLocalUpdate}
-          setIsFinalReviewModalOpen={setIsFinalReviewModalOpen}
-          setSuccessfullySentCandidateList={setSuccessfullySentCandidateList}
-          setIncompleteSentCandidateList={setIncompleteSentCandidateList}
-          />
-          {/* } */}
-
+      <Modal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+          setIsFinalReviewModalOpen(false)
+          setSuccessfullySentCandidateList("")
+          setIncompleteSentCandidateList("")
+          setRepeatedCandidatesList("")
+      }}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[50vh]">
         {isFinalReviewModalOpen && (
         <FinalReviewModal
-            isOpen={isFinalReviewModalOpen}
-            onClose={() => {
-                setIsFinalReviewModalOpen(false)
-                setSuccessfullySentCandidateList("")
-                setIncompleteSentCandidateList("")
-                setRepeatedCandidatesList("")
-            }}
-            successfullySentCandidateList={successfullySentCandidateList}
-            incompleteSentCandidateList={incompleteSentCandidateList}
-            repeatedCandidatesList={repeatedCandidatesList}
+          isOpen={isFinalReviewModalOpen}
+          onClose={() => {
+              setIsFinalReviewModalOpen(false)
+              setSuccessfullySentCandidateList("")
+              setIncompleteSentCandidateList("")
+              setRepeatedCandidatesList("")
+          }}
+          successfullySentCandidateList={successfullySentCandidateList}
+          incompleteSentCandidateList={incompleteSentCandidateList}
+          repeatedCandidatesList={repeatedCandidatesList}
         />
         )}
+      </Modal>
     </div>
   )
 }

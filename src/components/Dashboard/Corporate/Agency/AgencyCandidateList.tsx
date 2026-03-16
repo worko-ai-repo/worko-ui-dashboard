@@ -749,7 +749,12 @@ const AgencyCandidateList = () => {
               />
       )}
 
-    {/* {isRejecting &&       */}
+    <Modal
+    isOpen={isRejecting}
+    onClose={()=>setIsRejecting(false)}
+    className="max-w-md sm:w-[400px]"
+    classNameHeight="h-[80vh]">
+    {isRejecting && (
       <RejectCandidateModal
         onClose={()=>setIsRejecting(false)}
         isOpen={isRejecting}
@@ -759,7 +764,8 @@ const AgencyCandidateList = () => {
         setSelectedRows={setSelectedRows}
         localUpdate={handleLocalUpdate}
       />
-      {/* } */}
+    )}
+    </Modal>
 
     <Modal
       isOpen={isEvaluatorForm}
@@ -831,6 +837,15 @@ const AgencyCandidateList = () => {
     setAcceptingCandidate={setAcceptingCandidate}
     />
 
+    <Modal
+    isOpen={isFinalReviewModalOpen}
+    onClose={() => {
+        setIsFinalReviewModalOpen(false)
+        setSuccessfullySentCandidateList("")
+        setRepeatedCandidatesList("")
+    }}
+    className="max-w-md sm:w-[400px]"
+    classNameHeight="h-[50vh]">
     {isFinalReviewModalOpen && (
     <FinalReviewModal
         isOpen={isFinalReviewModalOpen}
@@ -844,6 +859,7 @@ const AgencyCandidateList = () => {
         repeatedCandidatesList={repeatedCandidatesList}
     />
     )}
+    </Modal>
     </div>
   )
 }

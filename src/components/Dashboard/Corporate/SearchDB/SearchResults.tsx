@@ -17,6 +17,7 @@ import EditCTCETCAndNoticePeriodModalForSearchInDB from "./modals/EditCTCETCAndN
 import FinalReviewModal from "../Database/modals/FinalReviewModal";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import { CommonPaginationPageSizeOptionsType } from "@TypesAndConstants/common.constants";
+import Modal from "@Components/Shared/Modal";
 
 export const initialPaginationState: PaginationInfo = {
   count: 0,
@@ -104,8 +105,8 @@ export type FailedCandidateDetails = {
         setIsJobsLoading(false)
       }
     }
-    fetchJobs()
-    },[])
+    if(userDetails?.userType && userDetails?.companyId) fetchJobs()
+    },[userDetails?.userType, userDetails?.companyId])
 
     // close on outside click or Esc
     useEffect(() => {
@@ -757,23 +758,30 @@ const handlePageChange = useCallback(
             setInitialIds={setInitialIds}
           />
           )}
-
-      {/* {isAssignJobModelOpen &&  */}
-        <MoveToApplicantsBulk
-          dashboardType={"CORPORATE"}
-          pageType={"ATLAS"}
-          textToDisplay={textToDisplay}
-          onClose={() => {
-            setIsAssignJobModelOpen(false);
-            setTextToDisplay("")
-          }}
-          isOpen={isAssignJobModelOpen}
-          candidateData={selectedRows[0]}
-          userDetails={userDetails}
-          submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
-      />
-      {/* } */}
-
+      <Modal
+        isOpen={isAssignJobModelOpen}
+        onClose={() => {
+          setIsAssignJobModelOpen(false);
+          setTextToDisplay("")
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[100vh]">
+        {isAssignJobModelOpen && 
+          <MoveToApplicantsBulk
+            dashboardType={"CORPORATE"}
+            pageType={"ATLAS"}
+            textToDisplay={textToDisplay}
+            onClose={() => {
+              setIsAssignJobModelOpen(false);
+              setTextToDisplay("")
+            }}
+            isOpen={isAssignJobModelOpen}
+            candidateData={selectedRows[0]}
+            userDetails={userDetails}
+            submitFunction={textToDisplay === "Move to applicant :" ? handleBulkMoveToApplicants: handleBulkFindMatchingScore}
+        />
+        }
+      </Modal>
       {/* {editProfileView && */}
         <EditCTCETCAndNoticePeriodModalForSearchInDB
         dashboardType={"CORPORATE"}
@@ -799,7 +807,17 @@ const handlePageChange = useCallback(
         setIncompleteSentCandidateList={setIncompleteSentCandidateList}
       />
       {/* } */}
-
+      <Modal
+      isOpen={isFinalReviewModalOpen}
+      onClose={() => {
+          setIsFinalReviewModalOpen(false)
+          setSuccessfullySentCandidateList("")
+          setIncompleteSentCandidateList("")
+          setRepeatedCandidatesList("")
+          setFailedCandidateDetails([])
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="h-[50vh]">
       {isFinalReviewModalOpen && (
         <FinalReviewModal
             isOpen={isFinalReviewModalOpen}
@@ -816,6 +834,7 @@ const handlePageChange = useCallback(
             failedCandidateDetails={failedCandidateDetails}
         />
       )}
+      </Modal>
       </div>
     );
   };

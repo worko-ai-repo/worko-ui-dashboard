@@ -1263,6 +1263,12 @@ export default function AgencyCandidateListTable(props: any) {
         // mainColumns={["jobProfile","agencyName",'applicantName','email',"viewCV","workoScore","action","status"]}
         // expandedColumns={['currentCompany',"currentDesignation",'currentCTC','expectedCTC', 'totalYOE','relevantYOE', 'readyToRelocate','anyComment','achievements']}
       />
+      <Modal
+      isOpen={isRejecting}
+      onClose={()=>setIsRejecting(false)}
+      className="max-w-md sm:w-[400px]"
+      classNameHeight="h-[80vh]">
+      {isRejecting && (
       <RejectCandidateModal
         onClose={() => setIsRejecting(false)}
         isOpen={isRejecting}
@@ -1272,6 +1278,9 @@ export default function AgencyCandidateListTable(props: any) {
         type={"single"}
         setSelectedRows={setSelectedRows}
       />
+      )}
+      </Modal>
+
       <Modal
         isOpen={isEvaluatorForm}
         onClose={() => setIsEvaluatorForm(false)}
@@ -1331,6 +1340,14 @@ export default function AgencyCandidateListTable(props: any) {
         {scorePointsModal && <ScorePointsModal {...scorePointsModal} />}
       </Modal>
 
+      <Modal
+      isOpen={viewViewDetailsModal}
+      onClose={() => {
+        setViewViewDetailsModal(false);
+        setFullDetails("");
+      }}
+      className="max-w-md sm:w-[400px] "
+      classNameHeight="min-h-[30vh]">
       <ViewFullDetail
           onClose={() => {
             setViewViewDetailsModal(false);
@@ -1340,6 +1357,7 @@ export default function AgencyCandidateListTable(props: any) {
           fullDetails={fullDetails}
           displayText={"Comments"}
         />
+      </Modal>
     <EditCTCETCAndNoticePeriodModalForAgencyCandidatesSingle
       dashboardType={"CORPORATE"}
       dashboardPage={"AGENCYCANDIDATES"}
@@ -1363,6 +1381,16 @@ export default function AgencyCandidateListTable(props: any) {
       setSelectedRows={setSelectedRows}
     />
 
+    <Modal
+    isOpen={isFinalReviewModalOpen}
+    onClose={() => {
+      setIsFinalReviewModalOpen(false)
+      setSuccessfullySentCandidateList("")
+      setRepeatedCandidatesList("")
+      setEditProfileData(undefined)
+    }}
+    className="max-w-md sm:w-[400px]"
+    classNameHeight="h-[50vh]">
     {isFinalReviewModalOpen && (
     <FinalReviewModal
         isOpen={isFinalReviewModalOpen}
@@ -1377,6 +1405,7 @@ export default function AgencyCandidateListTable(props: any) {
         repeatedCandidatesList={repeatedCandidatesList}
     />
     )}
+    </Modal>
     </>
   );
 }

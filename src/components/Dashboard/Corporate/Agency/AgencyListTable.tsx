@@ -492,8 +492,15 @@ export default function AgencyListTable(props: any) {
         hasPrevPage={currentPage > 1}
         hasNextPage={!!pagination?.lastKey}      
         />
-
-      {/* {isAssignJobModelOpen && ( */}
+      <Modal
+        isOpen={isAssignJobModelOpen}
+        onClose= {() => {
+          setIsAssignJobModelOpen(false);
+          setEditProfileData(null)
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[100vh]">
+      {isAssignJobModelOpen && (
         <AssignJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -506,9 +513,18 @@ export default function AgencyListTable(props: any) {
           userDetails={userDetails}
           localUpdate={localUpdate}
         />
-      {/*  )} */}
+      )}
+      </Modal>
 
-      {/* {isRemoveJobModelOpen && ( */}
+      <Modal
+        isOpen={isRemoveJobModelOpen}
+        onClose= {() => {
+          setIsRemoveJobModelOpen(false);
+          setEditProfileData(null)
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[100vh]">
+      {isRemoveJobModelOpen && (
         <RemoveJobModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -521,9 +537,18 @@ export default function AgencyListTable(props: any) {
           userDetails={userDetails}
           localUpdate={localUpdate}
         />
-      {/*  )} */}
+      )}
+      </Modal>
 
-      {/* {isEditAgencyModelOpen && ( */}
+      <Modal
+        isOpen={isEditAgencyModelOpen}
+        onClose= {() => {
+          setIsEditAgencyModelOpen(false);
+          setEditProfileData(null)
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[50vh]">
+      {isEditAgencyModelOpen && (
         <EditAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -534,9 +559,19 @@ export default function AgencyListTable(props: any) {
           data={editProfileData}
           localUpdate={localUpdate}
         />
-      {/*  )} */}
+      )}
+      </Modal>
 
-      {/* {isPauseAgencyModelOpen && ( */}
+      <Modal
+        isOpen={isPauseAgencyModelOpen}
+        onClose= {() => {
+          setIsPauseAgencyModelOpen(false);
+          setEditProfileData(null)
+          setCurrentAction("")
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[32vh]">
+      {isPauseAgencyModelOpen && (
         <PauseOrResumeAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -549,9 +584,18 @@ export default function AgencyListTable(props: any) {
           localUpdate={localUpdate}
           currentAction={currentAction}
         />
-      {/*  )} */}
+      )}
+      </Modal>
 
-      {/* {isDeleteAgencyModelOpen && ( */}
+      <Modal
+        isOpen={isDeleteAgencyModelOpen}
+        onClose= {() => {
+          setIsDeleteAgencyModelOpen(false);
+          setEditProfileData(null)
+        }}
+        className="max-w-md sm:w-[400px] "
+        classNameHeight="h-[32vh]">
+      {isDeleteAgencyModelOpen && (
         <DeleteAgencyModal
           dashboardType={"CORPORATE"}
           onClose= {() => {
@@ -563,8 +607,8 @@ export default function AgencyListTable(props: any) {
           data={editProfileData}
           removeAgencyLocally={removeAgencyLocally}
         />
-      {/* )} */}
-
+      )}
+      </Modal>
         {/* <Modal
           isOpen={isViewCVModalOpen}
           onClose={() => {
@@ -600,7 +644,7 @@ export default function AgencyListTable(props: any) {
             isContractCopy={true}
           />
         )}
-      </Modal>
+        </Modal>
     </>
   );
 }

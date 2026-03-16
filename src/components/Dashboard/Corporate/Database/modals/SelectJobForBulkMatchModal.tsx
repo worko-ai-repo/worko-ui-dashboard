@@ -287,10 +287,10 @@ const SelectJobForBulkMatch: React.FC<SelectJobForBulkMatchProps> = ({ dashboard
   };
 
   useEffect(() => {
-    fetchJobs();
     setSelectedJobs([]);
     setInput("");
-  }, []);
+    if(userDetails?.userType && userDetails?.companyId) fetchJobs()
+  }, [userDetails?.userType, userDetails?.companyId]);
 
   // if (loader) {
   //   return (

@@ -34,32 +34,32 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
           // GSTIN: data?.GSTIN,
         },
       });
-  const [visible, setVisible] = useState(false);
-  const [isAnimatingIn, setIsAnimatingIn] = useState(false);
+  // const [visible, setVisible] = useState(false);
+  // const [isAnimatingIn, setIsAnimatingIn] = useState(false);
   const [isSubmitting,setIsSubmitting]  = useState(false);
   const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   const { userDetails } = useAppContext();
-  const modalRef = useRef<HTMLDivElement>(null);
+  // const modalRef = useRef<HTMLDivElement>(null);
 
-      useEffect(() => {
-      if (isOpen && data) {
-            reset({
-            agencyName: data.agencyName || "",
-            // agencyEmail: data.email || "",
-            // contactPersonName: data.name || "",
-            contactNumber: data?.phoneNumberDetails?.number || "",
-            // GSTIN: data.GSTIN || "",
-            // contractCopy: data.contractCopy,
-            });
-          setVisible(true);
-          const timer = setTimeout(() => setIsAnimatingIn(true), 10);
-          return () => clearTimeout(timer);
-      } else {
-          setIsAnimatingIn(false);
-          const timer = setTimeout(() => setVisible(false), 300);
-          return () => clearTimeout(timer);
-      }
-      }, [isOpen,data,reset]);
+    useEffect(() => {
+    if (isOpen && data) {
+          reset({
+          agencyName: data.agencyName || "",
+          // agencyEmail: data.email || "",
+          // contactPersonName: data.name || "",
+          contactNumber: data?.phoneNumberDetails?.number || "",
+          // GSTIN: data.GSTIN || "",
+          // contractCopy: data.contractCopy,
+          });
+        // setVisible(true);
+        // const timer = setTimeout(() => setIsAnimatingIn(true), 10);
+        // return () => clearTimeout(timer);
+    } else {
+        // setIsAnimatingIn(false);
+        // const timer = setTimeout(() => setVisible(false), 300);
+        // return () => clearTimeout(timer);
+    }
+    }, [isOpen,data,reset]);
   
     const formSubmit = async (formData: any) => {
       setIsSubmitting(true)
@@ -111,29 +111,29 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
       }
 
     return (
-      <div
-        onMouseDown={(e) => {
-          if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
-            // reset();
-            onClose();
-          }
-        }}
-        className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
-          isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
-        } ${visible ? "visible" : "invisible"}`}>
-        <div
-          ref={modalRef}
-          className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
-            !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
-          }`}>
-          <button
-            onClick={()=>{
-                reset();
-                onClose();}}
-            className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
-            ×
-          </button>
-  
+      // <div
+      //   onMouseDown={(e) => {
+      //     if (modalRef.current && !modalRef.current.contains(e.target as Node)) {
+      //       // reset();
+      //       onClose();
+      //     }
+      //   }}
+      //   className={`fixed inset-0 z-[80] flex items-start justify-end transition-opacity duration-300 ease-in-out ${
+      //     isAnimatingIn ? "bg-black bg-opacity-50" : "bg-opacity-0 bg-black"
+      //   } ${visible ? "visible" : "invisible"}`}>
+        // <div
+        //   ref={modalRef}
+        //   className={`bg-white rounded-l-lg p-6 w-full max-w-md relative transform transition-transform duration-300 ease-in-out self-auto max-h-[100vh] overflow-y-auto ${
+        //     !isAnimatingIn ? "animate-slide-out" : "animate-slide-in"
+        //   }`}>
+        //   <button
+        //     onClick={()=>{
+        //         reset();
+        //         onClose();}}
+        //     className="absolute top-2 right-2 text-gray-500 hover:text-gray-700">
+        //     ×
+        //   </button>
+          <div className='py-6'>
           <h2 className="text-xl font-semibold mb-4 text-left">Edit agency</h2>
   
           <form onSubmit={handleSubmit(formSubmit)}>
@@ -251,7 +251,7 @@ const EditAgencyModal:React.FC<EditAgencyModalProps> = ({dashboardType,onClose,i
               </div>
           </form>
         </div>
-      </div>
+      //</div>
     )
   }
 
