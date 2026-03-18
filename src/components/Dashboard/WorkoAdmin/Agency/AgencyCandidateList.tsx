@@ -149,7 +149,7 @@ const AgencyCandidateList = () => {
           // agencyJobAssignedByCorporateUserId:userDetails?.id,
           includeJobDetails: true,
           includeCandidateParsedCvDetails: true,
-          // candidateEmail: string,
+          // searchText: string,
           pageSize:size,
           lastKey,
           sortOrder,
@@ -157,7 +157,7 @@ const AgencyCandidateList = () => {
         if (selectedCompany?.id) params.companyId = selectedCompany.id;
         if (jobId) params.jobId = jobId;
         if (agencyName) params.agencyName = agencyName;
-        if (searchBarText?.trim()) params.candidateEmail = searchBarText
+        if (searchBarText?.trim()) params.searchText = searchBarText
           const { response } = await httpServiceObj.get<AgencyAllCandidatesListApiResponse>(url, true, params, true);
     
           if (response) {
@@ -564,7 +564,7 @@ const AgencyCandidateList = () => {
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
             handleClick={() => {}}
-            placeholder="Search candidates by name, email and company name"
+            placeholder="Search candidates by name or email"
           />
         </div>
         

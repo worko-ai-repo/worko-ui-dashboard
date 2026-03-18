@@ -52,6 +52,7 @@ export interface DatabaseListFilters {
   companyId?: string;
   sortOrder?: "ascending" | "descending";
   userType?: string;
+  companyName?: string;
 }
 
 export interface DatabaseListApiResponse {
@@ -183,7 +184,7 @@ const CorporateDatabase:React.FC<CorporateDatabaseProps> = () => {
         // include apiFilters if present
         const searchValue = searchBarText?.trim() ?? "";
         if (searchValue) {
-          params.candidateEmail = searchValue;
+          params.searchText = searchValue;
         }
         if (searchFilters?.userType) params.userType = searchFilters.userType;
 

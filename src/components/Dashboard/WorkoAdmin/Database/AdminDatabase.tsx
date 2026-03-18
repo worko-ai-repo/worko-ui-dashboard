@@ -19,6 +19,7 @@ import { CommonPaginationPageSizeOptionsType } from '@TypesAndConstants/common.c
 import { filterDatabaseCandidates } from '@Utils/DatabaseFilter.utils';
 import DatabaseFilters, { DatabaseFilterValues } from '@Components/Shared/DatabasePage/DatabaseFilters';
 import Modal from '@Components/Shared/Modal';
+import { CompanyAPIResponse } from '../Agency/modals/AssignJobModal';
 
 interface AdminDatabaseProps{
 
@@ -64,6 +65,13 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
   const [incompleteSentCandidateList,setIncompleteSentCandidateList]  = useState<string>("");
   const [initialIds,setInitialIds] = useState<string[]>([]);
   const [filters, setFilters] = useState<DatabaseFilterValues>({});
+
+  const [isLoadingCompany, setIsLoadingCompany] = useState(false);
+  const [companyInput, setCompanyInput] = useState("");
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [companySelectionMade, setCompanySelectionMade] = useState(false);
+
   const { searchText: searchBarText, setSearchText: setSearchBarText, pageSize, setPageSize } = useUrlState({
   search: {
     defaultValue: ""
@@ -123,8 +131,6 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     try {
       const url = `${agencyBaseUrl}/central-candidate-profile/`;
       const params:Record<string, any> = {
-        // refereeType:"AGENCY",
-        // candidateEmail:"vishalvishwas7082@gmail.com",
         includeCandidateParsedCvDetails:true,
         pageSize: size,
         lastKey,
@@ -134,7 +140,11 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       // include apiFilters if present
       const searchValue = searchBarText?.trim() ?? "";
       if (searchValue) {
-        params.candidateEmail = searchValue;
+        params.searchText = searchValue;
+      }
+
+      if (selectedCompany?.name) {
+        params.companyName = selectedCompany.name;
       }
 
       if (searchFilters?.userType) params.userType = searchFilters.userType;
@@ -174,7 +184,7 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
       setIsLoading(false);
     }
   },
-  [userDetails, pageSize, apiFilters, apiStatus, searchBarText]
+  [userDetails, pageSize, apiFilters, apiStatus, searchBarText, selectedCompany]
 );
 
   useEffect(() => {
@@ -628,18 +638,125 @@ const AdminDatabase:React.FC<AdminDatabaseProps> = () => {
     setCurrentIndex(0);
     setEditProfileView(true);
   };
+
+  const fetchCompanySuggestions = async (value: string) => {
+  if (!value.trim()) {
+    setSuggestions([]);
+    return;
+  }
+
+  setIsLoadingCompany(true);
+  try {
+    const {response} = await httpServiceObj.get(`/company?companyName=${value}`,true,{});
+    const typedResponse = response as CompanyAPIResponse;
+    setSuggestions(typedResponse.data);
+  } catch (err) {
+    console.error("Company search failed", err);
+  } finally {
+    setIsLoadingCompany(false);
+  }
+  };
+
+  const companySearchRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleCompanyChange = (value: string) => {
+    setCompanyInput(value);
+    setCompanySelectionMade(false);
+    setSelectedCompany(null);
+    setShowSuggestions(true);
+
+    if (companySearchRef.current) {
+      clearTimeout(companySearchRef.current);
+    }
+
+    companySearchRef.current = setTimeout(() => {
+      fetchCompanySuggestions(value);
+    }, 400);
+  };
+
+  const handleSuggestionClick = (company: any) => {
+    setCompanyInput(company.name);
+    setShowSuggestions(false);
+    setCompanySelectionMade(true);
+    setSelectedCompany(company);
+  };
+
+  useEffect(() => {
+  if (!userDetails?.email) return;
+
+  if (selectedCompany?.name) {
+    setCurrentPage(1);
+    setPaginationInfo((prev) => ({ ...prev, lastKey: "" }));
+    paginationKeysRef.current = { 1: "" };
+
+    fetchDatabaseData(1, pageSize, "");
+  }
+}, [selectedCompany]);
   return (
     <div>
       <div className="flex flex-col lg:flex-row lg:items-center gap-1 sm:gap-1 w-full">
       {/* Search (Row 1 on mobile/tablet; left part on lg+) */}
         <div className="w-full lg:flex-1">
+          <div className='flex gap-2'>
           {/* Search Bar */}
           <SearchBarAgency
             searchBarText={searchBarText}
             setSearchBarText={setSearchBarText as React.Dispatch<React.SetStateAction<string | null>>}
             handleClick={() => {}}
-            placeholder="Search candidates by name, email and company name"
+            placeholder="Search candidates by name or email"
           />
+
+        <div className="flex gap-2 font-semibold w-full sm:w-auto md:flex-1 lg:flex-none">
+          <div className="relative overflow-visible w-full min-w-0">
+            <input
+              type="text"
+              placeholder="Enter company name"
+              className="border px-3 py-2 rounded-md w-full text-xs h-9 bg-white shadow-md"
+              value={companyInput}
+              onChange={(e) => handleCompanyChange(e.target.value)}
+              onFocus={() => setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+              autoComplete="off"
+            />
+
+            {companyInput.trim() && !companySelectionMade && showSuggestions && (
+              <ul
+                className="border bg-white rounded shadow-md absolute w-full z-[40] max-h-60 overflow-y-auto"
+                aria-live="polite"
+              >
+                {/* show only while loading */}
+                {isLoadingCompany && (
+                  <li className="block w-full px-4 py-2 text-gray-500 text-left">
+                    Loading companies...
+                  </li>
+                )}
+
+                {/* when not loading, show results or empty message */}
+                {!isLoadingCompany && (
+                  <>
+                    {suggestions.length > 0 ? (
+                      suggestions.map((company, idx) => (
+                        <li
+                          key={company.id ?? idx}
+                          className="block w-full px-4 py-2 hover:bg-gray-100 cursor-pointer text-left"
+                          onMouseDown={() => handleSuggestionClick(company)}
+                        >
+                          {company.name}
+                        </li>
+                      ))
+                    ) : (
+                      <li className="block w-full px-4 py-2 text-gray-500 cursor-default text-left">
+                        Sorry no company found
+                      </li>
+                    )}
+                  </>
+                )}
+              </ul>
+            )}
+          </div>
+        </div>
+        </div>
+
         </div>
       {/* Row 2 (mobile/tablet stacked): Bulk CV upload*/}
       <div className='flex gap-1 mt-1 sm:mt-0 md:mt-0'>
