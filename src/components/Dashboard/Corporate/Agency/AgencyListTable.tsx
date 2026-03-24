@@ -141,8 +141,8 @@ export default function AgencyListTable(props: any) {
     status: ["inviteStatus"],
     asignedJobs: ["totalAssignedJobs"],
     totalSubmitted: ["totalCandidatesSubmitted"],
-    totalRejected: ["totalCandidateRejected"],
-    totalHired: ["totalCandidateHired"],
+    totalRejected: ["totalRejected"],
+    totalHired: ["totalHired"],
   };
 
   // const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
@@ -276,7 +276,7 @@ export default function AgencyListTable(props: any) {
       sortable: true,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
-          <span>{row?.totalCandidateRejected ?? "-"}</span>
+          <span>{row?.totalRejected ?? "-"}</span>
         </div>
       ),
     },
@@ -286,7 +286,7 @@ export default function AgencyListTable(props: any) {
       sortable: true,
       render: (row: AgencyListDetailsDto) => (
         <div className="flex justify-center m-auto">
-          <span>{row?.totalCandidateHired ?? "-"}</span>
+          <span>{row?.totalHired ?? "-"}</span>
         </div>
       ),
     },
