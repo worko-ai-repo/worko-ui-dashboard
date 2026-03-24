@@ -57,11 +57,20 @@ import ApplicantExpandedRowDetails, {
 import httpServiceObj from "@Services/ApiHandler.service";
 import { useQuery } from "@tanstack/react-query";
 import { AgencyAllCandidatesListDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
+import ScheduleInterviewSidebar, {
+  InterviewRound,
+} from "@Components/Shared/ApplicantsPage/ScheduleInterviewSidebar";
+import InterviewHistorySidebar, {
+  HistoryRound,
+} from "@Components/Shared/ApplicantsPage/InterviewHistorySidebar";
+import InterviewSubmissionSidebar from "@Components/Shared/ApplicantsPage/InterviewSubmissionSidebar";
+import CancelInterviewSidebar from "@Components/Shared/ApplicantsPage/CancelInterviewSidebar";
+import RescheduleInterviewSidebar from "@Components/Shared/ApplicantsPage/RescheduleInterviewSidebar";
 
 // Component props interface
 interface ApplicationTableProps {
-  activeTab: "All" | "Hired" | "Joined";
-  setActiveTab: (tab: "All" | "Hired" | "Joined") => void;
+  activeTab: "All" | "Processing Interview" |"Hired" | "Joined";
+  setActiveTab: (tab: "All" | "Processing Interview" |"Hired" | "Joined") => void;
   ListSelection: ApplicationListSelectionDto;
   data: JobApplicationDetailsDto[];
   handleUpdate: (
@@ -785,6 +794,8 @@ export default function ApplicationTable({
               setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
             }}
             splitMode={isExpanded ? "main" : "all"}
+            onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+            onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
           />
         );
       },
@@ -827,6 +838,21 @@ export default function ApplicationTable({
           // commonColumns.cvViewedDate, // New column
           commonColumns.actions,
           // commonColumns.response,
+        ];
+      case "Processing Interview":
+        return [
+          commonColumns.name,
+          ...(isAllApplicants ? [commonColumns.jobProfile] : []),
+          commonColumns.currentPosition,
+          commonColumns.currentCTC,
+          commonColumns.noticePeriod,
+          commonColumns.experience,
+          commonColumns.matchingScore,
+          commonColumns.interviewScoreDetails,
+          commonColumns.status,
+          commonColumns.IsWorko,
+          commonColumns.IsRefelectedToRec,
+          commonColumns.actions,
         ];
       case "Hired":
         return [
@@ -957,6 +983,8 @@ export default function ApplicationTable({
         sendApplicationToRecruiter={sendApplicationToRecruiter}
         setJoinedModalOpen={setJoinedModalOpen}
         splitMode="expanded" // Show only expanded actions
+        onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+        onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
       />
     ) : null;
 
@@ -971,6 +999,115 @@ export default function ApplicationTable({
         expandedActions={expandedActionsNode}
       />
     );
+  };
+
+  const [scheduleInterviewSidebarState, setScheduleInterviewSidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
+
+  const [interviewHistorySidebarState, setInterviewHistorySidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
+
+  const [interviewSubmissionSidebarState, setInterviewSubmissionSidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+    roundId: string | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+    roundId: null,
+  });
+
+  const [cancelInterviewSidebarState, setCancelInterviewSidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
+
+  const [interviewRoundsByApplicationId, setInterviewRoundsByApplicationId] = useState<
+    Record<string, InterviewRound[]>
+  >({});
+
+  const [rescheduleInterviewSidebarState, setRescheduleInterviewSidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
+
+  const handleOpenRescheduleSidebar = (jobApplication: JobApplicationDetailsDto) => {
+    setRescheduleInterviewSidebarState({
+      isOpen: true,
+      jobApplication,
+    });
+  };
+
+  const getFakeRound1 = (): InterviewRound => {
+  const date = "2026-03-18";
+  const time = "00:19";  
+
+  const scheduledAt = new Date(`${date}T${time}`);
+
+    return {
+      id: "round-1",
+      roundNumber: 1,
+      scheduledAt,
+      interviewType: "Technical screening",
+      rules: "Please keep camera on.",
+      extraInterviewers: [
+        { name: "John Doe", email: "john.doe@example.com" },
+        { name: "John Doe", email: "john.doe@example.com" },
+        { name: "John Doe", email: "john.doe@example.com" }],
+      feedbackSubmitted: false,
+      joiningLink:"https://meet.google.com/vmj-ckas-wjm?pli=1",
+      interviewStatus: "SCHEDULED",
+      cancelledAt: null,
+    };
+  };
+
+  const handleOpenScheduleInterviewSidebar = (jobApplication: JobApplicationDetailsDto) => {
+    setInterviewRoundsByApplicationId((prev) => {
+      if (prev[jobApplication.id]?.length) return prev;
+      return {
+        ...prev,
+        [jobApplication.id]: [getFakeRound1()],
+      };
+    });
+
+    setScheduleInterviewSidebarState({
+      isOpen: true,
+      jobApplication,
+    });
+  };
+
+  const handleOpenInterviewHistorySidebar = (jobApplication: JobApplicationDetailsDto) => {
+    setInterviewHistorySidebarState({
+      isOpen: true,
+      jobApplication,
+    });
+  };
+
+  const handleOpenInterviewSubmissionSidebar = (
+    jobApplication: JobApplicationDetailsDto,
+    roundId: string
+  ) => {
+    setInterviewSubmissionSidebarState({
+      isOpen: true,
+      jobApplication,
+      roundId,
+    });
   };
 
   return (
@@ -1028,6 +1165,8 @@ export default function ApplicationTable({
               sendApplicationToRecruiter={sendApplicationToRecruiter}
               setJoinedModalOpen={setJoinedModalOpen}
               splitMode="expanded" // Show only expanded actions
+              onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+              onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
             />
           ) : null;
 
@@ -1071,6 +1210,189 @@ export default function ApplicationTable({
           }
           activeTab="All"
         />
+      </Modal>
+
+      <Modal
+        isOpen={
+          scheduleInterviewSidebarState.isOpen && !!scheduleInterviewSidebarState.jobApplication
+        }
+        onClose={() =>
+          setScheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+        }
+        className="w-full sm:w-[500px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {scheduleInterviewSidebarState.jobApplication && (
+          <ScheduleInterviewSidebar
+            jobApplication={scheduleInterviewSidebarState.jobApplication}
+            existingRounds={
+              interviewRoundsByApplicationId[scheduleInterviewSidebarState.jobApplication.id] ?? []
+            }
+            onClose={() =>
+              setScheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+            }
+            onRoundsChange={(rounds) => {
+              const appId = scheduleInterviewSidebarState.jobApplication?.id;
+              if (!appId) return;
+              setInterviewRoundsByApplicationId((prev) => ({
+                ...prev,
+                [appId]: rounds,
+              }));
+            }}
+            onOpenCancelSidebar={() => {
+              if (!scheduleInterviewSidebarState.jobApplication) return;
+              setCancelInterviewSidebarState({
+                isOpen: true,
+                jobApplication: scheduleInterviewSidebarState.jobApplication,
+              });
+            }}
+            onOpenRescheduleSidebar={() => {
+              if (!scheduleInterviewSidebarState.jobApplication) return;
+              handleOpenRescheduleSidebar(scheduleInterviewSidebarState.jobApplication);
+            }}
+            onOpenFeedbackSidebar={(roundId) => {
+              if (!scheduleInterviewSidebarState.jobApplication) return;
+              handleOpenInterviewSubmissionSidebar(
+                scheduleInterviewSidebarState.jobApplication,
+                roundId
+              );
+            }}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={
+          interviewHistorySidebarState.isOpen && !!interviewHistorySidebarState.jobApplication
+        }
+        onClose={() =>
+          setInterviewHistorySidebarState({ isOpen: false, jobApplication: null })
+        }
+        className="w-full sm:w-[560px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {interviewHistorySidebarState.jobApplication && (
+          <InterviewHistorySidebar
+            jobApplication={interviewHistorySidebarState.jobApplication}
+            onClose={() =>
+              setInterviewHistorySidebarState({ isOpen: false, jobApplication: null })
+            }
+            rounds={(
+              interviewRoundsByApplicationId[interviewHistorySidebarState.jobApplication.id] ?? []
+            ).map(
+              (r): HistoryRound => ({
+                id: r.id,
+                roundNumber: r.roundNumber,
+                scheduledAt: r.scheduledAt,
+                feedback: r.feedbackNotes ?? "",
+                rating: r.feedbackRating ?? null,
+                interviewType: r.interviewType === "__OTHER__"
+                    ? r.customInterviewType || ""
+                    : r.interviewType,
+                recruiterNote: r.recruiterNote,
+                rules: r.rules,
+                extraInterviewers: r.extraInterviewers,
+                joiningLink:r.joiningLink,
+                interviewStatus: r.interviewStatus ?? (r.scheduledAt ? "SCHEDULED" : undefined),
+                cancelReason: r.cancelReason,
+                cancelFeedback: r.cancelFeedback,
+              })
+            )}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={cancelInterviewSidebarState.isOpen && !!cancelInterviewSidebarState.jobApplication}
+        onClose={() => setCancelInterviewSidebarState({ isOpen: false, jobApplication: null })}
+        className="w-full sm:w-[480px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {cancelInterviewSidebarState.jobApplication && (
+          <CancelInterviewSidebar
+            jobApplication={cancelInterviewSidebarState.jobApplication}
+            roundNumber={
+              (
+                interviewRoundsByApplicationId[cancelInterviewSidebarState.jobApplication.id] ?? []
+              ).slice(-1)[0]?.roundNumber ?? 1
+            }
+            onClose={() => setCancelInterviewSidebarState({ isOpen: false, jobApplication: null })}
+            onSubmit={({ reason, feedback }) => {
+              const appId = cancelInterviewSidebarState.jobApplication?.id;
+              if (!appId) return;
+              setInterviewRoundsByApplicationId((prev) => {
+                const rounds = prev[appId] ?? [];
+                if (rounds.length === 0) return prev;
+                const latest = rounds[rounds.length - 1];
+                const updatedLatest: InterviewRound = {
+                  ...latest,
+                  interviewStatus: "CANCELLED",
+                  cancelReason: reason,
+                  cancelFeedback: feedback,
+                  cancelledAt: new Date(),
+                };
+                const updated = [...rounds.slice(0, -1), updatedLatest];
+                return { ...prev, [appId]: updated };
+              });
+              // eslint-disable-next-line no-console
+              console.log("Cancel Interview Payload:", {
+                jobApplicationId: appId,
+                reason,
+                feedback,
+              });
+              setCancelInterviewSidebarState({ isOpen: false, jobApplication: null });
+            }}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={
+          interviewSubmissionSidebarState.isOpen &&
+          !!interviewSubmissionSidebarState.jobApplication &&
+          !!interviewSubmissionSidebarState.roundId
+        }
+        onClose={() =>
+          setInterviewSubmissionSidebarState({
+            isOpen: false,
+            jobApplication: null,
+            roundId: null,
+          })
+        }
+        className="w-full sm:w-[480px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {interviewSubmissionSidebarState.jobApplication &&
+          interviewSubmissionSidebarState.roundId && (
+            <InterviewSubmissionSidebar
+              jobApplication={interviewSubmissionSidebarState.jobApplication}
+              roundId={interviewSubmissionSidebarState.roundId}
+              onClose={() =>
+                setInterviewSubmissionSidebarState({
+                  isOpen: false,
+                  jobApplication: null,
+                  roundId: null,
+                })
+              }
+              onSubmitted={({ roundId, feedback, rating }) => {
+                const appId = interviewSubmissionSidebarState.jobApplication?.id;
+                if (!appId) return;
+                setInterviewRoundsByApplicationId((prev) => ({
+                  ...prev,
+                  [appId]: (prev[appId] ?? []).map((r) =>
+                    r.id === roundId
+                      ? {
+                          ...r,
+                          feedbackSubmitted: true,
+                          feedbackNotes: feedback,
+                          feedbackRating: rating,
+                        }
+                      : r
+                  ),
+                }));
+              }}
+            />
+          )}
       </Modal>
 
       <Modal
@@ -1275,6 +1597,55 @@ export default function ApplicationTable({
           userName={interviewDetailviewModal.userName}
           interviewDetails={interviewDetailviewModal.interviewDetails}
         />
+      </Modal>
+
+      <Modal
+      isOpen={
+        rescheduleInterviewSidebarState.isOpen &&
+        !!rescheduleInterviewSidebarState.jobApplication
+      }
+      onClose={() =>
+        setRescheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+      }
+      className="w-full sm:w-[480px] h-full ml-auto"
+      classNameHeight="max-h-[100vh]"
+      >
+      {rescheduleInterviewSidebarState.jobApplication && (
+        <RescheduleInterviewSidebar
+          jobApplication={rescheduleInterviewSidebarState.jobApplication}
+          initialScheduledAt={
+            (
+              interviewRoundsByApplicationId[
+                rescheduleInterviewSidebarState.jobApplication.id
+              ] ?? []
+            ).slice(-1)[0]?.scheduledAt ?? null
+          }
+          onClose={() =>
+            setRescheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+          }
+          onSubmit={(scheduledAt) => {
+            const appId = rescheduleInterviewSidebarState.jobApplication?.id;
+            if (!appId) return;
+
+            setInterviewRoundsByApplicationId((prev) => {
+              const rounds = prev[appId] ?? [];
+              if (!rounds.length) return prev;
+
+              const latest = rounds[rounds.length - 1];
+
+              const updatedLatest: InterviewRound = {
+                ...latest,
+                scheduledAt,
+              };
+
+              return {
+                ...prev,
+                [appId]: [...rounds.slice(0, -1), updatedLatest],
+              };
+            });
+          }}
+        />
+      )}
       </Modal>
     </>
   );

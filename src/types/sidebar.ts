@@ -55,6 +55,7 @@ export type TabId =
 | 'aCompanies'
 | 'Refer-n-Earn'
 | 'aPackages'
+| 'aGmailLogin'
 // Agency dashboard tabs
 | 'agInvites'
 | 'agJobs'

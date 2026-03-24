@@ -29,6 +29,7 @@ import { EvaluatorDetails } from "@Interfaces/CorporateServices.dto";
 import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Interview/InterviewDetailedViewModal";
 import Modal from "@Components/Shared/Modal";
 import CandidateCard from "./CandidateCard";
+import InterviewDetailsModal from "./InterviewDetailsModal";
 interface MainContentProps {
   EvaluationRequestDetails: EvaluationRequestDetails;
   companyLogo: string;
@@ -111,6 +112,15 @@ const MainContent: React.FC<MainContentProps> = ({
   const [expandedSection, setExpandedSection] = useState<
     "about" | "worko" | "note" | null
   >(null);
+  const [interviewModal, setInterviewModal] = useState<{
+    isOpen: boolean;
+    data: any;
+    candidateName: string;
+  }>({
+    isOpen: false,
+    data: null,
+    candidateName: "",
+  });
 
   useEffect(() => {
     if (!EvaluationRequestDetails?.email || !EvaluationRequestDetails?.applicantUserId) {
@@ -231,6 +241,22 @@ const MainContent: React.FC<MainContentProps> = ({
     enabled: !!evaluatorDetails?.applicantUserEmail,
     refetchOnWindowFocus: false,
   });
+
+  const handleViewInterviewSidebar = (interviewDetails: any, name: string) => {
+  // TEMP dummy data (until API comes)
+  const dummyData = {
+    date: "25 March 2026",
+    time: "3:15 PM",
+    recruiterNote: "Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind",
+    meetingLink: "https://meet.google.com/abc-defg-hij",
+  };
+
+  setInterviewModal({
+    isOpen: true,
+    data: dummyData,
+    candidateName: name,
+  });
+};
 
   useEffect(() => {
     if (userInterviews && userInterviews.length > 0 ) {
@@ -363,13 +389,38 @@ const MainContent: React.FC<MainContentProps> = ({
             onViewCV={onViewCVCompany}
             onSubmitFeedback={onSubmitFeedbackCompany}
             onViewFeedback={onViewFeedbackCompany}
-            onViewInterview={onViewInterview}
+            onViewInterview={handleViewInterviewSidebar}
             expandedCard={expandedCard}
             expandedSection={expandedSection}
             setExpandedCard={setExpandedCard}
             setExpandedSection={setExpandedSection}
           />
         ))}
+
+        <Modal
+          isOpen={interviewModal.isOpen}
+          onClose={() =>
+            setInterviewModal({
+              isOpen: false,
+              data: null,
+              candidateName: "",
+            })
+          }
+          className="w-[400px] h-[450px]"
+        >
+          <InterviewDetailsModal
+            data={interviewModal.data}
+            candidateName={interviewModal.candidateName}
+            onClose={() =>
+              setInterviewModal({
+                isOpen: false,
+                data: null,
+                candidateName: "",
+              })
+            }
+          />
+        </Modal>
+
       </div>
     );
   }

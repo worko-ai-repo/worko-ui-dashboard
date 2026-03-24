@@ -40,7 +40,7 @@ export interface JobApplicationUpdatePayloadDto {
   userType?: string;
 }
 
-const tabs = ["All", "Hired", "Joined"] as const;
+const tabs = ["All", "Processing Interview", "Hired", "Joined"] as const;
 
 export interface ApplicationListSelectionDto {
   selectedRows: BulkJobApplicationUpdateItem[];
@@ -64,6 +64,8 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
     switch (tab) {
       case "All":
         return undefined;
+      case "Processing Interview":
+        return "PROCESSING_INTERVIEW";
       case "Hired":
         return "HIRING_IN_PROCESS";
       case "Joined":
@@ -615,7 +617,7 @@ const Applicants: React.FC<ApplicantsProps> = ({ isAllApplicants = false }) => {
                   : "border-transparent text-gray-500"
               }`}
               onClick={() => handleTabChange(tab)}>
-              {tab === "All" ? "All" : tab === "Hired" ? "Hired" : "Joined"}
+              {tab === "All" ? "All" : tab === "Hired" ? "Hired" : tab === "Processing Interview" ? "Processing Interview" : "Joined"}
             </button>
           ))}
         </div>

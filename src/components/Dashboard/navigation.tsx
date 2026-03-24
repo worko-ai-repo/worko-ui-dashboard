@@ -17,7 +17,7 @@ import {
   Warehouse,
   Vault,
 } from "./icons";
-import { IdCard, List, Settings, User, Zap } from "lucide-react";
+import { IdCard, List, MailPlus, Settings, User, Zap } from "lucide-react";
 
 // Define navigation items for all dashboard types
 const navigationItems: NavItem[] = [
@@ -205,6 +205,12 @@ const navigationItems: NavItem[] = [
     id: "aCompanies",
     label: "Companies",
     icon: <i className="fa-solid fa-building"></i>,
+    dashboardTypes: ["ADMIN"],
+  },
+  {
+    id: "aGmailLogin",
+    label: "Gmail login",
+    icon: <MailPlus/>,
     dashboardTypes: ["ADMIN"],
   },
  /*  { //@NEXT-RELEASE : NEXT RELEASE

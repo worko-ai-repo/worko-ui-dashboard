@@ -28,9 +28,11 @@ export type JobApplicationActionType =
   | "HIRE_NOW"
   | "VIEW_OFFER_LETTER_ISSUE"
   | "JOINED"
-  | "VIEW_DUPLICACY";
+  | "VIEW_DUPLICACY"
+  | "SCHEDULE_INTERVIEW"
+  | "INTERVIEW_HISTORY";
 
-export type TabType = "All" | "Hired" | "Joined";
+export type TabType = "All" | "Processing Interview" |"Hired" | "Joined";
 
 export interface ActionVisibilityConfig {
   visible: boolean;
@@ -86,6 +88,10 @@ export const CONDITIONS = {
         ].includes(entry.newStatus as JobApplicationStatusEnum)
       )
     ),
+  hasInterviewHistory: (app: JobApplicationDetailsDto) => {
+    const details: any = (app as any)?.applicantDetails;
+    return Boolean(Array.isArray(details?.interviewDetails) && details.interviewDetails.length > 0);
+  },
 };
 
 // Helper functions (moved from JobApplicationActions)
@@ -124,6 +130,8 @@ const HIDDEN_ALL: ActionVisibilityMap = Object.fromEntries(
     "VIEW_DUPLICACY",
     "PUSH_TO_RECRUITER",
     "RESEND_OFFER_LETTER",
+    "SCHEDULE_INTERVIEW",
+    "INTERVIEW_HISTORY",
   ] as JobApplicationActionType[]).map((action) => [action, { visible: false }])
 ) as ActionVisibilityMap;
 
@@ -221,6 +229,21 @@ export function getActionVisibilityConfig(
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
+        },
+        SCHEDULE_INTERVIEW: {
+          visible: true,
+          tabOverrides: {
+            Hired: false,
+            Joined: false,
+          },
+        },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+          tabOverrides: {
+            Hired: false,
+            Joined: false,
+          },
         },
       };
       break;

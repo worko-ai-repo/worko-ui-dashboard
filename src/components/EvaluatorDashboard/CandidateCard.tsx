@@ -298,6 +298,15 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
                 Submit Feedback
             </button>
             )}
+
+        <button
+          onClick={() =>
+            onViewInterview?.(interviewDetails, candidate.name || "")
+          }
+          className="p-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 text-[10px]"
+        >
+          View Interview
+        </button>
         </div>
         </div>
     </div>

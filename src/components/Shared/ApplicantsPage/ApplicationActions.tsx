@@ -89,6 +89,8 @@ type Props = {
     React.SetStateAction<{ isOpen: boolean; jobApplication: JobApplicationDetailsDto }>
   >;
   splitMode?: "main" | "expanded" | "all"; // NEW
+  onOpenScheduleInterviewSidebar?: (row: JobApplicationDetailsDto) => void;
+  onOpenInterviewHistorySidebar?: (row: JobApplicationDetailsDto) => void;
 };
 // ============================================
 // 1. Define split configuration in a constant
@@ -124,6 +126,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
     sendApplicationToRecruiter,
     setJoinedModalOpen,
     splitMode = "all",
+    onOpenScheduleInterviewSidebar,
+    onOpenInterviewHistorySidebar,
   } = props;
 
   /**
@@ -291,8 +295,46 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
         data-tooltip-id="my-tooltip"
         data-tooltip-content="Process Interview"
         onClick={() => handleStatusUpdate("PROCESSING_INTERVIEW", row)}
+        // onClick={() => {
+        //   if (onOpenScheduleInterviewSidebar) {
+        //     onOpenScheduleInterviewSidebar(row);
+        //   }
+        //   handleStatusUpdate("PROCESSING_INTERVIEW", row);
+        // }}
         className="btn-process flex gap-2 items-center">
         <Clipboard className="w-4 h-4" />
+      </button>
+    ),
+
+    SCHEDULE_INTERVIEW: (
+      <button
+        key="schedule-interview"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Schedule Interview"
+        onClick={() => {
+          if (onOpenScheduleInterviewSidebar) {
+            onOpenScheduleInterviewSidebar(row);
+          }
+        }}
+        className="btn-process flex gap-2 items-center"
+      >
+        <Calendar size={16} />
+      </button>
+    ),
+
+    INTERVIEW_HISTORY: (
+      <button
+        key="interview-history"
+        data-tooltip-id="my-tooltip"
+        data-tooltip-content="Interview History"
+        onClick={() => {
+          if (onOpenInterviewHistorySidebar) {
+            onOpenInterviewHistorySidebar(row);
+          }
+        }}
+        className="btn-info flex gap-2 items-center"
+      >
+        <FileText size={16} />
       </button>
     ),
 
@@ -464,6 +506,8 @@ export const JobApplicationActions: React.FC<Props> = (props) => {
       "SEND_TO_EVALUATOR",
       "VIEW_EVALUATION", // CV and evaluation
       "PROCESS_INTERVIEW",
+       "SCHEDULE_INTERVIEW",
+       "INTERVIEW_HISTORY",
       "INTERVIEW_DONE", // Interview actions
       "HIRE",
       "HIRE_NOW",

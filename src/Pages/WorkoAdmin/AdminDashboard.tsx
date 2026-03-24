@@ -51,7 +51,9 @@ const AgencyCandidateList = lazy(
 const AgencyList = lazy(
   () => import("@Components/Dashboard/WorkoAdmin/Agency/AgencyList")
 );
-
+const GoogleIntegration = lazy(
+  () => import("@Components/Dashboard/WorkoAdmin/GoogleIntegration/GoogleIntegration")
+);
 const AdminDashboard = () => {
   const routes = useRoutes([
     {
@@ -254,12 +256,19 @@ const AdminDashboard = () => {
             </Suspense>
           ),
         },
-
         {
           path: "aGuidance",
           element: (
             <Suspense fallback={<MainLoader />}>
               <AdminGuidance />
+            </Suspense>
+          ),
+        },
+        {
+          path: "aGmailLogin",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <GoogleIntegration />
             </Suspense>
           ),
         },
