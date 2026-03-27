@@ -1501,6 +1501,7 @@ export default function SearchResultsTable(props: any) {
             }}
             candidateFullDetails={editProfileData}
             showDownload={true}
+            isContractCopy={true}
           />
         )}
       </Modal>
