@@ -150,7 +150,7 @@ const AgencyCandidateList = () => {
       }
       if (jobId) params.jobId = jobId;
       if (agencyName) params.agencyName = agencyName;
-      if (searchBarText?.trim()) params.candidateEmail = searchBarText
+      if (searchBarText?.trim()) params.searchText = searchBarText
 
         const { response } = await httpServiceObj.get<AgencyAllCandidatesListApiResponse>(url, true, params, true);
   

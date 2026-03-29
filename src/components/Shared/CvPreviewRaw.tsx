@@ -43,12 +43,21 @@ const CVPreviewRaw: React.FC<CVPreviewRawProps> = ({
             ? candidateFullDetails?.name?.replace(/\s+/g, "_") 
             : candidateFullDetails?.candidateParsedCvDetails?.name?.replace(/\s+/g, "_");
           
-          const totalYOE = isContractCopy ? "" : candidateFullDetails?.candidateParsedCvDetails?.totalYOE;
+          const totalYOE = isContractCopy 
+            ? candidateFullDetails?.totalYOE 
+            : candidateFullDetails?.candidateParsedCvDetails?.totalYOE;
           
-          const company = isContractCopy 
-            ? candidateFullDetails?.agencyName?.replace(/\s+/g, "_")
-            : (candidateFullDetails?.candidateParsedCvDetails?.currentCompany || "Company").replace(/\s+/g, "_");
-          
+          const company = isContractCopy
+            ? (
+                candidateFullDetails?.agencyName ||
+                candidateFullDetails?.currentCompany ||
+                "Company"
+              ).replace(/\s+/g, "_")
+            : (
+                candidateFullDetails?.candidateParsedCvDetails?.currentCompany ||
+                "Company"
+              ).replace(/\s+/g, "_");
+
           const date = new Date().toISOString().split("T")[0];
           fileName = `Worko_${name}_${totalYOE}_${company}_${date}.pdf`;
         } else {

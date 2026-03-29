@@ -97,8 +97,8 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
       status: ["inviteStatus"],
       asignedJobs:["totalAssignedJobs"],
       totalSubmitted:["totalCandidatesSubmitted"],
-      totalRejected:["totalCandidateRejected"],
-      totalHired:["totalCandidateHired"],
+      totalRejected:["totalRejected"],
+      totalHired:["totalHired"],
   };
   // const { sortedData, onSortChange } = useSortableData(data as any, keyFallbacks);
   const { sortedData, onSortChange } = useSortableData<AgencyListDetailsDto>(data, keyFallbacks, {
@@ -225,7 +225,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.totalCandidateRejected ?? "-"}</span>
+                <span>{row?.totalRejected ?? "-"}</span>
             </div>
         ),
     },
@@ -235,7 +235,7 @@ const [dropdownVisibleRows, setDropdownVisibleRows] = useState<string[]>([]);
         sortable: true,
         render: (row: AgencyListDetailsDto) => (
             <div className='flex justify-center m-auto'>
-                <span>{row?.totalCandidateHired ?? "-"}</span>
+                <span>{row?.totalHired ?? "-"}</span>
             </div>
         ),
     },

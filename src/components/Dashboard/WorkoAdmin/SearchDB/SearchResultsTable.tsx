@@ -1514,6 +1514,7 @@ useEffect(() => {
             }}
             candidateFullDetails={editProfileData}
             showDownload={true}
+            isContractCopy={true}
           />
         )}
       </Modal>

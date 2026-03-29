@@ -210,8 +210,8 @@ export interface AgencyListDetailsDto {
   //future data
   totalAssignedJobs: number;
   totalCandidatesSubmitted: number;
-  totalCandidateRejected: number;
-  totalCandidateHired: number;
+  totalRejected: number;
+  totalHired: number;
   inviteAction: "PAUSE" | "RESUME" | "DELETE";
   isDelete: boolean;
 
