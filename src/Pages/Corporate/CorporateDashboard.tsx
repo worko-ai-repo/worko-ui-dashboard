@@ -196,7 +196,7 @@ const CorporateDashboard = () => {
           ),
         },
         {
-          path: "recruiterRecharge",
+          path: "recruiterSubscription",
           element: (
             <Suspense fallback={<MainLoader />}>
               {isCorporateAdmin ? <RecruiterRecharge /> : <AccessDenied />}

@@ -36,7 +36,7 @@ export type TabId =
 | 'driveResumeFetcher'
 | 'recharge'
 | 'credits'
-| 'recruiterRecharge'
+| 'recruiterSubscription'
 // Admin Dashboard Tabs
 | 'ajobs'
 | 'aApplicants'

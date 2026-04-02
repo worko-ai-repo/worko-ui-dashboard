@@ -227,6 +227,29 @@ const navigationItems: NavItem[] = [
     dashboardTypes: ["CORPORATE"],
   },
   {
+    id: "recharge",
+    label: "Recharge",
+    icon: <Zap/>,
+    dashboardTypes: ["CORPORATE"],
+    expandable:true,
+    child: [
+      // {
+      //   id: "credits",
+      //   label: "Credits",
+      //   icon: ReferralIcon,
+      //   dashboardTypes: ["CORPORATE"],
+      //   expandable: false,
+      // },
+      {
+        id: "recruiterSubscription",
+        label: "Subscription",
+        icon: ReferralIcon,
+        dashboardTypes: ["CORPORATE"],
+        expandable: false,
+      },
+    ]
+  },
+  {
     id: "settings",
     label: "Settings",
     icon: <Settings />,
@@ -263,29 +286,6 @@ const navigationItems: NavItem[] = [
       // },
     ]
   },
-  // {
-  //   id: "recharge",
-  //   label: "Recharge",
-  //   icon: <Zap/>,
-  //   dashboardTypes: ["CORPORATE"],
-  //   expandable:true,
-  //   child: [
-  //     {
-  //       id: "credits",
-  //       label: "Credits",
-  //       icon: ReferralIcon,
-  //       dashboardTypes: ["CORPORATE"],
-  //       expandable: false,
-  //     },
-  //     {
-  //       id: "recruiterRecharge",
-  //       label: "Recruiter Recharge",
-  //       icon: ReferralIcon,
-  //       dashboardTypes: ["CORPORATE"],
-  //       expandable: false,
-  //     },
-  //   ]
-  // },
   /* {
         id: 'invoice-&-payment',
         label: 'Invoice & Payment',

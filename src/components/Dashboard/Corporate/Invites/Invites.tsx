@@ -67,9 +67,18 @@ const Invites = () => {
     );
   }
 
+  const remainingLicenses = 12; // mock for now
   return (
     <div className="space-y-4 mt-2">
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        <div className="flex items-center gap-2 bg-blue-200 border border-blue-400 px-4 py-2 rounded-xl text-sm">
+        <span className="text-blue-700 font-medium">
+          Remaining Licenses
+        </span>
+        <span className="bg-blue-600 text-white px-2 py-0.5 rounded-md text-xs font-semibold">
+          {remainingLicenses}
+        </span>
+      </div>
         <button
           onClick={() => setIsSendInviteModalOpen(true)}
           className="flex items-center gap-2 bg-blue-600 px-4 py-2 rounded-xl text-white text-sm">

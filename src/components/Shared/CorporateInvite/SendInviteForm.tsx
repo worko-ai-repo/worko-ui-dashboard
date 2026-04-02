@@ -180,7 +180,7 @@ const InviteForm = ({
           {/* Header */}
           <div className="mb-8 w-full text-left">
             <h2 className="text-black text-lg font-semibold font-poppins leading-tight">
-              Invite others
+              Invite Recruiters
             </h2>
           </div>
 
