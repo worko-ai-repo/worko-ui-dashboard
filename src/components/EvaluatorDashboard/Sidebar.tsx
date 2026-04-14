@@ -61,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 };
 
   return (
-    <div className="w-64 bg-[#316BFF] text-white h-full flex flex-col overflow-hidden rounded-tr-xl rounded-br-xl">
+    <div className="w-[212px] bg-[#316BFF] text-white h-full flex flex-col overflow-hidden rounded-tr-3xl rounded-br-3xl">
       <div className="p-4 flex-1 overflow-auto">
         {/* User Profile Section */}
         <div className="flex items-center gap-3 mb-6 p-3 rounded-lg bg-indigo-700/50">
@@ -168,20 +168,24 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <div
                       key={companyId}
                       onClick={() => onCompanySelect && onCompanySelect(companyId)}
-                      className={`flex gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
+                      className={`flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
                         isSelected
                           ? 'bg-white text-slate-800 hover:bg-gray-50'
                           : 'hover:bg-[#3D78FF] text-white'
                       }`}
                     >
                       <div>
-                        <Briefcase className='h-12'/>
+                        <Briefcase className='h-5 w-4'/>
                       </div>
                       <div>                
-                        <div className="text-sm text-left font-semibold truncate">
-                          <p className='truncate max-w-[170px]'>{companyName}</p>
+                        <div                 
+                        data-tooltip-id="my-tooltip"
+                        data-tooltip-content={companyName}
+                        data-tooltip-place="top"
+                        className="text-xs text-left font-semibold truncate">
+                          <p className='truncate max-w-[150px]'>{companyName}</p>
                         </div>
-                        <div className="text-xs truncate flex gap-1 justify-start items-center">
+                        <div className="text-[10px] truncate flex gap-1 justify-start items-center">
                           <UsersRound className="w-3 h-3"/>
                           {count} {count > 1 ? "Candidates" : "Candidate"}
                         </div>
@@ -197,7 +201,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         </div>
       </div>
       <div className="border-t border-white/20 pt-4 hover:text-red-600 pb-3">
-        <button onClick={handleLogout} className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 px-4 rounded"
+        <button onClick={handleLogout} className="hover:text-red-500 text-white flex items-center justify-between focus:outline-none w-full text-left hover:bg-white/10 p-2 px-4 rounded text-[13px]"
             aria-label="Logout">
               <p>Logout</p>
             <LogOut className="cursor-pointer self-center" />

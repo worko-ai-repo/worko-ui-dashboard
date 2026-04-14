@@ -353,7 +353,7 @@ const EvaluatorView: React.FC = () => {
   const handleViewCV = async () => {
   const req = selectedRequestRef.current || selectedRequest;
   const cand = selectedCandidateDetailsRef.current || selectedCandidateDetails;
-    console.log(req,cand)
+
   if (!cand) {
     toast.error("Candidate details missing", getToastOptions({}));
     return;
@@ -554,7 +554,7 @@ const EvaluatorView: React.FC = () => {
 
     setIsViewCVModalOpen(true);
   } catch (err) {
-    console.log(err);
+    console.error(err);
     toast.error("Failed to load CV");
   }
   };
@@ -584,7 +584,7 @@ const EvaluatorView: React.FC = () => {
       toast.error("Missing request data");
       return;
     }
-    console.log(req.applicantName)
+    // console.log(req.applicantName)
     setIsFeedbackModalOpen(true);
   };
 
@@ -798,6 +798,15 @@ const EvaluatorView: React.FC = () => {
           ? applicationRes.value
           : { matchingScore: 0, scoreDetails: [] };
 
+      // const attendees = safeApplication?.attendees || [];
+
+      // const isEvaluatorAllowed = attendees
+      //   .filter((a: any) => a.type === "EVALUATOR") // remove EXTERNAL automatically
+      //   .some((a: any) => 
+      //     a.email?.toLowerCase() === userDetails?.email?.toLowerCase()
+      //   );
+      const isEvaluatorAllowed = Boolean(safeApplication?.latestInterviewRoundId) || safeApplication?.interviewRoundCount > 0;
+
       const safeSocial =
         socialRes.status === "fulfilled"
           ? socialRes.value?.[0] ?? {}
@@ -837,6 +846,7 @@ const EvaluatorView: React.FC = () => {
         interviewDetails,
         isAlreadyRequested,
         interviewScoreBreakdown: interviewDetails?.scoreBreakdown ?? {},
+        canViewInterview: isEvaluatorAllowed,
       };
     })
   );

@@ -89,8 +89,10 @@ export const CONDITIONS = {
       )
     ),
   hasInterviewHistory: (app: JobApplicationDetailsDto) => {
-    const details: any = (app as any)?.applicantDetails;
-    return Boolean(Array.isArray(details?.interviewDetails) && details.interviewDetails.length > 0);
+    // const details: any = (app as any)?.applicantDetails;
+    // return Boolean(Array.isArray(details?.latestInterviewRoundId) && details.interviewDetails.length > 0);
+    if(app.latestInterviewRoundId || app.interviewRoundCount || app.activeInterviewRoundId) return true
+    return false
   },
 };
 
@@ -213,6 +215,10 @@ export function getActionVisibilityConfig(
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
         },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+        },
       };
       break;
 
@@ -225,7 +231,7 @@ export function getActionVisibilityConfig(
         ONHOLD: { visible: true },
         NOTES: { visible: true },
         INTERVIEW_DONE: { visible: true /* ,condition: CONDITIONS.hasEvaluatorResponse */ },
-        SEND_TO_EVALUATOR: { visible: true },
+        SEND_TO_EVALUATOR: { visible: false },
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
@@ -240,10 +246,6 @@ export function getActionVisibilityConfig(
         INTERVIEW_HISTORY: {
           visible: true,
           condition: CONDITIONS.hasInterviewHistory,
-          tabOverrides: {
-            Hired: false,
-            Joined: false,
-          },
         },
       };
       break;
@@ -254,10 +256,14 @@ export function getActionVisibilityConfig(
         VIEW_CV: { visible: true },
         HIRE: { visible: true },
         NOTES: { visible: true },
-        SEND_TO_EVALUATOR: { visible: true },
+        SEND_TO_EVALUATOR: { visible: false },
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
+        },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
         },
         REJECT: { visible: true },
         ONHOLD: { visible: true },
@@ -280,7 +286,14 @@ export function getActionVisibilityConfig(
             Hired: true,
           },
         },
-
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
         REQUEST_DOCUMENT: { visible: true, tabOverrides: { All: false, Hired: true } },
       };
       break;
@@ -314,6 +327,14 @@ export function getActionVisibilityConfig(
             Hired: true,
           },
         },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
         HIRE_NOW: { visible: true, tabOverrides: { All: false, Hired: true } },
       };
       break;
@@ -328,6 +349,14 @@ export function getActionVisibilityConfig(
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
           tabOverrides: {
             All: false,
             Hired: true,
@@ -377,6 +406,14 @@ export function getActionVisibilityConfig(
             Hired: true,
           },
         },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
       };
 
       break;
@@ -395,6 +432,14 @@ export function getActionVisibilityConfig(
         VIEW_EVALUATION: {
           visible: true,
           condition: CONDITIONS.hasEvaluatorResponse,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
           tabOverrides: {
             All: false,
             Hired: true,
@@ -433,6 +478,14 @@ export function getActionVisibilityConfig(
             Joined: true,
           },
         },
+        INTERVIEW_HISTORY: {
+          visible: true,
+          condition: CONDITIONS.hasInterviewHistory,
+          tabOverrides: {
+            All: false,
+            Hired: true,
+          },
+        },
         VIEW_DOCUMENT_READ: {
           visible: true,
           tabOverrides: { All: false, Hired: true },
@@ -452,6 +505,7 @@ export function getActionVisibilityConfig(
           condition: CONDITIONS.hasDocRequested,
         },
         VIEW_EVALUATION: { visible: true, condition: CONDITIONS.hasEvaluatorResponse },
+        INTERVIEW_HISTORY: { visible: true, condition: CONDITIONS.hasInterviewHistory,},
         // INTERVIEW: { visible: true },
         VIEW_CV: { visible: true },
         NOTES: { visible: true },
@@ -465,6 +519,7 @@ export function getActionVisibilityConfig(
         REJECT: { visible: true },
         HIRE: { visible: false },
         VIEW_EVALUATION: { visible: true, condition: CONDITIONS.hasEvaluatorResponse },
+        INTERVIEW_HISTORY: { visible: true, condition: CONDITIONS.hasInterviewHistory,},
         // INTERVIEW: { visible: true },
         ONHOLD: { visible: true },
         VIEW_CV: { visible: true },

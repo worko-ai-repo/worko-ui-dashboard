@@ -121,6 +121,8 @@ const MainContent: React.FC<MainContentProps> = ({
     data: null,
     candidateName: "",
   });
+  const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("")
+  const [hrName, setHrName] = useState<string>("");
 
   useEffect(() => {
     if (!EvaluationRequestDetails?.email || !EvaluationRequestDetails?.applicantUserId) {
@@ -290,6 +292,7 @@ const MainContent: React.FC<MainContentProps> = ({
         const sessionEmail = payload.email.toLowerCase();
 
         const details = await fetchEvaluationDetails(jobApplicationId, evaluationRequestId);
+        setHrName(details.hrName)
         const expectedEmail = details.evaluatorDetails.email.toLowerCase();
 
         if (sessionEmail !== expectedEmail) {
@@ -394,6 +397,7 @@ const MainContent: React.FC<MainContentProps> = ({
             expandedSection={expandedSection}
             setExpandedCard={setExpandedCard}
             setExpandedSection={setExpandedSection}
+            setJobApplicationIdFromChild={setJobApplicationIdFromChild}
           />
         ))}
 
@@ -406,11 +410,13 @@ const MainContent: React.FC<MainContentProps> = ({
               candidateName: "",
             })
           }
-          className="w-[400px] h-[450px]"
+          className="w-full sm:w-[500px] h-full ml-auto"
+          classNameHeight="max-h-[100vh]"
         >
           <InterviewDetailsModal
             data={interviewModal.data}
             candidateName={interviewModal.candidateName}
+            hrName={hrName}
             onClose={() =>
               setInterviewModal({
                 isOpen: false,
@@ -418,6 +424,7 @@ const MainContent: React.FC<MainContentProps> = ({
                 candidateName: "",
               })
             }
+            jobApplicationIdFromChild={jobApplicationIdFromChild}
           />
         </Modal>
 

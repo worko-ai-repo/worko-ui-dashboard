@@ -9,7 +9,7 @@ interface Props {
   jobApplication: JobApplicationDetailsDto;
   initialScheduledAt?: Date | null;
   onClose: () => void;
-  onSubmit: (scheduledAt: Date) => void;
+  onSubmit: (scheduledAt: Date) => void | Promise<void>;
 }
 
 const RescheduleInterviewSidebar: React.FC<Props> = ({
@@ -26,6 +26,7 @@ const RescheduleInterviewSidebar: React.FC<Props> = ({
 
   const [date, setDate] = useState<Date | null>(initialScheduledAt ?? null);
   const [time, setTime] = useState<string>(getTimeValue(initialScheduledAt ?? null));
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   const buildScheduledAt = () => {
     if (!date || !time) return null;
@@ -35,7 +36,7 @@ const RescheduleInterviewSidebar: React.FC<Props> = ({
     return next;
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const scheduledAt = buildScheduledAt();
     if (!scheduledAt) return;
     const now = new Date();
@@ -51,9 +52,15 @@ const RescheduleInterviewSidebar: React.FC<Props> = ({
     ) {
         return;
     }
-  
-    onSubmit(scheduledAt);
-    onClose();
+    setIsSubmitting(true)
+    try {
+      await Promise.resolve(onSubmit(scheduledAt));
+      onClose();
+    } catch (error){
+      console.error(error,"Error while Rescheduling interview")
+    } finally {
+      setIsSubmitting(false)
+    }
   };
 
   return (
@@ -74,6 +81,7 @@ const RescheduleInterviewSidebar: React.FC<Props> = ({
               minDate={new Date()}
               dateFormat="dd MMM yyyy"
               className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              popperPlacement="right"
             />
           </div>
 
@@ -97,10 +105,14 @@ const RescheduleInterviewSidebar: React.FC<Props> = ({
           Cancel
         </button>
         <button
+          disabled={isSubmitting}
           onClick={handleSubmit}
-          className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg"
-        >
-          Submit
+          className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition
+            ${isSubmitting
+              ? "bg-indigo-300 cursor-not-allowed opacity-70"
+              : "bg-indigo-600 hover:bg-indigo-700"}`}
+          >
+          {isSubmitting ? "Submitting" :"Submit"}
         </button>
       </div>
     </div>

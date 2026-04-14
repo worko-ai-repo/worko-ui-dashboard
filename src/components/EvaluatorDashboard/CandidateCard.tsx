@@ -28,6 +28,7 @@ interface CandidateCardProps {
   expandedSection: "about" | "worko" | "note" | null;
   setExpandedCard: (id: string | null) => void;
   setExpandedSection: (section: "about" | "worko" | "note" | null) => void;
+  setJobApplicationIdFromChild : (data:string) => void;
 }
 
 const CandidateCard: React.FC<CandidateCardProps> = ({
@@ -40,6 +41,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
   expandedSection,
   setExpandedCard,
   setExpandedSection,
+  setJobApplicationIdFromChild,
 }) => {
   const details = item.details;
   const candidate = item.candidate || {};
@@ -235,7 +237,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
 
         {/* Company */}
         {application?.companyName && (
-            <p className="flex items-center gap-1 text-left text-[14px] text-slate-600">
+            <p className="flex items-center gap-1 text-left text-[12px] text-slate-600">
             <Building2 className="w-4 h-4 text-slate-500" />
             {application?.companyName}
             </p>
@@ -243,7 +245,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
 
         {/* Role */}
         {details?.jobTitle && (
-            <p className="flex items-center gap-1 text-left text-[14px] text-slate-600">
+            <p className="flex items-center gap-1 text-left text-[12px] text-slate-600">
             <Briefcase className="w-4 h-4 text-slate-500" />
             {details.jobTitle}
             </p>
@@ -298,15 +300,18 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
                 Submit Feedback
             </button>
             )}
-
+        {item.canViewInterview && (
         <button
-          onClick={() =>
+          onClick={() =>{
             onViewInterview?.(interviewDetails, candidate.name || "")
+            setJobApplicationIdFromChild(item?.request?.jobApplicationId)
+          }
           }
           className="p-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 text-[10px]"
         >
           View Interview
         </button>
+        )}
         </div>
         </div>
     </div>

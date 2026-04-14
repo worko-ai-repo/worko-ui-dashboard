@@ -281,6 +281,9 @@ export interface JobApplicationDetailsDto {
   }>;
   scoreDetailsForApplicant:string;
   isFindMatchingScoreInProgress:boolean;
+  latestInterviewRoundId?:string;
+  interviewRoundCount?:string;
+  activeInterviewRoundId?:string;
 }
 
 export type JobApplicationDocumentStatusType =

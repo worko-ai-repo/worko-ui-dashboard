@@ -426,3 +426,21 @@ export interface CursorPaginationResumeScreeningRecordsParams {
   corporateBulkJdId: string;
   lastKey?: string;
 }
+
+/** POST /user-job-applications/:applicationId/interviews */
+export interface ScheduleInterviewPayload {
+  organizerEmail:string;
+  interviewType: string;
+  startTime: string;
+  endTime: string;
+  attendees: {
+    type: "EVALUATOR" | "EXTERNAL";
+    userId?: string;
+    email: string;
+    name: string;
+  }[];
+  recruiterNote?: string;
+  ruleForCandidate?: string;
+  jobTitle: string,
+  companyName: string,
+}

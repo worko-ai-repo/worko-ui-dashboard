@@ -5,7 +5,7 @@ interface CancelInterviewSidebarProps {
   jobApplication: JobApplicationDetailsDto;
   roundNumber: number;
   onClose: () => void;
-  onSubmit: (payload: { reason: string; feedback: string }) => void;
+  onSubmit: (payload: { reason: string; feedback: string }) => void | Promise<void>;
 }
 
 const REASONS = [
@@ -22,10 +22,23 @@ const CancelInterviewSidebar: React.FC<CancelInterviewSidebarProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [reason, setReason] = useState<string>(REASONS[0]);
+  const [reason, setReason] = useState<string>("");
   const [feedback, setFeedback] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const isValid = useMemo(() => Boolean(reason?.trim()), [reason]);
+  // const isValid = useMemo(() => Boolean(reason?.trim()), [reason]);
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      await Promise.resolve(onSubmit({ reason: reason.trim(), feedback: feedback.trim() }));
+      onClose();
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
+  };
 
   return (
     <div className="flex flex-col h-full bg-white">
@@ -79,13 +92,13 @@ const CancelInterviewSidebar: React.FC<CancelInterviewSidebarProps> = ({
         </button>
         <button
           type="button"
-          disabled={!isValid}
-          onClick={() => onSubmit({ reason: reason.trim(), feedback: feedback.trim() })}
+          disabled={isSubmitting}
+          onClick={handleSubmit}
           className={`px-4 py-2 text-sm font-semibold text-white rounded-lg ${
-            isValid ? "bg-red-600 hover:bg-red-700" : "bg-red-300 cursor-not-allowed"
+            isSubmitting ? "bg-red-300 cursor-not-allowed" : "bg-red-600 hover:bg-red-700"
           }`}
         >
-          Confirm Cancel
+          {isSubmitting ? "Cancelling" : "Cancel"}
         </button>
       </div>
     </div>

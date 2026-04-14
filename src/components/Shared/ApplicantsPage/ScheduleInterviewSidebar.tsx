@@ -1,34 +1,98 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
+import { ScheduleInterviewPayload } from "@Interfaces/CorporateServices.dto";
 import { Info } from "lucide-react";
 import { toast } from "react-toastify";
 import { getToastOptions } from "lib-worko-ui";
 import CorporateServiceObj from "@Components/Dashboard/Corporate/Services/Corporate.service";
+import CancelInterviewSidebar from "@Components/Shared/ApplicantsPage/CancelInterviewSidebar";
+import RescheduleInterviewSidebar from "@Components/Shared/ApplicantsPage/RescheduleInterviewSidebar";
+import InterviewSubmissionSidebar from "@Components/Shared/ApplicantsPage/InterviewSubmissionSidebar";
+import { useAppContext } from "@Context/App.context";
+import { Attendee, InterviewItem } from "./InterviewHistorySidebar";
+import httpServiceObj from "@Services/ApiHandler.service";
+import { string } from "@tensorflow/tfjs-core";
 
-interface ExtraInterviewer {
-  name: string;
+type InterviewItemWithCustom = InterviewItem & {
+  customInterviewType?: string;
+};
+
+interface EvaluatorDetails {
+  cognitoUserId: string;
   email: string;
+  name: string;
 }
 
-export interface InterviewRound {
-  id: string;
-  roundNumber: number;
-  scheduledAt: Date | null;
-  interviewType: string;
-  recruiterNote?: string;
-  rules: string;
-  extraInterviewers: ExtraInterviewer[];
-  feedbackSubmitted?: boolean;
-  feedbackNotes?: string;
-  feedbackRating?: number | null;
-  joiningLink?:string;
-  interviewStatus?: "SCHEDULED" | "CANCELLED";
-  cancelReason?: string;
-  cancelFeedback?: string;
-  cancelledAt?: Date | null;
-  customInterviewType?: string;
+const PREDEFINED_INTERVIEW_TYPES = new Set([
+  "HR Round",
+  "Technical Round",
+  "Cultural Round",
+  "Business Understanding Round",
+  "Product Understanding Round",
+]);
+
+function mapInterviewToWithCustom(item: InterviewItem): InterviewItemWithCustom {
+  const t = item.interviewType?.trim() || "";
+  if (!t) return { ...item };
+  if (PREDEFINED_INTERVIEW_TYPES.has(t)) {
+    return { ...item, customInterviewType: undefined };
+  }
+  return {
+    ...item,
+    interviewType: "__OTHER__",
+    customInterviewType: t,
+  };
+}
+
+function dedupeAttendeesByEmail(
+  attendees: Attendee[]
+): Attendee[] {
+  const seen = new Set<string>();
+  return attendees.filter((a) => {
+    const email = a.email.toLowerCase().trim();
+    if (seen.has(email)) return false;
+    seen.add(email);
+    return true;
+  });
+}
+
+function createDraftRound(
+  jobApplication: JobApplicationDetailsDto,
+  roundNumber: number
+): InterviewItemWithCustom {
+  const draftId = `temp-${roundNumber}-${Date.now()}`;
+  return {
+    id: draftId,
+    createdAt: "",
+    updatedAt: "",
+    jobId: jobApplication.jobId || "",
+    companyId: jobApplication.companyId || "",
+    applicantEmail: jobApplication.applicantDetails?.email || "",
+    applicantName: jobApplication.applicantDetails?.name || "",
+    applicantId: "",
+    organizerId: "",
+    organizerEmail: "",
+    roundNumber,
+    status: "SCHEDULED",
+    scheduledAt: "",
+    endAt: "",
+    timezone: "",
+    meetingProvider: "",
+    meetingLink: "",
+    providerEventId: "",
+    completion: {},
+    updatedByUserId: "",
+    attendees: [],
+    recruiterNote: "",
+    ruleForCandidate: "",
+    cancellationReason: "",
+    applicationId: jobApplication.id,
+    interviewType: "",
+    jobTitle: jobApplication.jobTitle,
+    companyName: jobApplication.companyName ?? "",
+  };
 }
 
 type RoundDraftSchedule = {
@@ -39,46 +103,18 @@ type RoundDraftSchedule = {
 interface ScheduleInterviewSidebarProps {
   jobApplication: JobApplicationDetailsDto;
   onClose: () => void;
-  /**
-   * Optional existing rounds from API once available
-   */
-  existingRounds?: InterviewRound[];
-  onRoundsChange?: (rounds: InterviewRound[]) => void;
-  /**
-   * Opens feedback sidebar for a specific round
-   */
-  onOpenFeedbackSidebar?: (roundId: string) => void;
-  onOpenCancelSidebar?: () => void;
-  onOpenRescheduleSidebar?: () => void;
+  localUpdate: (jobId: string, updatedData: any) => void;
 }
+
+type SidePanel = "main" | "cancel" | "reschedule" | "feedback";
 
 export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> = ({
   jobApplication,
   onClose,
-  existingRounds = [],
-  onOpenFeedbackSidebar,
-  onRoundsChange,
-  onOpenCancelSidebar,
-  onOpenRescheduleSidebar,
+  localUpdate
 }) => {
-  const [rounds, setRounds] = useState<InterviewRound[]>(() => {
-    if (!existingRounds.length) {
-      return [
-        {
-          id: "round-1",
-          roundNumber: 1,
-          scheduledAt: null,
-          interviewType: "",
-          rules: "",
-          extraInterviewers: [],
-          feedbackSubmitted: false,
-        },
-      ];
-    }
-
-    return existingRounds;
-  });
-
+  const {userDetails}=useAppContext();
+  const [rounds, setRounds] = useState<InterviewItemWithCustom[]>([]);
   const [activeRoundId, setActiveRoundId] = useState<string>(rounds[0]?.id);
   const activeRound = useMemo(
     () => rounds.find((r) => r.id === activeRoundId) ?? rounds[0],
@@ -93,26 +129,35 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
 
   const [extraInterviewerName, setExtraInterviewerName] = useState("");
   const [extraInterviewerEmail, setExtraInterviewerEmail] = useState("");
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+  // const [draftScheduleByRoundId, setDraftScheduleByRoundId] = useState<
+  //   Record<string, RoundDraftSchedule>
+  // >(() => {
+  //   const initial: Record<string, RoundDraftSchedule> = {};
+  //   (existingRounds.length ? existingRounds : rounds).forEach((r) => {
+  //     initial[r.id] = { date: null, time: "" };
+  //   });
+  //   return initial;
+  // });
   const [draftScheduleByRoundId, setDraftScheduleByRoundId] = useState<
     Record<string, RoundDraftSchedule>
-  >(() => {
-    const initial: Record<string, RoundDraftSchedule> = {};
-    (existingRounds.length ? existingRounds : rounds).forEach((r) => {
-      initial[r.id] = { date: null, time: "" };
-    });
-    return initial;
-  });
-
-  const now = useMemo(() => new Date(), []);
-  const [isReschedulingLatestRound, setIsReschedulingLatestRound] = useState(false);
+  >({});
+  const now = new Date();
   const [emailError, setEmailError] = useState("");
   const [evaluatorSuggestions, setEvaluatorSuggestions] = useState<
-    { email: string; name: string }[]
+    { email: string; name: string; userId: string }[]
   >([]);
 
   const [filteredSuggestions, setFilteredSuggestions] = useState<
-    { email: string; name: string }[]
+    { email: string; name: string; userId: string }[]
   >([]);
+
+  const [sidePanel, setSidePanel] = useState<SidePanel>("main");
+  const [feedbackRoundId, setFeedbackRoundId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeEvaluatorId, setActiveEvaluatorId] = useState<string | null>(null);
+  const suggestionRef = useRef<HTMLDivElement | null>(null);
 
   const isValidEmail = (email: string) => {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -124,6 +169,7 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
     if (!value) {
       setEmailError("");
       setFilteredSuggestions([]);
+      return;
     } else if (!isValidEmail(value)) {
       setEmailError("Invalid email");
     } else {
@@ -153,6 +199,7 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
           .map((evaluator) => ({
             email: evaluator?.createdByUserEmail?.trim(),
             name: evaluator?.evaluatorName?.trim(),
+            userId: evaluator?.id,
           }))
           .filter((e) => e.email); // remove invalid
 
@@ -168,10 +215,11 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
   const handleSelectSuggestion = (suggestion: {
     email: string;
     name: string;
+    userId?: string;
   }) => {
     setExtraInterviewerEmail(suggestion.email);
     setExtraInterviewerName(suggestion.name);
-
+    setSelectedUserId(suggestion.userId);
     // ✅ FIX: revalidate email
     if (!isValidEmail(suggestion.email)) {
       setEmailError("Invalid email");
@@ -209,16 +257,18 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
     }));
   };
 
-  const buildScheduledAtFromDraft = (roundId: string): Date | null => {
+  const buildStartTimeFromDraft = (roundId: string): string | null => {
     const draft = draftScheduleByRoundId[roundId];
     if (!draft?.date || !draft?.time) return null;
+
     const [hh, mm] = draft.time.split(":").map((v) => Number(v));
     const next = new Date(draft.date);
     next.setHours(hh || 0, mm || 0, 0, 0);
-    return next;
+
+    return next.toISOString(); // ✅ full ISO
   };
 
-  const handleRoundFieldChange = (patch: Partial<InterviewRound>) => {
+  const handleRoundFieldChange = (patch: Partial<InterviewItemWithCustom>) => {
     if (!activeRound) return;
     setRounds((prev) =>
       prev.map((round) => (round.id === activeRound.id ? { ...round, ...patch } : round))
@@ -234,17 +284,30 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
       setEmailError("Invalid email");
       return;
     }
+    const alreadyExists = (activeRound.attendees || []).some(
+      (a) => a.email.toLowerCase().trim() === extraInterviewerEmail.toLowerCase().trim()
+    );
+
+    if (alreadyExists) {
+      toast.error("This email has already been added", getToastOptions({}));
+      return;
+    }
+
     setRounds((prev) =>
       {
         const updated = prev.map((round) =>
           round.id === activeRound.id
             ? {
                 ...round,
-                extraInterviewers: [
-                  ...round.extraInterviewers,
+                attendees: [
+                  ...(round.attendees || []),
                   {
+                    type: (selectedUserId ? "EVALUATOR" : "EXTERNAL") as
+                      | "EVALUATOR"
+                      | "EXTERNAL",
                     name: extraInterviewerName.trim(),
                     email: extraInterviewerEmail.trim(),
+                    ...(selectedUserId ? { userId: selectedUserId } : {}),
                   },
                 ],
               }
@@ -256,22 +319,38 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
 
     setExtraInterviewerName("");
     setExtraInterviewerEmail("");
+    setSelectedUserId(undefined);
   };
 
   const canAddNextRound = useMemo(() => {
     if (!rounds.length) return false;
+
     const lastRound = rounds[rounds.length - 1];
-    if (lastRound.interviewStatus === "CANCELLED") return true;
+
+    // allow if cancelled
+    if (lastRound.status === "CANCELLED") return true;
+
     if (!lastRound.scheduledAt) return false;
+
     const now = new Date();
-    const timePassed = lastRound.scheduledAt.getTime() <= now.getTime();
-    return Boolean(lastRound.feedbackSubmitted && timePassed);
+    const timePassed =
+      new Date(lastRound.scheduledAt).getTime() <= now.getTime();
+
+    const organizerCompletion = lastRound.completion?.organizer;
+
+    const feedbackDone =
+      lastRound.status === "COMPLETED" &&
+      Boolean(organizerCompletion?.feedback?.trim()) &&
+      organizerCompletion?.rating !== null &&
+      organizerCompletion?.rating !== undefined;
+
+    return Boolean(timePassed && feedbackDone);
   }, [rounds]);
 
   const latestJoinLink = useMemo(() => {
     if (!rounds.length) return "";
     const latest = rounds[rounds.length - 1];
-    return latest.joiningLink || "";
+    return latest.meetingLink || "";
   }, [rounds]);
 
   const handleJoin = () => {
@@ -279,147 +358,443 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
     window.open(latestJoinLink, "_blank", "noopener,noreferrer");
   };
 
-  const handleRescheduleLatestRound = () => {
-    if (!latestRound) return;
-    const scheduledAt = buildScheduledAtFromDraft(latestRound.id);
-    if (!scheduledAt) return;
-
-    const updatedRounds = rounds.map((round) =>
-      round.id === latestRound.id
-        ? {
-            ...round,
-            scheduledAt,
-          }
-        : round
-    );
-
-    setRounds(updatedRounds);
-    onRoundsChange?.(updatedRounds);
-    setIsReschedulingLatestRound(false);
-  };
-
   const handleAddNextRound = () => {
     if (!canAddNextRound) return;
-    const nextNumber = rounds.length + 1;
-    const id = `round-${nextNumber}`;
-    const newRound: InterviewRound = {
-      id,
-      roundNumber: nextNumber,
-      scheduledAt: null,
-      interviewType: "",
-      rules: "",
-      extraInterviewers: [],
-      feedbackSubmitted: false,
-    };
+    const nextNumber = rounds.length
+      ? Math.max(...rounds.map((r) => r.roundNumber)) + 1
+      : 1;
+    const newRound = createDraftRound(jobApplication, nextNumber);
     setRounds((prev) => [...prev, newRound]);
     setDraftScheduleByRoundId((prev) => ({
       ...prev,
-      [id]: { date: null, time: "" },
+      [newRound.id]: { date: null, time: "" },
     }));
-    setActiveRoundId(id);
+    setActiveRoundId(newRound.id);
   };
 
-  const removeDuplicateInterviewersByEmail = (interviewers: ExtraInterviewer[]) => {
-    const seen = new Set<string>();
+  const handleScheduleSubmit = async () => {
+    if (!latestRound) return;
 
-    return interviewers.filter((interviewer) => {
-      const email = interviewer.email.toLowerCase().trim();
+    const startTime = buildStartTimeFromDraft(latestRound.id);
+    if (!startTime) {
+      toast.error("Please select date and time", getToastOptions({}));
+      return;
+    }
 
-      if (seen.has(email)) {
-        return false; //  remove duplicate
-      }
+    if (new Date(startTime).getTime() < new Date().getTime()) {
+      toast.error("Selected date and time cannot be in the past", getToastOptions({}));
+      return;
+    }
 
-      seen.add(email);
-      return true; //  keep first
-    });
-  };
+    const resolvedInterviewType =
+      latestRound.interviewType === "__OTHER__"
+        ? (latestRound.customInterviewType || "").trim()
+        : (latestRound.interviewType || "").trim();
 
-  const handleSubmitAll = () => {
-      if (activeRound) {
-        const scheduledAt = buildScheduledAtFromDraft(activeRound.id);
+    if (!resolvedInterviewType) {
+      toast.error("Please select an interview type", getToastOptions({}));
+      return;
+    }
+    setIsSubmitting(true)
+    const endTime = new Date(startTime);
+    endTime.setMinutes(endTime.getMinutes() + 60);
 
-      if (scheduledAt && scheduledAt.getTime() < new Date().getTime()) {
-        toast.error("Selected date and time cannot be in the past",getToastOptions({}));
-        return;
+    const attendees = dedupeAttendeesByEmail(latestRound.attendees || []);
+
+    const newAttendees = await Promise.all(
+      attendees.map(async (attendees) => {
+      if(attendees.type === "EVALUATOR"){
+        const {response,error} = await httpServiceObj.get<EvaluatorDetails>(`/evaluator-detail/${attendees?.email}/email`,true,{},false,"JOB")
+        if(response?.cognitoUserId) return {...attendees, userId: response.cognitoUserId}
+        if (error) {
+          const { userId, ...rest } = attendees;
+          return rest;
         }
       }
+      return attendees
+    }))
 
-      // Identify latest round
-      const latestRoundId = rounds[rounds.length - 1]?.id;
+    const payload: ScheduleInterviewPayload = {
+      organizerEmail:userDetails?.email ?? "",
+      jobTitle: jobApplication?.jobTitle,
+      companyName: jobApplication?.companyName,
+      interviewType: resolvedInterviewType,
+      startTime,
+      endTime: endTime.toISOString(),
+      attendees: newAttendees,
+      recruiterNote: (latestRound.recruiterNote ?? "").trim() || undefined,
+      ruleForCandidate: (latestRound.ruleForCandidate ?? "").trim() || undefined,
+    };
+    
+    const tempId = latestRound.id;
 
-      // Clean duplicates ONLY in latest round
-      const cleanedRounds = rounds.map((round) => {
-        if (round.id !== latestRoundId) return round;
+    try {
+      const { response, error } = await CorporateServiceObj.scheduleInterview(
+        jobApplication.id,
+        payload
+      );
 
-        return {
-          ...round,
-          extraInterviewers: removeDuplicateInterviewersByEmail(
-            round.extraInterviewers
-          ),
-        };
+      if (error) {
+        toast.error(error.message || "Failed to schedule interview", getToastOptions({}));
+        return;
+      }
+
+      if (!response) {
+        toast.error("Failed to schedule interview", getToastOptions({}));
+        return;
+      }
+      
+      if (rounds.length === 1 && !latestRound?.scheduledAt) {
+        localUpdate(jobApplication.id,{interviewRoundCount:1})
+      }
+
+      const responseData = response as any;
+
+      toast.success("Interview scheduled successfully", getToastOptions({}));
+
+      setRounds((prev) =>
+        prev.map((round) =>
+          round.id === tempId
+            ? mapInterviewToWithCustom({
+                ...round,
+                ...responseData,
+                id: responseData.id || responseData.interviewId || tempId,
+                scheduledAt:
+                  responseData.scheduledAt || responseData.startTime || startTime,
+                endAt: responseData.endAt || responseData.endTime || endTime.toISOString(),
+                attendees: responseData.attendees || round.attendees || [],
+                rating:
+                  responseData.rating === null ? undefined : responseData.rating,
+              })
+            : round
+        )
+      );
+
+      setActiveRoundId(responseData.id || responseData.interviewId || tempId);
+      setDraftScheduleByRoundId((prev) => {
+        const next = { ...prev };
+        delete next[tempId];
+        next[responseData.id || responseData.interviewId || tempId] = { date: null, time: "" };
+        return next;
       });
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to schedule interview", getToastOptions({}));
+    } finally {
+      setIsSubmitting(false)
+    }
+  };
 
-    // Commit only unscheduled rounds that have valid draft date+time
-    const committedRounds = cleanedRounds.map((r) => {
-      if (r.scheduledAt) return r;
-      const scheduledAt = buildScheduledAtFromDraft(r.id);
-      if (!scheduledAt) return r;
-      return {
-        ...r,
-        scheduledAt,
-      };
+  const handleCancelInterviewConfirm = async ({
+    reason,
+    feedback,
+  }: {
+    reason: string;
+    feedback: string;
+  }) => {
+    if (!jobApplication?.id || !latestRound?.id) return;
+
+    const response = await CorporateServiceObj.cancelInterview(
+      jobApplication.id,
+      latestRound.id,
+      {
+        cancellationReason: reason,
+        cancellationFeedback: feedback || undefined,
+      }
+    );
+
+    if (!response) {
+      toast.error("Failed to cancel interview", getToastOptions({}));
+      return;
+    }
+
+    setRounds((prev) =>
+      prev.map((r) =>
+        r.id === latestRound.id
+          ? mapInterviewToWithCustom({
+              ...r,
+              ...response,
+              status: "CANCELLED",
+              cancellationReason: reason,
+              cancellationFeedback: feedback,
+            })
+          : r
+      )
+    );
+
+    toast.success("Interview cancelled", getToastOptions({}));
+    setSidePanel("main");
+  };
+
+  const handleRescheduleConfirm = async (scheduledAt: Date) => {
+    if (!jobApplication?.id || !latestRound?.id) return;
+
+  const endTime = new Date(scheduledAt);
+  endTime.setMinutes(endTime.getMinutes() + 60);
+
+  const response = await CorporateServiceObj.rescheduleInterview(
+    jobApplication.id,
+    latestRound.id,
+    {
+      startTime: scheduledAt.toISOString(),
+      endTime: endTime.toISOString(),      
+    }
+  );
+
+    if (!response) {
+      toast.error("Failed to reschedule interview", getToastOptions({}));
+      return;
+    }
+    const responseData = response as any;
+
+    setRounds((prev) =>
+      prev.map((r) =>
+        r.id === latestRound.id
+          ? mapInterviewToWithCustom({
+              ...r,
+              ...responseData,
+              id: responseData.id || responseData.interviewId || r.id,
+              scheduledAt:
+                responseData.scheduledAt ||
+                responseData.startTime ||
+                scheduledAt.toISOString(),
+              endAt: responseData.endAt || responseData.endTime || endTime.toISOString(),
+              status: responseData.status || r.status,
+              rating: responseData.rating === null ? undefined : responseData.rating,
+            })
+          : r
+      )
+    );
+
+    toast.success("Interview rescheduled", getToastOptions({}));
+    setSidePanel("main");
+  };
+
+  const handleFeedbackSubmitted = async ({
+    roundId,
+    feedback,
+    rating,
+  }: {
+    roundId: string;
+    feedback: string;
+    rating: number | null;
+  }) => {
+    if (!jobApplication?.id) return;
+
+    const response = await CorporateServiceObj.completeInterview(jobApplication.id, roundId, {
+      organizer:{
+        feedback,
+        rating,
+      }
     });
 
-    const payload = {
-      jobApplicationId: jobApplication.id,
-      jobId: jobApplication.jobId,
-      applicantName: jobApplication.applicantDetails?.name,
-      applicantEmail: jobApplication.applicantDetails?.email,
-      rounds: committedRounds.map((round) => ({
-        roundNumber: round.roundNumber,
-        scheduledAt: round.scheduledAt,
-        interviewType: round.interviewType === "__OTHER__"
-                      ? (round.customInterviewType || "").trim()
-                      : round.interviewType.trim(),
-        recruiterNote: (round.recruiterNote ?? "").trim(),
-        rules: round.rules.trim(),
-        extraInterviewers: round.extraInterviewers,
-        feedbackSubmitted: round.feedbackSubmitted ?? false,
-        feedbackNotes: round.feedbackNotes ?? "",
-        feedbackRating: round.feedbackRating ?? null,
-      })),
-    };
+    if (!response) {
+      toast.error("Failed to submit feedback", getToastOptions({}));
+      throw new Error("complete failed");
+    }
 
-    // Placeholder for future API integration
-    // Replace this console.log with API call when ready
-    // e.g. AdminServiceObj.scheduleInterviewRounds(payload)
-    // or interviewService.scheduleInterviewRounds(payload)
-    // eslint-disable-next-line no-console
-    console.log("Schedule Interview Rounds Payload:", payload);
+    setRounds((prev) =>
+      prev.map((r) =>
+        r.id === roundId
+          ? mapInterviewToWithCustom({
+              ...r,
+              ...response,
+              feedback: feedback || r.feedback,
+              rating: rating ?? r.rating,
+            })
+          : r
+      )
+    );
 
-    onRoundsChange?.(committedRounds);
-    onClose();
+    toast.success("Feedback submitted", getToastOptions({}));
+    setSidePanel("main");
+    setFeedbackRoundId(null);
   };
 
   useEffect(() => {
-    if (existingRounds.length === 0) return;
-    setRounds(existingRounds);
-    setDraftScheduleByRoundId((prev) => {
-      const next = { ...prev };
-      existingRounds.forEach((r) => {
-        if (!next[r.id]) next[r.id] = { date: null, time: "" };
-      });
-      return next;
-    });
-    if (!existingRounds.some((r) => r.id === activeRoundId)) {
-      setActiveRoundId(existingRounds[0]?.id);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [existingRounds]);
+    const fetchRounds = async () => {
+      try {
+        setIsLoading(true);
+        if (!jobApplication?.id) return;
+
+        const response = await CorporateServiceObj.getInterviewsByApplicationId(
+          jobApplication.id
+        );
+
+        const items = response?.data || [];
+
+        const mappedRounds: InterviewItemWithCustom[] = items.map((item) =>
+          mapInterviewToWithCustom(item)
+        ).sort((a, b) => (a.roundNumber ?? 0) - (b.roundNumber ?? 0)) // sort ascending
+
+        if (mappedRounds.length === 0) {
+          const draft = createDraftRound(jobApplication, 1);
+          setRounds([draft]);
+          setActiveRoundId(draft.id);
+          setDraftScheduleByRoundId((prev) => ({
+            ...prev,
+            [draft.id]: { date: null, time: "" },
+          }));
+          return;
+        }
+
+        // adding evalutor name and email in completion.evaluators object 
+        const enrichedItems = mappedRounds.map((round, index) => {
+          const originalItem = items[index];
+
+          const attendeeMap = Object.fromEntries(
+            (originalItem?.attendees || [])
+              .filter((a) => a.type === "EVALUATOR" && a.userId)
+              .map((a) => [
+                a.userId,
+                { name: a.name, email: a.email },
+              ])
+          );
+
+          const evaluators = (round.completion?.evaluators || {}) as Record<string, any>;
+
+          const enrichedEvaluators = Object.fromEntries(
+            Object.entries(evaluators).map(([userId, evalData]) => [
+              userId,
+              {
+                ...evalData,
+                name: attendeeMap[userId]?.name || null,
+                email: attendeeMap[userId]?.email || null,
+              },
+            ])
+          );
+
+          return {
+            ...round,
+            completion: {
+              ...round.completion,
+              evaluators: enrichedEvaluators,
+            },
+          };
+        });
+        
+        setRounds(enrichedItems);
+        setActiveRoundId(mappedRounds[0]?.id);
+
+        setDraftScheduleByRoundId((prev) => {
+          const next = { ...prev };
+          mappedRounds.forEach((r) => {
+            if (!next[r.id]) next[r.id] = { date: null, time: "" };
+          });
+          return next;
+        });
+      } catch (error) {
+        console.error("Failed to fetch interviews", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchRounds();
+  }, [jobApplication?.id]);
+
+  const openFeedbackForRound = (roundId: string) => {
+    setFeedbackRoundId(roundId);
+    setSidePanel("feedback");
+  };
+
+  const handleRemoveInterviewer = (email: string) => {
+    if (!activeRound) return;
+
+    setRounds((prev) =>
+      prev.map((round) =>
+        round.id === activeRound.id
+          ? {
+              ...round,
+              attendees: (round.attendees || []).filter(
+                (a) => a.email !== email
+              ),
+            }
+          : round
+      )
+    );
+  };
+
+  const evaluators = activeRound?.completion?.evaluators
+  ? Object.entries(activeRound.completion.evaluators)
+  : [];
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        suggestionRef.current &&
+        !suggestionRef.current.contains(e.target as Node)
+      ) {
+        setFilteredSuggestions([]);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("click", handleClickOutside);
+    };
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full bg-white">
+        <div className="w-full max-w-md p-6 border border-gray-200 rounded-2xl shadow-sm bg-gray-50 animate-pulse space-y-4">
+        
+          <div className="h-4 w-40 bg-gray-200 rounded" />
+
+          <div className="h-3 w-28 bg-gray-200 rounded" />
+
+          <div className="space-y-3 mt-4">
+            <div className="h-10 bg-gray-200 rounded-lg" />
+            <div className="h-10 bg-gray-200 rounded-lg" />
+            <div className="h-10 bg-gray-200 rounded-lg" />
+          </div>
+
+          <div className="h-10 w-28 bg-gray-200 rounded-lg mt-4" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full bg-white">
-      <div className="flex items-center justify-between px-3 py-4 border-b">
+      {sidePanel === "cancel" && latestRound && (
+        <CancelInterviewSidebar
+          jobApplication={jobApplication}
+          roundNumber={latestRound.roundNumber}
+          onClose={() => setSidePanel("main")}
+          onSubmit={handleCancelInterviewConfirm}
+        />
+      )}
+
+      {sidePanel === "reschedule" && latestRound && (
+        <RescheduleInterviewSidebar
+          jobApplication={jobApplication}
+          initialScheduledAt={
+            latestRound.scheduledAt ? new Date(latestRound.scheduledAt) : null
+          }
+          onClose={() => setSidePanel("main")}
+          onSubmit={handleRescheduleConfirm}
+        />
+      )}
+
+      {sidePanel === "feedback" && feedbackRoundId && (
+        <InterviewSubmissionSidebar
+          name = {jobApplication.applicantDetails?.name}
+          jobTitle = {jobApplication.jobTitle}
+          // jobApplication={jobApplication}
+          roundId={feedbackRoundId}
+          onClose={() => {
+            setSidePanel("main");
+            setFeedbackRoundId(null);
+          }}
+          onSubmitted={handleFeedbackSubmitted}
+        />
+      )}
+
+      {sidePanel === "main" && (
+        <>
+      <div className="flex items-center justify-between py-2 border-b">
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Schedule Interview</h2>
           <p className="mt-1 text-xs text-gray-500">
@@ -428,7 +803,7 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+      <div className="flex-1 overflow-y-auto py-2 space-y-6">
         {/* Rounds header */}
         <div className="flex items-center justify-between mb-2">
           <div className="flex gap-2 flex-wrap">
@@ -466,6 +841,7 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
             </button>
             ))}
           </div>
+          {rounds.length < 5 && 
           <button
             type="button"
             onClick={handleAddNextRound}
@@ -480,76 +856,115 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
             }`}
           >
             Add Next Round
-          </button>
+          </button>}
         </div>
 
         {activeRound && (
           <>
-            {activeRound.scheduledAt && !isReschedulingLatestRound ? (
-              <div className="space-y-3 p-4 border border-gray-200 rounded-lg bg-gray-50">
-                <div>
-                  <p className="text-xs font-medium text-gray-500">
-                    Round {activeRound.roundNumber}
-                  </p>
-                  <div className="flex items-center gap-2 mt-1">
+            {activeRound.scheduledAt ? (
+              <div className="space-y-3">
+                {/* <div className="space-y-3 p-4 border border-gray-200 rounded-lg bg-gray-50"> */}
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="p-2 border border-gray-200 rounded-lg bg-white">
+                  <div className="flex items-center justify-start mb-1 gap-3">
+                    <p className="text-xs font-semibold text-blue-500">
+                      Status & Time
+                    </p>
+
                     <span
                       className={`px-2 py-0.5 rounded-full text-[0.65rem] font-semibold ${
-                        activeRound.interviewStatus === "CANCELLED"
+                        activeRound?.status === "CANCELLED"
                           ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
+                          : activeRound?.status === "COMPLETED"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-blue-100 text-blue-700"
                       }`}
                     >
-                      {activeRound.interviewStatus === "CANCELLED" ? "Cancelled" : "Scheduled"}
-                    </span>
-                    <span className="text-sm text-gray-900">
-                      {activeRound.scheduledAt.toLocaleString()}
+                      {activeRound?.status}
                     </span>
                   </div>
+                    <p className="text-sm text-gray-500">
+                      {new Date(activeRound.scheduledAt).toLocaleString()}
+                    </p>
+                  </div>
+                  <div className="p-2 border border-gray-200 rounded-lg bg-white">
+                    <p className="text-xs font-semibold text-blue-500 mb-1">
+                      Interview Type
+                    </p>
+                    <p className="text-sm text-gray-500 whitespace-pre-line">
+                      {activeRound.interviewType === "__OTHER__"
+                        ? activeRound.customInterviewType || "-"
+                        : activeRound.interviewType || "-"}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Interview Type</p>
-                  <p className="text-sm text-gray-900 whitespace-pre-line">
-                    {activeRound.interviewType === "__OTHER__"
-                      ? activeRound.customInterviewType || "-"
-                      : activeRound.interviewType || "-"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-xs font-medium text-gray-500">Rules</p>
-                  <p className="text-sm text-gray-900 whitespace-pre-line">
-                    {activeRound.rules || "-"}
-                  </p>
-                </div>
-                {activeRound.extraInterviewers.length > 0 && (
-                  <div>
-                    <p className="text-xs font-medium text-gray-500">Extra interviewers</p>
-                    <ul className="mt-2 space-y-1">
-                      {activeRound.extraInterviewers.map((interviewer, index) => (
+
+                <div className="grid grid-cols-2 gap-3 mt-2">
+                  <div className="p-2 border border-gray-200 rounded-lg">
+                    <p className="text-xs font-bold text-blue-500">Rules</p>
+                    <p className="text-sm text-gray-500 whitespace-pre-line">
+                      {activeRound.ruleForCandidate || "-"}
+                    </p>
+                  </div>
+                  {/* {(activeRound.attendees?.length ?? 0) > 0 && ( */}
+                    <div className="p-2 border border-gray-200 rounded-lg">
+                      <p className="text-xs font-bold text-blue-500">Attendees</p>
+                      <ul className="mt-2 space-y-1 list-disc pl-4 marker:text-black">
                         <li
-                          key={`${interviewer.email}-${index}`}
-                          className="text-xs text-gray-700"
+                          className="text-xs text-gray-500"
                         >
-                          {interviewer.name} ({interviewer.email})
+                          {userDetails?.fullName} 
+                          {/* ({userDetails?.email}) */}
                         </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+                        <li
+                          className="text-xs text-gray-500"
+                        >
+                          {jobApplication?.applicantDetails?.name} 
+                          {/* ({jobApplication?.applicantDetails?.email}) */}
+                        </li>
+                        {(activeRound.attendees?.length ?? 0) > 0 &&
+                        (activeRound.attendees || []).map((interviewer, index) => (
+                          <li
+                            key={`${interviewer.email}-${index}`}
+                            className="text-xs text-gray-500"
+                          >
+                            {interviewer.name} 
+                            {/* ({interviewer.email}) */}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  {/* )} */}
+                </div>
+
+                {!activeRound?.completion?.organizer?.rating &&
+                !activeRound?.completion?.organizer?.feedback &&
+                !activeRound?.cancellationReason &&
+                !activeRound?.cancellationFeedback &&
                 <div>
-                  <p className="text-xs font-medium text-gray-500">Link</p>
+                  <p className="text-xs font-bold text-blue-500">Recruiter&apos;s Note</p>
+                  <p className="text-sm text-gray-500 whitespace-pre-line">
+                    {activeRound.recruiterNote || "-"}
+                  </p>
+                </div>
+                }
+
+                {Date.now() <= new Date(activeRound.scheduledAt).getTime() + 70 * 60 * 1000 && (
+                <div>
+                  <p className="text-xs font-bold text-blue-500">Link</p>
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm text-gray-900 break-all">
-                      {activeRound.joiningLink || "-"}
+                    <span className="text-sm text-gray-500 break-all">
+                      {activeRound.meetingLink || "-"}
                     </span>
                     <button
                       type="button"
-                      disabled={!activeRound.joiningLink}
+                      disabled={!activeRound.meetingLink}
                       onClick={() => {
-                        if (!activeRound.joiningLink) return;
-                        window.open(activeRound.joiningLink, "_blank", "noopener,noreferrer");
+                        if (!activeRound.meetingLink) return;
+                        window.open(activeRound.meetingLink, "_blank", "noopener,noreferrer");
                       }}
                       className={`px-3 py-1 text-xs font-semibold rounded-lg border ${
-                        activeRound.joiningLink
+                        activeRound.meetingLink
                           ? "text-indigo-700 border-indigo-300 hover:bg-indigo-50"
                           : "text-gray-400 border-gray-200 cursor-not-allowed"
                       }`}
@@ -558,33 +973,180 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                     </button>
                   </div>
                 </div>
-
-                {activeRound.interviewStatus === "CANCELLED" && (
-                  <div className="space-y-2 pt-2 border-t border-gray-200">
+                )}
+                {activeRound.status === "CANCELLED" && (
+                  <div className="space-y-2 p-2 border border-gray-200 rounded-lg">
                     <div>
                       <p className="text-xs font-medium text-gray-500">Cancel reason</p>
-                      <p className="text-sm text-gray-900">{activeRound.cancelReason || "-"}</p>
+                      <p className="text-sm text-gray-900">{activeRound.cancellationReason || "-"}</p>
                     </div>
                     <div>
                       <p className="text-xs font-medium text-gray-500">Cancel feedback</p>
                       <p className="text-sm text-gray-900 whitespace-pre-line">
-                        {activeRound.cancelFeedback || "-"}
+                        {activeRound.cancellationFeedback || "-"}
                       </p>
                     </div>
                   </div>
                 )}
-                {onOpenFeedbackSidebar &&
-                  activeRound.scheduledAt.getTime() <= now.getTime() &&
-                  !activeRound.feedbackSubmitted &&
-                  activeRound.interviewStatus !== "CANCELLED" && (
+
+                {/* Completed Info */}
+                {activeRound?.status === "COMPLETED" && (
+                  <div className="space-y-3 p-2 border border-gray-200 rounded-lg mt-2">
+                    <p className="font-extrabold text-blue-500">Recruiter/Organizer Feedback</p>
+                    <div>
+                      <p className="text-xs font-medium text-black">Rating</p>
+                      <p className="text-sm text-gray-500">
+                        {activeRound?.completion?.organizer?.rating} / 5
+                      </p>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-medium text-black">Feedback</p>
+                      <p className="text-sm text-gray-500 whitespace-pre-line">
+                        {activeRound?.completion?.organizer?.feedback}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Evaluator Feedback */}
+                {activeRound?.completion?.evaluators &&
+                  Object.keys(activeRound.completion.evaluators).length > 0 && (
+                    <div>
+                    {/* <p className="font-extrabold text-blue-500">Evaluators Feedback</p> */}
+                    <div className="space-y-4 pt-2 border-gray-200">
+                      <div>
+                        {/* <p className="font-extrabold text-blue-500">Evaluators Feedback</p> */}
+                        {/* Tabs */}
+                        <div className="flex gap-2 flex-wrap mt-2">
+                          {evaluators.map(([userId, evaluator]: any) => (
+                            <button
+                              key={userId}
+                              onClick={() => setActiveEvaluatorId(userId)}
+                              className={`px-3 py-1 rounded-full text-xs font-medium border ${
+                                userId === (activeEvaluatorId || evaluators[0][0])
+                                  ? "bg-indigo-600 text-white border-indigo-600"
+                                  : "bg-white text-indigo-700 border-indigo-200 hover:bg-indigo-50"
+                              }`}
+                            >
+                              {evaluator.name || "Evaluator"}
+                            </button>
+                          ))}
+                        </div>
+
+                        {/* Details */}
+                        <div className="space-y-3 p-2 border border-gray-200 rounded-lg mt-2">
+                          {evaluators
+                            .filter(([userId]) =>
+                              userId === (activeEvaluatorId ?? evaluators[0]?.[0])
+                            )
+                            .map(([userId, evaluator]: any) => (
+                              <div key={userId} className="space-y-2">
+                                <p className="font-extrabold text-blue-500">Evaluator Feedback</p>
+                                <div>
+                                  <p className="text-xs font-medium text-black">Evaluator Name</p>
+                                  <p className="text-sm text-gray-500">{evaluator.name}</p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-medium text-black">Evaluator Email</p>
+                                  <p className="text-sm text-gray-500">{evaluator.email}</p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-medium text-black">Rating</p>
+                                  <p className="text-sm text-gray-500">
+                                    {evaluator.rating} / 5
+                                  </p>
+                                </div>
+
+                                <div>
+                                  <p className="text-xs font-medium text-black">Feedback</p>
+                                  <p className="text-sm text-gray-500 whitespace-pre-line">
+                                    {evaluator.feedback}
+                                  </p>
+                                </div>
+
+                              </div>
+                            ))}
+                        </div>
+                      </div>
+                      {/* {Object.entries(activeRound.completion.evaluators).map(
+                        ([userId, evaluator]: any) => (
+                          <div key={userId} className="space-y-2 border-b pb-2">
+                            
+                            <div>
+                              <p className="text-xs font-medium text-black">Evaluator Name</p>
+                              <p className="text-sm text-gray-500">{evaluator.name}</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-medium text-black">Evaluator Email</p>
+                              <p className="text-sm text-gray-500">{evaluator.email}</p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-medium text-black">Rating</p>
+                              <p className="text-sm text-gray-500">
+                                {evaluator.rating} / 5
+                              </p>
+                            </div>
+
+                            <div>
+                              <p className="text-xs font-medium text-black">Feedback</p>
+                              <p className="text-sm text-gray-500 whitespace-pre-line">
+                                {evaluator.feedback}
+                              </p>
+                            </div>
+
+                          </div>
+                        )
+                      )} */}
+                    </div>
+                    </div>
+                )}
+                
+                {new Date(activeRound.scheduledAt).getTime() <= now.getTime() 
+                && activeRound.status !== "CANCELLED" && activeRound.status !== "COMPLETED" &&(
+                  <button
+                    onClick={() => openFeedbackForRound(activeRound.id)}
+                    className="text-xs font-semibold text-indigo-700 hover:text-indigo-900 w-fit"
+                  >
+                    Submit feedback for Round {activeRound?.roundNumber}
+                  </button>
+                )}
+              {/* {new Date(activeRound.scheduledAt).getTime() <= now.getTime() &&
+                activeRound.status !== "CANCELLED" && (
+                  activeRound.status === "COMPLETED" &&
+                  activeRound.completion?.organizer?.feedback?.trim() &&
+                  activeRound.completion?.organizer?.rating !== null &&
+                  activeRound.completion?.organizer?.rating !== undefined ? (
+                    
+                    <div className="space-y-2 pt-2 border-t border-gray-200">
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Rating</p>
+                        <p className="text-sm text-gray-900">
+                          {activeRound.completion.organizer.rating} / 5
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-gray-500">Feedback</p>
+                        <p className="text-sm text-gray-900 whitespace-pre-line">
+                          {activeRound.completion.organizer.feedback}
+                        </p>
+                      </div>
+                    </div>
+
+                  ) : (
                     <button
                       type="button"
                       className="text-xs font-semibold text-indigo-700 hover:text-indigo-900 w-fit"
-                      onClick={() => onOpenFeedbackSidebar(activeRound.id)}
+                      onClick={() => openFeedbackForRound(activeRound.id)}
                     >
                       Submit feedback for Round {activeRound.roundNumber}
                     </button>
-                )}
+                  )
+              )} */}
               </div>
             ) : (
               <>
@@ -618,21 +1180,14 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                   </div>
                 </div>
 
-                {!isReschedulingLatestRound && (
-                  <>
+                <>
                     <div className="space-y-2">
                       <label className="block text-sm font-medium text-gray-900">
                         Interview Type
                       </label>
                       <select
                         value={
-                          [
-                            "HR Round",
-                            "Technical Round",
-                            "Cultural Round",
-                            "Business Understanding Round",
-                            "Product Understanding Round",
-                          ].includes(activeRound.interviewType)
+                          PREDEFINED_INTERVIEW_TYPES.has(activeRound.interviewType || "")
                             ? activeRound.interviewType
                             : activeRound.customInterviewType
                             ? "Others"
@@ -712,8 +1267,8 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                       </label>
                       <textarea
                         rows={3}
-                        value={activeRound.rules}
-                        onChange={(e) => handleRoundFieldChange({ rules: e.target.value })}
+                        value={activeRound.ruleForCandidate}
+                        onChange={(e) => handleRoundFieldChange({ ruleForCandidate: e.target.value })}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                         placeholder="Add any instructions or rules for this interview."
                       />
@@ -725,11 +1280,11 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                           Add interview panel
                         </label>
                         <p className="text-xs text-gray-500">
-                          Add additional interviewers by name and email. You can add multiple
-                          interviewers.
+                          Add additional interviewers by name and email. Candidate and recruiter are added automatically.
                         </p>
                       </div>
 
+                      <div ref={suggestionRef} className="relative">
                       <div className="flex flex-col gap-2 sm:flex-row">
                         <input
                           type="text"
@@ -767,7 +1322,7 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                       </div>
                       {filteredSuggestions.length > 0 && (
                           <div 
-                          onBlur={() => setTimeout(() => setFilteredSuggestions([]), 150)}
+                          // onBlur={() => setTimeout(() => setFilteredSuggestions([]), 150)}
                           className="border rounded-lg mt-1 max-h-20 overflow-y-auto bg-white shadow">
                             {filteredSuggestions.map((s, index) => (
                               <div
@@ -780,39 +1335,49 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                             ))}
                           </div>
                         )}
-                                                {emailError && (
+                        </div>
+                        {emailError && (
                           <p className="text-red-500 text-xs mt-1">{emailError}</p>
                         )}
-                      {activeRound.extraInterviewers.length > 0 && (
+                      {(activeRound.attendees?.length ?? 0) > 0 && (
                         <div className="mt-2 space-y-2">
                           <p className="text-xs font-medium text-gray-700">Added interviewers</p>
                           <ul className="space-y-1 max-h-32 overflow-y-auto pr-1">
-                            {activeRound.extraInterviewers.map((interviewer, index) => (
+                            {(activeRound.attendees || []).map((interviewer, index) => (
                               <li
                                 key={`${interviewer.email}-${index}`}
                                 className="flex items-center justify-between px-3 py-2 text-xs bg-gray-50 border border-gray-200 rounded-lg"
                               >
-                                <div className="flex flex-col">
-                                  <span className="font-medium text-gray-900">
-                                    {interviewer.name}
-                                  </span>
-                                  <span className="text-gray-600">{interviewer.email}</span>
-                                </div>
+                                {/* <div className="flex justify-around items-center gap-2"> */}
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-gray-900">
+                                      {interviewer.name}
+                                    </span>
+                                    <span className="text-gray-600">{interviewer.email}</span>
+                                  </div>
+                                  <div>
+                                    <button 
+                                    className="ml-3 text-gray-500 hover:text-red-500 text-xl"
+                                    onClick={() => handleRemoveInterviewer(interviewer.email)}
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                {/* </div> */}
                               </li>
                             ))}
                           </ul>
                         </div>
                       )}
                     </div>
-                  </>
-                )}
+                </>
               </>
             )}
           </>
         )}
       </div>
 
-      <div className="px-3 py-4 border-t flex justify-end gap-3">
+      <div className="px-3 py-4 flex justify-end gap-3 border-t border-gray-200">
       {isActiveLatestRound ? (
         <>
           {isDraftLatestRound ? (
@@ -833,47 +1398,42 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
             </button>
           ) : (
             <>
-              {latestRound?.interviewStatus !== "CANCELLED" && (
+              {latestRound?.status !== "CANCELLED" && latestRound?.status !== "COMPLETED" &&(
                 <button
                   type="button"
-                  onClick={() => {
-                    if (onOpenCancelSidebar) {
-                      onOpenCancelSidebar();
-                      return;
-                    }
-                    onClose();
-                  }}
+                  onClick={() => setSidePanel("cancel")}
                   className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Cancel Interview
                 </button>
               )}
 
-              {latestRound?.interviewStatus !== "CANCELLED" && (
+              {latestRound?.status !== "CANCELLED" && latestRound?.status !== "COMPLETED" &&(
                 <button
                   type="button"
                   onClick={() => {
                     if (!latestRound) return;
-                    onOpenRescheduleSidebar?.();
+                    setSidePanel("reschedule");
                   }}
                   className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
                 >
                   Reschedule
                 </button>
               )}
-
-              <button
-                type="button"
-                disabled={!latestJoinLink}
-                onClick={handleJoin}
-                className={`px-4 py-2 text-sm font-semibold rounded-lg border ${
-                  latestJoinLink
-                    ? "text-indigo-700 border-indigo-300 hover:bg-indigo-50"
-                    : "text-gray-400 border-gray-200 cursor-not-allowed bg-white"
-                }`}
-              >
-                Join
-              </button>
+              {Date.now() <= new Date(activeRound.scheduledAt).getTime() + 70 * 60 * 1000 && (
+                <button
+                  type="button"
+                  disabled={!latestJoinLink}
+                  onClick={handleJoin}
+                  className={`px-4 py-2 text-sm font-semibold rounded-lg border ${
+                    latestJoinLink
+                      ? "text-indigo-700 border-indigo-300 hover:bg-indigo-50"
+                      : "text-gray-400 border-gray-200 cursor-not-allowed bg-white"
+                  }`}
+                >
+                  Join
+                </button>
+              )}
             </>
           )}
 
@@ -881,14 +1441,16 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
             <button
               type="button"
               disabled={
+                isSubmitting ||
                 !draftScheduleByRoundId[activeRound.id]?.date ||
                 !draftScheduleByRoundId[activeRound.id]?.time ||
                 !activeRound.interviewType ||
                 (activeRound.interviewType === "__OTHER__" &&
                   !(activeRound.customInterviewType || "").trim())
               }
-              onClick={handleSubmitAll}
+              onClick={handleScheduleSubmit}
               className={`px-4 py-2 text-sm font-semibold rounded-lg ${
+                isSubmitting ||
                 !draftScheduleByRoundId[activeRound.id]?.date ||
                 !draftScheduleByRoundId[activeRound.id]?.time ||
                 !activeRound.interviewType ||
@@ -898,20 +1460,31 @@ export const ScheduleInterviewSidebar: React.FC<ScheduleInterviewSidebarProps> =
                   : "bg-indigo-600 text-white hover:bg-indigo-700"
               }`}
             >
-              Submit
+              {isSubmitting ? "Submitting" : "Submit"}
             </button>
           )}
         </>
-      ) : (
-        <button
-          type="button"
-          onClick={onClose}
-          className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
-        >
-          Close
-        </button>
-      )}
+      ) : null
+      // (
+      //   <button
+      //     type="button"
+      //     onClick={onClose}
+      //     className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+      //   >
+      //     Close
+      //   </button>
+      // )
+      }
+      <button
+        type="button"
+        onClick={onClose}
+        className="px-4 py-2 text-sm font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50"
+      >
+        Close
+      </button>
       </div>
+        </>
+      )}
     </div>
   );
 };

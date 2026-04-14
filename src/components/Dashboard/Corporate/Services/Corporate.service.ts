@@ -20,9 +20,11 @@ import {
   BulkJobApplicationUpdateItem,
   EvaluationResponseItemDto,
   BulkJobApplicationUpdatePayload,
+  ScheduleInterviewPayload,
 } from "@Interfaces/CorporateServices.dto";
 import { BulkJdParsedData } from "@Components/Dashboard/WorkoAdmin/BulkCvCheck/BulkCvCheck";
 import { AgencyListDetailsDto } from "@Interfaces/AgencyDatabaseApplicantDetailsDto";
+import { InterviewItem } from "@Components/Shared/ApplicantsPage/InterviewHistorySidebar";
 
 const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
 /**
@@ -663,6 +665,153 @@ class CorporateService {
     } catch (error: any) {
       console.error("[CORPORATE SERVICE]: Failed to get agency list", error);
       return [];
+    }
+  }
+
+  /**
+ * getInterviewsByApplicationId
+ *
+ * @description - Fetch all interview rounds for a job application (organizer/corp/admin view)
+ *
+ * @type {GET}
+ *
+ * @param {string} applicationId
+ * @param {object} params - optional query params (limit, cursor)
+ *
+ * @return {Promise<{ items: InterviewItem[]; nextCursor: string | null }>}
+ */
+  async getInterviewsByApplicationId(
+    applicationId: string,
+    params: { limit?: number; cursor?: string } = {}
+  ): Promise<{
+    data: InterviewItem[];
+    nextCursor: string | null;
+  }> {
+    try {
+      const { response } = await httpServiceObj.get<{
+        data: InterviewItem[];
+        nextCursor: string | null;
+      }>(
+        `/user-job-interview/${applicationId}/interviews`,
+        true,
+        params,
+        false,
+        "JOB"
+      );
+
+      if (!response) {
+        throw new Error("No response received");
+      }
+
+      return response;
+    } catch (error: any) {
+      console.error(
+        "[ADMIN SERVICE]: Failed to fetch interviews by application id.",
+        error
+      );
+
+      return {
+        data: [],
+        nextCursor: null,
+      };
+    }
+  }
+
+  async scheduleInterview(
+    applicationId: string,
+    payload: ScheduleInterviewPayload
+  ): Promise<{ response: InterviewItem | null; error: Error | null }> {
+    try {
+      const { response, error } = await httpServiceObj.post<InterviewItem>(
+        `/user-job-interview/${applicationId}/interviews`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+
+      if (error) {
+        return {
+          response: null,
+          error: error instanceof Error ? error : new Error(String(error)),
+        };
+      }
+
+      if (!response) {
+        return {
+          response: null,
+          error: new Error("No response received from Interview scheduling."),
+        };
+      }
+
+      return { response, error: null };
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to post Interview scheduled details.", error);
+      return {
+        response: null,
+        error: error instanceof Error ? error : new Error(String(error)),
+      };
+    }
+  }
+
+  async rescheduleInterview(applicationId: string,interviewId: string, payload: any): Promise<any> {
+    try {
+      const { response } = await httpServiceObj.patch<any>(
+        `/user-job-interview/${applicationId}/interviews/${interviewId}/reschedule`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+      if (response) return response;
+      else {
+        throw new Error();
+      }
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to Reschedule Interview.");
+      return null;
+    }
+  }
+
+  async cancelInterview(applicationId: string,interviewId: string, payload: any): Promise<any> {
+    try {
+      const { response } = await httpServiceObj.patch<any>(
+        `/user-job-interview/${applicationId}/interviews/${interviewId}/cancel`,
+        payload,
+        true,
+        {},
+        false,
+        "JOB"
+      );
+      if (response) return response;
+      else {
+        throw new Error();
+      }
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to Cancel Interview.");
+      return null;
+    }
+  }
+
+  async completeInterview(applicationId: string,interviewId: string, payload: any): Promise<any> {
+    try {
+      const { response } = await httpServiceObj.patch<any>(
+        `/user-job-interview/${applicationId}/interviews/${interviewId}/complete`,
+        payload,
+        true,
+        {},
+        false,  
+        "JOB"
+      );
+      if (response) return response;
+      else {
+        throw new Error();
+      }
+    } catch (error: any) {
+      console.error("[ADMIN SERVICE]: Failed to Mark Complete for current Interview.");
+      return null;
     }
   }
 }

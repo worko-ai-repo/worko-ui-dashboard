@@ -1,39 +1,37 @@
 import React, { useState } from "react";
-import { JobApplicationDetailsDto } from "@Interfaces/CorporateDashboard.dto";
-
 interface InterviewSubmissionSidebarProps {
-  jobApplication: JobApplicationDetailsDto;
+  name : string;
+  jobTitle : string;
   roundId: string;
   onClose: () => void;
-  onSubmitted?: (payload: { roundId: string; feedback: string; rating: number | null }) => void;
+  onSubmitted?: (payload: {
+    roundId: string;
+    feedback: string;
+    rating: number | null;
+  }) => void | Promise<void>;
 }
 
 const InterviewSubmissionSidebar: React.FC<InterviewSubmissionSidebarProps> = ({
-  jobApplication,
+  name,
+  jobTitle,
   roundId,
   onClose,
   onSubmitted,
 }) => {
   const [feedback, setFeedback] = useState("");
   const [rating, setRating] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
-  const handleSubmit = () => {
-    const payload = {
-      jobApplicationId: jobApplication.id,
-      jobId: jobApplication.jobId,
-      applicantName: jobApplication.applicantDetails?.name,
-      applicantEmail: jobApplication.applicantDetails?.email,
-      roundId,
-      feedback: feedback.trim(),
-      rating,
-    };
-
-    // Placeholder for future API integration
-    // eslint-disable-next-line no-console
-    console.log("Interview Feedback Submission Payload:", payload);
-
-    onSubmitted?.({ roundId, feedback: feedback.trim(), rating });
-    onClose();
+  const handleSubmit = async () => {
+    setIsSubmitting(true)
+    try {
+      await Promise.resolve(onSubmitted?.({ roundId, feedback: feedback.trim(), rating }));
+      onClose();
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
   };
 
   return (
@@ -42,7 +40,7 @@ const InterviewSubmissionSidebar: React.FC<InterviewSubmissionSidebarProps> = ({
         <div>
           <h2 className="text-lg font-semibold text-gray-900">Interview Feedback</h2>
           <p className="mt-1 text-xs text-gray-500">
-            {jobApplication.applicantDetails?.name} &bull; {jobApplication.jobTitle}
+            {name} &bull; {jobTitle}
           </p>
         </div>
       </div>
@@ -90,11 +88,15 @@ const InterviewSubmissionSidebar: React.FC<InterviewSubmissionSidebarProps> = ({
           Cancel
         </button>
         <button
+          disabled={isSubmitting}
           type="button"
           onClick={handleSubmit}
-          className="px-4 py-2 text-sm font-semibold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700"
+          className={`px-4 py-2 text-sm font-semibold text-white rounded-lg transition
+            ${isSubmitting
+              ? "bg-indigo-300 cursor-not-allowed opacity-70"
+              : "bg-indigo-600 hover:bg-indigo-700"}`}
         >
-          Submit
+          {isSubmitting ? "Submitting" : "Submit"}
         </button>
       </div>
     </div>

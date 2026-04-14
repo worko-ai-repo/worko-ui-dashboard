@@ -50,6 +50,8 @@ import ApplicantExpandedRowDetails, {
 } from "@Components/Shared/ApplicantsPage/ApplicantExpandedData";
 import { useQuery } from "@tanstack/react-query";
 import httpServiceObj from "@Services/ApiHandler.service";
+import ScheduleInterviewSidebar from "@Components/Shared/ApplicantsPage/ScheduleInterviewSidebar";
+import InterviewHistorySidebar from "@Components/Shared/ApplicantsPage/InterviewHistorySidebar";
 
 export const statusColors: Record<JobApplicationStatusType, string> = {
   APPLIED: "bg-[#D6F4FF] text-[#00ADC0]",
@@ -108,8 +110,8 @@ export const newDisplayStatus: Record<JobApplicationStatusType, string> = {
 };
 
 export interface ApplicationTableProps {
-  activeTab: "All" | "Hired" | "Joined";
-  setActiveTab: (tab: "All" | "Hired" | "Joined") => void;
+  activeTab: "All" | "Processing Interview" | "Hired" | "Joined";
+  setActiveTab: (tab: "All" | "Processing Interview" | "Hired" | "Joined") => void;
   ListSelection: ApplicationListSelectionDto;
   data: JobApplicationDetailsDto[];
   handleUpdate: (
@@ -215,6 +217,20 @@ export default function ApplicationTable({
     application: JobApplicationDetailsDto;
   }>({ isOpen: false, application: {} as JobApplicationDetailsDto });
   const [pdfViewDetailsID, setPdfViewDetailsID] = useState<string | null>(null);
+  const [scheduleInterviewSidebarState, setScheduleInterviewSidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
+  const [interviewHistorySidebarState, setInterviewHistorySidebarState] = useState<{
+    isOpen: boolean;
+    jobApplication: JobApplicationDetailsDto | null;
+  }>({
+    isOpen: false,
+    jobApplication: null,
+  });
   const currentId = initialIds[0] ?? null;
     const {
     data: apidata,
@@ -680,6 +696,8 @@ export default function ApplicationTable({
               setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
             }}
             splitMode={isExpanded ? "main" : "all"}
+            onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+            onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
           />
         );
       },
@@ -718,6 +736,18 @@ export default function ApplicationTable({
           commonColumns.status,
           commonColumns.actions,
           // commonColumns.response,
+        ];
+      case "Processing Interview":
+        return [
+          commonColumns.name,
+          commonColumns.currentPosition,
+          commonColumns.currentCTC,
+          commonColumns.noticePeriod,
+          commonColumns.experience,
+          commonColumns.matchingScore,
+          commonColumns.interviewScoreDetails,
+          commonColumns.status,
+          commonColumns.actions,
         ];
       case "Hired":
         return [
@@ -828,6 +858,8 @@ export default function ApplicationTable({
           setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
         }}
         splitMode="expanded" // Show only expanded actions
+        onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+        onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
       />
     ) : null;
 
@@ -842,6 +874,20 @@ export default function ApplicationTable({
         expandedActions={expandedActionsNode}
       />
     );
+  };
+
+  const handleOpenScheduleInterviewSidebar = (jobApplication: JobApplicationDetailsDto) => {
+    setScheduleInterviewSidebarState({
+      isOpen: true,
+      jobApplication,
+    });
+  };
+
+  const handleOpenInterviewHistorySidebar = (jobApplication: JobApplicationDetailsDto) => {
+    setInterviewHistorySidebarState({
+      isOpen: true,
+      jobApplication,
+    });
   };
 
   return (
@@ -895,6 +941,8 @@ export default function ApplicationTable({
                 setDuplicateModalOpen({ isOpen: true, applicant: row, action: action });
               }}
               splitMode="expanded" // Show only expanded actions
+              onOpenScheduleInterviewSidebar={handleOpenScheduleInterviewSidebar}
+              onOpenInterviewHistorySidebar={handleOpenInterviewHistorySidebar}
             />
           ) : null;
 
@@ -950,6 +998,47 @@ export default function ApplicationTable({
             payload={isRejectModalOpen.payload}
             jobId={isRejectModalOpen.jobId}
             onClose={() => setIsRejectModalOpen(null)}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={
+          scheduleInterviewSidebarState.isOpen && !!scheduleInterviewSidebarState.jobApplication
+        }
+        onClose={() =>
+          setScheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+        }
+        className="w-full sm:w-[500px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {scheduleInterviewSidebarState.jobApplication && (
+          <ScheduleInterviewSidebar
+            jobApplication={scheduleInterviewSidebarState.jobApplication}
+            onClose={() =>
+              setScheduleInterviewSidebarState({ isOpen: false, jobApplication: null })
+            }
+            localUpdate={localUpdate}
+          />
+        )}
+      </Modal>
+
+      <Modal
+        isOpen={
+          interviewHistorySidebarState.isOpen && !!interviewHistorySidebarState.jobApplication
+        }
+        onClose={() =>
+          setInterviewHistorySidebarState({ isOpen: false, jobApplication: null })
+        }
+        className="w-full sm:w-[560px] h-full ml-auto"
+        classNameHeight="max-h-[100vh]"
+      >
+        {interviewHistorySidebarState.jobApplication && (
+          <InterviewHistorySidebar
+            jobApplication={interviewHistorySidebarState.jobApplication}
+            onClose={() =>
+              setInterviewHistorySidebarState({ isOpen: false, jobApplication: null })
+            }
           />
         )}
       </Modal>
