@@ -31,6 +31,7 @@ import InterviewDetailedViewModal from "@Components/Modals/SharedModals/Intervie
 import httpServiceObj from "@Services/ApiHandler.service";
 import interviewServiceObj from "@Services/Interview.service";
 import { getLatestInterviewData } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
+import { request } from "http";
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -77,6 +78,18 @@ const EvaluatorView: React.FC = () => {
   const selectedRequestRef = useRef<any>(null);
   const selectedCandidateDetailsRef = useRef<any>(null);
   const isHydratingFromGroupRef = useRef(false);
+  const [idToFetchInterviews, setidToFetchInterviews] = useState<string[]>([]);
+  const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("")
+
+  const [interviewModal, setInterviewModal] = useState<{
+    isOpen: boolean;
+    data: any;
+    candidateName: string;
+  }>({
+    isOpen: false,
+    data: null,
+    candidateName: "",
+  });
 
   const getEvaluationDetails = async () => {
     try {
@@ -597,6 +610,11 @@ const EvaluatorView: React.FC = () => {
     try {
       if (!evaluatorEmail) return;
       const rawData = await fetchEvaluationRequests(evaluatorEmail);
+
+      const onlyIds = rawData.map(data =>{
+        return data.jobApplicationId
+      })
+      setidToFetchInterviews(onlyIds)
       const filteredRequests: typeof rawData = [];
       // for (const request of rawData) {
       //   if (!request.evaluationResponseId || !request.jobApplicationId) {
@@ -749,6 +767,10 @@ const EvaluatorView: React.FC = () => {
     });
     return Array.from(set);
   }, [requests]);
+
+  const numberOfPendingEvaluation = useMemo(() =>{
+    return requests?.filter(request => !request.evaluationResponseId)
+  },[requests])
 
   const handleCompanySelect = async (companyId: string) => {
     setSelectedCompanyId(companyId);
@@ -993,6 +1015,11 @@ useEffect(() => {
         onCompanySelect={handleCompanySelect}
         requests={requests}
         groupedCompaniesWithCompanyName={groupedCompaniesWithCompanyName}
+        idToFetchInterviews={idToFetchInterviews}
+        setJobApplicationIdFromChild={setJobApplicationIdFromChild}
+        interviewModal={interviewModal}
+        setInterviewModal={setInterviewModal}
+        numberOfPendingEvaluation={numberOfPendingEvaluation.length}
       />
 
       <MainContent
@@ -1072,6 +1099,10 @@ useEffect(() => {
         onSubmitFeedbackCompany={handleSubmitFeedbackCompany}
         onViewFeedbackCompany={handleViewFeedbackCompany}
         onViewInterview={handleViewInterviewCompany}
+        setJobApplicationIdFromChild={setJobApplicationIdFromChild}
+        jobApplicationIdFromChild={jobApplicationIdFromChild}
+        interviewModal={interviewModal}
+        setInterviewModal={setInterviewModal}
       />
 
       {/*Feedback Modal*/}

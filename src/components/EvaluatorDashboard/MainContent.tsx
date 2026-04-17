@@ -64,6 +64,21 @@ interface MainContentProps {
   onSubmitFeedbackCompany?: (req: any, cand: any) => void;
   onViewFeedbackCompany?: (req: any, cand: any) => void;
   onViewInterview?: (interviewDetails: any, name: string) => void;
+  setJobApplicationIdFromChild: (id: string) => void;
+  jobApplicationIdFromChild:string;
+  interviewModal: {
+    isOpen: boolean;
+    data: any;
+    candidateName: string;
+  };
+
+  setInterviewModal: React.Dispatch<
+    React.SetStateAction<{
+      isOpen: boolean;
+      data: any;
+      candidateName: string;
+    }>
+  >;
 }
 
 const handleLogout = async () => {
@@ -94,7 +109,11 @@ const MainContent: React.FC<MainContentProps> = ({
   onViewCVCompany,
   onSubmitFeedbackCompany,
   onViewFeedbackCompany,
-  onViewInterview
+  onViewInterview,
+  setJobApplicationIdFromChild,
+  jobApplicationIdFromChild,
+  interviewModal,
+  setInterviewModal
 }) => {
   const [socialLinks, setSocialLinks] = useState<SocialLinks>({});
   const [evaluatorEmail, setEvaluatorEmail] = useState<string>("");
@@ -112,16 +131,16 @@ const MainContent: React.FC<MainContentProps> = ({
   const [expandedSection, setExpandedSection] = useState<
     "about" | "worko" | "note" | null
   >(null);
-  const [interviewModal, setInterviewModal] = useState<{
-    isOpen: boolean;
-    data: any;
-    candidateName: string;
-  }>({
-    isOpen: false,
-    data: null,
-    candidateName: "",
-  });
-  const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("")
+  // const [interviewModal, setInterviewModal] = useState<{
+  //   isOpen: boolean;
+  //   data: any;
+  //   candidateName: string;
+  // }>({
+  //   isOpen: false,
+  //   data: null,
+  //   candidateName: "",
+  // });
+  // const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("")
   const [hrName, setHrName] = useState<string>("");
 
   useEffect(() => {
@@ -244,18 +263,11 @@ const MainContent: React.FC<MainContentProps> = ({
     refetchOnWindowFocus: false,
   });
 
-  const handleViewInterviewSidebar = (interviewDetails: any, name: string) => {
-  // TEMP dummy data (until API comes)
-  const dummyData = {
-    date: "25 March 2026",
-    time: "3:15 PM",
-    recruiterNote: "Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind Candidate is strong need to check his presence of mind",
-    meetingLink: "https://meet.google.com/abc-defg-hij",
-  };
-
+  const handleViewInterviewFeedbackSidebar = (interviewDetails: any, name: string, jobApplicationId: string) => {
+  setJobApplicationIdFromChild(jobApplicationId);
   setInterviewModal({
     isOpen: true,
-    data: dummyData,
+    data: interviewDetails,
     candidateName: name,
   });
 };
@@ -392,7 +404,8 @@ const MainContent: React.FC<MainContentProps> = ({
             onViewCV={onViewCVCompany}
             onSubmitFeedback={onSubmitFeedbackCompany}
             onViewFeedback={onViewFeedbackCompany}
-            onViewInterview={handleViewInterviewSidebar}
+            onViewVideoInterview={onViewInterview}
+            onViewInterviewFeedback={handleViewInterviewFeedbackSidebar}
             expandedCard={expandedCard}
             expandedSection={expandedSection}
             setExpandedCard={setExpandedCard}

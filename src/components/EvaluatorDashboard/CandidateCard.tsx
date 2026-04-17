@@ -13,16 +13,24 @@ import {
   SendIcon,
   ChevronDown,
   ChevronUp,
+  Eye,
+  EyeClosed,
 } from "lucide-react";
 import { toTitleCase } from "@Utils/Titlecase.utils";
 import { formatObjectForDisplay } from "@Utils/FormatText.utils";
+import { EyeDropperIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 
 interface CandidateCardProps {
   item: any;
   onViewCV?: (req?: any,cand?:any) => void;
   onSubmitFeedback?: (req?: any,cand?:any) => void;
   onViewFeedback?: (req?: any,cand?:any) => void;
-  onViewInterview?: (interviewDetails: any, name: string) => void;
+  onViewVideoInterview?: (interviewDetails: any, name: string) => void;
+  onViewInterviewFeedback?: (
+    interviewDetails: any,
+    name: string,
+    jobApplicationId: string
+  ) => void;
 
   expandedCard: string | null;
   expandedSection: "about" | "worko" | "note" | null;
@@ -36,7 +44,8 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
   onViewCV,
   onSubmitFeedback,
   onViewFeedback,
-  onViewInterview,
+  onViewVideoInterview,
+  onViewInterviewFeedback,
   expandedCard,
   expandedSection,
   setExpandedCard,
@@ -56,16 +65,33 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
   const isThisCardOpen = expandedCard === cardId;
 
   // Toggle a specific section inside this card
-  const toggleExpand = (section: "about" | "worko" | "note") => {
-    if (isThisCardOpen && expandedSection === section) {
-      setExpandedSection(null);
-      setExpandedCard(null);
-    } else {
-      setExpandedCard(cardId);
-      setExpandedSection(section);
-    }
-  };
+  // const toggleExpand = (section: "about" | "worko" | "note") => {
+  //   if (isThisCardOpen && expandedSection === section) {
+  //     setExpandedSection(null);
+  //     setExpandedCard(null);
+  //   } else {
+  //     setExpandedCard(cardId);
+  //     setExpandedSection(section);
+  //   }
+  // };
+const toggleExpand = (section: "about" | "worko" | "note") => {
+  let targetSection: "about" | "note";
 
+  // Grouping logic
+  if (section === "about" || section === "worko") {
+    targetSection = "about"; // Row 1
+  } else {
+    targetSection = "note"; // Row 2
+  }
+
+  if (isThisCardOpen && expandedSection === targetSection) {
+    setExpandedSection(null);
+    setExpandedCard(null);
+  } else {
+    setExpandedCard(cardId);
+    setExpandedSection(targetSection);
+  }
+};
   const getPlainPreviewText = () => {
   let data = application.scoreDetails || application.rejectionFeedbackBySystem;
 
@@ -261,7 +287,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
                 </a>
             ))}
         </div>
-
+          
         {/* Buttons */}
         <div className="flex gap-3 mt-2">
             <button
@@ -275,7 +301,7 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
             {hasValidInterview && !isAlreadyRequested && (
             <button
                 onClick={() =>
-                onViewInterview?.(interviewDetails, candidate.name || "")
+                onViewVideoInterview?.(interviewDetails, candidate.name || "")
                 }
                 className="p-2 bg-red-600 text-white rounded-lg flex items-center gap-2 text-[10px]"
             >
@@ -287,8 +313,9 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
             {item.request?.evaluationResponseId ? (
             <button
                 onClick={() => onViewFeedback?.(item.request, item.candidate)}
-                className="p-2 bg-green-600 text-white rounded-lg text-[10px]"
-            >
+                className="p-2 bg-green-600 text-white rounded-lg flex items-center gap-2 text-[10px]"
+            > 
+              <EyeClosed className="w-4 h-4" />
                 View Feedback
             </button>
             ) : (
@@ -303,13 +330,19 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
         {item.canViewInterview && (
         <button
           onClick={() =>{
-            onViewInterview?.(interviewDetails, candidate.name || "")
-            setJobApplicationIdFromChild(item?.request?.jobApplicationId)
+            const currentJobApplicationId = item?.request?.jobApplicationId || "";
+            setJobApplicationIdFromChild(currentJobApplicationId);
+            onViewInterviewFeedback?.(
+              interviewDetails,
+              candidate.name || "",
+              currentJobApplicationId
+            );
           }
           }
           className="p-2 bg-blue-600 text-white rounded-lg flex items-center gap-2 text-[10px]"
         >
-          View Interview
+          <Eye className="w-4 h-4" />
+          View Interview Feedback
         </button>
         )}
         </div>
@@ -317,117 +350,133 @@ const CandidateCard: React.FC<CandidateCardProps> = ({
     </div>
     </div>
 
-
-      {/* ----------------------------- */}
-      {/* About Section */}
-      {/* ----------------------------- */}
       <hr />
-      <div onClick={() => toggleExpand("about")} className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:cursor-pointer">
-        <div className="flex justify-between items-center">
-          <h3 className="text-left text-[13px] font-semibold text-slate-800">
-            About
-          </h3>
+      <div className="grid grid-cols-2 gap-4">
 
-          <div>
-            {renderExpandIcon(isThisCardOpen && expandedSection === "about")}
+        {/* ----------------------------- */}
+        {/* About Section */}
+        {/* ----------------------------- */}
+        <div
+          onClick={() => toggleExpand("about")}
+          className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:cursor-pointer"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-left text-[13px] font-semibold text-slate-800">
+              About
+            </h3>
+
+            <div>
+              {renderExpandIcon(isThisCardOpen && expandedSection === "about")}
+            </div>
           </div>
+
+          <p
+            className={`text-left text-[12px] text-slate-700 ${
+              isThisCardOpen && expandedSection === "about"
+                ? ""
+                : "line-clamp-1"
+            }`}
+          >
+            {candidate?.about || "This candidate hasn’t added an about section yet."}
+          </p>
         </div>
 
-        <p
-          className={`text-left text-[12px] text-slate-700 ${
-            isThisCardOpen && expandedSection === "about"
-              ? ""
-              : "line-clamp-1"
-          }`}
+        {/* ----------------------------- */}
+        {/* Worko Feedback */}
+        {/* ----------------------------- */}
+        <div
+          onClick={() => toggleExpand("worko")}
+          className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:cursor-pointer"
         >
-          {candidate?.about || "N/A"}
-        </p>
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-2">
+              <span className="text-[13px] font-semibold text-slate-800">
+                Worko Feedback
+              </span>
+              {Number(application?.matchingScore) > 0 && (
+                <span className="text-[12px] bg-yellow-200 px-2 py-[2px] rounded text-slate-800 font-semibold">
+                  ⭐ {application.matchingScore}/100
+                </span>
+              )}
+            </div>
+
+            <div>
+              {renderExpandIcon(isThisCardOpen && expandedSection === "about")}
+            </div>
+          </div>
+
+          <div className="text-left text-[12px] text-slate-700">
+            {isThisCardOpen && expandedSection === "about" ? (
+              renderWorkoContent()
+            ) : (
+              <p className="line-clamp-1">
+                {getPlainPreviewText()}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
       {/* ----------------------------- */}
-      {/* Worko Feedback */}
+      {/* SECOND ROW */}
       {/* ----------------------------- */}
-      <div onClick={() => toggleExpand("worko")} className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 hover:cursor-pointer">
-        <div  className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <span className="text-[13px] font-semibold text-slate-800">
-              Worko Feedback
-            </span>
-            {Number(application?.matchingScore) > 0 &&
-            <span className="text-[12px] bg-yellow-200 px-2 py-[2px] rounded text-slate-800 font-semibold">
-              ⭐ {application.matchingScore}/100
-            </span>
-            }
+
+      <div className={`grid gap-4 mt-3 ${hasValidInterview && !isAlreadyRequested ? "grid-cols-2" : "grid-cols-1"}`}>
+
+        {/* ----------------------------- */}
+        {/* Recruiter's Note */}
+        {/* ----------------------------- */}
+        <div
+          onClick={() => toggleExpand("note")}
+          className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:cursor-pointer"
+        >
+          <div className="flex justify-between items-center">
+            <h3 className="text-left text-[13px] font-semibold text-slate-800">
+              Recruiter's Note
+            </h3>
+
+            <div>
+              {renderExpandIcon(isThisCardOpen && expandedSection === "note")}
+            </div>
           </div>
 
-          <div>
-            {renderExpandIcon(isThisCardOpen && expandedSection === "worko")}
-          </div>
+          <p
+            className={`text-left text-[12px] text-slate-700 ${
+              isThisCardOpen && expandedSection === "note"
+                ? ""
+                : "line-clamp-1"
+            }`}
+          >
+            {details?.hrDetailedFeedback || "No detailed feedback has been shared."}
+          </p>
         </div>
 
-        <div className="text-left text-[12px] text-slate-700">
-        {isThisCardOpen && expandedSection === "worko" ? (
-            renderWorkoContent()
-        ) : (
-            <p className="line-clamp-1">
-            {getPlainPreviewText()}
-            </p>
+        {/* ----------------------------- */}
+        {/* Scores */}
+        {/* ----------------------------- */}
+        {hasValidInterview && !isAlreadyRequested && (
+          <div className="bg-cyan-100 border rounded-lg p-3">
+            <h3 className="text-left text-[13px] font-semibold text-gray-700">
+              Scores:
+            </h3>
+
+            <div className="flex flex-wrap gap-4">
+              {formatObjectForDisplay(
+                interviewDetails?.scoreBreakdown || {}
+              ).map(({ label, value }, index) => (
+                <div key={index}>
+                  <span className="text-[13px] font-semibold text-gray-600 mr-2">
+                    {label}:
+                  </span>
+                  <span className="text-[12px] text-blue-500 font-semibold">
+                    {value}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
         )}
-        </div>
       </div>
-
-      {/* ----------------------------- */}
-      {/* Recruiter's Note */}
-      {/* ----------------------------- */}
-      <div onClick={() => toggleExpand("note")} className="bg-blue-50 border border-blue-200 rounded-lg p-3 hover:cursor-pointer">
-        <div className="flex justify-between items-center">
-          <h3 className="text-left text-[13px] font-semibold text-slate-800">
-            Recruiter's Note
-          </h3>
-
-          <div>
-            {renderExpandIcon(isThisCardOpen && expandedSection === "note")}
-          </div>
-        </div>
-
-        <p
-          className={`text-left text-[12px] text-slate-700 ${
-            isThisCardOpen && expandedSection === "note"
-              ? ""
-              : "line-clamp-1"
-          }`}
-        >
-          {details?.hrDetailedFeedback ||
-            "No feedback provided."}
-        </p>
-      </div>
-
-      {/* ----------------------------- */}
-      {/* Scores */}
-      {/* ----------------------------- */}
-      {hasValidInterview && !isAlreadyRequested && (
-        <div className="bg-cyan-100 border rounded-lg p-3">
-          <h3 className="text-left text-[13px] font-semibold text-gray-700">
-            Scores:
-          </h3>
-
-          <div className="flex flex-wrap gap-4">
-            {formatObjectForDisplay(
-              interviewDetails?.scoreBreakdown || {}
-            ).map(({ label, value }, index) => (
-              <div key={index}>
-                <span className="text-[13px] font-semibold text-gray-600 mr-2">
-                  {label}:
-                </span>
-                <span className="text-[12px] text-blue-500 font-semibold">
-                  {value}%
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
     </div>
   );
 };
