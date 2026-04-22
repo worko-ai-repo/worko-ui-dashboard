@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 // Define or import the missing types
 type DateRange = "7d" | "30d" | "90d" | "180d";
@@ -20,6 +20,10 @@ import { CorporateAnalyticsHomeSkeleton } from "@Components/Loader/Skeleton/Skel
 import { JobApplicationStatusEnum } from "@Enums/JobAndApplication.enum";
 import { useUrlState } from "@Hooks/useUrlState.hook";
 import { Loader } from "lucide-react";
+import EvaluatorMatrix from "@Components/Shared/Home/EvaluatorMatrix";
+import CorporateServiceObj from "../Services/Corporate.service";
+import httpServiceObj from "@Services/ApiHandler.service";
+import AgencyMatrix from "@Components/Shared/Home/AgencyMatrix";
 
 /**
  * Corporate Home Analytics Component
@@ -47,20 +51,78 @@ const CorporateHome = () => {
         serialize: (value: JobStatusFilter) => value,
         deserialize: (value: string) => value as JobStatusFilter,
       },
+      recruiterId: {
+        defaultValue: "" as string,
+        serialize: (value: string) => value,
+        deserialize: (value: string) => value,
+      },
     },
   });
 
   const dateRange = (filters.dateRange || "30d") as DateRange;
   const jobStatus = (filters.jobStatus || "ALL") as JobStatusFilter;
+  const selectedRecruiterId = filters.recruiterId || undefined;
+
+  const { data: invitesResponse } = useQuery({
+    queryKey: ["analyticsCorporateRecruitersInvites", companyId],
+    enabled: !!companyId,
+    queryFn: () =>
+      CorporateServiceObj.fetchInvites({
+        pageSize: 200,
+        companyId,
+        sortOrder: "descending",
+      }),
+  });
+
+  const { data: companyDetails } = useQuery({
+  queryKey: ["corporateCompanyDetails", companyId],
+  enabled: !!companyId,
+  queryFn: async () => {
+      const { response, error } = await httpServiceObj.get<any>(`/company/${companyId}`, true, {});
+
+      if (error) {
+        console.error("Error fetching company details: ", error);
+        return null;
+      }
+      return response;
+    },
+  });
+
+  const name = userDetails?.fullName?.split(" ")
+  const recruiters = useMemo(() => {
+    const acceptedRecruiters =
+      (invitesResponse?.data ?? []).filter(
+        (inv) => inv.inviteStatus === "ACCEPTED"
+      );
+
+    if (companyDetails) {
+      return [
+        {...companyDetails[0], 
+          firstName:name?.[0],
+          lastName:name?.[1]
+        },
+        ...acceptedRecruiters,
+      ];
+    }
+
+    return acceptedRecruiters;
+  }, [invitesResponse, companyDetails]);
+
+  useEffect(() => {
+    if (filters.recruiterId || !recruiters.length) return;
+    // Default to logged-in company record so APIs always scope correctly on first load.
+    setFilter("recruiterId", recruiters[0].id);
+  }, [filters.recruiterId, recruiters, setFilter]);
 
   // Fetch hiring trend analytics data
   const { data: hiringTrendSummary, isLoading: isHiringTrendLoading } =
     useQuery<HiringTrendResponse>({
-      queryKey: ["analyticsHiringTrend", companyId, undefined, dateRange, jobStatus],
+      queryKey: ["analyticsHiringTrend", companyId, selectedRecruiterId, dateRange, jobStatus],
       enabled: !!companyId,
       queryFn: () =>
         AnalyticsServiceObj.getHiringTrend({
           companyId,
+          recruiterId: selectedRecruiterId,
           granularity: "monthly",
           dateRange,
           jobStatus,
@@ -74,10 +136,11 @@ const CorporateHome = () => {
   // Fetch onboarding pipeline data
   const { data: onboarding, isLoading: isOnboardingLoading } = useQuery<OnboardingPipelineResponse>(
     {
-      queryKey: ["analyticsOnboardingCorporate", companyId, dateRange, jobStatus],
+      queryKey: ["analyticsOnboardingCorporate", companyId, selectedRecruiterId, dateRange, jobStatus],
       queryFn: () =>
         AnalyticsServiceObj.getOnboardingPipeline({
           companyId,
+          recruiterId: selectedRecruiterId,
           includeDetails: true,
           dateRange,
           jobStatus,
@@ -92,10 +155,11 @@ const CorporateHome = () => {
 
   // Fetch critical dropoff analytics data
   const { data: dropoff, isLoading: isDropoffLoading } = useQuery<CriticalDropoffResponse>({
-    queryKey: ["analyticsDropoffCorporate", companyId, dateRange, jobStatus],
+    queryKey: ["analyticsDropoffCorporate", companyId, selectedRecruiterId, dateRange, jobStatus],
     queryFn: () =>
       AnalyticsServiceObj.getDropoff({
         companyId,
+        recruiterId: selectedRecruiterId,
         dateRange,
         jobStatus,
         topN: 5,
@@ -112,6 +176,10 @@ const CorporateHome = () => {
 
   const totalDropoffRate = dropoff?.overallDropoffRate ?? 0;
 
+  const selectedRecruiter = useMemo(() => {
+    return recruiters.find(r => r.id === selectedRecruiterId);
+  }, [recruiters, selectedRecruiterId]);
+
   // Show skeleton loader while data is loading
   if (isLoading && !hiringTrendSummary && !onboarding && !dropoff) {
     return <CorporateAnalyticsHomeSkeleton />;
@@ -120,7 +188,7 @@ const CorporateHome = () => {
   return (
     <div className="flex flex-col gap-4 lg:gap-10 justify-between">
       <div className="flex-1 flex flex-col gap-4">
-        <div className="flex flex-col w-full gap-4 justify-start">
+        <div className="flex flex-col w-full gap-2 justify-start">
           {/* <HeaderDetails /> */}
 
           {/* Filters */}
@@ -130,10 +198,33 @@ const CorporateHome = () => {
               <p className="text-sm font-semibold text-slate-700">Analytics overview</p>
               <p className="text-xs text-slate-400">Job & application insights for your company</p>
             </div>
-            <div className="flex items-center gap-4 text-xs">
+
+            <div className="flex flex-wrap items-end gap-4 text-xs">
+              {/* <div className="flex items-center gap-4 text-xs"> */}
+
+              {userDetails?.userType.includes("corporate-admin") 
+                ? <div className="flex flex-col min-w-[200px]">
+                  <label className="text-slate-500 mb-1.5 text-left">Recruiter</label>
+                  <select
+                    className="border border-slate-200 rounded-lg px-3 py-2 text-xs h-[44px] cursor-pointer disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
+                    value={selectedRecruiterId ?? ""}
+                    onChange={(e) => setFilter("recruiterId", e.target.value)}
+                  >
+                    {/* <option value="">All recruiters</option> */}
+                    {recruiters.map((inv) => (
+                      <option key={inv.id} value={inv.id}>
+                        {inv.firstName} {inv.lastName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                : null
+              }
+
               {/* Date Range Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 mr-1">Date range:</span>
+              <div className="flex flex-col">
+                <label className="text-slate-500 mb-1.5 text-left">Date range</label>
+                <div className="flex gap-2">
                 {(["7d", "30d", "90d", "180d"] as DateRange[]).map((range) => (
                   <button
                     key={range}
@@ -149,11 +240,13 @@ const CorporateHome = () => {
                     {range === "180d" && "Last 180 days"}
                   </button>
                 ))}
+                </div>
               </div>
 
               {/* Job Status Filter */}
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 mr-1">Job status:</span>
+              <div className="flex flex-col">
+                <label className="text-slate-500 mb-1.5 text-left">Job status</label>
+                <div className="flex gap-2">
                 {(["ALL", "PUBLISHED"] as JobStatusFilter[]).map((statusValue) => (
                   <button
                     key={statusValue}
@@ -167,14 +260,15 @@ const CorporateHome = () => {
                     {statusValue === "PUBLISHED" && "Published only"}
                   </button>
                 ))}
+                </div>
               </div>
             </div>
           </div>
 
           <div className="min-h-screen">
-            <div className="mx-auto space-y-8">
+            <div className="mx-auto space-y-2">
               {/* Top Row - KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                 {/* Total Jobs KPI */}
                 <StatCard title="Total jobs">
                   <div className="text-3xl font-semibold text-slate-800">
@@ -223,9 +317,14 @@ const CorporateHome = () => {
               </div>
 
               {/* Middle Row - Hiring Trend Chart & Onboarding Pipeline */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-2">
                 {/* Hiring Trend Chart */}
-                <HiringTrend dateRange={dateRange} jobStatus={jobStatus} />
+                <HiringTrend
+                  dateRange={dateRange}
+                  jobStatus={jobStatus}
+                  companyIdOverride={companyId}
+                  recruiterIdOverride={selectedRecruiterId}
+                />
 
                 {/* Onboarding Pipeline Snapshot */}
                 <StatCard
@@ -284,7 +383,7 @@ const CorporateHome = () => {
               </div>
 
               {/* Bottom Row - Critical Drop-offs & Funnel Velocity */}
-              <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-2">
                 {/* Critical Drop-off Stages Card */}
                 <StatCard title="Critical drop-off stages" className="h-full text-left">
                   {/* Top Summary Stats */}
@@ -385,12 +484,38 @@ const CorporateHome = () => {
                 </StatCard>
 
                 {/* Funnel Velocity Chart */}
-                <FunnelVelocity dateRange={dateRange} jobStatus={jobStatus} />
+                <FunnelVelocity
+                  companyId={companyId}
+                  recruiterId={selectedRecruiterId}
+                  dateRange={dateRange}
+                  jobStatus={jobStatus}
+                />
               </div>
 
               {/* Hiring Intelligence Table */}
               <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
                 <HiringIntelligence companyIdOverride={companyId} dateRange={dateRange} />
+              </div>
+
+              {/* Evaluator Table */}
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+                <EvaluatorMatrix 
+                  companyIdOverride={companyId} 
+                  dateRange={dateRange} 
+                  recruiterId={selectedRecruiterId}
+                  firstName={selectedRecruiter?.firstName}
+                  lastName={selectedRecruiter?.lastName}
+                  />
+              </div>
+
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+                <AgencyMatrix
+                  companyIdOverride={companyId} 
+                  dateRange={dateRange} 
+                  recruiterId={selectedRecruiterId}
+                  firstName={selectedRecruiter?.firstName}
+                  lastName={selectedRecruiter?.lastName}
+                  />
               </div>
             </div>
           </div>

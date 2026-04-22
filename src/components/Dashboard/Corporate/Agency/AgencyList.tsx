@@ -295,7 +295,8 @@ const AgencyList = () => {
                 handleClick={() => console.log("as")}
                 />
             </div> */}
-            <div className='flex flex-col mt-4 mb-4'>         
+            {userDetails?.userType.includes("corporate-admin")
+            ?<div className='flex flex-col mt-4 mb-4'>         
               <button 
               onClick={()=>setIsAddAgencyModelOpen(!isAddAgencyModelOpen)}
               className='border rounded-lg px-4 py-3 text-xs flex flex-row justify-center items-center gap-1 text-white bg-gradient-to-t from-blue-500 to-cyan-300 font-semibold'>
@@ -303,6 +304,9 @@ const AgencyList = () => {
                 Add Agency
               </button>
             </div>
+            : 
+            <div className='mt-6'></div>
+            }
         </div>
       </div>
       {isLoading ? (

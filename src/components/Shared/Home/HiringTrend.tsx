@@ -224,7 +224,7 @@ const HiringTrend: React.FC<HiringTrendProps> = ({
   }, [chartData]);
 
   return (
-    <div className="flex bg-white rounded-xl shadow-xl p-4 flex-col gap-3">
+    <div className="flex bg-white rounded-xl hover:shadow-md p-4 flex-col gap-3">
       <div className="flex items-center justify-between">
         <div className="text-left">
           <p className="text-lg font-semibold text-slate-700">Hiring trend</p>

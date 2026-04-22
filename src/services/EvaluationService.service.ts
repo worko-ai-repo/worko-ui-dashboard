@@ -64,7 +64,7 @@ export const fetchEvaluationRequests = async (
   const url = `${JOB_BASE_URL}/request-evaluation/`;
   const params = {
     evaluatorEmail,
-    pageSize: '25',
+    pageSize: 200,
     sortOrder: 'descending',
     dashboardType:"EVALUATOR"
   };
