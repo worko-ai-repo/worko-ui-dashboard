@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Loader } from "lucide-react";
 import { StatCard } from "@Components/Dashboard/Corporate/Home/StatCard";
 import httpServiceObj from "@Services/ApiHandler.service";
@@ -36,6 +36,8 @@ type EvaluatorGroup = {
 
 const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }: EvaluatorMatrixProps) => {
   const [search, setSearch] = React.useState("");
+  const dropdownRef = React.useRef<HTMLDivElement>(null);
+  const [isOpen, setIsOpen] = React.useState(false);
   const [selectedEvaluator, setSelectedEvaluator] = React.useState<string>("ALL");
   const {userDetails} = useAppContext()
 
@@ -77,7 +79,11 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
   const data = evaluationResponse?.data ?? [];
 
   const processedData = React.useMemo(() => {
-    if (!data) return [];
+    if (!data?.length) return [];
+
+    if (data.some((item) => !item?.evaluatorDetails?.email)) {
+      return [];
+    }
     const grouped = data.reduce<Record<string, EvaluatorGroup>>((acc, item) => {
       const key = item.evaluatorDetails.email; // no optional now (based on your type)
 
@@ -141,7 +147,8 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
   const map = new Map();
 
   data.forEach((item) => {
-    const email = item.evaluatorDetails.email;
+    const email = item?.evaluatorDetails?.email;
+    if (!email) return;
     if (!map.has(email)) {
       map.set(email, {
         name: item.evaluatorDetails.name,
@@ -153,6 +160,27 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
   return Array.from(map.values());
   }, [data]);
 
+  const selectedEvaluatorName = React.useMemo(() => {
+    if (selectedEvaluator === "ALL") return "All Evaluators";
+
+    const found = evaluatorOptions.find(
+      (e) => e.email === selectedEvaluator
+    );
+
+    return found ? toTitleCase(found.name) : "Select Evaluator";
+  }, [selectedEvaluator, evaluatorOptions]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   return (
     <div>
       <StatCard title="Evaluator Matrix" className="text-left h-full">
@@ -163,7 +191,7 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
           </p>
           
           <div className="flex items-center justify-center gap-3">
-          <div className="flex flex-col min-w-[150px] justify-center">
+          {/* <div className="flex flex-col min-w-[150px] justify-center">
             <select
               className="border border-slate-200 rounded-lg px-3 py-2 text-xs h-[34px] cursor-pointer"
               value={selectedEvaluator}
@@ -179,8 +207,45 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
+          <div ref={dropdownRef} className="relative w-[150px] min-w-[150px] max-w-[150px] z-[20]">
+            <button
+              type="button"
+              className="border px-3 py-2 w-full text-xs rounded-lg truncate text-left"
+              onClick={() => setIsOpen((prev) => !prev)}
+            >
+              {selectedEvaluatorName}
+            </button>
 
+            {isOpen && (
+              <div className="text-xs absolute mt-1 w-full max-h-40 overflow-y-auto border bg-white rounded-lg shadow">
+                <div
+                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                  onClick={() => {
+                    setSearch("");
+                    setSelectedEvaluator("ALL");
+                    setIsOpen(false);
+                  }}
+                >
+                  All Evaluators
+                </div>
+
+                {evaluatorOptions.map((e) => (
+                  <div
+                    key={e.email}
+                    className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                    onClick={() => {
+                      setSearch("");
+                      setSelectedEvaluator(e.email);
+                      setIsOpen(false);
+                    }}
+                  >
+                    {toTitleCase(e.name)}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
           {/* SEARCH */}
           <input
             type="text"

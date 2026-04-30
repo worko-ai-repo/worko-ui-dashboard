@@ -204,8 +204,9 @@ const CorporateHome = () => {
 
               {userDetails?.userType.includes("corporate-admin") 
                 ? <div className="flex flex-col min-w-[200px]">
-                  <label className="text-slate-500 mb-1.5 text-left">Recruiter</label>
+                  <label htmlFor="recruiter-label" className="text-slate-500 mb-1.5 text-left">Recruiter</label>
                   <select
+                    id="recruiter-label"
                     className="border border-slate-200 rounded-lg px-3 py-2 text-xs h-[44px] cursor-pointer disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
                     value={selectedRecruiterId ?? ""}
                     onChange={(e) => setFilter("recruiterId", e.target.value)}
@@ -507,7 +508,9 @@ const CorporateHome = () => {
                   lastName={selectedRecruiter?.lastName}
                   />
               </div>
-
+              
+              {/* Agency Table */}
+              {userDetails?.userType?.includes("corporate-admin") && 
               <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
                 <AgencyMatrix
                   companyIdOverride={companyId} 
@@ -516,7 +519,7 @@ const CorporateHome = () => {
                   firstName={selectedRecruiter?.firstName}
                   lastName={selectedRecruiter?.lastName}
                   />
-              </div>
+              </div>}
             </div>
           </div>
         </div>

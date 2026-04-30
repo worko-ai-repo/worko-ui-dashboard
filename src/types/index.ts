@@ -41,6 +41,21 @@ export interface EvaluationRequest {
   candidateParsedCvId:string;
   evaluationResponseStatus:string;
 }
+export interface AgencyRequest {
+  acceptedCount: number;
+  agencyId: string;
+  agencyName: string;
+  companyName: string;
+  hiredCount: number;
+  inProcessCount: number;
+  jobAssignedDate: string;
+  jobId: string;
+  jobTitle: string;
+  lastActivityAt: string;
+  rejectedCount: number;
+  submittedCount: number;
+  totalCandidates:number;
+}
 
 export interface EvaluationDetails extends EvaluationRequest {
   hrHtmlDetailedFeedback: string;

@@ -19,6 +19,8 @@ import { newDisplayStatus } from "@Components/Dashboard/Corporate/Applicants/App
 import { AdminAnalyticsHomeSkeleton } from "@Components/Loader/Skeleton/SkeletonLoader";
 import { useAnalyticsUrlState } from "@Hooks/useAnalyticsUrlState.hook";
 import { Loader } from "lucide-react";
+import EvaluatorMatrix from "@Components/Shared/Home/EvaluatorMatrix";
+import AgencyMatrix from "@Components/Shared/Home/AgencyMatrix";
 
 type DateRange = "7d" | "30d" | "90d" | "180d";
 type JobStatusFilter = "ALL" | "PUBLISHED";
@@ -212,8 +214,9 @@ const AdminAnalyticsHome = () => {
 
               {/* Recruiter dropdown fed from invites; disabled until company selected */}
               <div className="flex flex-col min-w-[200px]">
-                <label className="text-slate-500 mb-1.5 text-left">Recruiter</label>
+                <label htmlFor="recruiter-label" className="text-slate-500 mb-1.5 text-left">Recruiter</label>
                 <select
+                  id="recruiter-label"
                   className="border border-slate-200 rounded-lg px-3 py-2 text-xs h-[44px] cursor-pointer disabled:bg-slate-50 disabled:text-slate-400 disabled:border-slate-200"
                   value={selectedRecruiterId ?? ""}
                   onChange={(e) => {
@@ -601,6 +604,28 @@ const AdminAnalyticsHome = () => {
               {/* Hiring Intelligence Table */}
               <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
                 <HiringIntelligence companyIdOverride={selectedCompanyId} dateRange={dateRange} />
+              </div>
+
+              {/* Evaluator Table */}
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+                <EvaluatorMatrix 
+                  companyIdOverride={selectedCompanyId} 
+                  dateRange={dateRange} 
+                  recruiterId={selectedRecruiterId}
+                  firstName={selectedRecruiter?.firstName}
+                  lastName={selectedRecruiter?.lastName}
+                  />
+              </div>
+              
+              {/* Agency Table */}
+              <div className="grid grid-cols-1 xl:grid-cols-1 gap-6">
+                <AgencyMatrix
+                  companyIdOverride={selectedCompanyId}
+                  dateRange={dateRange} 
+                  recruiterId={selectedRecruiterId}
+                  firstName={selectedRecruiter?.firstName}
+                  lastName={selectedRecruiter?.lastName}
+                  />
               </div>
             </div>
           </div>
