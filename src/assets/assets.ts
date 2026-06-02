@@ -157,6 +157,22 @@ import gmail_10 from './gmail/gmail_10.png';
 import gmail_11 from './gmail/gmail_11.png';
 import gmail_12 from './gmail/gmail_12.png';
 import gmail_13 from './gmail/gmail_13.png';
+
+import gcal_1 from './worko-assets/cal/gcal_1.webp';
+import gcal_2 from './worko-assets/cal/gcal_2.webp';
+import gcal_3 from './worko-assets/cal/gcal_3.webp';
+import gcal_4 from './worko-assets/cal/gcal_4.webp';
+import gcal_5 from './worko-assets/cal/gcal_5.webp';
+import gcal_6 from './worko-assets/cal/gcal_6.webp';
+import ocal_1 from './worko-assets/cal/ocal_1.webp';
+import ocal_2 from './worko-assets/cal/ocal_2.webp';
+import ocal_3 from './worko-assets/cal/ocal_3.webp';
+import ycal_1 from './worko-assets/cal/ycal_1.webp';
+import ycal_2 from './worko-assets/cal/ycal_2.webp';
+import ycal_3 from './worko-assets/cal/ycal_3.webp';
+import ycal_4 from './worko-assets/cal/ycal_4.webp';
+import zcal_1 from './worko-assets/cal/zcal_1.webp';
+
 export { 
     // Backgrounds
     bg_plexus,
@@ -309,4 +325,19 @@ export {
     gmail_11,
     gmail_12,
     gmail_13,
+
+    gcal_1,
+    gcal_2,
+    gcal_3,
+    gcal_4,
+    gcal_5,
+    gcal_6,
+    ocal_1,
+    ocal_2,
+    ocal_3,
+    ycal_1,
+    ycal_2,
+    ycal_3,
+    ycal_4,
+    zcal_1
 };

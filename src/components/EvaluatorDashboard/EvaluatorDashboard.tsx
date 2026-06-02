@@ -32,6 +32,7 @@ import httpServiceObj from "@Services/ApiHandler.service";
 import interviewServiceObj from "@Services/Interview.service";
 import { getLatestInterviewData } from "@Components/Dashboard/WorkoAdmin/Applicants/ApplicantsTable";
 import { request } from "http";
+import GoogleIntegration from "@Components/Dashboard/WorkoAdmin/GoogleIntegration/GoogleIntegration";
 // This is the inner view rendered for a given jobId + jobApplicationId
 const EvaluatorView: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -71,15 +72,15 @@ const EvaluatorView: React.FC = () => {
   //View CV state
 
   const [isViewCVModalOpen, setIsViewCVModalOpen] = useState(false);
-  const [cvLink, setCVLink] = useState<string>("")
-  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE
+  const [cvLink, setCVLink] = useState<string>("");
+  const agencyBaseUrl = import.meta.env.APP_PROXY_AGENCY_BASE;
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [companyCandidates, setCompanyCandidates] = useState<any[]>([]);
   const selectedRequestRef = useRef<any>(null);
   const selectedCandidateDetailsRef = useRef<any>(null);
   const isHydratingFromGroupRef = useRef(false);
   const [idToFetchInterviews, setidToFetchInterviews] = useState<string[]>([]);
-  const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("")
+  const [jobApplicationIdFromChild, setJobApplicationIdFromChild] = useState("");
 
   const [interviewModal, setInterviewModal] = useState<{
     isOpen: boolean;
@@ -90,6 +91,7 @@ const EvaluatorView: React.FC = () => {
     data: null,
     candidateName: "",
   });
+  const [activeSection, setActiveSection] = useState<"roles" | "interviews" | "calendar">("roles");
 
   const getEvaluationDetails = async () => {
     try {
@@ -111,8 +113,6 @@ const EvaluatorView: React.FC = () => {
     refetchOnWindowFocus: false,
   });
 
-
-
   const handleCloseFeedbackModal = () => {
     setIsFeedbackModalOpen(false);
     // setSelectedCandidate(null);
@@ -121,7 +121,7 @@ const EvaluatorView: React.FC = () => {
   const handleFeedbackComplete = (data: any) => {
     // Only remove request for REJECT or ON_HOLD
     // For INTERVIEW_SCHEDULED, keep it in the list (it's just scheduled, not complete)
-    const shouldRemove = data.status === 'reject' || data.status === 'hold';
+    const shouldRemove = data.status === "reject" || data.status === "hold";
 
     if (!shouldRemove) {
       // For INTERVIEW_SCHEDULED, just close modal and keep evaluation in list
@@ -130,25 +130,24 @@ const EvaluatorView: React.FC = () => {
     }
 
     // Remove the submitted request from the list (for REJECT/ON_HOLD only)
-    const updatedRequests = requests.filter(req => req.id !== selectedRequest?.id);
+    const updatedRequests = requests.filter((req) => req.id !== selectedRequest?.id);
     setRequests(updatedRequests);
 
     // Update companyCandidates to reflect the removal
-    setCompanyCandidates(prev =>
-      prev.filter(item => item.request.id !== selectedRequest?.id)
-    );
+    setCompanyCandidates((prev) => prev.filter((item) => item.request.id !== selectedRequest?.id));
 
     // Check if current group is now empty
-    const remainingInGroup = updatedRequests.filter(r => r.companyId === selectedCompanyId);
+    const remainingInGroup = updatedRequests.filter((r) => r.companyId === selectedCompanyId);
 
     if (remainingInGroup.length === 0) {
       // Group is empty, switch to another group
-      const remainingCompanies = Array.from(new Set(updatedRequests.map(r => r.companyId)));
+      const remainingCompanies = Array.from(new Set(updatedRequests.map((r) => r.companyId)));
 
       if (remainingCompanies.length > 0) {
         // Find next available group: prefer next, fallback to previous
         const currentIndex = remainingCompanies.indexOf(selectedCompanyId);
-        const nextCompanyId = remainingCompanies[currentIndex + 1] || remainingCompanies[currentIndex - 1];
+        const nextCompanyId =
+          remainingCompanies[currentIndex + 1] || remainingCompanies[currentIndex - 1];
 
         if (nextCompanyId) {
           handleCompanySelect(nextCompanyId);
@@ -198,9 +197,9 @@ const EvaluatorView: React.FC = () => {
   //         console.log(error)
   //       }
   //     }else if(selectedCandidateDetails?.cvAwsS3ResourceType === "BULK_CVS"){
-  //           if(!selectedCandidateDetails?.companyId 
+  //           if(!selectedCandidateDetails?.companyId
   //             || !selectedCandidateDetails?.cvAwsS3FileName
-  //             || !selectedCandidateDetails?.corporateBulkJdId 
+  //             || !selectedCandidateDetails?.corporateBulkJdId
   //           ){
   //             toast.error("Missing details",getToastOptions({}))
   //             return
@@ -215,7 +214,7 @@ const EvaluatorView: React.FC = () => {
   //             setCVLink(response?.objectUrl ?? "")
   //           } catch (error) {
   //             console.log(error)
-  //           }      
+  //           }
   //     }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CORP_CAND_BULK_CV_UPLOAD") {
   //           if (
   //             !selectedCandidateDetails?.cvAwsS3FilePath ||
@@ -225,13 +224,13 @@ const EvaluatorView: React.FC = () => {
   //             return;
   //           }
   //           const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
-  //           const payload = { 
+  //           const payload = {
   //             companyId: splittedID[1],
-  //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName 
+  //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName
   //           }
   //           try {
   //             const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
-      
+
   //             if (error) {
   //               toast.error(error.message, getToastOptions({}));
   //               return;
@@ -239,7 +238,7 @@ const EvaluatorView: React.FC = () => {
   //             setCVLink(response?.objectUrl ?? "")
   //           } catch (error) {
   //             console.log(error)
-  //           }      
+  //           }
   //         }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "ADMIN_CAND_BULK_CV_UPLOAD") {
   //           if (
   //             !selectedCandidateDetails?.cvAwsS3FileName
@@ -247,12 +246,12 @@ const EvaluatorView: React.FC = () => {
   //             toast.error("Missing details", getToastOptions({}));
   //             return;
   //           }
-  //           const payload = { 
-  //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName 
+  //           const payload = {
+  //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName
   //           }
   //           try {
   //             const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`, payload, true, {}, true );
-      
+
   //             if (error) {
   //               toast.error(error.message, getToastOptions({}));
   //               return;
@@ -260,7 +259,7 @@ const EvaluatorView: React.FC = () => {
   //             setCVLink(response?.objectUrl ?? "")
   //           } catch (error) {
   //             console.log(error)
-  //           }      
+  //           }
   //         }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CAND_SUBMIT_CV_JOB") {
   //           if (
   //             !selectedCandidateDetails?.cvAwsS3FilePath ||
@@ -271,14 +270,14 @@ const EvaluatorView: React.FC = () => {
   //             return;
   //           }
   //           const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
-  //           const payload = { 
+  //           const payload = {
   //             companyId: splittedID[2],
   //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName,
   //             jobId:selectedCandidateDetails?.jobId
   //           }
   //           try {
   //             const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`, payload, true, {}, true );
-      
+
   //             if (error) {
   //               toast.error(error.message, getToastOptions({}));
   //               return;
@@ -286,7 +285,7 @@ const EvaluatorView: React.FC = () => {
   //             setCVLink(response?.objectUrl ?? "")
   //           } catch (error) {
   //             console.log(error)
-  //           }      
+  //           }
   //         }else if (selectedCandidateDetails?.cvAwsS3ResourceType === "CORP_CAND_REFERRAL_CV") {
   //           if (
   //             !selectedCandidateDetails?.cvAwsS3FilePath ||
@@ -296,13 +295,13 @@ const EvaluatorView: React.FC = () => {
   //             return;
   //           }
   //           const splittedID = selectedCandidateDetails?.cvAwsS3FilePath.split("/")
-  //           const payload = { 
+  //           const payload = {
   //             companyId: splittedID[1],
   //             candCvAwsS3FileName: selectedCandidateDetails?.cvAwsS3FileName
   //           }
   //           try {
   //             const { response, error } = await httpServiceObj.post<{ objectUrl: string }>( `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`, payload, true, {}, true );
-      
+
   //             if (error) {
   //               toast.error(error.message, getToastOptions({}));
   //               return;
@@ -310,11 +309,11 @@ const EvaluatorView: React.FC = () => {
   //             setCVLink(response?.objectUrl ?? "")
   //           } catch (error) {
   //             console.log(error)
-  //           }      
+  //           }
   //         }else{
-  //       if(!selectedCandidateDetails?.companyId 
-  //         || !selectedCandidateDetails?.jobId 
-  //         || !selectedCandidateDetails?.agencyUserId 
+  //       if(!selectedCandidateDetails?.companyId
+  //         || !selectedCandidateDetails?.jobId
+  //         || !selectedCandidateDetails?.agencyUserId
   //         || !selectedCandidateDetails?.cvAwsS3FileName
   //         || !selectedCandidateDetails?.cvAwsS3FilePath
   //       ){
@@ -332,7 +331,7 @@ const EvaluatorView: React.FC = () => {
   //       }
   //       try {
   //         const {response,error} = await httpServiceObj.post<any>(`${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,payload,true,{},true,)
-          
+
   //         if(error){
   //           toast.error(error.message,getToastOptions({}))
   //           return
@@ -364,212 +363,212 @@ const EvaluatorView: React.FC = () => {
   // };
 
   const handleViewCV = async () => {
-  const req = selectedRequestRef.current || selectedRequest;
-  const cand = selectedCandidateDetailsRef.current || selectedCandidateDetails;
+    const req = selectedRequestRef.current || selectedRequest;
+    const cand = selectedCandidateDetailsRef.current || selectedCandidateDetails;
 
-  if (!cand) {
-    toast.error("Candidate details missing", getToastOptions({}));
-    return;
-  }
-
-  // Direct signed URL
-  if (cand.cvAwsS3SignedUrl) {
-    setCVLink(cand.cvAwsS3SignedUrl);
-    setIsViewCVModalOpen(true);
-    return;
-  }
-
-  // Resource type-based handling
-  const type = cand.cvAwsS3ResourceType;
-
-  try {
-    // --- USER RESUME ---
-    if (type === "USER_RESUME") {
-      if (!cand.userDetailId || !cand.cvAwsS3FileName) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
-      }
-
-      const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
-        `/file/${cand.id}/${cand.cvAwsS3FileName}/USER_RESUME`,
-        true,
-        {},
-        false,
-        "BASE"
-      );
-
-      if (error) return toast.error(error.message, getToastOptions({}));
-
-      setCVLink(response?.objectUrl ?? "");
+    if (!cand) {
+      toast.error("Candidate details missing", getToastOptions({}));
+      return;
     }
 
-    // --- BULK_CVS ---
-    else if (type === "BULK_CVS") {
-      if (!cand.companyId || !cand.cvAwsS3FileName || !cand.corporateBulkJdId) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
-      }
-
-      const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
-        `/file/${cand.companyId}/${cand.cvAwsS3FileName}/BULK_CVS`,
-        true,
-        { corporateBulkJdId: cand.corporateBulkJdId },
-        false,
-        "BASE"
-      );
-
-      if (error) return toast.error(error.message, getToastOptions({}));
-
-      setCVLink(response?.objectUrl ?? "");
+    // Direct signed URL
+    if (cand.cvAwsS3SignedUrl) {
+      setCVLink(cand.cvAwsS3SignedUrl);
+      setIsViewCVModalOpen(true);
+      return;
     }
 
-    // --- CORPORATE BULK UPLOAD ---
-    else if (type === "CORP_CAND_BULK_CV_UPLOAD") {
-      if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
+    // Resource type-based handling
+    const type = cand.cvAwsS3ResourceType;
+
+    try {
+      // --- USER RESUME ---
+      if (type === "USER_RESUME") {
+        if (!cand.userDetailId || !cand.cvAwsS3FileName) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
+
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
+          `/file/${cand.id}/${cand.cvAwsS3FileName}/USER_RESUME`,
+          true,
+          {},
+          false,
+          "BASE"
+        );
+
+        if (error) return toast.error(error.message, getToastOptions({}));
+
+        setCVLink(response?.objectUrl ?? "");
       }
 
-      const companyId = cand.cvAwsS3FilePath.split("/")[1];
+      // --- BULK_CVS ---
+      else if (type === "BULK_CVS") {
+        if (!cand.companyId || !cand.cvAwsS3FileName || !cand.corporateBulkJdId) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
 
-      const payload = {
-        companyId,
-        candCvAwsS3FileName: cand.cvAwsS3FileName,
-      };
+        const { response, error } = await httpServiceObj.get<{ objectUrl: string }>(
+          `/file/${cand.companyId}/${cand.cvAwsS3FileName}/BULK_CVS`,
+          true,
+          { corporateBulkJdId: cand.corporateBulkJdId },
+          false,
+          "BASE"
+        );
 
-      const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
-        `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`,
-        payload,
-        true,
-        {},
-        true
-      );
+        if (error) return toast.error(error.message, getToastOptions({}));
 
-      if (error) return toast.error(error.message, getToastOptions({}));
-
-      setCVLink(response?.objectUrl ?? "");
-    }
-
-    // --- ADMIN BULK UPLOAD ---
-    else if (type === "ADMIN_CAND_BULK_CV_UPLOAD") {
-      if (!cand.cvAwsS3FileName) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
+        setCVLink(response?.objectUrl ?? "");
       }
 
-      const payload = {
-        candCvAwsS3FileName: cand.cvAwsS3FileName,
-      };
+      // --- CORPORATE BULK UPLOAD ---
+      else if (type === "CORP_CAND_BULK_CV_UPLOAD") {
+        if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
 
-      const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
-        `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`,
-        payload,
-        true,
-        {},
-        true
-      );
+        const companyId = cand.cvAwsS3FilePath.split("/")[1];
 
-      if (error) return toast.error(error.message, getToastOptions({}));
+        const payload = {
+          companyId,
+          candCvAwsS3FileName: cand.cvAwsS3FileName,
+        };
 
-      setCVLink(response?.objectUrl ?? "");
-    }
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
+          `${agencyBaseUrl}/file/gsu2v/CORP_CAND_BULK_CV_UPLOAD`,
+          payload,
+          true,
+          {},
+          true
+        );
 
-    // --- CAND SUBMIT CV JOB ---
-    else if (type === "CAND_SUBMIT_CV_JOB") {
-      if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName || !cand.jobId) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
+        if (error) return toast.error(error.message, getToastOptions({}));
+
+        setCVLink(response?.objectUrl ?? "");
       }
 
-      const companyId = cand.cvAwsS3FilePath.split("/")[2];
+      // --- ADMIN BULK UPLOAD ---
+      else if (type === "ADMIN_CAND_BULK_CV_UPLOAD") {
+        if (!cand.cvAwsS3FileName) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
 
-      const payload = {
-        companyId,
-        candCvAwsS3FileName: cand.cvAwsS3FileName,
-        jobId: cand.jobId,
-      };
+        const payload = {
+          candCvAwsS3FileName: cand.cvAwsS3FileName,
+        };
 
-      const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
-        `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`,
-        payload,
-        true,
-        {},
-        true
-      );
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
+          `${agencyBaseUrl}/file/gsu2v/ADMIN_CAND_BULK_CV_UPLOAD`,
+          payload,
+          true,
+          {},
+          true
+        );
 
-      if (error) return toast.error(error.message, getToastOptions({}));
+        if (error) return toast.error(error.message, getToastOptions({}));
 
-      setCVLink(response?.objectUrl ?? "");
-    }
-
-    // --- CORP REFERRAL CV ---
-    else if (type === "CORP_CAND_REFERRAL_CV") {
-      if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
+        setCVLink(response?.objectUrl ?? "");
       }
 
-      const companyId = cand.cvAwsS3FilePath.split("/")[1];
+      // --- CAND SUBMIT CV JOB ---
+      else if (type === "CAND_SUBMIT_CV_JOB") {
+        if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName || !cand.jobId) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
 
-      const payload = {
-        companyId,
-        candCvAwsS3FileName: cand.cvAwsS3FileName,
-      };
+        const companyId = cand.cvAwsS3FilePath.split("/")[2];
 
-      const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
-        `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`,
-        payload,
-        true,
-        {},
-        true
-      );
+        const payload = {
+          companyId,
+          candCvAwsS3FileName: cand.cvAwsS3FileName,
+          jobId: cand.jobId,
+        };
 
-      if (error) return toast.error(error.message, getToastOptions({}));
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
+          `${agencyBaseUrl}/file/gsu2v/CAND_SUBMIT_CV_JOB`,
+          payload,
+          true,
+          {},
+          true
+        );
 
-      setCVLink(response?.objectUrl ?? "");
-    }
+        if (error) return toast.error(error.message, getToastOptions({}));
 
-    // --- AGENCY SUBMIT USER CV ---
-    else {
-      if (
-        !cand.companyId ||
-        !cand.jobId ||
-        !cand.agencyUserId ||
-        !cand.cvAwsS3FileName ||
-        !cand.cvAwsS3FilePath
-      ) {
-        toast.error("Missing details", getToastOptions({}));
-        return;
+        setCVLink(response?.objectUrl ?? "");
       }
 
-      const split = cand.cvAwsS3FilePath.split("/");
-      const jobIdFromPath = split[split.length - 2];
+      // --- CORP REFERRAL CV ---
+      else if (type === "CORP_CAND_REFERRAL_CV") {
+        if (!cand.cvAwsS3FilePath || !cand.cvAwsS3FileName) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
 
-      const payload = {
-        companyId: cand.companyId,
-        jobId: jobIdFromPath,
-        agencyUserId: cand.agencyUserId,
-        candidateCvAwsS3FileName: cand.cvAwsS3FileName,
-      };
+        const companyId = cand.cvAwsS3FilePath.split("/")[1];
 
-      const { response, error } = await httpServiceObj.post<any>(
-        `${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,
-        payload,
-        true,
-        {},
-        true
-      );
+        const payload = {
+          companyId,
+          candCvAwsS3FileName: cand.cvAwsS3FileName,
+        };
 
-      if (error) return toast.error(error.message, getToastOptions({}));
+        const { response, error } = await httpServiceObj.post<{ objectUrl: string }>(
+          `${agencyBaseUrl}/file/gsu2v/CORP_CAND_REFERRAL_CV`,
+          payload,
+          true,
+          {},
+          true
+        );
 
-      setCVLink(response.objectUrl);
+        if (error) return toast.error(error.message, getToastOptions({}));
+
+        setCVLink(response?.objectUrl ?? "");
+      }
+
+      // --- AGENCY SUBMIT USER CV ---
+      else {
+        if (
+          !cand.companyId ||
+          !cand.jobId ||
+          !cand.agencyUserId ||
+          !cand.cvAwsS3FileName ||
+          !cand.cvAwsS3FilePath
+        ) {
+          toast.error("Missing details", getToastOptions({}));
+          return;
+        }
+
+        const split = cand.cvAwsS3FilePath.split("/");
+        const jobIdFromPath = split[split.length - 2];
+
+        const payload = {
+          companyId: cand.companyId,
+          jobId: jobIdFromPath,
+          agencyUserId: cand.agencyUserId,
+          candidateCvAwsS3FileName: cand.cvAwsS3FileName,
+        };
+
+        const { response, error } = await httpServiceObj.post<any>(
+          `${agencyBaseUrl}/file/gsu2v/AGENCY_SUBMIT_USER_CV`,
+          payload,
+          true,
+          {},
+          true
+        );
+
+        if (error) return toast.error(error.message, getToastOptions({}));
+
+        setCVLink(response.objectUrl);
+      }
+
+      setIsViewCVModalOpen(true);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to load CV");
     }
-
-    setIsViewCVModalOpen(true);
-  } catch (err) {
-    console.error(err);
-    toast.error("Failed to load CV");
-  }
   };
 
   const handleViewFeedback = async () => {
@@ -577,10 +576,7 @@ const EvaluatorView: React.FC = () => {
     if (!req?.evaluationResponseId) return;
 
     try {
-      const feedback = await getEvaluationResponse(
-        req.jobApplicationId,
-        req.evaluationResponseId
-      );
+      const feedback = await getEvaluationResponse(req.jobApplicationId, req.evaluationResponseId);
 
       setViewFeedbackData(feedback);
       setIsViewFeedbackOpen(true);
@@ -611,10 +607,10 @@ const EvaluatorView: React.FC = () => {
       if (!evaluatorEmail) return;
       const rawData = await fetchEvaluationRequests(evaluatorEmail);
 
-      const onlyIds = rawData.map(data =>{
-        return data.jobApplicationId
-      })
-      setidToFetchInterviews(onlyIds)
+      const onlyIds = rawData.map((data) => {
+        return data.jobApplicationId;
+      });
+      setidToFetchInterviews(onlyIds);
       const filteredRequests: typeof rawData = [];
       // for (const request of rawData) {
       //   if (!request.evaluationResponseId || !request.jobApplicationId) {
@@ -685,7 +681,7 @@ const EvaluatorView: React.FC = () => {
     }
 
     const fetchDetailsData = async () => {
-      setIsLoadingData(true)
+      setIsLoadingData(true);
       try {
         // 1. Fetch Evaluation Details
         const details = await fetchEvaluationDetails(
@@ -699,14 +695,19 @@ const EvaluatorView: React.FC = () => {
         const candidateParsedCvId = selectedRequest.candidateParsedCvId;
         const applicantUserId = selectedRequest.applicantUserId;
 
-        if(candidateEmail && candidateParsedCvId){
-          const {response} = await httpServiceObj.get<any>(`${agencyBaseUrl}/candidate-parsed-cv/${candidateParsedCvId}`,true,{},true);
+        if (candidateEmail && candidateParsedCvId) {
+          const { response } = await httpServiceObj.get<any>(
+            `${agencyBaseUrl}/candidate-parsed-cv/${candidateParsedCvId}`,
+            true,
+            {},
+            true
+          );
           if (response) {
             setSelectedCandidateDetails(response);
             setApplicationDetails(response);
           }
         }
-        
+
         if (candidateEmail && applicantUserId) {
           const candidate = await fetchCandidateDetails(candidateEmail);
           // console.log(candidate)
@@ -721,7 +722,7 @@ const EvaluatorView: React.FC = () => {
         console.error("Failed to fetch details or candidate detail or application detail:", err);
         setDetails(null);
       } finally {
-        setIsLoadingData(false)
+        setIsLoadingData(false);
       }
     };
 
@@ -729,167 +730,157 @@ const EvaluatorView: React.FC = () => {
   }, [selectedRequest]);
 
   const handleCandidateSelect = (id: string) => {
-    setSelectedCandidateDetails(null)
-    setApplicationDetails(null)
-    setDetails(null)
+    setSelectedCandidateDetails(null);
+    setApplicationDetails(null);
+    setDetails(null);
     const request = requests.find((r) => r.id === id);
     if (request) setSelectedRequest(request);
   };
 
   const handleLocalUpdate = (requestId: string, updatedFields: Partial<EvaluationRequest>) => {
     // 1. Update the requests list
-    setRequests(prev =>
-      prev.map(req =>
-        req.id === requestId ? { ...req, ...updatedFields } : req
-      )
+    setRequests((prev) =>
+      prev.map((req) => (req.id === requestId ? { ...req, ...updatedFields } : req))
     );
 
     // 2. Update the selected request if it matches
-    setSelectedRequest(prev =>
+    setSelectedRequest((prev) =>
       prev && prev.id === requestId ? { ...prev, ...updatedFields } : prev
     );
-    setCompanyCandidates(prev =>
-    prev.map(c =>
-      c.request.id === requestId
-        ? {
-            ...c,
-            request: { ...c.request, ...updatedFields }
-          }
-        : c
-    )
-  );
+    setCompanyCandidates((prev) =>
+      prev.map((c) =>
+        c.request.id === requestId
+          ? {
+              ...c,
+              request: { ...c.request, ...updatedFields },
+            }
+          : c
+      )
+    );
   };
 
   const groupedCompanies = useMemo(() => {
     const set = new Set<string>();
-    requests.forEach(r => {
+    requests.forEach((r) => {
       if (r.companyId) set.add(r.companyId);
     });
     return Array.from(set);
   }, [requests]);
 
-  const numberOfPendingEvaluation = useMemo(() =>{
-    return requests?.filter(request => !request.evaluationResponseId)
-  },[requests])
+  const numberOfPendingEvaluation = useMemo(() => {
+    return requests?.filter((request) => !request.evaluationResponseId);
+  }, [requests]);
 
   const handleCompanySelect = async (companyId: string) => {
     setSelectedCompanyId(companyId);
 
-  // IMPORTANT: clear old candidates immediately so loader shows
-  setCompanyCandidates([]);
+    // IMPORTANT: clear old candidates immediately so loader shows
+    setCompanyCandidates([]);
 
-  // show loading
-  setIsLoadingData(true);
+    // show loading
+    setIsLoadingData(true);
 
-  // exit single-candidate mode
-  setSelectedRequest(null);
+    // exit single-candidate mode
+    setSelectedRequest(null);
 
     const filtered = requests.filter((r) => r.companyId === companyId);
 
-  try {
-    const results = await Promise.allSettled(
-    filtered.map(async (req) => {
-      const [
-        detailsRes,
-        candidateRes,
-        applicationRes,
-        socialRes,
-        interviewRes,
-        parsedCvRes
-      ] = await Promise.allSettled([
-        fetchEvaluationDetails(req.jobApplicationId, req.id),
-        fetchCandidateDetails(req.applicantUserEmail),
-        fetchApplicationDetails(req.jobApplicationId),
-        fetchCandidateSocial(req.applicantUserEmail),
-        interviewServiceObj.fetchInterviewList(req.applicantUserEmail),
-        // Fetch candidate-parsed-cv for CV data (contains cvAwsS3SignedUrl, cvAwsS3ResourceType, etc.)
-        req.candidateParsedCvId 
-          ? httpServiceObj.get<any>(`${agencyBaseUrl}/candidate-parsed-cv/${req.candidateParsedCvId}`, true, {}, true)
-          : Promise.resolve({ response: null })
-      ]);
+    try {
+      const results = await Promise.allSettled(
+        filtered.map(async (req) => {
+          const [detailsRes, candidateRes, applicationRes, socialRes, interviewRes, parsedCvRes] =
+            await Promise.allSettled([
+              fetchEvaluationDetails(req.jobApplicationId, req.id),
+              fetchCandidateDetails(req.applicantUserEmail),
+              fetchApplicationDetails(req.jobApplicationId),
+              fetchCandidateSocial(req.applicantUserEmail),
+              interviewServiceObj.fetchInterviewList(req.applicantUserEmail),
+              // Fetch candidate-parsed-cv for CV data (contains cvAwsS3SignedUrl, cvAwsS3ResourceType, etc.)
+              req.candidateParsedCvId
+                ? httpServiceObj.get<any>(
+                    `${agencyBaseUrl}/candidate-parsed-cv/${req.candidateParsedCvId}`,
+                    true,
+                    {},
+                    true
+                  )
+                : Promise.resolve({ response: null }),
+            ]);
 
-      // --- Safe fallback handlers ---
-      const safeDetails = detailsRes.status === "fulfilled" ? detailsRes.value : {};
-      const safeCandidate =
-        candidateRes.status === "fulfilled"
-          ? candidateRes.value?.[0] ?? {}
-          : { name: "Candidate", about: "", social: {} };
+          // --- Safe fallback handlers ---
+          const safeDetails = detailsRes.status === "fulfilled" ? detailsRes.value : {};
+          const safeCandidate =
+            candidateRes.status === "fulfilled"
+              ? candidateRes.value?.[0] ?? {}
+              : { name: "Candidate", about: "", social: {} };
 
-      const safeApplication =
-        applicationRes.status === "fulfilled"
-          ? applicationRes.value
-          : { matchingScore: 0, scoreDetails: [] };
+          const safeApplication =
+            applicationRes.status === "fulfilled"
+              ? applicationRes.value
+              : { matchingScore: 0, scoreDetails: [] };
 
-      // const attendees = safeApplication?.attendees || [];
+          // const attendees = safeApplication?.attendees || [];
 
-      // const isEvaluatorAllowed = attendees
-      //   .filter((a: any) => a.type === "EVALUATOR") // remove EXTERNAL automatically
-      //   .some((a: any) => 
-      //     a.email?.toLowerCase() === userDetails?.email?.toLowerCase()
-      //   );
-      const isEvaluatorAllowed = Boolean(safeApplication?.latestInterviewRoundId) || safeApplication?.interviewRoundCount > 0;
+          // const isEvaluatorAllowed = attendees
+          //   .filter((a: any) => a.type === "EVALUATOR") // remove EXTERNAL automatically
+          //   .some((a: any) =>
+          //     a.email?.toLowerCase() === userDetails?.email?.toLowerCase()
+          //   );
+          const isEvaluatorAllowed =
+            Boolean(safeApplication?.latestInterviewRoundId) ||
+            safeApplication?.interviewRoundCount > 0;
 
-      const safeSocial =
-        socialRes.status === "fulfilled"
-          ? socialRes.value?.[0] ?? {}
-          : {};
+          const safeSocial = socialRes.status === "fulfilled" ? socialRes.value?.[0] ?? {} : {};
 
-      // Merge parsed CV data (which has cvAwsS3SignedUrl, cvAwsS3ResourceType, etc.)
-      let parsedCvData = null;
-      if (parsedCvRes.status === "fulfilled" && parsedCvRes.value?.response) {
-        parsedCvData = parsedCvRes.value.response;
-      }
+          // Merge parsed CV data (which has cvAwsS3SignedUrl, cvAwsS3ResourceType, etc.)
+          let parsedCvData = null;
+          if (parsedCvRes.status === "fulfilled" && parsedCvRes.value?.response) {
+            parsedCvData = parsedCvRes.value.response;
+          }
 
-      // -------- Video Interview Logic (copy from MainContent) --------
-      let interviewDetails = null;
-      let isAlreadyRequested = false;
+          // -------- Video Interview Logic (copy from MainContent) --------
+          let interviewDetails = null;
+          let isAlreadyRequested = false;
 
-      if (interviewRes.status === "fulfilled" && interviewRes.value?.response) {
-        const list = interviewRes.value.response; // <-- real array
-        const latest = getLatestInterviewData(list || [], "");
+          if (interviewRes.status === "fulfilled" && interviewRes.value?.response) {
+            const list = interviewRes.value.response; // <-- real array
+            const latest = getLatestInterviewData(list || [], "");
 
-        interviewDetails = latest?.interviewDetails || null;
-        isAlreadyRequested =
-          interviewDetails && !interviewDetails?.score ? true : false;
-      }
-      
-      return {
-        request: req,
-        details: safeDetails,
-        candidate: { 
-          ...safeCandidate, 
-          social: safeSocial,
-          // Merge CV data from parsed-cv endpoint
-          ...(parsedCvData || {})
-        },
-        application: safeApplication || parsedCvData,  // Use parsed CV data for application if needed
+            interviewDetails = latest?.interviewDetails || null;
+            isAlreadyRequested = interviewDetails && !interviewDetails?.score ? true : false;
+          }
 
-        // important additions:
-        interviewDetails,
-        isAlreadyRequested,
-        interviewScoreBreakdown: interviewDetails?.scoreBreakdown ?? {},
-        canViewInterview: isEvaluatorAllowed,
-      };
-    })
-  );
+          return {
+            request: req,
+            details: safeDetails,
+            candidate: {
+              ...safeCandidate,
+              social: safeSocial,
+              // Merge CV data from parsed-cv endpoint
+              ...(parsedCvData || {}),
+            },
+            application: safeApplication || parsedCvData, // Use parsed CV data for application if needed
 
-  const final = results
-    .filter((r) => r.status === "fulfilled")
-    .map((r) => r.value);
+            // important additions:
+            interviewDetails,
+            isAlreadyRequested,
+            interviewScoreBreakdown: interviewDetails?.scoreBreakdown ?? {},
+            canViewInterview: isEvaluatorAllowed,
+          };
+        })
+      );
 
-  setCompanyCandidates(final);
-    // KEEP EVERYTHING — no skipping
-    const finalPayload = results
-      .filter((r) => r.status === "fulfilled")
-      .map((r) => r.value);
+      const final = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
 
-    setCompanyCandidates(finalPayload);
+      setCompanyCandidates(final);
+      // KEEP EVERYTHING — no skipping
+      const finalPayload = results.filter((r) => r.status === "fulfilled").map((r) => r.value);
+
+      setCompanyCandidates(finalPayload);
     } catch (e) {
-    console.error("Error loading grouped candidates:", e);
-  } finally {
-    setIsLoadingData(false);
-  }
-
+      console.error("Error loading grouped candidates:", e);
+    } finally {
+      setIsLoadingData(false);
+    }
   };
 
   // Helper function to hydrate single-candidate state from grouped data
@@ -905,8 +896,8 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleViewCVCompany = (req: any) => {
-    const match = companyCandidates.find(c => c.request.id === req.id);
-    
+    const match = companyCandidates.find((c) => c.request.id === req.id);
+
     if (match) {
       hydrateSingleCandidateFromGroup(match);
     }
@@ -918,8 +909,8 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleSubmitFeedbackCompany = (req: any) => {
-    const match = companyCandidates.find(c => c.request.id === req.id);
-    
+    const match = companyCandidates.find((c) => c.request.id === req.id);
+
     if (match) {
       hydrateSingleCandidateFromGroup(match);
     }
@@ -931,8 +922,8 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleViewFeedbackCompany = (req: any) => {
-    const match = companyCandidates.find(c => c.request.id === req.id);
-    
+    const match = companyCandidates.find((c) => c.request.id === req.id);
+
     if (match) {
       hydrateSingleCandidateFromGroup(match);
     }
@@ -944,49 +935,49 @@ const EvaluatorView: React.FC = () => {
   };
 
   const handleViewInterviewCompany = (interviewDetails: any, name: string) => {
-  setInterviewDetailviewModal({
-    isOpen: true,
-    interviewDetails,
-    userName: name,
-  });
-};
-
-const [groupedCompaniesWithCompanyName, setGroupedCompaniesWithCompanyName] = useState<
-  { companyId: string; companyName: string }[]
->([]);
-
-useEffect(() => {
-  if (!requests.length) return;
-
-  const uniqueIds = Array.from(new Set(requests.map(r => r.companyId)));
-
-  const loadNames = async () => {
-    const results = await Promise.allSettled(
-      uniqueIds.map(async (id) => {
-        const req = requests.find(r => r.companyId === id);
-        if (!req) return null;
-
-        const app = await fetchApplicationDetails(req.jobApplicationId);
-
-        return {
-          companyId: id,
-          companyName: app?.companyName || id,
-        };
-      })
-    );
-
-    const final = results
-      .filter(
-        (r): r is PromiseFulfilledResult<{ companyId: string; companyName: string } | null> =>
-          r.status === "fulfilled" && r.value !== null
-      )
-      .map((r) => r.value!);
-
-    setGroupedCompaniesWithCompanyName(final);
+    setInterviewDetailviewModal({
+      isOpen: true,
+      interviewDetails,
+      userName: name,
+    });
   };
 
-  loadNames();
-}, [requests]);
+  const [groupedCompaniesWithCompanyName, setGroupedCompaniesWithCompanyName] = useState<
+    { companyId: string; companyName: string }[]
+  >([]);
+
+  useEffect(() => {
+    if (!requests.length) return;
+
+    const uniqueIds = Array.from(new Set(requests.map((r) => r.companyId)));
+
+    const loadNames = async () => {
+      const results = await Promise.allSettled(
+        uniqueIds.map(async (id) => {
+          const req = requests.find((r) => r.companyId === id);
+          if (!req) return null;
+
+          const app = await fetchApplicationDetails(req.jobApplicationId);
+
+          return {
+            companyId: id,
+            companyName: app?.companyName || id,
+          };
+        })
+      );
+
+      const final = results
+        .filter(
+          (r): r is PromiseFulfilledResult<{ companyId: string; companyName: string } | null> =>
+            r.status === "fulfilled" && r.value !== null
+        )
+        .map((r) => r.value!);
+
+      setGroupedCompaniesWithCompanyName(final);
+    };
+
+    loadNames();
+  }, [requests]);
 
   return (
     <div className="h-screen bg-gray-100 flex">
@@ -1020,90 +1011,98 @@ useEffect(() => {
         interviewModal={interviewModal}
         setInterviewModal={setInterviewModal}
         numberOfPendingEvaluation={numberOfPendingEvaluation.length}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
       />
 
-      <MainContent
-        // key={selectedRequest?.id || "no-selection"}
-        EvaluationRequestDetails={
-          details && selectedCandidateDetails && applicationDetails
-            ? {
-                id: details.id,
-                name: selectedCandidateDetails.name,
-                aboutCandidate: selectedCandidateDetails.about,
-                role: details.jobTitle,
-                recruiterFeedback: details.hrDetailedFeedback,
-                overallScore: 0, // Placeholder for now
-                workoFeedback: "",
-                videoInterview: {
-                  confidence: 0,
-                  attitude: 0,
-                  domainKnowledge: 0,
-                  commSkills: 0,
-                },
-                profileSentDate: new Date(details.createdAt).toLocaleString(),
-                recruiterName: details.hrName,
-                matchingScore: applicationDetails.matchingScore ?? 0,
-                scoreDetails: (() => {
-                  const scoreOrRejection =
-                    (applicationDetails.matchingScore ?? 0) >= 70
-                      ? applicationDetails.scoreDetails
-                      : applicationDetails.rejectionFeedbackBySystem;
+      {activeSection === "calendar" ? (
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
+          <GoogleIntegration />
+        </div>
+      ) : (
+        <MainContent
+          // key={selectedRequest?.id || "no-selection"}
+          EvaluationRequestDetails={
+            details && selectedCandidateDetails && applicationDetails
+              ? {
+                  id: details.id,
+                  name: selectedCandidateDetails.name,
+                  aboutCandidate: selectedCandidateDetails.about,
+                  role: details.jobTitle,
+                  recruiterFeedback: details.hrDetailedFeedback,
+                  overallScore: 0, // Placeholder for now
+                  workoFeedback: "",
+                  videoInterview: {
+                    confidence: 0,
+                    attitude: 0,
+                    domainKnowledge: 0,
+                    commSkills: 0,
+                  },
+                  profileSentDate: new Date(details.createdAt).toLocaleString(),
+                  recruiterName: details.hrName,
+                  matchingScore: applicationDetails.matchingScore ?? 0,
+                  scoreDetails: (() => {
+                    const scoreOrRejection =
+                      (applicationDetails.matchingScore ?? 0) >= 70
+                        ? applicationDetails.scoreDetails
+                        : applicationDetails.rejectionFeedbackBySystem;
 
-                  try {
-                    const parsed = JSON.parse(scoreOrRejection || "[]");
-                    return Array.isArray(parsed) ? parsed : scoreOrRejection;
-                  } catch (err) {
-                    return scoreOrRejection;
-                  }
-                })(),
-                evaluationResponseId: selectedRequest?.evaluationResponseId,
-                email: selectedRequest?.applicantUserEmail ?? "",
-                applicantUserId:details?.applicantUserId,
-              }
-            : {
-                id: "",
-                name: "",
-                aboutCandidate: "",
-                role: "",
-                recruiterFeedback: "",
-                overallScore: 0,
-                workoFeedback: "",
-                videoInterview: {
-                  confidence: 0,
-                  attitude: 0,
-                  domainKnowledge: 0,
-                  commSkills: 0,
-                },
-                profileSentDate: "",
-                recruiterName: "",
+                    try {
+                      const parsed = JSON.parse(scoreOrRejection || "[]");
+                      return Array.isArray(parsed) ? parsed : scoreOrRejection;
+                    } catch (err) {
+                      return scoreOrRejection;
+                    }
+                  })(),
+                  evaluationResponseId: selectedRequest?.evaluationResponseId,
+                  email: selectedRequest?.applicantUserEmail ?? "",
+                  applicantUserId: details?.applicantUserId,
+                }
+              : {
+                  id: "",
+                  name: "",
+                  aboutCandidate: "",
+                  role: "",
+                  recruiterFeedback: "",
+                  overallScore: 0,
+                  workoFeedback: "",
+                  videoInterview: {
+                    confidence: 0,
+                    attitude: 0,
+                    domainKnowledge: 0,
+                    commSkills: 0,
+                  },
+                  profileSentDate: "",
+                  recruiterName: "",
 
-                matchingScore: 0,
-                scoreDetails: [],
-                email: "",
-              }
-        }
-        companyLogo=""
-        onSubmitFeedback={handleSubmitFeedback}
-        onViewFeedback={handleViewFeedback}
-        onViewCV={handleViewCV}
-        onViewVideo={handleViewVideo}
-        requests={requests}
-        isLoadingData={isLoadingData}
-        hasAttemptedLoad={hasAttemptedLoad}
-        evaluatorDetails={details}
-        applicationDetails={applicationDetails}
-        interviewDetailviewModal={interviewDetailviewModal}
-        setInterviewDetailviewModal={setInterviewDetailviewModal}
-        companyCandidates={companyCandidates}
-        onViewCVCompany={handleViewCVCompany}
-        onSubmitFeedbackCompany={handleSubmitFeedbackCompany}
-        onViewFeedbackCompany={handleViewFeedbackCompany}
-        onViewInterview={handleViewInterviewCompany}
-        setJobApplicationIdFromChild={setJobApplicationIdFromChild}
-        jobApplicationIdFromChild={jobApplicationIdFromChild}
-        interviewModal={interviewModal}
-        setInterviewModal={setInterviewModal}
-      />
+                  matchingScore: 0,
+                  scoreDetails: [],
+                  email: "",
+                }
+          }
+          companyLogo=""
+          onSubmitFeedback={handleSubmitFeedback}
+          onViewFeedback={handleViewFeedback}
+          onViewCV={handleViewCV}
+          onViewVideo={handleViewVideo}
+          requests={requests}
+          isLoadingData={isLoadingData}
+          hasAttemptedLoad={hasAttemptedLoad}
+          evaluatorDetails={details}
+          applicationDetails={applicationDetails}
+          interviewDetailviewModal={interviewDetailviewModal}
+          setInterviewDetailviewModal={setInterviewDetailviewModal}
+          companyCandidates={companyCandidates}
+          onViewCVCompany={handleViewCVCompany}
+          onSubmitFeedbackCompany={handleSubmitFeedbackCompany}
+          onViewFeedbackCompany={handleViewFeedbackCompany}
+          onViewInterview={handleViewInterviewCompany}
+          setJobApplicationIdFromChild={setJobApplicationIdFromChild}
+          jobApplicationIdFromChild={jobApplicationIdFromChild}
+          interviewModal={interviewModal}
+          setInterviewModal={setInterviewModal}
+        />
+      )}
 
       {/*Feedback Modal*/}
       <Modal
@@ -1132,7 +1131,15 @@ useEffect(() => {
         onClose={() => setIsViewFeedbackOpen(false)}
         className="max-w-3xl w-full">
         {viewFeedbackData && (
-          <ViewFeedbackModal candidateName={selectedCandidateDetails?.name || selectedRequestRef.current.applicantName || "Candidate"} onClose={() => setIsViewFeedbackOpen(false)} data={viewFeedbackData} />
+          <ViewFeedbackModal
+            candidateName={
+              selectedCandidateDetails?.name ||
+              selectedRequestRef.current.applicantName ||
+              "Candidate"
+            }
+            onClose={() => setIsViewFeedbackOpen(false)}
+            data={viewFeedbackData}
+          />
         )}
       </Modal>
 
@@ -1173,20 +1180,19 @@ useEffect(() => {
       </Modal>
 
       <Modal
-          isOpen={interviewDetailviewModal.isOpen}
-          onClose={() =>
-            setInterviewDetailviewModal({
-              isOpen: false,
-              interviewDetails: {} as InterviewDto,
-              userName: "",
-            })
-          }
-         >
-          <InterviewDetailedViewModal
-            userName={interviewDetailviewModal.userName}
-            interviewDetails={interviewDetailviewModal.interviewDetails}
-          />
-        </Modal>
+        isOpen={interviewDetailviewModal.isOpen}
+        onClose={() =>
+          setInterviewDetailviewModal({
+            isOpen: false,
+            interviewDetails: {} as InterviewDto,
+            userName: "",
+          })
+        }>
+        <InterviewDetailedViewModal
+          userName={interviewDetailviewModal.userName}
+          interviewDetails={interviewDetailviewModal.interviewDetails}
+        />
+      </Modal>
     </div>
   );
 };

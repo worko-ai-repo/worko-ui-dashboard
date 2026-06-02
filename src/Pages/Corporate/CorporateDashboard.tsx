@@ -13,6 +13,7 @@ import AccessDenied from "@Pages/errors/AccessDenied/AccessDenied";
 
 
 
+
 // Lazy load components
 const Jobs = lazy(() => import("@Components/Dashboard/Corporate/Job/Jobs"));
 const Applicants = lazy(() => import("@Components/Dashboard/Corporate/Applicants/Applicants"));
@@ -20,6 +21,7 @@ const BulkCVCheck = lazy(() => import("@Components/Dashboard/Corporate/BulkCvChe
 const Invites = lazy(() => import("@Components/Dashboard/Corporate/Invites/Invites"));
 const Interview = lazy(() => import("@Components/Dashboard/Corporate/Interviews/Interview"));
 const ApplicantsModal = lazy(() => import("@Components/Modals/SharedModals/ApplicantsModal"));
+const GoogleIntegration = lazy(() => import("@Components/Dashboard/WorkoAdmin/GoogleIntegration/GoogleIntegration"));
 
 
 const AdminDatabase = lazy(() => import("@Components/Dashboard/Corporate/Database/CorporateDatabase"));
@@ -200,6 +202,14 @@ const CorporateDashboard = () => {
           element: (
             <Suspense fallback={<MainLoader />}>
               {isCorporateAdmin ? <RecruiterRecharge /> : <AccessDenied />}
+            </Suspense>
+          ),
+        },
+         {
+          path: "aCalendarIntegration",
+          element: (
+            <Suspense fallback={<MainLoader />}>
+              <GoogleIntegration />
             </Suspense>
           ),
         },

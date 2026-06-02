@@ -72,6 +72,7 @@ const JobTableWrapper: React.FC<JobsTableProps> = ({
   const [updatingJobId, setUpdatingJobId] = useState<string | null>(null);
   const { sortedData, onSortChange } = useSortableData(data, keyFallbacksforJobs, {
     tableId: "admin-jobs-table",
+    defaultSort: { key: "createdAt", order: "desc" },
     persistInUrl: true,
     persistInLocalStorage: false,
     // defaultSort: { key: "createdAt", order: "desc" }, // Replace "asc" with "desc" if descending order is needed

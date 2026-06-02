@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import { getToastOptions } from "@Utils/Toast.utils";
-import { ReferAndEarnDto } from "@Interfaces/AdminServices.dto";
+import { ReferAndEarnDto, ReferAndEarnUpdateApiDto } from "@Interfaces/AdminServices.dto";
 import SimpleSelectInput from "@Components/Shared/PostJob/InputSelect";
-import { CheckCircleIcon, PaperAirplaneIcon } from "@heroicons/react/24/outline";
-import { ReferAndEarnJobApplicationStatusType } from "@TypesAndConstants/JobsAndApplication.type";
-import { ReferAndEarnJobStatusOptionsArray } from "@TypesAndConstants/common.constants";
+import { PaperAirplaneIcon } from "@heroicons/react/24/outline";
+import {
+  ReferAndEarnJobApplicationStatusType,
+  ReferAndEarnStatusType,
+} from "@TypesAndConstants/JobsAndApplication.type";
+import { ReferAndEarnJobStatusOptionsArray, ReferAndEarnStatusOptionsLabel } from "@TypesAndConstants/common.constants";
 import AdminServiceObj from "../Services/Admin.service";
 
 interface ReferAndEarnReferralStatusUpdateModalProps {
@@ -16,16 +19,22 @@ interface ReferAndEarnReferralStatusUpdateModalProps {
 }
 
 interface StatusUpdateFormData {
-  status: ReferAndEarnJobApplicationStatusType;
+  status: ReferAndEarnStatusType;
 }
 
 // Convert status options to select format
-const statusSelectOptions = Object.entries(ReferAndEarnJobStatusOptionsArray).map(
-  ([key, value]) => ({
+const allowedStatuses = [
+  "WITHDRAWAL_ACCEPTED",
+  "WITHDRAWAL_REJECTED",
+  "PAYMENT_COMPLETED",
+];
+
+const statusSelectOptions = Object.entries(ReferAndEarnStatusOptionsLabel)
+  .filter(([key]) => allowedStatuses.includes(key))
+  .map(([key, value]) => ({
     value: key,
     label: value.label,
-  })
-);
+  }));
 
 const ReferAndEarnReferralStatusUpdateModal: React.FC<
   ReferAndEarnReferralStatusUpdateModalProps
@@ -38,7 +47,7 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<
     formState: { errors },
   } = useForm<StatusUpdateFormData>({
     defaultValues: {
-      status: data.jobApplicationStatus || "PENDING",
+      status: data.status,
     },
     mode: "onChange",
   });
@@ -49,12 +58,9 @@ const ReferAndEarnReferralStatusUpdateModal: React.FC<
   const onSubmit = async (formData: StatusUpdateFormData) => {
     setIsSubmitting(true);
     try {
-      // Prepare the payload - only update status
-      const payload = {
-        jobApplicationStatus: formData.status,
+      const payload: ReferAndEarnUpdateApiDto = {
+        status: formData.status,
       };
-
-      // console.log("Status update payload:", payload);
 
       const response = await AdminServiceObj.patchReferAndEarnStatus(data.id, payload);
       if (!response) {

@@ -59,7 +59,7 @@ const EvaluatorMatrix = ({ companyIdOverride, recruiterId, firstName, lastName }
       };
 
       const { response, error } = await httpServiceObj.get<EvaluationResponseData>(
-        `/request-evaluation/company`,
+        `/request-evaluation`,
         true,
         params,
         false,

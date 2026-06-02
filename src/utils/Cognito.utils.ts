@@ -331,7 +331,17 @@ class CognitoService {
       const { tokens } = await fetchAuthSession();
       const userType = tokens?.idToken?.payload["cognito:groups"];
       const userId = tokens?.idToken?.payload["sub"];
+      const idToken = tokens?.idToken?.toString();
+      const accessToken = tokens?.accessToken?.toString();
 
+      // Persist tokens into secure storage (preferred)
+      if (idToken) {
+        secureStorage.setItem(SecureStorageKeyEnum.USERTOKEN, idToken);
+      }
+      if (accessToken) {
+        secureStorage.setItem<string>(SecureStorageKeyEnum.ACCESSTOKEN, accessToken);
+      }
+      
       if (userId) {
         secureStorage.setItem(SecureStorageKeyEnum.COGNITOUSERID, userId);
       }
@@ -382,6 +392,68 @@ class CognitoService {
       return true;
     } catch (error: any) {
       console.error("Error setting access token:", error);
+      return false;
+    }
+  }
+
+    /**
+   * Synchronize tokens from Amplify/Cognito into SecureStorage.
+   * If forceRefresh is true, ask Amplify to refresh tokens before syncing.
+   */
+  public async sessionSync(forceRefresh = false): Promise<boolean> {
+    try {
+      const session = await fetchAuthSession({ forceRefresh });
+      const idToken = session.tokens?.idToken?.toString() || "";
+      const accessToken = session.tokens?.accessToken?.toString() || "";
+
+      if (idToken) {
+        secureStorage.setItem(SecureStorageKeyEnum.USERTOKEN, idToken);
+      }
+      if (accessToken) {
+        secureStorage.setItem(SecureStorageKeyEnum.ACCESSTOKEN, accessToken);
+      }
+
+      // Also refresh stored user id and roles if available
+      const userType = session.tokens?.idToken?.payload["cognito:groups"];
+      const userId = session.tokens?.idToken?.payload["sub"];
+      if (userId) {
+        secureStorage.setItem(SecureStorageKeyEnum.COGNITOUSERID, userId);
+      }
+      if (Array.isArray(userType)) {
+        // map Cognito groups to our UserRole array and persist
+        const roles: any[] = [];
+        for (const role of userType) {
+          switch (role) {
+            case UserRole.CORPORATE_ADMIN:
+            case UserRole.CORPORATE_RECRUITER: {
+              secureStorage.setItem<typeof role>(SecureStorageKeyEnum.CORPORATEUSERTYPE, role);
+              roles.push(UserRole.CORPORATE);
+              break;
+            }
+            case UserRole.ADMIN: {
+              roles.push(UserRole.ADMIN);
+              break;
+            }
+            case UserRole.EVALUATOR: {
+              roles.push(UserRole.EVALUATOR);
+              break;
+            }
+            case UserRole.LINKEDIN: {
+              roles.push(UserRole.LINKEDIN);
+              break;
+            }
+            case UserRole.GENERAL_USER: {
+              roles.push(UserRole.GENERAL_USER);
+              break;
+            }
+          }
+        }
+        secureStorage.setItem<UserRole[]>(SecureStorageKeyEnum.USERTYPE, roles);
+      }
+
+      return true;
+    } catch (error) {
+      console.error("sessionSync failed:", error);
       return false;
     }
   }

@@ -467,7 +467,7 @@ class AdminService {
         "BASE"
       );
 
-      if (!response) {
+      if (!response && status !== 204) {
         throw new Error("No response received");
       }
       return true;

@@ -72,6 +72,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
     } = useFeedbackForm();
 
     const canSelectNextStep = feedback.trim().length > 0;
+    const canSubmitFeedback = score > 0 && feedback.trim().length > 0;
 
     const getScoreColor = (score: number) => {
         if (score <= 2) return 'bg-red-500';
@@ -80,6 +81,11 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
     };
 
     const handleFinalSubmit = async () => {
+        if (!canSubmitFeedback) {
+            toast.error('Please fill all required fields',getToastOptions({}));
+            return;
+        }
+
         if (!isNextStepValid()) {
             toast.error('Please fill all required fields',getToastOptions({}));
             return;
@@ -110,8 +116,10 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
         } else if (selectedRequest.createdByUserId) {
             basePayload.evaluationRequesterUserId = selectedRequest.createdByUserId;
         }
+
+        const effectiveNextStep = nextStep ?? 'schedule';
         try {
-            if (nextStep === 'reject') {
+            if (effectiveNextStep === 'reject') {
                 await submitEvaluationResponse({
                     ...basePayload,
                     status: 'REJECTED',
@@ -120,7 +128,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     htmlComment,
                 } as SubmitEvaluationPayload);
                 toast.success('Feedback submitted successfully!',getToastOptions({}));
-            } else if (nextStep === 'hold') {
+            } else if (effectiveNextStep === 'hold') {
                 await submitEvaluationResponse({
                     ...basePayload,
                     status: 'ON_HOLD',
@@ -129,7 +137,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                     htmlComment,
                 } as SubmitEvaluationPayload);
                 toast.success('Feedback submitted successfully!',getToastOptions({}));
-            } else if (nextStep === 'schedule') {
+            } else if (effectiveNextStep === 'schedule') {
                 const now = new Date();
                 const buildDateTimeFromHour = (date: string, hour: number) => {
                     const d = new Date(date + 'T00:00:00');
@@ -180,12 +188,12 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
             if (onSubmitComplete) {
                 onSubmitComplete({
-                    status: nextStep,
+                    status: effectiveNextStep,
                     score,
                     reason:
-                        nextStep === 'reject'
+                        effectiveNextStep === 'reject'
                             ? selectedRejectionReason
-                            : nextStep === 'hold'
+                            : effectiveNextStep === 'hold'
                                 ? selectedHoldReason
                                 : undefined,
                     feedback,
@@ -200,7 +208,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
     };
 
     return (
-        <div className="h-full flex flex-col max-h-[95vh] w-full">
+        <div className="h-full flex flex-col sm:min-w-[500px] max-h-[95vh] w-full">
             {/* Header */}
             <div className="border-b border-gray-200 px-8 py-6 flex-shrink-0">
                 <div className="flex items-center justify-between">
@@ -282,7 +290,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                         
                         {canSelectNextStep && nextStep ? (
                             <div className="flex items-center gap-2 px-4 py-3 rounded-lg border w-fit opacity-50">
-                                {nextStep === 'schedule' && <Calendar size={18} className="text-indigo-600" />}
+                                {/* {nextStep === 'schedule' && <Calendar size={18} className="text-indigo-600" />} */}
                                 {nextStep === 'reject' && <X size={18} className="text-red-600" />}
                                 {nextStep === 'hold' && <Clock size={18} className="text-yellow-600" />}
                                 <span className="text-sm font-medium">
@@ -292,7 +300,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                             </div>
                         ) : (
                             <div className="flex flex-wrap gap-3">
-                                <button
+                              {/*   <button
                                   onClick={() => canSelectNextStep && handleNextStepClick('schedule')}
                                   disabled={!canSelectNextStep}
                                   className={`flex items-center gap-2 px-5 py-3 rounded-lg border transition-colors ${
@@ -303,7 +311,7 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
                                 >
                                     <Calendar size={16} />
                                     <span className="text-sm font-medium">Schedule interview</span>
-                                </button>
+                                </button> */}
 
                                 <button
                                   onClick={() => canSelectNextStep && handleNextStepClick('reject')}
@@ -393,9 +401,9 @@ const FeedbackModal: React.FC<FeedbackModalProps> = ({
 
   <button
     onClick={handleFinalSubmit}
-    disabled={!canSelectNextStep || !nextStep}
+        disabled={!canSubmitFeedback}
     className={`flex items-center gap-2 px-8 py-3 text-white rounded-lg hover:opacity-90 transition-colors ${
-      nextStep === 'schedule' ? 'bg-indigo-600' :
+            !nextStep || nextStep === 'schedule' ? 'bg-indigo-600' :
       nextStep === 'reject' ? 'bg-red-600' :
       nextStep === 'hold' ? 'bg-yellow-600' :
       'bg-gray-400 cursor-not-allowed'

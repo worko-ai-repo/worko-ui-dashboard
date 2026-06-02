@@ -265,7 +265,7 @@ const AdminDashboard = () => {
           ),
         },
         {
-          path: "aGmailLogin",
+          path: "aCalendarIntegration",
           element: (
             <Suspense fallback={<MainLoader />}>
               <GoogleIntegration />

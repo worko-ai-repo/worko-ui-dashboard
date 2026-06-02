@@ -462,6 +462,7 @@ const AdminJobs = () => {
               searchBarText={searchBarText}
               setSearchBarText={handleSearchChange}
               handleClick={() => refetch()}
+              placeholder="Seach by job title"
             />
             <div className=" flex w-3/9 flex-shrink-0  gap-4 justify-end lg:items-end">
               <div className="max-sm:flex-1 flex items-start justify-between gap-3 font-semibold text-sm">
